@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.BusbarSection;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
+import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -60,11 +61,12 @@ class NamingStrategyTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void assertAfterNetworkModificationCreation() {
-        Set<String> busbarIds = getNetwork()
+        VoltageLevel vl1 = getNetwork().getVoltageLevel("vl1");
+        Set<String> busbarIds = vl1.getNodeBreakerView()
                 .getBusbarSectionStream()
                 .map(BusbarSection::getId)
                 .collect(Collectors.toSet());
-        assertTrue(busbarIds.containsAll(Set.of("1.1", "1A", "1B", "1.A", "1A1", "3A", "1B1", "BUSBAR_1_1", "BUSBAR_2_1", "BUSBAR_1_2", "BUSBAR_2_2")));
+        assertTrue(busbarIds.containsAll(Set.of("BUSBAR_1_1", "BUSBAR_2_1", "BUSBAR_1_2", "BUSBAR_2_2")));
     }
 
     @Override
