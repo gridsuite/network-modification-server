@@ -151,13 +151,6 @@
     <dependencies>
         <!-- Compilation dependencies -->
         <dependency>
-            <groupId>com.rte-france.powsybl</groupId>
-            <artifactId>powsybl-rte-network-store</artifactId>
-            <version>0.16.0-SNAPSHOT</version>
-            <scope>runtime</scope>
-        </dependency>
-
-        <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-client</artifactId>
         </dependency>

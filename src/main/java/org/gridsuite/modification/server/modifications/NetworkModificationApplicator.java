@@ -65,12 +65,10 @@ public class NetworkModificationApplicator {
     @Value("${impacts.collection-threshold:50}")
     private Integer collectionThreshold;
 
-    @Getter
     @Value("${naming-strategy:Default}")
     private String namingStrategyValue;
 
-    @Getter
-    private final NamingStrategy namingStrategy;
+    private NamingStrategy namingStrategy;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ModificationApplicationInfosService applicationInfosService,
@@ -86,7 +84,6 @@ public class NetworkModificationApplicator {
         this.loadFlowService = loadFlowService;
         this.networkModificationObserver = networkModificationObserver;
         this.largeNetworkModificationExecutionService = largeNetworkModificationExecutionService;
-        this.namingStrategy = new NamingStrategiesServiceLoader().findNamingStrategyByName(namingStrategyValue).orElse(new DefaultNamingStrategy());
     }
 
     /* This method is used for incremental modifications
@@ -116,6 +113,13 @@ public class NetworkModificationApplicator {
         } else {
             return CompletableFuture.completedFuture(applyAndFlush(modificationInfosGroup, listener));
         }
+    }
+
+    public NamingStrategy getNamingStrategy() {
+        if (namingStrategy == null) {
+            namingStrategy = new NamingStrategiesServiceLoader().findNamingStrategyByName(namingStrategyValue).orElse(new DefaultNamingStrategy());
+        }
+        return namingStrategy;
     }
 
     private NetworkModificationResult applyAndFlush(ModificationApplicationGroup modificationInfosGroup,
@@ -232,7 +236,7 @@ public class NetworkModificationApplicator {
         modification.initApplicationContext(this.filterService, this.loadFlowService);
 
         // apply all changes on the network
-        modification.apply(network, namingStrategy, subReportNode);
+        modification.apply(network, getNamingStrategy(), subReportNode);
     }
 
     private void handleException(ReportNode subReportNode, Exception e) {
