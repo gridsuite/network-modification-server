@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
@@ -577,5 +578,15 @@ public class NetworkModificationService {
                 .filter(List.of(equipmentImpactedQuery._toQuery(), networkFilter));
 
         return boolQueryBuilder.build();
+    }
+
+    public List<String> getBusBarSectionsForNewCoupler(@NonNull String voltageLevelId, @NonNull Integer busBarCount, @NonNull Integer sectionCount, List<SwitchKind> switchKindList) {
+        List<String> bbsIds = new ArrayList<>();
+        for (int i = 1; i < busBarCount + 1; i++) {
+            for (int j = 1; j < sectionCount + 1; j++) {
+                bbsIds.add(modificationApplicator.getNamingStrategy().getBusbarId(voltageLevelId, switchKindList, i, j));
+            }
+        }
+        return bbsIds;
     }
 }
