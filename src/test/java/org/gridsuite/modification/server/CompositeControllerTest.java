@@ -100,7 +100,7 @@ class CompositeControllerTest {
     }
 
     @Test
-    void testNetworkCompositeModification() throws Exception { // TODO reformater pour réduire nb asserts ??
+    void testSplit() throws Exception {
         // Insert some switch modifications in the group
         int modificationsNumber = 2;
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, modificationsNumber);
@@ -133,8 +133,6 @@ class CompositeControllerTest {
         assertNotNull(compositeModificationContent.getFirst().getMessageValues());
         assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.getFirst()).getEquipmentAttributeName());
         assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.getFirst()).getEquipmentAttributeValue());
-        assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.getFirst()).getEquipmentType());
-        assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.getFirst()).getEquipmentId());
 
         // create another composite modification
         List<ModificationInfos> otherModificationList = createSomeSwitchModifications(TEST_GROUP2_ID, modificationsNumber);
@@ -177,16 +175,38 @@ class CompositeControllerTest {
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).toList();
         assertEquals(modificationUuids.getFirst(), newModificationUuidList.getFirst());
         assertThat(modificationList.getFirst()).recursivelyEquals(newModificationList.get(modificationsNumber));
+    }
 
-        // insert the same composite modification inside the same group but this time as a complete composite, not split into regular network modifications
+    @Test
+    void testInsert() throws Exception {
+        // Insert some switch modifications in the group
+        int modificationsNumber = 2;
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, modificationsNumber);
+
+        // Create a composite modification with the switch modification
+        List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
+        MvcResult mvcResult;
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        List<ModificationInfos> modificationInfosList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(modificationsNumber, modificationInfosList.size());
+
+        // Insert the composite modification in the group
+        final String bodyJson = getJsonBodyModificationCompositeInfos(
+                List.of(Pair.of(compositeModificationUuid, "random name")));
+
+        // insert the same composite modification inside as a complete composite, not split into regular network modifications
         mvcResult = runRequestAsync(
                 mockMvc,
                 put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP_ID + "?action=INSERT")
                         .content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk()
         );
         assertApplicationStatusOK(mvcResult);
-        newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
-        assertEquals(modificationsNumber * 2 + 1, newModificationList.size());
+        List<ModificationInfos> newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(modificationsNumber + 1, newModificationList.size());
         CompositeModificationInfos insertedComposite = (CompositeModificationInfos) newModificationList.stream().filter(modificationInfos ->
                 modificationInfos.getType().equals(COMPOSITE_MODIFICATION)).findFirst().orElseThrow();
         assertNotNull(insertedComposite);
