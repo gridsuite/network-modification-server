@@ -293,7 +293,6 @@ public class NetworkModificationRepository {
         }
     }
 
-    // TODO : check this for metadata ??
     public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
         if (onlyStashed) {
             return modificationRepository

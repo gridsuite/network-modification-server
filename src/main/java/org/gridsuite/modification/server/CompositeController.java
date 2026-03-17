@@ -48,19 +48,17 @@ public class CompositeController {
     @Operation(summary = "Insert a list of composite network modifications passed in body at the end of a group")
     @ApiResponse(responseCode = "200", description = "The composite modification list has been added to the group.")
     public CompletableFuture<ResponseEntity<NetworkModificationsResult>> insertCompositeModifications(
-            @Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
-            @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") CompositeModificationAction action,
+            @Parameter(description = "updated group UUID, where modifications are inserted") @PathVariable("groupUuid") UUID targetGroupUuid,
+            @Parameter(description = "Insertion method", required = true) @RequestParam(value = "action") CompositeModificationAction action,
             @RequestBody Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
-        List<UUID> modificationsUuids = modificationContextInfos.getFirst().stream().map(Pair::getFirst).toList();
         return switch (action) {
             case SPLIT ->
-                    networkModificationService.splitCompositeModifications(targetGroupUuid, modificationsUuids, modificationContextInfos.getSecond())
+                    networkModificationService.splitCompositeModifications(targetGroupUuid, modificationContextInfos)
                             .thenApply(ResponseEntity.ok()::body);
             case INSERT ->
                     networkModificationService.insertCompositeModificationsIntoGroup(
                             targetGroupUuid,
-                            modificationContextInfos.getFirst(),
-                            modificationContextInfos.getSecond()
+                            modificationContextInfos
                     ).thenApply(ResponseEntity.ok()::body);
         };
     }
