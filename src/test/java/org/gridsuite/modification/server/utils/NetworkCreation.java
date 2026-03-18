@@ -117,9 +117,9 @@ public final class NetworkCreation {
         createSwitch(v2, "v2bshunt", "v2bshunt", SwitchKind.BREAKER, true, false, false, 8, 9);
         createSwitch(v2, "v2dshunt", "v2dshunt", SwitchKind.DISCONNECTOR, true, false, false, 9, 0);
 
-        createDanglingLine(v2, "v2Dangling", "v2Dangling", 10, 1, 2, 3, 4, 50, 30, "xnode1");
-        createSwitch(v2, "v2bdangling", "v2bdangling", SwitchKind.BREAKER, true, false, false, 10, 11);
-        createSwitch(v2, "v2ddangling", "v2ddangling", SwitchKind.DISCONNECTOR, true, false, false, 11, 1);
+        createBoundaryLine(v2, "v2Boundary", "v2Boundary", 10, 1, 2, 3, 4, 50, 30, "xnode1");
+        createSwitch(v2, "v2bboundary", "v2bboundary", SwitchKind.BREAKER, true, false, false, 10, 11);
+        createSwitch(v2, "v2dboundary", "v2dboundary", SwitchKind.DISCONNECTOR, true, false, false, 11, 1);
 
         createVscConverterStation(v2, "v2vsc", "v2vsc", 12, 1, 40, true, 150);
         createSwitch(v2, "v2bvsc", "v2bdvsc", SwitchKind.BREAKER, true, false, false, 12, 13);

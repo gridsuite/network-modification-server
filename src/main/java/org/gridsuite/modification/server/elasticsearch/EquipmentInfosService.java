@@ -50,7 +50,7 @@ public class EquipmentInfosService {
             IdentifiableType.BATTERY,
             IdentifiableType.LOAD,
             IdentifiableType.SHUNT_COMPENSATOR,
-            IdentifiableType.DANGLING_LINE,
+            IdentifiableType.BOUNDARY_LINE,
             IdentifiableType.STATIC_VAR_COMPENSATOR,
             IdentifiableType.HVDC_CONVERTER_STATION);
 

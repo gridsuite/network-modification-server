@@ -352,9 +352,9 @@ public final class NetworkUtil {
             .add();
     }
 
-    public static void createDanglingLine(VoltageLevel vl, String id, String name,
+    public static void createBoundaryLine(VoltageLevel vl, String id, String name,
                                            int node, double r, double x, double b, double g, double p0, double q0, String pairingKey) {
-        vl.newDanglingLine()
+        vl.newBoundaryLine()
             .setId(id)
             .setName(name)
             .setR(r)

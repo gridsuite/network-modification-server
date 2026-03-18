@@ -855,7 +855,7 @@ class ModificationControllerTest {
 
         // same for bus breaker
         generatorCreationInfosBusBreaker.setEquipmentId("idGenerator3");
-        generatorCreationInfosBusBreaker.setPlannedOutageRate(80.);
+        generatorCreationInfosBusBreaker.setPlannedOutageRate(0.5);
         generatorCreationInfosJson = getJsonBody(generatorCreationInfosBusBreaker, TEST_NETWORK_BUS_BREAKER_ID, null);
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
@@ -864,7 +864,7 @@ class ModificationControllerTest {
         assertNotNull(generatorStartup);
         assertEquals(Double.NaN, generatorStartup.getPlannedActivePowerSetpoint(), 0);
         assertEquals(Double.NaN, generatorStartup.getMarginalCost(), 0);
-        assertEquals(80., generatorStartup.getPlannedOutageRate(), 0);
+        assertEquals(0.5, generatorStartup.getPlannedOutageRate(), 0);
         assertEquals(Double.NaN, generatorStartup.getForcedOutageRate(), 0);
     }
 
@@ -1363,13 +1363,13 @@ class ModificationControllerTest {
         testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.BATTERY, "v3Battery", "v3bBattery", "v3dBattery", "s2");
         testNetworkModificationsCount(TEST_GROUP_ID, 9);
 
-        // delete dangling line
-        equipmentDeletionInfos.setEquipmentType(IdentifiableType.DANGLING_LINE);
-        equipmentDeletionInfos.setEquipmentId("v2Dangling");
+        // delete boundary line
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.BOUNDARY_LINE);
+        equipmentDeletionInfos.setEquipmentId("v2Boundary");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
-        testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.DANGLING_LINE, "v2Dangling", "v2bdangling", "v2ddangling", "s1");
+        testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.BOUNDARY_LINE, "v2Boundary", "v2bboundary", "v2dboundary", "s1");
         testNetworkModificationsCount(TEST_GROUP_ID, 10);
 
         // delete hvdc line => also delete converter stations

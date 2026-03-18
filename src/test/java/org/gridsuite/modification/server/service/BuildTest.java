@@ -535,7 +535,7 @@ class BuildTest {
                 .voltageRegulationOn(true).targetV(225.)
                 .plannedActivePowerSetPoint(80.)
                 .marginalCost(82.)
-                .plannedOutageRate(83.).forcedOutageRate(84.)
+                .plannedOutageRate(0.5).forcedOutageRate(0.6)
                 .minQ(20.).maxQ(50.)
                 .participate(true).droop(9F).directTransX(35.)
                 .stepUpTransformerX(25.).regulatingTerminalId("v2load")
@@ -762,8 +762,8 @@ class BuildTest {
         assertEquals(100., network.getGenerator(NEW_GENERATOR_ID).getTargetP(), 0.1);
         assertEquals(80., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getPlannedActivePowerSetpoint(), 0);
         assertEquals(82., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getMarginalCost(), 0);
-        assertEquals(83., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getPlannedOutageRate(), 0);
-        assertEquals(84., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getForcedOutageRate(), 0);
+        assertEquals(0.5, network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getPlannedOutageRate(), 0);
+        assertEquals(0.6, network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getForcedOutageRate(), 0);
         assertTrue(network.getGenerator(NEW_GENERATOR_ID).getExtension(ActivePowerControl.class).isParticipate());
         assertEquals(9F, network.getGenerator(NEW_GENERATOR_ID).getExtension(ActivePowerControl.class).getDroop(), 0);
         assertEquals(35., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorShortCircuit.class).getDirectTransX(), 0);
