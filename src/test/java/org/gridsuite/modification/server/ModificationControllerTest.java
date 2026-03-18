@@ -1822,8 +1822,8 @@ class ModificationControllerTest {
         selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(1, selectedLineType.getLimitsForLineType().size());
         assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
-        assertEquals(11.11, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit(), 0.01);
-        assertEquals(22.22, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue(), 0.01);
+        assertEquals(11.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit(), 0.01);
+        assertEquals(22.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue(), 0.01);
         assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getName());
         assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getAcceptableDuration());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
@@ -2258,5 +2258,41 @@ class ModificationControllerTest {
                 new TypeReference<>() {
                 });
         assertEquals(0, networkModificationsResult.size());
+    }
+
+    @Test
+    void testGetBusBarSectionsForNewCoupler() throws Exception {
+        MvcResult result = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/busbar-sections-for-new-coupler")
+                        .param("voltageLevelId", "VL1")
+                        .param("busBarCount", Integer.toString(2))
+                        .param("sectionCount", Integer.toString(3))
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+        List<String> bbsIds = mapper.readValue(
+                result.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                });
+        assertEquals(6, bbsIds.size());
+        assertEquals("VL1_1_1", bbsIds.getFirst());
+        assertEquals("VL1_2_3", bbsIds.getLast());
+
+        result = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/busbar-sections-for-new-coupler")
+                        .param("voltageLevelId", "VL1")
+                        .param("busBarCount", Integer.toString(2))
+                        .param("sectionCount", Integer.toString(3))
+                        .param("switchKindList", SwitchKind.BREAKER.toString())
+                        .param("switchKindList", SwitchKind.DISCONNECTOR.toString())
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        bbsIds = mapper.readValue(
+                result.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                });
+        assertEquals(6, bbsIds.size());
+        assertEquals("VL1_1_1", bbsIds.getFirst());
+        assertEquals("VL1_2_3", bbsIds.getLast());
     }
 }
