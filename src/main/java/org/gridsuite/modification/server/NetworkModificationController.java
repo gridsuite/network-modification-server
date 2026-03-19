@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server;
 
+import com.powsybl.iidm.network.SwitchKind;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,10 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -308,5 +306,17 @@ public class NetworkModificationController {
             @RequestParam(value = "userInput") String userInput) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(networkModificationService.searchNetworkModifications(networkUuid, userInput));
+    }
+
+    @GetMapping(value = "/network-modifications/busbar-sections-for-new-coupler", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Generate bus bar section suggestions for new coupler")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "List of generated bus bar sections ids")
+    })
+    public ResponseEntity<List<String>> getBusBarSectionsForNewCoupler(
+            @Parameter(description = "Voltage level id") @RequestParam("voltageLevelId") String voltageLevelId,
+            @Parameter(description = "Bus bar count") @RequestParam("busBarCount") Integer busBarCount,
+            @Parameter(description = "Section count") @RequestParam("sectionCount") Integer sectionCount,
+            @Parameter(description = "Switch kinds list") @RequestParam(name = "switchKindList", required = false) Optional<List<SwitchKind>> switchKindList) {
+        return ResponseEntity.ok().body(networkModificationService.getBusBarSectionsForNewCoupler(voltageLevelId, busBarCount, sectionCount, switchKindList.orElse(List.of())));
     }
 }
