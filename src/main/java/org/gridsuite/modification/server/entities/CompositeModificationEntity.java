@@ -13,6 +13,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +27,10 @@ import java.util.List;
 @Entity
 @Table(name = "composite_modification")
 public class CompositeModificationEntity extends ModificationEntity {
+
+    @Column(name = "name")
+    @ColumnDefault("'My Composite'")
+    private String name;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
@@ -44,6 +49,7 @@ public class CompositeModificationEntity extends ModificationEntity {
     public CompositeModificationInfos toModificationInfos() {
         List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).toList();
         return CompositeModificationInfos.builder()
+                .name(getName())
                 .activated(getActivated())
                 .description(getDescription())
                 .date(getDate())
@@ -56,6 +62,7 @@ public class CompositeModificationEntity extends ModificationEntity {
     // when we go back to an empty list, dont use addAll() on the list because JPA could start
     // @OrderColumn to 1 instead of 0
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
+        this.setName(compositeModificationInfos.getName());
         modifications.clear();
         modifications = compositeModificationInfos.getModifications().stream()
                 .map(ModificationEntity::fromDTO)

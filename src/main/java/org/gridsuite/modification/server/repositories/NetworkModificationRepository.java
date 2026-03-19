@@ -139,6 +139,15 @@ public class NetworkModificationRepository {
         return modificationRepository.save(compositeEntity).getId();
     }
 
+    public CompositeModificationInfos cloneCompositeModification(@NonNull ModificationsToCopyInfos compositeModification) {
+        CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
+        List<ModificationInfos> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModification.getUuid())).stream()
+                .toList();
+        newCompositeInfos.setModifications(copiedModifications);
+        newCompositeInfos.setName(compositeModification.getCompositeName());
+        return newCompositeInfos;
+    }
+
     public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
         ModificationEntity modificationEntity = modificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
@@ -427,6 +436,19 @@ public class NetworkModificationRepository {
         return groupUuids.stream().flatMap(this::getModificationEntityStream)
                 .filter(m -> !onlyStashed || m.getStashed() == onlyStashed)
                 .map(this::toModificationsInfosOptimizedForTabular).toList();
+    }
+
+    public List<ModificationInfos> getModificationsInfosToExport(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
+        try {
+            return groupUuids.stream().flatMap(this::getModificationEntityStream)
+                    .filter(modification -> !modification.getStashed())
+                    .map(this::toModificationsInfosOptimizedForTabular).toList();
+        } catch (NetworkModificationException e) {
+            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+                return List.of();
+            }
+            throw e;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -763,6 +785,19 @@ public class NetworkModificationRepository {
         List<ModificationInfos> modificationInfos = getCompositeModificationsInfosNonTransactional(modificationsUuids);
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
         // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
+        return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
+    }
+
+    @Transactional
+    public List<ModificationInfos> insertCompositeModificationsIntoGroup(
+            @NonNull UUID targetGroupUuid,
+            @NonNull List<ModificationsToCopyInfos> compositeModifications) {
+        List<ModificationInfos> newCompositeModifications = new ArrayList<>();
+        for (ModificationsToCopyInfos compositeModification : compositeModifications) {
+            CompositeModificationInfos newCompositeModification = cloneCompositeModification(compositeModification);
+            newCompositeModifications.add(newCompositeModification);
+        }
+        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 }

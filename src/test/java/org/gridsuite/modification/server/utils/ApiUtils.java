@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationsToCopyInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -76,7 +77,10 @@ public final class ApiUtils {
 
     public static NetworkModificationsResult putGroupsWithCopy(MockMvc mockMvc, UUID targetGroupUuid, List<UUID> modificationUuids, UUID networkUuid) throws Exception {
         ModificationApplicationContext applicationContext = new ModificationApplicationContext(networkUuid, UUID.randomUUID().toString(), UUID.randomUUID(), UUID.randomUUID(), Set.of());
-        String body = getObjectMapper().writeValueAsString(org.springframework.data.util.Pair.of(modificationUuids, List.of(applicationContext)));
+
+        List<ModificationsToCopyInfos> modifications = modificationUuids.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        String body = getObjectMapper().writeValueAsString(org.springframework.data.util.Pair.of(modifications, List.of(applicationContext)));
 
         ResultActions mockMvcResultActions = mockMvc.perform(
                 put("/v1/groups/{groupUuid}", targetGroupUuid)

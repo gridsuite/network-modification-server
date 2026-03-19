@@ -24,11 +24,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder;
-import org.gridsuite.modification.server.dto.ModificationMetadata;
-import org.gridsuite.modification.server.dto.ModificationsSearchResult;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.catalog.AerialLineTypeInfos;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
+import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
@@ -196,6 +195,10 @@ class ModificationControllerTest {
         return TestUtils.getJsonBody(modificationInfos, networkUuid, variantId);
     }
 
+    private String getJsonBodyModificationsToCopyInfos(List<ModificationsToCopyInfos> modifs, String variantId) throws JsonProcessingException {
+        return TestUtils.getJsonBodyModificationsToCopyInfos(modifs, TEST_NETWORK_ID, variantId);
+    }
+
     private String getJsonBody(List<UUID> uuids, String variantId) throws JsonProcessingException {
         return TestUtils.getJsonBody(uuids, TEST_NETWORK_ID, variantId);
     }
@@ -233,6 +236,91 @@ class ModificationControllerTest {
         String errorMessage = assertThrows(NetworkModificationException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
         assertEquals(new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("%s", modificationUuid)).getMessage(), errorMessage);
         assertThrows(NullPointerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, null));
+    }
+
+    @Test
+    void testNetworkModificationsToExport() throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
+
+        // Create two equipment modifications (exportable)
+        EquipmentAttributeModificationInfos switchStatusModification = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .build();
+
+        String switchJson = getJsonBody(switchStatusModification, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        //creating modifications associated to default group
+        mvcResult = runRequestAsync(mockMvc,
+                post(NETWORK_MODIFICATION_URI)
+                        .content(switchJson)
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        EquipmentAttributeModificationInfos loadModificationInfos = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.LOAD)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .stashed(true)
+                .equipmentAttributeName("v1load")
+                .equipmentId("v1load")
+                .build();
+        String loadModificationInfosJson = getJsonBody(loadModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        // Create a non-exportable modification
+        ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
+                .formulaInfosList(List.of())
+                .identifiableType(IdentifiableType.VOLTAGE_LEVEL)
+                .build();
+
+        String customJson = getJsonBody(byFormulaModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        runRequestAsync(mockMvc,
+                post(NETWORK_MODIFICATION_URI)
+                        .content(customJson)
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+
+        // check group existance
+        mvcResult = mockMvc.perform(get("/v1/groups"))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<UUID> groupUuids = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
+        assertEquals(groupUuids, List.of(TEST_GROUP_ID));
+
+        // get export modifications Infos group
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications/export", TEST_GROUP_ID))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        NetworkModificationExportInfos exportInfos = mapper.readValue(resultAsString, NetworkModificationExportInfos.class);
+
+        assertEquals(1, exportInfos.exportedModifications().size());
+        assertEquals(1, exportInfos.unexportedModifications().size());
+        assertEquals(exportInfos.unexportedModifications().getFirst().type(), byFormulaModificationInfos.getType());
+
+        // delete group
+        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
+                .andExpect(status().isOk());
+
+        // get Export Modifications Infos after group deletion should fail when errorOnGroupNotFound=true (default)
+        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications/export", TEST_GROUP_ID))
+                .andExpect(status().isNotFound());
+
+        // Export after deletion with errorOnGroupNotFound=false should return empty lists
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications/export?errorOnGroupNotFound=false", TEST_GROUP_ID))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        exportInfos = mapper.readValue(resultAsString, NetworkModificationExportInfos.class);
+        assertEquals(exportInfos.exportedModifications(), List.of());
+        assertEquals(exportInfos.unexportedModifications(), List.of());
     }
 
     @Test
@@ -554,7 +642,11 @@ class ModificationControllerTest {
         List<UUID> duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
         List<UUID> badModificationUuidList = List.of(UUID.randomUUID(), UUID.randomUUID());
         duplicateModificationUuidList.addAll(badModificationUuidList);
-        String bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
+
+        List<ModificationsToCopyInfos> duplicateModificationList = duplicateModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        String bodyJson = getJsonBodyModificationsToCopyInfos(duplicateModificationList, NetworkCreation.VARIANT_ID);
+
         MvcResult mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
 
@@ -583,7 +675,9 @@ class ModificationControllerTest {
 
         // Duplicate the same modifications, and append them at the end of this new group modification list.
         duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
-        bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
+        duplicateModificationList = duplicateModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        bodyJson = getJsonBodyModificationsToCopyInfos(duplicateModificationList, NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + otherGroupId + "?action=COPY").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
 
@@ -612,7 +706,9 @@ class ModificationControllerTest {
         }
 
         // Duplicate modifications from a group and from a list : illegal operation
-        bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
+        duplicateModificationList = duplicateModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        bodyJson = getJsonBodyModificationsToCopyInfos(duplicateModificationList, NetworkCreation.VARIANT_ID);
         mvcResult = mockMvc.perform(
                 put("/v1/groups/" + otherGroupId + "?action=COPY" + "&originGroupUuid=" + TEST_GROUP_ID)
                     .content(bodyJson)
@@ -635,7 +731,9 @@ class ModificationControllerTest {
         List<UUID> duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
         List<UUID> badModificationUuidList = List.of(UUID.randomUUID(), UUID.randomUUID());
         duplicateModificationUuidList.addAll(badModificationUuidList);
-        String bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
+        List<ModificationsToCopyInfos> duplicateModificationList = duplicateModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        String bodyJson = getJsonBodyModificationsToCopyInfos(duplicateModificationList, NetworkCreation.VARIANT_ID);
         String url = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
         MvcResult mvcResult = runRequestAsync(mockMvc, put(url).content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
@@ -667,7 +765,10 @@ class ModificationControllerTest {
         // Duplicate the same modifications, and append them at the end of this new group modification list.
         duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
         String copyUrl = "/v1/groups/" + otherGroupId + "?action=COPY";
-        bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
+        duplicateModificationList = duplicateModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        bodyJson = getJsonBodyModificationsToCopyInfos(duplicateModificationList, NetworkCreation.VARIANT_ID);
+
         mvcResult = runRequestAsync(mockMvc, put(copyUrl).content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
 
@@ -704,7 +805,9 @@ class ModificationControllerTest {
 
         // Try to copy an unexisting Modification
         List<UUID> duplicateModificationUuidList = List.of(UUID.randomUUID());
-        String bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
+        List<ModificationsToCopyInfos> duplicateModificationList = duplicateModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        String bodyJson = getJsonBodyModificationsToCopyInfos(duplicateModificationList, NetworkCreation.VARIANT_ID);
         String url = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY" + "&before=" + modificationUuidList.get(0);
         mockMvc.perform(put(url).content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -773,7 +876,9 @@ class ModificationControllerTest {
 
         // swap modifications: move [1] before [0]
         List<UUID> movingModificationUuidList = List.of(modificationUuidList.get(1));
-        String bodyJson = getJsonBody(movingModificationUuidList, NetworkCreation.VARIANT_ID);
+        List<ModificationsToCopyInfos> movingModificationList = movingModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        String bodyJson = getJsonBodyModificationsToCopyInfos(movingModificationList, NetworkCreation.VARIANT_ID);
         String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&before=" + modificationUuidList.get(0);
         mockMvc.perform(put(url).content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -845,14 +950,13 @@ class ModificationControllerTest {
         mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}&onlyMetadata=false", compositeModificationUuid))
             .andExpect(status().isOk()).andReturn();
         compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals("open", ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeName());
-        assertEquals(Boolean.TRUE, ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeValue());
-        assertEquals(IdentifiableType.SWITCH, ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentType());
-        assertEquals("v1b1", ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentId());
+        checkCompositeModificationContent(compositeModificationContent);
 
         // Insert the composite modification in the group
-        String bodyJson = getJsonBody(List.of(compositeModificationUuid), NetworkCreation.VARIANT_ID);
-        mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + TEST_GROUP_ID + "?action=INSERT").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        final String bodyJson = getJsonBodyModificationsToCopyInfos(
+                List.of(ModificationsToCopyInfos.builder().uuid(compositeModificationUuid).compositeName("random name").build()),
+                NetworkCreation.VARIANT_ID);
+        mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + TEST_GROUP_ID + "?action=SPLIT_COMPOSITE").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
         assertApplicationStatusOK(mvcResult);
 
@@ -861,6 +965,27 @@ class ModificationControllerTest {
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).toList();
         assertEquals(modificationUuids.get(0), newModificationUuidList.get(0));
         assertThat(modificationList.get(0)).recursivelyEquals(newModificationList.get(modificationsNumber));
+
+        // insert the same composite modification inside the same group but this time as a complete composite, not split into regular network modifications
+        mvcResult = runRequestAsync(
+                mockMvc,
+                put("/v1/groups/" + TEST_GROUP_ID + "?action=INSERT_COMPOSITE")
+                        .content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk()
+        );
+        assertApplicationStatusOK(mvcResult);
+        newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(modificationsNumber * 2 + 1, newModificationList.size());
+        CompositeModificationInfos insertedComposite = (CompositeModificationInfos) newModificationList.stream().filter(modificationInfos ->
+                modificationInfos.getType().equals(COMPOSITE_MODIFICATION)).findFirst().orElseThrow();
+        assertNotNull(insertedComposite);
+        checkCompositeModificationContent(insertedComposite.getModifications());
+    }
+
+    private static void checkCompositeModificationContent(List<ModificationInfos> compositeModificationContent) {
+        assertEquals("open", ((EquipmentAttributeModificationInfos) compositeModificationContent.getFirst()).getEquipmentAttributeName());
+        assertEquals(Boolean.TRUE, ((EquipmentAttributeModificationInfos) compositeModificationContent.getFirst()).getEquipmentAttributeValue());
+        assertEquals(IdentifiableType.SWITCH, ((EquipmentAttributeModificationInfos) compositeModificationContent.getFirst()).getEquipmentType());
+        assertEquals("v1b1", ((EquipmentAttributeModificationInfos) compositeModificationContent.getFirst()).getEquipmentId());
     }
 
     /**
@@ -903,13 +1028,12 @@ class ModificationControllerTest {
         mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}&onlyMetadata=false", compositeModificationUuid))
             .andExpect(status().isOk()).andReturn();
         compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals("open", ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeName());
-        assertEquals(Boolean.TRUE, ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeValue());
-        assertEquals(IdentifiableType.SWITCH, ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentType());
-        assertEquals("v1b1", ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentId());
-        String bodyJson = getJsonBody(List.of(compositeModificationUuid), NetworkCreation.VARIANT_ID);
+        checkCompositeModificationContent(compositeModificationContent);
+        final String bodyJson = getJsonBodyModificationsToCopyInfos(
+                List.of(ModificationsToCopyInfos.builder().uuid(compositeModificationUuid).build()),
+                NetworkCreation.VARIANT_ID);
         // Insert the composite modification in the group
-        mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + TEST_GROUP_ID + "?action=INSERT").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + TEST_GROUP_ID + "?action=SPLIT_COMPOSITE").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
         assertApplicationStatusOK(mvcResult);
 
@@ -937,7 +1061,9 @@ class ModificationControllerTest {
 
         // cut origin[0] and append to destination
         List<UUID> movingModificationUuidList = List.of(originSingleModification);
-        String bodyJson = getJsonBody(movingModificationUuidList, NetworkCreation.VARIANT_ID);
+        List<ModificationsToCopyInfos> movingModificationList = movingModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        String bodyJson = getJsonBodyModificationsToCopyInfos(movingModificationList, NetworkCreation.VARIANT_ID);
         String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&originGroupUuid=" + TEST_GROUP2_ID + "&build=true";
         MvcResult mvcResult = runRequestAsync(mockMvc, put(url).content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
@@ -975,8 +1101,8 @@ class ModificationControllerTest {
                 stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
 
         // try to move an unexisting modification before [0]: no error, no change
-        List<UUID> movingModificationUuidList = List.of(UUID.randomUUID());
-        String bodyJson = getJsonBody(movingModificationUuidList, NetworkCreation.VARIANT_ID);
+        List<ModificationsToCopyInfos> movingModificationList = List.of(ModificationsToCopyInfos.builder().uuid(UUID.randomUUID()).build());
+        String bodyJson = getJsonBodyModificationsToCopyInfos(movingModificationList, NetworkCreation.VARIANT_ID);
         String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&originGroupUuid=" + TEST_GROUP_ID + "&before=" + modificationUuidList.get(0);
 
         mockMvc.perform(put(url).content(bodyJson)
@@ -1502,6 +1628,10 @@ class ModificationControllerTest {
         List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(10, lineTypes.size());
 
+        // need to delete before adding the new catalog
+        mockMvc.perform(delete(URI_LINE_CATALOG))
+                .andExpect(status().isOk());
+
         // Check if catalog is completely updated
         mockMvc.perform(multipart(URI_LINE_CATALOG)
                 .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_2)))
@@ -1530,7 +1660,7 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testGetLineTypeWithLimitsCatalog() throws Exception {
+    void testGetLineTypeWithoutLimitsCatalog() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
 
@@ -1558,6 +1688,8 @@ class ModificationControllerTest {
         // getting the whole catalog does not load the limits
         assertNull(lineTypes.get(0).getLimitsForLineType());
         assertNull(lineTypes.get(1).getLimitsForLineType());
+
+        // get one line of the catalog does not load limits too
         mvcResult = mockMvc
             .perform(get(URI_LINE_CATALOG + "/" + lineTypes.get(0).getId()).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -1565,13 +1697,67 @@ class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         LineTypeInfos selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(2, selectedLineType.getLimitsForLineType().size());
+        assertNull(selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
+        assertNull(selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
+        assertNull(selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits());
+        assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
+        assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
+        mockMvc.perform(delete(URI_LINE_CATALOG))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testGetLineTypeWithLimitsCatalog() throws Exception {
+        // Create the catalog with some line types
+        mockMvc.perform(multipart(URI_LINE_CATALOG)
+                        .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_3)))
+                .andExpect(status().isOk());
+
+        MvcResult mvcResult = mockMvc
+                .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        String resultAsString = mvcResult.getResponse().getContentAsString();
+        List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(2, lineTypes.size());
+        UUID aerialLineId = lineTypes.get(0) instanceof AerialLineTypeInfos ? lineTypes.get(0).getId() : lineTypes.get(1).getId();
+        UUID underGroundLineId = lineTypes.get(0) instanceof UndergroundLineTypeInfos ? lineTypes.get(0).getId() : lineTypes.get(1).getId();
+
+        // get one aerial line with limits
+        mvcResult = mockMvc
+                .perform(get(URI_LINE_CATALOG + "/" + aerialLineId + "/with-limits?area=1&temperature=37").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        LineTypeInfos selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
+
+        assertEquals(1, selectedLineType.getLimitsForLineType().size());
         assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
         assertEquals(10.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
-        assertEquals(20.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitValue());
-        assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitName());
-        assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitAcceptableDuration());
+        assertEquals(20.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue());
+        assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getName());
+        assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getAcceptableDuration());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
         assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
+
+        // get one underground line with limits
+        mvcResult = mockMvc
+                .perform(get(URI_LINE_CATALOG + "/" + underGroundLineId + "/with-limits?area=1&shapeFactor=0.9").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(1, selectedLineType.getLimitsForLineType().size());
+        assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
+        assertEquals(11.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit(), 0.01);
+        assertEquals(22.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue(), 0.01);
+        assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getName());
+        assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getAcceptableDuration());
+        assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
+        assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
+
+        mockMvc.perform(delete(URI_LINE_CATALOG))
+                .andExpect(status().isOk());
     }
 
     private MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
@@ -1999,5 +2185,41 @@ class ModificationControllerTest {
                 new TypeReference<>() {
                 });
         assertEquals(0, networkModificationsResult.size());
+    }
+
+    @Test
+    void testGetBusBarSectionsForNewCoupler() throws Exception {
+        MvcResult result = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/busbar-sections-for-new-coupler")
+                        .param("voltageLevelId", "VL1")
+                        .param("busBarCount", Integer.toString(2))
+                        .param("sectionCount", Integer.toString(3))
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+        List<String> bbsIds = mapper.readValue(
+                result.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                });
+        assertEquals(6, bbsIds.size());
+        assertEquals("VL1_1_1", bbsIds.getFirst());
+        assertEquals("VL1_2_3", bbsIds.getLast());
+
+        result = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/busbar-sections-for-new-coupler")
+                        .param("voltageLevelId", "VL1")
+                        .param("busBarCount", Integer.toString(2))
+                        .param("sectionCount", Integer.toString(3))
+                        .param("switchKindList", SwitchKind.BREAKER.toString())
+                        .param("switchKindList", SwitchKind.DISCONNECTOR.toString())
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        bbsIds = mapper.readValue(
+                result.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                });
+        assertEquals(6, bbsIds.size());
+        assertEquals("VL1_1_1", bbsIds.getFirst());
+        assertEquals("VL1_2_3", bbsIds.getLast());
     }
 }

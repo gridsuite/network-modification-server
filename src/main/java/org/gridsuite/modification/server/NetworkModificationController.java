@@ -6,12 +6,14 @@
  */
 package org.gridsuite.modification.server;
 
+import com.powsybl.iidm.network.SwitchKind;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationsToCopyInfos;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
@@ -22,10 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -37,7 +36,10 @@ import java.util.concurrent.CompletableFuture;
 public class NetworkModificationController {
 
     private enum GroupModificationAction {
-        MOVE, COPY, INSERT
+        MOVE,
+        COPY,
+        SPLIT_COMPOSITE, // the network modifications contained into the composite modifications are extracted and inserted one by one
+        INSERT_COMPOSITE // the composite modifications are fully inserted as composite modifications
     }
 
     private final NetworkModificationService networkModificationService;
@@ -58,6 +60,14 @@ public class NetworkModificationController {
                                                                            @Parameter(description = "Stashed modifications") @RequestParam(name = "onlyStashed", required = false, defaultValue = "false") Boolean onlyStashed,
                                                                            @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
         return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, onlyStashed));
+    }
+
+    @GetMapping(value = "/groups/{groupUuid}/network-modifications/export", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get list modifications to export for a given group")
+    @ApiResponse(responseCode = "200", description = "List of modifications of the group to export")
+    public ResponseEntity<NetworkModificationExportInfos> getNetworkModificationsToExport(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                                                          @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
+        return ResponseEntity.ok().body(networkModificationService.getNetworkModificationsInfosToExport(groupUuid, errorOnGroupNotFound));
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications/verify", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -89,24 +99,32 @@ public class NetworkModificationController {
     @PutMapping(value = "/groups/{groupUuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list, or Insert them (composite) at the end of the list")
     @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated.")
-    public CompletableFuture<ResponseEntity<NetworkModificationsResult>> handleNetworkModifications(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
-                                                                                                @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
-                                                                                                @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
-                                                                                                @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
-                                                                                                @Parameter(description = "modifications can be applied (default is true)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
-                                                                                                @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
+    public CompletableFuture<ResponseEntity<NetworkModificationsResult>> handleNetworkModifications(
+            @Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
+            @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
+            @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
+            @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
+            @Parameter(description = "modifications can be applied (default is true)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
+            @RequestBody Pair<List<ModificationsToCopyInfos>, List<ModificationApplicationContext>> modificationContextInfos) {
+        List<UUID> modificationsUuids = modificationContextInfos.getFirst().stream().map(ModificationsToCopyInfos::getUuid).toList();
         return switch (action) {
             case COPY ->
-                networkModificationService.duplicateModifications(targetGroupUuid, originGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
-            case INSERT ->
-                networkModificationService.insertCompositeModifications(targetGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
+                networkModificationService.duplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids, modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
+            case SPLIT_COMPOSITE ->
+                networkModificationService.splitCompositeModifications(targetGroupUuid, modificationsUuids, modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
+            case INSERT_COMPOSITE ->
+                networkModificationService.insertCompositeModificationsIntoGroup(
+                        targetGroupUuid,
+                        modificationContextInfos.getFirst(),
+                        modificationContextInfos.getSecond()
+                ).thenApply(ResponseEntity.ok()::body);
             case MOVE -> {
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
                 boolean applyModifications = canApply;
                 if (sourceGroupUuid.equals(targetGroupUuid)) {
                     applyModifications = false;
                 }
-                yield networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, beforeModificationUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond(), applyModifications).thenApply(ResponseEntity.ok()::body);
+                yield networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, beforeModificationUuid, modificationsUuids, modificationContextInfos.getSecond(), applyModifications).thenApply(ResponseEntity.ok()::body);
             }
         };
     }
@@ -195,20 +213,31 @@ public class NetworkModificationController {
     }
 
     @GetMapping(value = "/network-modifications/catalog/line_types/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get a line types catalog")
+    @Operation(summary = "Get a line type from the catalog with area and temperature but no limits")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line types catalog is returned")})
-    public ResponseEntity<LineTypeInfos> getOneLineTypeWithLimits(@PathVariable("uuid") UUID uuid) {
-        return ResponseEntity.ok().body(lineTypesCatalogService.getLineTypesWithLimits(uuid));
+    public ResponseEntity<LineTypeInfos> getOneLineTypeWithAreaAndTemperature(@PathVariable("uuid") UUID uuid) {
+        return ResponseEntity.ok().body(lineTypesCatalogService.getLineTypesWithAreaTemperatureShapeFactors(uuid));
+    }
+
+    @GetMapping(value = "/network-modifications/catalog/line_types/{uuid}/with-limits", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get a line type from the catalog with the limits associated with requested area, temperature and shape factor")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line types catalog is returned")})
+    public ResponseEntity<LineTypeInfos> getOneLineTypeWithLimits(@PathVariable UUID uuid, @RequestParam String area,
+                                                                  @RequestParam(required = false) String temperature,
+                                                                  @RequestParam(required = false) String shapeFactor) {
+        LineTypeInfos test = lineTypesCatalogService.getLineTypesWithLimits(uuid, area, temperature, shapeFactor);
+        return ResponseEntity.ok().body(test);
     }
 
     @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Create or reset completely a line types catalog")
-    @ApiResponse(responseCode = "200", description = "The line types catalog is created or reset")
-    public ResponseEntity<Void> resetLineTypes(@RequestParam("file") MultipartFile file) {
-        lineTypesCatalogService.resetLineTypes(file);
+    @Operation(summary = "Create or add a line types catalog")
+    @ApiResponse(responseCode = "200", description = "The line types catalog is created or added")
+    public ResponseEntity<Void> addLineTypes(@RequestParam("file") MultipartFile file) {
+        lineTypesCatalogService.addLineTypes(file);
         return ResponseEntity.ok().build();
     }
 
+    // TODO : delete this endpoint
     @DeleteMapping(value = "/network-modifications/catalog/line_types", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Delete line types catalog")
     @ApiResponse(responseCode = "200", description = "The line types catalog is deleted")
@@ -311,5 +340,17 @@ public class NetworkModificationController {
             @RequestParam(value = "userInput") String userInput) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(networkModificationService.searchNetworkModifications(networkUuid, userInput));
+    }
+
+    @GetMapping(value = "/network-modifications/busbar-sections-for-new-coupler", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Generate bus bar section suggestions for new coupler")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "List of generated bus bar sections ids")
+    })
+    public ResponseEntity<List<String>> getBusBarSectionsForNewCoupler(
+            @Parameter(description = "Voltage level id") @RequestParam("voltageLevelId") String voltageLevelId,
+            @Parameter(description = "Bus bar count") @RequestParam("busBarCount") Integer busBarCount,
+            @Parameter(description = "Section count") @RequestParam("sectionCount") Integer sectionCount,
+            @Parameter(description = "Switch kinds list") @RequestParam(name = "switchKindList", required = false) Optional<List<SwitchKind>> switchKindList) {
+        return ResponseEntity.ok().body(networkModificationService.getBusBarSectionsForNewCoupler(voltageLevelId, busBarCount, sectionCount, switchKindList.orElse(List.of())));
     }
 }
