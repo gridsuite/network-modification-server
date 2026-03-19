@@ -24,10 +24,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder;
-import org.gridsuite.modification.server.dto.ModificationMetadata;
-import org.gridsuite.modification.server.dto.ModificationsSearchResult;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.AerialLineTypeInfos;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
@@ -239,6 +236,91 @@ class ModificationControllerTest {
         String errorMessage = assertThrows(NetworkModificationException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
         assertEquals(new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("%s", modificationUuid)).getMessage(), errorMessage);
         assertThrows(NullPointerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, null));
+    }
+
+    @Test
+    void testNetworkModificationsToExport() throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
+
+        // Create two equipment modifications (exportable)
+        EquipmentAttributeModificationInfos switchStatusModification = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .build();
+
+        String switchJson = getJsonBody(switchStatusModification, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        //creating modifications associated to default group
+        mvcResult = runRequestAsync(mockMvc,
+                post(NETWORK_MODIFICATION_URI)
+                        .content(switchJson)
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        EquipmentAttributeModificationInfos loadModificationInfos = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.LOAD)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .stashed(true)
+                .equipmentAttributeName("v1load")
+                .equipmentId("v1load")
+                .build();
+        String loadModificationInfosJson = getJsonBody(loadModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        // Create a non-exportable modification
+        ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
+                .formulaInfosList(List.of())
+                .identifiableType(IdentifiableType.VOLTAGE_LEVEL)
+                .build();
+
+        String customJson = getJsonBody(byFormulaModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        runRequestAsync(mockMvc,
+                post(NETWORK_MODIFICATION_URI)
+                        .content(customJson)
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+
+        // check group existance
+        mvcResult = mockMvc.perform(get("/v1/groups"))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<UUID> groupUuids = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
+        assertEquals(groupUuids, List.of(TEST_GROUP_ID));
+
+        // get export modifications Infos group
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications/export", TEST_GROUP_ID))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        NetworkModificationExportInfos exportInfos = mapper.readValue(resultAsString, NetworkModificationExportInfos.class);
+
+        assertEquals(1, exportInfos.exportedModifications().size());
+        assertEquals(1, exportInfos.unexportedModifications().size());
+        assertEquals(exportInfos.unexportedModifications().getFirst().type(), byFormulaModificationInfos.getType());
+
+        // delete group
+        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
+                .andExpect(status().isOk());
+
+        // get Export Modifications Infos after group deletion should fail when errorOnGroupNotFound=true (default)
+        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications/export", TEST_GROUP_ID))
+                .andExpect(status().isNotFound());
+
+        // Export after deletion with errorOnGroupNotFound=false should return empty lists
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications/export?errorOnGroupNotFound=false", TEST_GROUP_ID))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        exportInfos = mapper.readValue(resultAsString, NetworkModificationExportInfos.class);
+        assertEquals(exportInfos.exportedModifications(), List.of());
+        assertEquals(exportInfos.unexportedModifications(), List.of());
     }
 
     @Test
@@ -1546,6 +1628,10 @@ class ModificationControllerTest {
         List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(10, lineTypes.size());
 
+        // need to delete before adding the new catalog
+        mockMvc.perform(delete(URI_LINE_CATALOG))
+                .andExpect(status().isOk());
+
         // Check if catalog is completely updated
         mockMvc.perform(multipart(URI_LINE_CATALOG)
                 .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_2)))
@@ -1663,8 +1749,8 @@ class ModificationControllerTest {
         selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(1, selectedLineType.getLimitsForLineType().size());
         assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
-        assertEquals(9.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
-        assertEquals(18.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue());
+        assertEquals(11.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit(), 0.01);
+        assertEquals(22.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue(), 0.01);
         assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getName());
         assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getAcceptableDuration());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
@@ -2099,5 +2185,41 @@ class ModificationControllerTest {
                 new TypeReference<>() {
                 });
         assertEquals(0, networkModificationsResult.size());
+    }
+
+    @Test
+    void testGetBusBarSectionsForNewCoupler() throws Exception {
+        MvcResult result = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/busbar-sections-for-new-coupler")
+                        .param("voltageLevelId", "VL1")
+                        .param("busBarCount", Integer.toString(2))
+                        .param("sectionCount", Integer.toString(3))
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+        List<String> bbsIds = mapper.readValue(
+                result.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                });
+        assertEquals(6, bbsIds.size());
+        assertEquals("VL1_1_1", bbsIds.getFirst());
+        assertEquals("VL1_2_3", bbsIds.getLast());
+
+        result = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/busbar-sections-for-new-coupler")
+                        .param("voltageLevelId", "VL1")
+                        .param("busBarCount", Integer.toString(2))
+                        .param("sectionCount", Integer.toString(3))
+                        .param("switchKindList", SwitchKind.BREAKER.toString())
+                        .param("switchKindList", SwitchKind.DISCONNECTOR.toString())
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        bbsIds = mapper.readValue(
+                result.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                });
+        assertEquals(6, bbsIds.size());
+        assertEquals("VL1_1_1", bbsIds.getFirst());
+        assertEquals("VL1_2_3", bbsIds.getLast());
     }
 }
