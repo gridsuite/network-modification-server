@@ -346,11 +346,10 @@ public class NetworkModificationController {
     @Operation(summary = "Get the list of all the network modifications inside a list of composite modifications with information about missing composite modifications")
     @ApiResponse(responseCode = "200", description = "List of modifications inside the composite modifications and list of missing composite modifications UUIDs")
     public ResponseEntity<NetworkModificationsWithMissingInfo> getNetworkModificationsFromCompositeWithMissingInfo(
-            @Parameter(description = "Composite modifications uuids list") @RequestParam("uuids") List<UUID> compositeModificationUuids,
-            @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false, defaultValue = "true") Boolean onlyMetadata) {
+            @Parameter(description = "Composite modifications uuids list") @RequestParam("uuids") List<UUID> compositeModificationUuids) {
         return ResponseEntity.ok()
             .contentType(MediaType.APPLICATION_JSON)
-            .body(networkModificationService.getNetworkModificationsFromCompositeWithMissingInfo(compositeModificationUuids, onlyMetadata)
+            .body(networkModificationService.getNetworkModificationsFromCompositeWithMissingInfo(compositeModificationUuids)
             );
     }
 

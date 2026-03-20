@@ -581,18 +581,10 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public NetworkModificationsWithMissingInfo getNetworkModificationsFromCompositeWithMissingInfo(List<UUID> compositeModificationUuids, boolean onlyMetadata) {
+    public NetworkModificationsWithMissingInfo getNetworkModificationsFromCompositeWithMissingInfo(List<UUID> compositeModificationUuids) {
         List<UUID> foundUuids = new ArrayList<>();
-        List<ModificationInfos> networkModifications;
-
-        if (onlyMetadata) {
-            networkModifications = networkModificationRepository.getBasicNetworkModificationsFromCompositeWithFoundUuids(compositeModificationUuids, foundUuids);
-        } else {
-            networkModifications = networkModificationRepository.getCompositeModificationsInfosWithFoundUuids(compositeModificationUuids, foundUuids);
-        }
-
-        List<UUID> missingUuids = compositeModificationUuids.stream().filter(uuid -> !foundUuids.contains(uuid)).toList();
-        return new NetworkModificationsWithMissingInfo(networkModifications, missingUuids);
+        List<ModificationInfos> networkModifications = networkModificationRepository.getCompositeModificationsInfosWithFoundUuids(compositeModificationUuids, foundUuids);
+        return new NetworkModificationsWithMissingInfo(networkModifications, compositeModificationUuids.stream().filter(uuid -> !foundUuids.contains(uuid)).toList());
     }
 
     public List<String> getBusBarSectionsForNewCoupler(@NonNull String voltageLevelId, @NonNull Integer busBarCount, @NonNull Integer sectionCount, List<SwitchKind> switchKindList) {
