@@ -79,5 +79,5 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     void deleteAllByIdIn(List<UUID> ids);
 
     @Query(value = "SELECT DISTINCT cast(id AS VARCHAR) FROM composite_modification_sub_modifications WHERE id IN (?1)", nativeQuery = true)
-    List<UUID> findExistingCompositeModificationIds(List<UUID> compositeIds);
+    Set<UUID> findExistingCompositeModificationIds(List<UUID> compositeIds);
 }

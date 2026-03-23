@@ -800,16 +800,4 @@ public class NetworkModificationRepository {
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
-
-    @Transactional(readOnly = true)
-    public List<ModificationInfos> getCompositeModificationsInfosWithFoundUuids(@NonNull List<UUID> uuids, List<UUID> foundUuids) {
-        return getCompositeModificationsInfosNonTransactionalWithFoundUuids(uuids, foundUuids);
-    }
-
-    private List<ModificationInfos> getCompositeModificationsInfosNonTransactionalWithFoundUuids(@NonNull List<UUID> uuids, List<UUID> foundUuids) {
-        List<UUID> foundCompositeModificationIds = modificationRepository.findExistingCompositeModificationIds(uuids);
-        foundUuids.addAll(foundCompositeModificationIds);
-        List<UUID> modificationIds = modificationRepository.findModificationIdsByCompositeModificationIdIn(foundCompositeModificationIds);
-        return modificationIds.stream().map(this::getModificationInfo).toList();
-    }
 }
