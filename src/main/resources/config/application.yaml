@@ -37,7 +37,9 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.cancel
         publishStoppedBuild-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.stopped
-      output-bindings: publishBuild-out-0;publishResultBuild-out-0;publishCancelBuild-out-0;publishStoppedBuild-out-0
+        publishCaseResult-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}modifications.case.result
+      output-bindings: publishBuild-out-0;publishResultBuild-out-0;publishCancelBuild-out-0;publishStoppedBuild-out-0;publishCaseResult-out-0
       rabbit:
         bindings:
           consumeBuild-in-0:
