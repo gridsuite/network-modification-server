@@ -52,7 +52,7 @@
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
         <!-- TODO network-modification.version remove when included in gridsuite-dependencies -->
-        <network-modification.version>0.72.0</network-modification.version>
+        <network-modification.version>0.73.0</network-modification.version>
     </properties>
 
     <build>
