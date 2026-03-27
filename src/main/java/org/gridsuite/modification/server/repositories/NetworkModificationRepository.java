@@ -428,7 +428,23 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public List<ModificationInfos> getActiveModifications(UUID groupUuid, Set<UUID> modificationsToExclude) {
         List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByGroupId(groupUuid, emptyIfNull(modificationsToExclude));
-        return modificationsEntities.stream().map(this::toModificationsInfosOptimizedForTabular).toList();
+        Set<UUID> excluded = emptyIfNull(modificationsToExclude);
+        return modificationsEntities.stream()
+                .map(entity -> toModificationsInfosFilteringExcluded(entity, excluded))
+                .toList();
+    }
+
+    private ModificationInfos toModificationsInfosFilteringExcluded(ModificationEntity entity, Set<UUID> excluded) {
+        if (!(entity instanceof CompositeModificationEntity composite) || excluded.isEmpty()) {
+            return toModificationsInfosOptimizedForTabular(entity);
+        }
+        List<ModificationInfos> filteredSubs = composite.getModifications().stream()
+                .filter(sub -> !excluded.contains(sub.getId()))
+                .map(sub -> toModificationsInfosFilteringExcluded(sub, excluded))
+                .toList();
+        CompositeModificationInfos infos = (CompositeModificationInfos) toModificationsInfosOptimizedForTabular(composite);
+        infos.setModifications(filteredSubs);
+        return infos;
     }
 
     private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
