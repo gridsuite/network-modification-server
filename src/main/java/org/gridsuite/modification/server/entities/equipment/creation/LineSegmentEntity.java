@@ -45,7 +45,7 @@ public class LineSegmentEntity {
     private String temperature;
 
     @Column(name = "shape_factor")
-    private Integer shapeFactor;
+    private Double shapeFactor;
 
     public static List<LineSegmentEntity> toLineSegmentEntities(List<LineSegmentInfos> lineSegmentInfos) {
         List<LineSegmentEntity> lineSegments = new ArrayList<>();

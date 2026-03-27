@@ -18,7 +18,7 @@
             <column name="area" type="VARCHAR(255)"/>
             <column name="segment_distance_value" type="INT"/>
             <column name="segment_type_id" type="VARCHAR(255)"/>
-            <column name="shape_factor" type="INT"/>
+            <column name="shape_factor" type="FLOAT(53)"/>
             <column name="temperature" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
