@@ -495,10 +495,10 @@ public class NetworkModificationService {
             new NetworkModificationsResult(ids, result));
     }
 
-    public CompletableFuture<NetworkModificationsResult> insertCompositeModificationsIntoGroup(
+    public CompletableFuture<NetworkModificationsResult> insertCompositeModifications(
             @NonNull UUID targetGroupUuid,
             @NonNull Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
-        List<ModificationInfos> modifications = networkModificationRepository.insertCompositeModificationsIntoGroup(
+        List<ModificationInfos> modifications = networkModificationRepository.insertCompositeModifications(
                 targetGroupUuid, modificationContextInfos.getFirst());
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, modifications, modificationContextInfos.getSecond()).thenApply(result ->
@@ -645,6 +645,14 @@ public class NetworkModificationService {
                 .filter(List.of(equipmentImpactedQuery._toQuery(), networkFilter));
 
         return boolQueryBuilder.build();
+    }
+
+    @Transactional(readOnly = true)
+    public NetworkModificationsWithMissingInfo getNetworkModificationsFromCompositeWithMissingInfo(List<UUID> compositeModificationUuids) {
+        Set<UUID> foundUuids = modificationRepository.findExistingCompositeModificationIds(compositeModificationUuids);
+        List<ModificationInfos> networkModifications = networkModificationRepository.getCompositeModificationsInfos(compositeModificationUuids);
+        List<UUID> missingUuids = compositeModificationUuids.stream().filter(uuid -> !foundUuids.contains(uuid)).toList();
+        return new NetworkModificationsWithMissingInfo(networkModifications, missingUuids);
     }
 
     public List<String> getBusBarSectionsForNewCoupler(@NonNull String voltageLevelId, @NonNull Integer busBarCount, @NonNull Integer sectionCount, List<SwitchKind> switchKindList) {

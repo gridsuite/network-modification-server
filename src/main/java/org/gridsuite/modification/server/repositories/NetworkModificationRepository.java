@@ -816,7 +816,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationInfos> insertCompositeModificationsIntoGroup(
+    public List<ModificationInfos> insertCompositeModifications(
             @NonNull UUID targetGroupUuid,
             @NonNull List<Pair<UUID, String>> compositesUuidName) {
         List<UUID> compositeUuids = compositesUuidName.stream().map(Pair::getFirst).toList();

@@ -308,6 +308,17 @@ public class NetworkModificationController {
                 .body(networkModificationService.searchNetworkModifications(networkUuid, userInput));
     }
 
+    @GetMapping(value = "/network-composite-modifications/network-modifications-with-missing-info", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get the list of all the network modifications inside a list of composite modifications with information about missing composite modifications")
+    @ApiResponse(responseCode = "200", description = "List of modifications inside the composite modifications and list of missing composite modifications UUIDs")
+    public ResponseEntity<NetworkModificationsWithMissingInfo> getNetworkModificationsFromCompositeWithMissingInfo(
+            @Parameter(description = "Composite modifications uuids list") @RequestParam("uuids") List<UUID> compositeModificationUuids) {
+        return ResponseEntity.ok()
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(networkModificationService.getNetworkModificationsFromCompositeWithMissingInfo(compositeModificationUuids)
+            );
+    }
+
     @GetMapping(value = "/network-modifications/busbar-sections-for-new-coupler", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Generate bus bar section suggestions for new coupler")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "List of generated bus bar sections ids")
