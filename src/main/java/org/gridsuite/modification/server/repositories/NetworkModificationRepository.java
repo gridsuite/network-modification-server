@@ -853,14 +853,14 @@ public class NetworkModificationRepository {
             CompositeModificationEntity composite = compositeModificationRepository.findById(sourceCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, sourceCompositeUuid)));
-            List<ModificationEntity> subMods = composite.getModifications();
+            List<ModificationEntity> subMods = new ArrayList<>(composite.getModifications());
             List<ModificationEntity> removed = removeModifications(subMods, List.of(modificationUuid));
             if (removed.isEmpty()) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
                         String.format("Sub-modification (%s) not found in composite (%s)", modificationUuid, sourceCompositeUuid));
             }
             insertModifications(subMods, removed, beforeUuid);
-            composite.setModifications(subMods);
+            rewriteCompositeSubModifications(sourceCompositeUuid, subMods);
             return;
         }
 
@@ -869,13 +869,13 @@ public class NetworkModificationRepository {
             CompositeModificationEntity sourceComposite = compositeModificationRepository.findById(sourceCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, sourceCompositeUuid)));
-            List<ModificationEntity> sourceSubMods = sourceComposite.getModifications();
+            List<ModificationEntity> sourceSubMods = new ArrayList<>(sourceComposite.getModifications());
             movedEntities = removeModifications(sourceSubMods, List.of(modificationUuid));
             if (movedEntities.isEmpty()) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
                         String.format("Sub-modification (%s) not found in composite (%s)", modificationUuid, sourceCompositeUuid));
             }
-            sourceComposite.setModifications(sourceSubMods);
+            rewriteCompositeSubModifications(sourceCompositeUuid, sourceSubMods);
         } else {
             ModificationGroupEntity group = getModificationGroup(groupUuid);
             List<ModificationEntity> rootMods = group.getModifications()
@@ -899,9 +899,9 @@ public class NetworkModificationRepository {
             CompositeModificationEntity targetComposite = compositeModificationRepository.findById(targetCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, targetCompositeUuid)));
-            List<ModificationEntity> targetSubMods = targetComposite.getModifications();
+            List<ModificationEntity> targetSubMods = new ArrayList<>(targetComposite.getModifications());
             insertModifications(targetSubMods, movedEntities, beforeUuid);
-            targetComposite.setModifications(targetSubMods);
+            rewriteCompositeSubModifications(targetCompositeUuid, targetSubMods);
         } else {
             ModificationGroupEntity group = getOrCreateModificationGroup(groupUuid);
             List<ModificationEntity> rootMods = group.getModifications().stream()
@@ -911,6 +911,13 @@ public class NetworkModificationRepository {
             movedEntities.forEach(movedEntity -> movedEntity.setGroup(group));
             insertModifications(rootMods, movedEntities, beforeUuid);
             group.setModifications(rootMods);
+        }
+    }
+
+    private void rewriteCompositeSubModifications(UUID compositeId, List<ModificationEntity> orderedSubMods) {
+        compositeModificationRepository.deleteCompositeSubModifications(compositeId);
+        for (int i = 0; i < orderedSubMods.size(); i++) {
+            compositeModificationRepository.insertCompositeSubModification(compositeId, orderedSubMods.get(i).getId(), i);
         }
     }
 }
