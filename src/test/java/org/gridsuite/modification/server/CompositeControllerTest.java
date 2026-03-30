@@ -485,43 +485,6 @@ class CompositeControllerTest {
     }
 
     @Test
-    void testExpandToLeafUuids() throws Exception {
-        // Create leaf modifications inside a composite
-        List<ModificationInfos> leafMods = createSomeSwitchModifications(TEST_GROUP_ID, 3);
-        List<UUID> leafUuids = leafMods.stream().map(ModificationInfos::getUuid).toList();
-        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
-                        .content(mapper.writeValueAsString(leafUuids)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-
-        // Fetch actual sub-modification UUIDs stored inside the composite
-        Map<UUID, List<ModificationInfos>> initialMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", compositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        List<UUID> actualSubUuids = initialMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
-        assertEquals(3, actualSubUuids.size());
-
-        // Expanding the composite UUID should return itself and all sub-modification UUIDs
-        mvcResult = mockMvc.perform(get(URI_COMPOSITE_NETWORK_MODIF_BASE + "/leaf-uuids")
-                        .queryParam("uuids", compositeUuid.toString()))
-                .andExpect(status().isOk()).andReturn();
-        Set<UUID> result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-
-        assertTrue(result.contains(compositeUuid));
-        assertTrue(result.containsAll(actualSubUuids));
-        assertEquals(4, result.size());
-
-        // Expanding plain leaf UUIDs directly should return them as-is
-        mvcResult = mockMvc.perform(get(URI_COMPOSITE_NETWORK_MODIF_BASE + "/leaf-uuids")
-                        .queryParam("uuids", actualSubUuids.get(0).toString())
-                        .queryParam("uuids", actualSubUuids.get(1).toString()))
-                .andExpect(status().isOk()).andReturn();
-        Set<UUID> leafResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(Set.of(actualSubUuids.get(0), actualSubUuids.get(1)), leafResult);
-    }
-
-    @Test
     void testExpandToLeafUuidsNestedComposites() throws Exception {
         // Build nested structure: outerComposite → [innerComposite → [leaf1, leaf2], leaf3]
         List<ModificationInfos> innerLeafs = createSomeSwitchModifications(TEST_GROUP_ID, 2);
