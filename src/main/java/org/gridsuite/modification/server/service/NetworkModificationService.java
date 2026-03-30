@@ -200,12 +200,16 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getNetworkModificationsFromComposite(List<UUID> compositeModificationUuids, boolean onlyMetadata) {
-        if (onlyMetadata) {
-            return networkModificationRepository.getBasicNetworkModificationsFromComposite(compositeModificationUuids);
-        } else {
-            return networkModificationRepository.getCompositeModificationsInfos(compositeModificationUuids);
-        }
+    public Map<UUID, List<ModificationInfos>> getNetworkModificationsFromComposite(List<UUID> compositeModificationUuids, boolean onlyMetadata) {
+        Map<UUID, List<ModificationInfos>> compositeModifications = new HashMap<>();
+        compositeModificationUuids.forEach(compositeModificationUuid -> {
+            if (onlyMetadata) {
+                compositeModifications.put(compositeModificationUuid, networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeModificationUuid)));
+            } else {
+                compositeModifications.put(compositeModificationUuid, networkModificationRepository.getCompositeModificationsInfos(List.of(compositeModificationUuid)));
+            }
+        });
+        return compositeModifications;
     }
 
     private void checkGenerationDispatchFilters(GenerationDispatchInfos generationDispatchInfos) {
