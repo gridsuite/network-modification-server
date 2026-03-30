@@ -20,6 +20,7 @@ import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -392,63 +393,41 @@ class CompositeControllerTest {
         assertEquals(3, subUuids.size());
 
         // Move the first sub-modification to the end (no beforeUuid = append)
-        UUID movingUuid = subUuids.getFirst();
+        // was [0,1,2] → [1,2,0]
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
-                        TEST_GROUP_ID, movingUuid)
+                        TEST_GROUP_ID, subUuids.get(0))
                         .queryParam("sourceCompositeUuid", compositeUuid.toString())
                         .queryParam("targetCompositeUuid", compositeUuid.toString()))
                 .andExpect(status().isOk());
 
-        // Verify order: was [0,1,2], moved 0 to end → [1,2,0]
-        Map<UUID, List<ModificationInfos>> resultMap = mapper.readValue(
+        Map<UUID, List<ModificationInfos>> afterFirstMove = mapper.readValue(
                 mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", compositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
-        List<UUID> newOrder = resultMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
-        assertEquals(3, newOrder.size());
-        assertEquals(subUuids.get(1), newOrder.get(0));
-        assertEquals(subUuids.get(2), newOrder.get(1));
-        assertEquals(subUuids.get(0), newOrder.get(2));
-    }
+        List<UUID> orderAfterFirst = afterFirstMove.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
+        assertEquals(3, orderAfterFirst.size());
+        assertEquals(subUuids.get(1), orderAfterFirst.get(0));
+        assertEquals(subUuids.get(2), orderAfterFirst.get(1));
+        assertEquals(subUuids.get(0), orderAfterFirst.get(2));
 
-    @Test
-    void testMoveSubModificationBeforeTarget() throws Exception {
-        // Create 3 switch modifications inside a composite
-        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
-        List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
-        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
-                        .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-
-        // Fetch the actual sub-modification UUIDs as stored inside the composite
-        Map<UUID, List<ModificationInfos>> initialMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", compositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        List<UUID> subUuids = initialMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
-        assertEquals(3, subUuids.size());
-
-        // Move the last sub-modification before the first (beforeUuid = subUuids[0])
-        UUID movingUuid = subUuids.get(2);
-        UUID beforeUuid = subUuids.get(0);
+        // Move the last sub-modification before the first using beforeUuid
+        // current [1,2,0] → move 0 before 1 → [0,1,2]
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
-                        TEST_GROUP_ID, movingUuid)
+                        TEST_GROUP_ID, orderAfterFirst.get(2))
                         .queryParam("sourceCompositeUuid", compositeUuid.toString())
                         .queryParam("targetCompositeUuid", compositeUuid.toString())
-                        .queryParam("beforeUuid", beforeUuid.toString()))
+                        .queryParam("beforeUuid", orderAfterFirst.get(0).toString()))
                 .andExpect(status().isOk());
 
-        // Verify order: was [0,1,2], moved 2 before 0 → [2,0,1]
-        Map<UUID, List<ModificationInfos>> resultMap = mapper.readValue(
+        Map<UUID, List<ModificationInfos>> afterSecondMove = mapper.readValue(
                 mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", compositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
-        List<UUID> newOrder = resultMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
-        assertEquals(3, newOrder.size());
-        assertEquals(subUuids.get(2), newOrder.get(0));
-        assertEquals(subUuids.get(0), newOrder.get(1));
-        assertEquals(subUuids.get(1), newOrder.get(2));
+        List<UUID> orderAfterSecond = afterSecondMove.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
+        assertEquals(3, orderAfterSecond.size());
+        assertEquals(subUuids.get(0), orderAfterSecond.get(0));
+        assertEquals(subUuids.get(1), orderAfterSecond.get(1));
+        assertEquals(subUuids.get(2), orderAfterSecond.get(2));
     }
 
     @Test
@@ -494,6 +473,15 @@ class CompositeControllerTest {
 
         // Root group should have one more modification
         assertEquals(rootSizeBefore + 1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+
+        // The moved modification must now belong to TEST_GROUP_ID (has a group at root level)
+        ModificationEntity movedEntity = modificationRepository.getModificationEntity(movingUuid);
+        assertNotNull(movedEntity.getGroup());
+        assertEquals(TEST_GROUP_ID, movedEntity.getGroup().getId());
+
+        // The remaining sub-modification must still have no group (still owned by the composite)
+        ModificationEntity remainingEntity = modificationRepository.getModificationEntity(actualSubUuids.get(1));
+        assertNull(remainingEntity.getGroup());
     }
 
     @Test
