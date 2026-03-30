@@ -56,7 +56,7 @@ public class CompositeController {
                     networkModificationService.splitCompositeModifications(targetGroupUuid, modificationContextInfos)
                             .thenApply(ResponseEntity.ok()::body);
             case INSERT ->
-                    networkModificationService.insertCompositeModificationsIntoGroup(
+                    networkModificationService.insertCompositeModifications(
                             targetGroupUuid,
                             modificationContextInfos
                     ).thenApply(ResponseEntity.ok()::body);
