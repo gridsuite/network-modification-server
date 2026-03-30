@@ -582,6 +582,14 @@ public class NetworkModificationService {
         return boolQueryBuilder.build();
     }
 
+    @Transactional(readOnly = true)
+    public NetworkModificationsWithMissingInfo getNetworkModificationsFromCompositeWithMissingInfo(List<UUID> compositeModificationUuids) {
+        Set<UUID> foundUuids = modificationRepository.findExistingCompositeModificationIds(compositeModificationUuids);
+        List<ModificationInfos> networkModifications = networkModificationRepository.getCompositeModificationsInfos(compositeModificationUuids);
+        List<UUID> missingUuids = compositeModificationUuids.stream().filter(uuid -> !foundUuids.contains(uuid)).toList();
+        return new NetworkModificationsWithMissingInfo(networkModifications, missingUuids);
+    }
+
     public List<String> getBusBarSectionsForNewCoupler(@NonNull String voltageLevelId, @NonNull Integer busBarCount, @NonNull Integer sectionCount, List<SwitchKind> switchKindList) {
         List<String> bbsIds = new ArrayList<>();
         for (int i = 1; i < busBarCount + 1; i++) {
