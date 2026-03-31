@@ -32,7 +32,7 @@ public class CompositeModificationEntity extends ModificationEntity {
     @ColumnDefault("'My Composite'")
     private String name;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
             name = "compositeModificationSubModifications",
             joinColumns = @JoinColumn(name = "id"), foreignKey = @ForeignKey(name = "composite_modification_sub_modifications_id_fk"),
