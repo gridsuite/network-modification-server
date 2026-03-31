@@ -548,4 +548,57 @@ class CompositeControllerTest {
         assertTrue(result.contains(actualLeaf3Uuid));
         assertEquals(5, result.size());
     }
+
+    @Test
+    void testMoveSubModificationFromRootToComposite() throws Exception {
+        // Create 1 root-level modification and a composite with 1 sub-modification in the same group
+        List<ModificationInfos> rootMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID rootModUuid = rootMods.getFirst().getUuid();
+
+        List<ModificationInfos> subMods = createSomeSwitchModifications(TEST_GROUP2_ID, 1);
+        List<UUID> subModUuids = subMods.stream().map(ModificationInfos::getUuid).toList();
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(subModUuids)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        runRequestAsync(mockMvc,
+                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}?action=INSERT", TEST_GROUP_ID)
+                        .content(getJsonBodyModificationCompositeInfos(List.of(Pair.of(compositeUuid, "composite"))))
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+
+        // Fetch actual sub-modification UUID inside the composite (copy created by INSERT)
+        Map<UUID, List<ModificationInfos>> initialMap = mapper.readValue(
+                mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", compositeUuid))
+                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
+                new TypeReference<>() { });
+        List<UUID> actualSubUuids = initialMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
+        assertEquals(1, actualSubUuids.size());
+
+        int rootSizeBefore = modificationRepository.getModifications(TEST_GROUP_ID, true, true).size();
+
+        // Move root-level modification into the composite (no sourceCompositeUuid), append at end
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
+                        TEST_GROUP_ID, rootModUuid)
+                        .queryParam("targetCompositeUuid", compositeUuid.toString()))
+                .andExpect(status().isOk());
+
+        // Composite should now contain 2 sub-modifications; moved mod is appended at the end
+        Map<UUID, List<ModificationInfos>> afterMap = mapper.readValue(
+                mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", compositeUuid))
+                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
+                new TypeReference<>() { });
+        List<UUID> newSubUuids = afterMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
+        assertEquals(2, newSubUuids.size());
+        assertEquals(actualSubUuids.getFirst(), newSubUuids.get(0));
+        assertEquals(rootModUuid, newSubUuids.get(1));
+
+        // Root group should have one less modification
+        assertEquals(rootSizeBefore - 1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+
+        // The moved modification must now have no group (owned by the composite, not the group)
+        ModificationEntity movedEntity = modificationRepository.getModificationEntity(rootModUuid);
+        assertNull(movedEntity.getGroup());
+    }
 }
