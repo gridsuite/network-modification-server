@@ -1,0 +1,22 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="elcheikhbas (generated)" id="1774954823029-15">
+        <createTable tableName="line_modification_line_segments">
+            <column name="line_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="line_segments_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1774954823029-16">
+        <addUniqueConstraint columnNames="line_segments_id" constraintName="line_modification_line_segments_uk" tableName="line_modification_line_segments"/>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1774954823029-17">
+        <addForeignKeyConstraint baseColumnNames="line_id" baseTableName="line_modification_line_segments" constraintName="line_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1774954823029-18">
+        <addForeignKeyConstraint baseColumnNames="line_segments_id" baseTableName="line_modification_line_segments" constraintName="line_segments_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="line_segments" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
