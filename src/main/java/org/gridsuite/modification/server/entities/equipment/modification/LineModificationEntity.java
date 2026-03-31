@@ -11,11 +11,16 @@ import lombok.NoArgsConstructor;
 
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.LineModificationInfos;
+import org.gridsuite.modification.dto.LineSegmentInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.entities.equipment.creation.LineSegmentEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 import jakarta.persistence.*;
 import org.springframework.util.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -55,6 +60,13 @@ public class LineModificationEntity extends BranchModificationEntity {
     })
     private DoubleModificationEmbedded b2;
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+        joinColumns = @JoinColumn(name = "line_id"), foreignKey = @ForeignKey(name = "line_modification_id_fk"),
+        inverseJoinColumns = @JoinColumn(name = "line_segments_id"), inverseForeignKey = @ForeignKey(name = "line_segments_id_fk"),
+        uniqueConstraints = @UniqueConstraint(name = "line_modification_line_segments_uk", columnNames = {"line_segments_id"}))
+    private List<LineSegmentEntity> lineSegments;
+
     public LineModificationEntity(LineModificationInfos lineModificationInfos) {
         super(lineModificationInfos);
         assignAttributes(lineModificationInfos);
@@ -72,6 +84,19 @@ public class LineModificationEntity extends BranchModificationEntity {
         b1 = new DoubleModificationEmbedded(lineModificationInfos.getB1());
         g2 = new DoubleModificationEmbedded(lineModificationInfos.getG2());
         b2 = new DoubleModificationEmbedded(lineModificationInfos.getB2());
+        lineSegments = assignLineSegments(lineModificationInfos.getLineSegments());
+    }
+
+    private List<LineSegmentEntity> assignLineSegments(List<LineSegmentInfos> lineSegmentInfos) {
+        List<LineSegmentEntity> updatedLineSegments = lineSegments;
+
+        if (updatedLineSegments == null) {
+            updatedLineSegments = new ArrayList<>();
+        } else {
+            updatedLineSegments.clear();
+        }
+        updatedLineSegments.addAll(LineSegmentEntity.toLineSegmentEntities(lineSegmentInfos));
+        return updatedLineSegments;
     }
 
     @Override
@@ -119,6 +144,7 @@ public class LineModificationEntity extends BranchModificationEntity {
             .p2MeasurementValidity(toAttributeModification(getP2MeasurementValidity()))
             .q2MeasurementValue(toAttributeModification(getQ2MeasurementValue()))
             .q2MeasurementValidity(toAttributeModification(getQ2MeasurementValidity()))
+            .lineSegments(LineSegmentEntity.fromLineSegmentsEntity(getLineSegments()))
              // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
