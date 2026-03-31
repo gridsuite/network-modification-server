@@ -1,0 +1,34 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="elcheikhbas (generated)" id="1774347058503-15">
+        <createTable tableName="line_creation_line_segments">
+            <column name="line_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="line_segments_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1774347058503-16">
+        <createTable tableName="line_segments">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="line_segmentsPK"/>
+            </column>
+            <column name="area" type="VARCHAR(255)"/>
+            <column name="segment_distance_value" type="INT"/>
+            <column name="segment_type_id" type="VARCHAR(255)"/>
+            <column name="shape_factor" type="FLOAT(53)"/>
+            <column name="temperature" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1774347058503-17">
+        <addUniqueConstraint columnNames="line_segments_id" constraintName="line_creation_line_segments_uk" tableName="line_creation_line_segments"/>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1774347058503-18">
+        <addForeignKeyConstraint baseColumnNames="line_id" baseTableName="line_creation_line_segments" constraintName="line_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_creation" validate="true"/>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1774347058503-19">
+        <addForeignKeyConstraint baseColumnNames="line_segments_id" baseTableName="line_creation_line_segments" constraintName="line_segments_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="line_segments" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

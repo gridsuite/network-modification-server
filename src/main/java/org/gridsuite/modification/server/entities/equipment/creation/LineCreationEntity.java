@@ -9,11 +9,15 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.LineCreationInfos;
+import org.gridsuite.modification.dto.LineSegmentInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 
 import jakarta.persistence.*;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -37,6 +41,13 @@ public class LineCreationEntity extends BranchCreationEntity {
     @Column(name = "b2")
     private Double b2;
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+        joinColumns = @JoinColumn(name = "line_id"), foreignKey = @ForeignKey(name = "line_id_fk"),
+        inverseJoinColumns = @JoinColumn(name = "line_segments_id"), inverseForeignKey = @ForeignKey(name = "line_segments_id_fk"),
+        uniqueConstraints = @UniqueConstraint(name = "line_creation_line_segments_uk", columnNames = {"line_segments_id"}))
+    private List<LineSegmentEntity> lineSegments;
+
     public LineCreationEntity(LineCreationInfos lineCreationInfos) {
         super(lineCreationInfos);
         assignAttributes(lineCreationInfos);
@@ -54,6 +65,19 @@ public class LineCreationEntity extends BranchCreationEntity {
         b1 = lineCreationInfos.getB1();
         g2 = lineCreationInfos.getG2();
         b2 = lineCreationInfos.getB2();
+        lineSegments = assignLineSegments(lineCreationInfos.getLineSegments());
+    }
+
+    private List<LineSegmentEntity> assignLineSegments(List<LineSegmentInfos> lineSegmentInfos) {
+        List<LineSegmentEntity> updatedLineSegments = lineSegments;
+
+        if (updatedLineSegments == null) {
+            updatedLineSegments = new ArrayList<>();
+        } else {
+            updatedLineSegments.clear();
+        }
+        updatedLineSegments.addAll(LineSegmentEntity.toLineSegmentEntities(lineSegmentInfos));
+        return updatedLineSegments;
     }
 
     @Override
@@ -62,7 +86,7 @@ public class LineCreationEntity extends BranchCreationEntity {
     }
 
     private LineCreationInfos.LineCreationInfosBuilder<?, ?> toLineCreationInfosBuilder() {
-        LineCreationInfos.LineCreationInfosBuilder<?, ?> builder = LineCreationInfos
+        return LineCreationInfos
             .builder()
             .uuid(getId())
             .date(getDate())
@@ -98,9 +122,8 @@ public class LineCreationEntity extends BranchCreationEntity {
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
                                 .toList())
-            .operationalLimitsGroups(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));
-
-        return builder;
+            .operationalLimitsGroups(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()))
+            .lineSegments(LineSegmentEntity.fromLineSegmentsEntity(getLineSegments()));
     }
 
 }
