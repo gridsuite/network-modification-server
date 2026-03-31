@@ -21,13 +21,13 @@ import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
 import mockwebserver3.MockWebServer;
 import org.apache.commons.text.StringSubstitutor;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ModificationsToCopyInfos;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.service.ReportService;
 import org.junit.platform.commons.util.StringUtils;
 import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
+import org.springframework.data.util.Pair;
 import org.springframework.test.web.servlet.*;
 
 import java.io.IOException;
@@ -227,7 +227,7 @@ public final class TestUtils {
         return createJsonPayload(uuids, networkUuid, variantId);
     }
 
-    public static String getJsonBodyModificationsToCopyInfos(List<ModificationsToCopyInfos> modifs, UUID networkUuid, String variantId) throws JsonProcessingException {
+    public static String getJsonBodyModificationCompositeInfos(List<Pair<UUID, String>> modifs, UUID networkUuid, String variantId) throws JsonProcessingException {
         return createJsonPayload(modifs, networkUuid, variantId);
     }
 

@@ -37,6 +37,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.util.Pair;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.*;
@@ -307,10 +308,13 @@ class ModificationIndexationTest {
         Split this composite and insert the contained modifications to group 2, variant 2
          */
         UUID groupUuid2 = UUID.randomUUID();
+        Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos = Pair.of(
+                List.of(Pair.of(compositeUuid, "")),
+                List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
+        );
         NetworkModificationsResult modificationsResult = networkModificationService.splitCompositeModifications(
             groupUuid2,
-            List.of(compositeUuid),
-            List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
+            modificationContextInfos
         ).join();
 
         /*

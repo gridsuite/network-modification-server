@@ -6,16 +6,17 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.iidm.network.BusbarSection;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.Switch;
-import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import org.gridsuite.modification.dto.CouplingDeviceInfos;
-import org.gridsuite.modification.dto.CreateCouplingDeviceInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
+import com.powsybl.iidm.network.SwitchKind;
+import com.powsybl.iidm.network.VoltageLevel;
+import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.springframework.test.context.TestPropertySource;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -31,51 +32,41 @@ class NamingStrategyTest extends AbstractNetworkModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
-        Network network = NetworkCreation.createSwitchNetwork(networkUuid, new NetworkFactoryImpl());
-        network.getVoltageLevel("vl1")
-                .getNodeBreakerView()
-                .newBusbarSection()
-                .setId("b3")
-                .setName("b3")
-                .setNode(15)
-                .add();
-        network.getVoltageLevel("vl1")
-                .getNodeBreakerView()
-                .newBusbarSection()
-                .setId("b9")
-                .setName("b9")
-                .setNode(20)
-                .add();
-        return network;
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override
     protected ModificationInfos buildModification() {
-        return CreateCouplingDeviceInfos.builder()
-                .couplingDeviceInfos(CouplingDeviceInfos.builder()
-                        .busbarSectionId1("b1")
-                        .busbarSectionId2("b3")
-                        .build())
-                .voltageLevelId("v1")
-                .build();
+        return ModificationCreation.getCreationVoltageLevel("s2", "vl1", "vlName");
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return CreateCouplingDeviceInfos.builder()
-                .couplingDeviceInfos(CouplingDeviceInfos.builder()
-                        .busbarSectionId1("b1")
-                        .busbarSectionId2("b4")
-                        .build())
-                .voltageLevelId("v1")
+        return VoltageLevelCreationInfos.builder()
+                .stashed(false)
+                .equipmentId("VoltageLevelIdEdited")
+                .equipmentName("VoltageLevelEdited")
+                .substationId("s2")
+                .nominalV(385)
+                .lowVoltageLimit(0.0)
+                .highVoltageLimit(10.0)
+                .ipMin(0.0)
+                .ipMax(10.0)
+                .busbarCount(2)
+                .sectionCount(2)
+                .switchKinds(Arrays.asList(SwitchKind.BREAKER))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("1A").busbarSectionId2("1.A").build()))
                 .build();
     }
 
     @Override
     protected void assertAfterNetworkModificationCreation() {
-        assertTrue(getNetwork().getSwitchStream().map(Switch::getId).collect(Collectors.toSet())
-                // verify that the switches names follow the dummy naming strategy
-                .containsAll(Set.of("SWITCH_b1_b3", "DISCONNECTOR_22_15_0", "DISCONNECTOR_21_0_0")));
+        VoltageLevel vl1 = getNetwork().getVoltageLevel("vl1");
+        Set<String> busbarIds = vl1.getNodeBreakerView()
+                .getBusbarSectionStream()
+                .map(BusbarSection::getId)
+                .collect(Collectors.toSet());
+        assertTrue(busbarIds.containsAll(Set.of("BUSBAR_1_1", "BUSBAR_2_1", "BUSBAR_1_2", "BUSBAR_2_2")));
     }
 
     @Override
