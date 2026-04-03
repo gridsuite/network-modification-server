@@ -23,7 +23,6 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ModificationsToCopyInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
@@ -40,6 +39,7 @@ import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -420,21 +420,23 @@ public class NetworkModificationService {
     /**
      * all their network modifications are extracted from the composite modifications and inserted into the group
      */
-    public CompletableFuture<NetworkModificationsResult> splitCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> compositeModificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
-        List<ModificationInfos> modifications = networkModificationRepository.saveCompositeModifications(targetGroupUuid, compositeModificationsUuids);
+    public CompletableFuture<NetworkModificationsResult> splitCompositeModifications(
+            @NonNull UUID targetGroupUuid,
+            @NonNull Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
+        List<UUID> modificationsUuids = modificationContextInfos.getFirst().stream().map(Pair::getFirst).toList();
+        List<ModificationInfos> modifications = networkModificationRepository.saveCompositeModifications(targetGroupUuid, modificationsUuids);
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
-        return applyModifications(targetGroupUuid, modifications, applicationContexts).thenApply(result ->
+        return applyModifications(targetGroupUuid, modifications, modificationContextInfos.getSecond()).thenApply(result ->
             new NetworkModificationsResult(ids, result));
     }
 
-    public CompletableFuture<NetworkModificationsResult> insertCompositeModificationsIntoGroup(
+    public CompletableFuture<NetworkModificationsResult> insertCompositeModifications(
             @NonNull UUID targetGroupUuid,
-            @NonNull List<ModificationsToCopyInfos> compositeModifications,
-            @NonNull List<ModificationApplicationContext> applicationContexts) {
-        List<ModificationInfos> modifications = networkModificationRepository.insertCompositeModificationsIntoGroup(
-                targetGroupUuid, compositeModifications);
+            @NonNull Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
+        List<ModificationInfos> modifications = networkModificationRepository.insertCompositeModifications(
+                targetGroupUuid, modificationContextInfos.getFirst());
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
-        return applyModifications(targetGroupUuid, modifications, applicationContexts).thenApply(result ->
+        return applyModifications(targetGroupUuid, modifications, modificationContextInfos.getSecond()).thenApply(result ->
             new NetworkModificationsResult(ids, result));
     }
 

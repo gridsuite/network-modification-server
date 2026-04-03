@@ -93,14 +93,14 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("AC Line 'idLine4': r is invalid", ERROR_MESSAGE_KEY, reportService);
+        assertLogMessage("AC line 'idLine4': r is invalid", ERROR_MESSAGE_KEY, reportService);
 
         lineCreationInfos.setR(100.0);
         lineCreationInfos.setX(Double.NaN);
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("AC Line 'idLine4': x is invalid", ERROR_MESSAGE_KEY, reportService);
+        assertLogMessage("AC line 'idLine4': x is invalid", ERROR_MESSAGE_KEY, reportService);
 
         // try to create an existing line
         lineCreationInfos.setEquipmentId("line2");

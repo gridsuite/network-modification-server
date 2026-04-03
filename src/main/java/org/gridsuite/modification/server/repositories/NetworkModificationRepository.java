@@ -19,6 +19,9 @@ import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +66,8 @@ public class NetworkModificationRepository {
     private final ModificationApplicationInfosService modificationApplicationInfosService;
 
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationRepository.class);
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
@@ -137,15 +142,6 @@ public class NetworkModificationRepository {
                 .toList();
         compositeEntity.setModifications(copyEntities);
         return modificationRepository.save(compositeEntity).getId();
-    }
-
-    public CompositeModificationInfos cloneCompositeModification(@NonNull ModificationsToCopyInfos compositeModification) {
-        CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
-        List<ModificationInfos> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModification.getUuid())).stream()
-                .toList();
-        newCompositeInfos.setModifications(copiedModifications);
-        newCompositeInfos.setName(compositeModification.getCompositeName());
-        return newCompositeInfos;
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
@@ -810,13 +806,23 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationInfos> insertCompositeModificationsIntoGroup(
+    public List<ModificationInfos> insertCompositeModifications(
             @NonNull UUID targetGroupUuid,
-            @NonNull List<ModificationsToCopyInfos> compositeModifications) {
+            @NonNull List<Pair<UUID, String>> compositesUuidName) {
+        List<UUID> compositeUuids = compositesUuidName.stream().map(Pair::getFirst).toList();
         List<ModificationInfos> newCompositeModifications = new ArrayList<>();
-        for (ModificationsToCopyInfos compositeModification : compositeModifications) {
-            CompositeModificationInfos newCompositeModification = cloneCompositeModification(compositeModification);
-            newCompositeModifications.add(newCompositeModification);
+        List<ModificationInfos> modificationInfos = getModificationsInfosNonTransactional(compositeUuids);
+        // apply the new composite name to the corresponding composite modifications
+        for (Pair<UUID, String> compositeUuidName : compositesUuidName) {
+            CompositeModificationInfos newCompositeModification = (CompositeModificationInfos) modificationInfos.stream()
+                    .filter(modif -> modif.getUuid().equals(compositeUuidName.getFirst()))
+                    .findFirst().orElse(null);
+            if (newCompositeModification != null) {
+                newCompositeModification.setName(compositeUuidName.getSecond());
+                newCompositeModifications.add(newCompositeModification);
+            } else {
+                LOGGER.error("Could not find composite modification with uuid {} to apply its name {}", compositeUuidName.getFirst(), compositeUuidName.getSecond());
+            }
         }
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
