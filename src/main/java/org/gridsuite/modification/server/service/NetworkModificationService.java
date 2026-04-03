@@ -19,6 +19,7 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
@@ -140,21 +141,75 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     public void verifyModifications(UUID groupUuid, Set<UUID> modificationUuids) {
-        if (!networkModificationRepository.getModifications(groupUuid, true, true)
-            .stream().map(ModificationInfos::getUuid)
-            .collect(Collectors.toSet())
-            .containsAll(modificationUuids)) {
+        List<ModificationInfos> rootModifications = networkModificationRepository.getModifications(groupUuid, true, true);
+        Set<UUID> rootUuids = rootModifications.stream()
+                .map(ModificationInfos::getUuid)
+                .collect(Collectors.toSet());
+
+        Set<UUID> missing = modificationUuids.stream()
+                .filter(uuid -> !rootUuids.contains(uuid))
+                .collect(Collectors.toSet());
+
+        if (missing.isEmpty()) {
+            return;
+        }
+
+        // Some UUIDs not at root level: expand all root composites to leaf UUIDs at any depth
+        // and check whether the missing UUIDs appear anywhere in the tree
+        List<UUID> compositeUuidsInGroup = rootModifications.stream()
+                .filter(m -> ModificationType.COMPOSITE_MODIFICATION == m.getType())
+                .map(ModificationInfos::getUuid)
+                .toList();
+        if (!compositeUuidsInGroup.isEmpty()) {
+            Set<UUID> allLeafUuids = new HashSet<>();
+            expandToLeafUuidsRecursive(compositeUuidsInGroup, allLeafUuids);
+            missing.removeIf(allLeafUuids::contains);
+        }
+
+        if (!missing.isEmpty()) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
         }
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getNetworkModificationsFromComposite(List<UUID> compositeModificationUuids, boolean onlyMetadata) {
-        if (onlyMetadata) {
-            return networkModificationRepository.getBasicNetworkModificationsFromComposite(compositeModificationUuids);
-        } else {
-            return networkModificationRepository.getCompositeModificationsInfos(compositeModificationUuids);
+    public Set<UUID> expandToLeafUuids(List<UUID> modificationUuids) {
+        Set<UUID> result = new HashSet<>();
+        expandToLeafUuidsRecursive(modificationUuids, result);
+        return result;
+    }
+
+    private void expandToLeafUuidsRecursive(List<UUID> uuids, Set<UUID> result) {
+        if (uuids.isEmpty()) {
+            return;
         }
+        Map<UUID, ModificationType> typeByUuid = modificationRepository.findBaseDataByIdIn(uuids).stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, e -> ModificationType.valueOf(e.getType())));
+
+        List<UUID> composites = new ArrayList<>();
+        for (UUID uuid : uuids) {
+            result.add(uuid);
+            if (ModificationType.COMPOSITE_MODIFICATION == typeByUuid.get(uuid)) {
+                composites.add(uuid);
+            }
+        }
+
+        if (!composites.isEmpty()) {
+            List<UUID> subUuids = networkModificationRepository.getSubModificationUuidsForComposites(composites);
+            expandToLeafUuidsRecursive(subUuids, result);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, List<ModificationInfos>> getNetworkModificationsFromComposite(List<UUID> compositeModificationUuids, boolean onlyMetadata) {
+        Map<UUID, List<ModificationInfos>> compositeModifications = new HashMap<>();
+        compositeModificationUuids.forEach(compositeModificationUuid -> {
+            if (onlyMetadata) {
+                compositeModifications.put(compositeModificationUuid, networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeModificationUuid)));
+            } else {
+                compositeModifications.put(compositeModificationUuid, networkModificationRepository.getCompositeModificationsInfos(List.of(compositeModificationUuid)));
+            }
+        });
+        return compositeModifications;
     }
 
     private void checkGenerationDispatchFilters(GenerationDispatchInfos generationDispatchInfos) {
@@ -367,6 +422,16 @@ public class NetworkModificationService {
 
         CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = applyModifications && !modifications.isEmpty() ? applyModifications(destinationGroupUuid, modifications, applicationContexts) : CompletableFuture.completedFuture(List.of());
         return futureResult.thenApply(result -> new NetworkModificationsResult(modifications.stream().map(ModificationInfos::getUuid).toList(), result));
+    }
+
+    public void moveSubModification(
+            @NonNull UUID groupUuid,
+            UUID sourceCompositeUuid,
+            UUID targetCompositeUuid,
+            @NonNull UUID modificationUuid,
+            UUID beforeUuid) {
+        networkModificationRepository.moveSubModification(
+                groupUuid, sourceCompositeUuid, targetCompositeUuid, modificationUuid, beforeUuid);
     }
 
     public Map<UUID, UUID> duplicateGroup(UUID sourceGroupUuid, UUID groupUuid) {
