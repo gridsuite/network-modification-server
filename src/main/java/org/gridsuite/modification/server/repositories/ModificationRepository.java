@@ -6,8 +6,11 @@
  */
 package org.gridsuite.modification.server.repositories;
 
+import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -80,4 +83,20 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     @Query(value = "SELECT DISTINCT cast(id AS VARCHAR) FROM composite_modification_sub_modifications WHERE id IN (?1)", nativeQuery = true)
     Set<UUID> findExistingCompositeModificationIds(List<UUID> compositeIds);
+
+    @NativeQuery("WITH RECURSIVE ModificationHierarchy (id) AS ( " +
+        "  SELECT m0.id" +
+        "  FROM composite_modification_sub_modifications m0 " +
+        "  WHERE m0.id = :compositeUuid " +
+        "  UNION ALL " +
+        "  SELECT distinct m.modification_id" +
+        "  FROM composite_modification_sub_modifications m " +
+        "  INNER JOIN ModificationHierarchy mh ON m.id = mh.id " +
+        ") " +
+        "SELECT cast(m.id AS VARCHAR) FROM composite_modification m " +
+        "WHERE m.id IN (SELECT mh.id FROM ModificationHierarchy mh)")
+    List<UUID> findOnlyCompositeChildrenUuids(UUID compositeUuid);
+
+    @EntityGraph(attributePaths = {"modifications"}, type = EntityGraph.EntityGraphType.LOAD)
+    List<CompositeModificationEntity> findAllCompositesWithModificationsByIdIn(List<UUID> compositeUuids);
 }
