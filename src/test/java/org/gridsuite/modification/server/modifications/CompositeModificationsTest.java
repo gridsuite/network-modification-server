@@ -24,8 +24,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.IntStream;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
@@ -103,12 +105,13 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
     void testCheckSqlRequestsCount() throws Exception {
         UUID modificationUuid = saveModification(buildModification());
 
+        SQLStatementCountValidator.reset();
         mockMvc.perform(get("/v1/network-modifications/{uuid}", modificationUuid)).andExpectAll(
                 status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
-        SQLStatementCountValidator.reset();
         assertSelectCount(7);
 
+        SQLStatementCountValidator.reset();
         mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
             .andExpect(status().isOk());
         SQLStatementCountValidator.assertSelectCount(8);
@@ -133,14 +136,11 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
     }
 
     private TabularModificationInfos createTabularModification() {
-
-        List<ModificationInfos> groupModifications = List.of(
-            GeneratorModificationInfos.builder().equipmentId("generator1").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
-            GeneratorModificationInfos.builder().equipmentId("generator2").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
-            GeneratorModificationInfos.builder().equipmentId("generator3").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
-            GeneratorModificationInfos.builder().equipmentId("generator4").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
-            GeneratorModificationInfos.builder().equipmentId("generator5").maxP(new AttributeModification<>(500., OperationType.SET)).build()
-        );
+        // Use a random number of generators to test the optimization (no N+1 select)
+        List<ModificationInfos> groupModifications = IntStream.range(0, new Random().nextInt(10) + 1)
+            .mapToObj(i -> GeneratorModificationInfos.builder().equipmentId("generator" + i).maxP(new AttributeModification<>(500., OperationType.SET)).build())
+            .map(ModificationInfos.class::cast)
+            .toList();
         return
             TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
