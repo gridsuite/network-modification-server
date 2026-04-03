@@ -97,6 +97,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         "WHERE m.id IN (SELECT mh.id FROM ModificationHierarchy mh)")
     List<UUID> findOnlyCompositeChildrenUuids(UUID compositeUuid);
 
+    @Query("SELECT c FROM CompositeModificationEntity c WHERE c.id IN ?1")
     @EntityGraph(attributePaths = {"modifications"}, type = EntityGraph.EntityGraphType.LOAD)
     List<CompositeModificationEntity> findAllCompositesWithModificationsByIdIn(List<UUID> compositeUuids);
 }
