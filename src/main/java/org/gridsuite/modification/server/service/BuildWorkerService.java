@@ -81,6 +81,15 @@ public class BuildWorkerService {
     }
 
     @Bean
+    public Consumer<Message<String>> consumeBuild1() {
+        return consumeBuild();
+    }
+
+    @Bean
+    public Consumer<Message<String>> consumeBuild2() {
+        return consumeBuild();
+    }
+
     public Consumer<Message<String>> consumeBuild() {
         return message -> networkModificationObserver.observeFullBuild(() -> {
             BuildExecContext execContext;
