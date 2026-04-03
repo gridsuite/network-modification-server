@@ -419,8 +419,7 @@ public class NetworkModificationRepository {
         // Load all sub-composites only for root composites (associated with a group) to avoid N+1 select
         if (compositeEntity.getGroup() != null) {
             List<UUID> uuids = modificationRepository.findOnlyCompositeChildrenUuids(compositeEntity.getId());
-            List<CompositeModificationEntity> modificationEntities = modificationRepository.findAllCompositesWithModificationsByIdIn(uuids);
-            modificationEntities.size();
+            modificationRepository.findAllCompositesWithModificationsByIdIn(uuids);
         }
         return CompositeModificationInfos.builder()
             .name(compositeEntity.getName())
