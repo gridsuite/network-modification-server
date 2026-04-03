@@ -12,8 +12,6 @@ import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -21,19 +19,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -44,19 +39,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Tag("IntegrationTest")
 class CompositeModificationsTest extends AbstractNetworkModificationTest {
 
-    @MockitoBean
-    private NetworkModificationApplicator networkModificationApplicator;
-
     @BeforeEach
     void specificSetUp() {
-        // Currently we never apply composite modifications (apply mocked)
-        CompletableFuture<NetworkModificationResult> networkModificationResultMock = CompletableFuture.completedFuture(NetworkModificationResult.builder()
-            .applicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
-            .lastGroupApplicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
-            .networkImpacts(List.of())
-            .build());
-        when(networkModificationApplicator.applyModifications(any(ModificationApplicationGroup.class), any()))
-            .then(invocation -> networkModificationResultMock);
         SQLStatementCountValidator.reset();
     }
 
@@ -68,11 +52,15 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-            ModificationCreation.getCreationGenerator("v1", "idGenerator", "nameGenerator", "1B", "v2load", "LOAD",
+            ModificationCreation.getCreationGenerator("v1", "idGeneratorComposite", "nameGenerator", "1.1", "v2load", "LOAD",
                 "v1"),
-            ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED),
-            ModificationCreation.getCreationBattery("v1", "idBattery", "nameBattry", "1.1"));
+            ModificationCreation.getCreationLoad("v1", "idLoadComposite", "nameLoad", "1.1", LoadType.UNDEFINED),
+            CompositeModificationInfos.builder().name("battery composite")
+                .modifications(List.of(ModificationCreation.getCreationBattery("v1", "idBatteryComposite", "nameBattry", "1.1")))
+                .stashed(false).build()
+        );
         return CompositeModificationInfos.builder()
+            .name("composite")
             .modifications(modifications)
             .stashed(false)
             .build();
@@ -85,10 +73,16 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void assertAfterNetworkModificationCreation() {
+        assertNotNull(getNetwork().getGenerator("idGeneratorComposite"));
+        assertNotNull(getNetwork().getLoad("idLoadComposite"));
+        assertNotNull(getNetwork().getBattery("idBatteryComposite"));
     }
 
     @Override
     protected void assertAfterNetworkModificationDeletion() {
+        assertNull(getNetwork().getGenerator("idGeneratorComposite"));
+        assertNull(getNetwork().getLoad("idLoadComposite"));
+        assertNull(getNetwork().getBattery("idBatteryComposite"));
     }
 
     @Override
@@ -124,7 +118,12 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         CompositeModificationInfos compositeInfo2 = CompositeModificationInfos.builder().name("composite2").modifications(List.of(siteInfo1, compositeInfo1)).build();
         CompositeModificationInfos compositeInfo3 = CompositeModificationInfos.builder().name("composite3").modifications(List.of(createTabularModification(), compositeInfo2)).build();
         CompositeModificationInfos compositeInfo41 = CompositeModificationInfos.builder().name("composite41").modifications(List.of(compositeInfo3)).build();
-        CompositeModificationInfos compositeInfo42 = CompositeModificationInfos.builder().name("composite42").modifications(List.of()).build();
+        // Use a random number of composites to test the optimization (no N+1 select)
+        List<ModificationInfos> compositeInfos = IntStream.range(0, new Random().nextInt(10) + 1)
+            .mapToObj(i -> CompositeModificationInfos.builder().name("composite5" + i).modifications(List.of()).build())
+            .map(ModificationInfos.class::cast)
+            .toList();
+        CompositeModificationInfos compositeInfo42 = CompositeModificationInfos.builder().name("composite42").modifications(compositeInfos).build();
 
         CompositeModificationInfos compositeInfo = CompositeModificationInfos.builder().name("composite").modifications(List.of(compositeInfo41, compositeInfo42)).build();
 
@@ -137,14 +136,14 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
 
     private TabularModificationInfos createTabularModification() {
         // Use a random number of generators to test the optimization (no N+1 select)
-        List<ModificationInfos> groupModifications = IntStream.range(0, new Random().nextInt(10) + 1)
+        List<ModificationInfos> generatorModifications = IntStream.range(0, new Random().nextInt(10) + 1)
             .mapToObj(i -> GeneratorModificationInfos.builder().equipmentId("generator" + i).maxP(new AttributeModification<>(500., OperationType.SET)).build())
             .map(ModificationInfos.class::cast)
             .toList();
         return
             TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
-                .modifications(groupModifications)
+                .modifications(generatorModifications)
                 .stashed(false)
                 .build();
     }
