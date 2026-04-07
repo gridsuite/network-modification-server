@@ -115,7 +115,7 @@ class CompositeControllerTest {
                         .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         ModificationInfos compositeModificationInfos = CompositeModificationInfos.builder()
-                .modifications(modificationList)
+                .modificationsInfos(modificationList)
                 .build();
         UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertThat(modificationRepository.getModificationInfo(compositeModificationUuid)).recursivelyEquals(compositeModificationInfos);
@@ -144,7 +144,7 @@ class CompositeControllerTest {
                         .content(mapper.writeValueAsString(otherModificationUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         ModificationInfos otherCompositeModificationInfos = CompositeModificationInfos.builder()
-                .modifications(otherModificationList)
+                .modificationsInfos(otherModificationList)
                 .build();
         UUID otherCompositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertThat(modificationRepository.getModificationInfo(otherCompositeModificationUuid)).recursivelyEquals(otherCompositeModificationInfos);
@@ -216,7 +216,7 @@ class CompositeControllerTest {
         CompositeModificationInfos insertedComposite = (CompositeModificationInfos) newModificationList.stream().filter(modificationInfos ->
                 modificationInfos.getType().equals(COMPOSITE_MODIFICATION)).findFirst().orElseThrow();
         assertNotNull(insertedComposite);
-        checkCompositeModificationContent(insertedComposite.getModifications());
+        checkCompositeModificationContent(insertedComposite.getModificationsInfos());
     }
 
     private static void checkCompositeModificationContent(List<ModificationInfos> compositeModificationContent) {

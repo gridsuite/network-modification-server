@@ -98,7 +98,7 @@ public class CompositeController {
     }
 
     @GetMapping(value = "/leaf-uuids", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Recursively expand a list of modification UUIDs with composite and their content UUIDs")
+    @Operation(summary = "Recursively expand a list of modification UUIDs with composites and their content UUIDs")
     @ApiResponse(responseCode = "200", description = "The full set of leaf modification UUIDs")
     public ResponseEntity<Set<UUID>> expandToLeafUuids(@Parameter(description = "Modification UUIDs to expand") @RequestParam("uuids") List<UUID> modificationUuids) {
         return ResponseEntity.ok().body(networkModificationService.expandToLeafUuids(modificationUuids));

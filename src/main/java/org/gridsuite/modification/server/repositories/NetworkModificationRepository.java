@@ -931,7 +931,7 @@ public class NetworkModificationRepository {
             List<ModificationEntity> rootMods = group.getModifications().stream()
                     .filter(Objects::nonNull)
                     .filter(m -> !m.getStashed())
-                    .toList();
+                    .collect(Collectors.toList());
             movedEntities.forEach(movedEntity -> movedEntity.setGroup(group));
             insertModifications(rootMods, movedEntities, beforeUuid);
             group.setModifications(rootMods);

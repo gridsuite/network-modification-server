@@ -140,7 +140,7 @@ public class NetworkModificationService {
     }
 
     /**
-     * checks that all the modificationUuids are part of the groupUuid, otherwise throw an error
+     * checks that all the modificationUuids are part of the groupUuid, otherwise throws an error
      */
     @Transactional(readOnly = true)
     public void verifyModifications(UUID groupUuid, Set<UUID> modificationUuids) {
