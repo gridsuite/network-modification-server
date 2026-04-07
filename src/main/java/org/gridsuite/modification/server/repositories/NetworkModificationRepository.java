@@ -137,7 +137,7 @@ public class NetworkModificationRepository {
     }
 
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
-        CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
+        CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
                 .map(this::toModificationsInfosOptimized)
@@ -431,7 +431,7 @@ public class NetworkModificationRepository {
             .date(compositeEntity.getDate())
             .uuid(compositeEntity.getId())
             .stashed(compositeEntity.getStashed())
-            .modifications(compositeEntity.getModifications().stream().map(this::toModificationsInfosOptimized).toList())
+            .modificationsInfos(compositeEntity.getModifications().stream().map(this::toModificationsInfosOptimized).toList())
             .build();
     }
 
@@ -456,14 +456,14 @@ public class NetworkModificationRepository {
 
     private ModificationInfos toModificationsInfosFilteringExcluded(ModificationEntity entity, Set<UUID> excluded) {
         if (!(entity instanceof CompositeModificationEntity composite) || excluded.isEmpty()) {
-            return toModificationsInfosOptimizedForTabular(entity);
+            return toModificationsInfosOptimized(entity);
         }
         List<ModificationInfos> filteredSubs = composite.getModifications().stream()
                 .filter(sub -> !excluded.contains(sub.getId()))
                 .map(sub -> toModificationsInfosFilteringExcluded(sub, excluded))
                 .toList();
         CompositeModificationInfos infos = (CompositeModificationInfos) toModificationsInfosOptimized(composite);
-        infos.setModifications(filteredSubs);
+        infos.setModificationsInfos(filteredSubs);
         return infos;
     }
 

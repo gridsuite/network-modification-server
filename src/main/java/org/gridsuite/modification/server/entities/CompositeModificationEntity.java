@@ -55,7 +55,7 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .date(getDate())
                 .uuid(getId())
                 .stashed(getStashed())
-                .modifications(modificationsInfos)
+                .modificationsInfos(modificationsInfos)
                 .build();
     }
 
@@ -64,7 +64,7 @@ public class CompositeModificationEntity extends ModificationEntity {
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
         this.setName(compositeModificationInfos.getName());
         modifications.clear();
-        modifications = compositeModificationInfos.getModifications().stream()
+        modifications = compositeModificationInfos.getModificationsInfos().stream()
                 .map(ModificationEntity::fromDTO)
                 .toList();
     }

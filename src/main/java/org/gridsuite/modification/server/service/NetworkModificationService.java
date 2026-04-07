@@ -139,6 +139,9 @@ public class NetworkModificationService {
         return modificationRepository.findAllByIdIn(modificationUuids);
     }
 
+    /**
+     * checks that all the modificationUuids are part of the groupUuid, otherwise throw an error
+     */
     @Transactional(readOnly = true)
     public void verifyModifications(UUID groupUuid, Set<UUID> modificationUuids) {
         List<ModificationInfos> rootModifications = networkModificationRepository.getModifications(groupUuid, true, true);

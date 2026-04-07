@@ -68,7 +68,7 @@ public class NetworkModificationController {
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications/verify", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Check modifications list belong to a group")
+    @Operation(summary = "Check if all the modifications from a list belong to a group")
     @ApiResponse(responseCode = "200", description = "List of modifications")
     public ResponseEntity<List<ModificationInfos>> verifyNetworkModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                                               @Parameter(description = "Modifications UUID") @RequestParam(name = "uuids") Set<UUID> modificationUuids) {
