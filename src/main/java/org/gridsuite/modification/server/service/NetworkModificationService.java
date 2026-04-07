@@ -197,7 +197,7 @@ public class NetworkModificationService {
         }
 
         if (!composites.isEmpty()) {
-            List<UUID> subUuids = networkModificationRepository.getSubModificationUuidsForComposites(composites);
+            List<UUID> subUuids = networkModificationRepository.getSubModificationUuidsFromComposites(composites);
             expandToLeafUuidsRecursive(subUuids, result);
         }
     }

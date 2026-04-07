@@ -587,7 +587,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<UUID> getSubModificationUuidsForComposites(@NonNull List<UUID> compositeUuids) {
+    public List<UUID> getSubModificationUuidsFromComposites(@NonNull List<UUID> compositeUuids) {
         return modificationRepository.findModificationIdsByCompositeModificationIdIn(compositeUuids);
     }
 
@@ -670,19 +670,19 @@ public class NetworkModificationRepository {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
-            applyMetadataToEntityTree(modificationEntity, metadata);
+            if (metadata.getDescription() != null) {
+                modificationEntity.setDescription(metadata.getDescription());
+            }
+            if (metadata.getActivated() != null) {
+                applyActivatedToEntityTree(modificationEntity, metadata.getActivated());
+            }
         }
     }
 
-    private void applyMetadataToEntityTree(@NonNull ModificationEntity entity, @NonNull ModificationInfos metadata) {
-        if (metadata.getDescription() != null) {
-            entity.setDescription(metadata.getDescription());
-        }
-        if (metadata.getActivated() != null) {
-            entity.setActivated(metadata.getActivated());
-            if (entity instanceof CompositeModificationEntity composite) {
-                composite.getModifications().forEach(sub -> applyMetadataToEntityTree(sub, metadata));
-            }
+    private void applyActivatedToEntityTree(@NonNull ModificationEntity entity, @NonNull boolean activated) {
+        entity.setActivated(activated);
+        if (entity instanceof CompositeModificationEntity composite) {
+            composite.getModifications().forEach(sub -> applyActivatedToEntityTree(sub, activated));
         }
     }
 
@@ -886,6 +886,7 @@ public class NetworkModificationRepository {
 
         List<ModificationEntity> movedEntities;
         if (sourceCompositeUuid != null) {
+            // moved from a composite
             CompositeModificationEntity sourceComposite = compositeModificationRepository.findById(sourceCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, sourceCompositeUuid)));
@@ -897,6 +898,7 @@ public class NetworkModificationRepository {
             }
             rewriteCompositeSubModifications(sourceCompositeUuid, sourceSubMods);
         } else {
+            // moved from the root level of the network modification table
             ModificationGroupEntity group = getModificationGroup(groupUuid);
             List<ModificationEntity> rootMods = group.getModifications()
                     .stream()
@@ -916,6 +918,7 @@ public class NetworkModificationRepository {
         }
 
         if (targetCompositeUuid != null) {
+            // moved into a composite
             CompositeModificationEntity targetComposite = compositeModificationRepository.findById(targetCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, targetCompositeUuid)));
@@ -923,11 +926,12 @@ public class NetworkModificationRepository {
             insertModifications(targetSubMods, movedEntities, beforeUuid);
             rewriteCompositeSubModifications(targetCompositeUuid, targetSubMods);
         } else {
+            // moved to the root level of the network modification table
             ModificationGroupEntity group = getOrCreateModificationGroup(groupUuid);
             List<ModificationEntity> rootMods = group.getModifications().stream()
                     .filter(Objects::nonNull)
                     .filter(m -> !m.getStashed())
-                    .collect(Collectors.toList());
+                    .toList();
             movedEntities.forEach(movedEntity -> movedEntity.setGroup(group));
             insertModifications(rootMods, movedEntities, beforeUuid);
             group.setModifications(rootMods);
