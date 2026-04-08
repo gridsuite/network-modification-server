@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024, RTE (http://www.rte-france.com)
+ * Copyright (c) 2026, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -207,12 +207,6 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         // We check that the request count is not dependent on the number of sub creations of the tabular creation (the JPA N+1 problem is correctly solved)
         assertSelectCount(5);
         reset();
-
-        // We get the modifications of the group (so the 2 tabular creations)
-        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
-                .andExpect(status().isOk());
-        // We check that the request count is not dependent on the number of sub creations of the tabular creation (the JPA N+1 problem is correctly solved)
-        assertSelectCount(10);
     }
 
     @Test
