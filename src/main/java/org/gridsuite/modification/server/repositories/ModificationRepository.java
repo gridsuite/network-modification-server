@@ -77,4 +77,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findCurrentLimitsIdsByOpLimitsGroupsIds(List<UUID> uuids);
 
     void deleteAllByIdIn(List<UUID> ids);
+
+    @Query(value = "SELECT DISTINCT cast(id AS VARCHAR) FROM composite_modification_sub_modifications WHERE id IN (?1)", nativeQuery = true)
+    Set<UUID> findExistingCompositeModificationIds(List<UUID> compositeIds);
 }

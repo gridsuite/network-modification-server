@@ -119,6 +119,8 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
                 .maxSusceptance(IAttributeModificationEmbeddable.toAttributeModification(getMaxSusceptance()))
                 .maximumSectionCount(IAttributeModificationEmbeddable.toAttributeModification(getMaximumSectionCount()))
                 .sectionCount(IAttributeModificationEmbeddable.toAttributeModification(getSectionCount()))
+                .qMeasurementValue(IAttributeModificationEmbeddable.toAttributeModification(getQMeasurementValue()))
+                .qMeasurementValidity(IAttributeModificationEmbeddable.toAttributeModification(getQMeasurementValidity()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
