@@ -448,9 +448,9 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public List<ModificationInfos> getActiveModifications(UUID groupUuid, Set<UUID> modificationsToExclude) {
         List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByGroupId(groupUuid, emptyIfNull(modificationsToExclude));
-        Set<UUID> presentRootUuids = modificationsEntities.stream().map(ModificationEntity::getId).collect(Collectors.toSet());
+        Set<UUID> modificationsEntitiesUuids = modificationsEntities.stream().map(ModificationEntity::getId).collect(Collectors.toSet());
         Set<UUID> excluded = emptyIfNull(modificationsToExclude).stream()
-                .filter(uuid -> !presentRootUuids.contains(uuid))
+                .filter(uuid -> !modificationsEntitiesUuids.contains(uuid))
                 .collect(Collectors.toSet());
         return modificationsEntities.stream()
                 .map(entity -> toModificationsInfosFilteringExcluded(entity, excluded))
