@@ -321,6 +321,8 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .connectionDirection2(ConnectablePosition.Direction.BOTTOM)
                 .connectionPosition1(0)
                 .connectionPosition2(0)
+                .lineSegments(List.of(new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", "50", null),
+                    new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", null, 0.95)))
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
