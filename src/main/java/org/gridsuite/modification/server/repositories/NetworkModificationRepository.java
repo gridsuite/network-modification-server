@@ -926,7 +926,8 @@ public class NetworkModificationRepository {
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             if (movingEntity instanceof CompositeModificationEntity movingComposite
-                    && containsComposite(movingComposite, targetCompositeUuid)) {
+                    && (movingComposite.getId().equals(targetCompositeUuid)
+                    || containsComposite(movingComposite, targetCompositeUuid))) {
                 throw new NetworkModificationException(MOVE_MODIFICATION_ERROR,
                         String.format("Moving composite (%s) into (%s) would create a cycle", modificationUuid, targetCompositeUuid));
             }
