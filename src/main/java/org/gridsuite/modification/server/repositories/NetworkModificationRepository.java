@@ -448,7 +448,10 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public List<ModificationInfos> getActiveModifications(UUID groupUuid, Set<UUID> modificationsToExclude) {
         List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByGroupId(groupUuid, emptyIfNull(modificationsToExclude));
-        Set<UUID> excluded = emptyIfNull(modificationsToExclude);
+        Set<UUID> presentRootUuids = modificationsEntities.stream().map(ModificationEntity::getId).collect(Collectors.toSet());
+        Set<UUID> excluded = emptyIfNull(modificationsToExclude).stream()
+                .filter(uuid -> !presentRootUuids.contains(uuid))
+                .collect(Collectors.toSet());
         return modificationsEntities.stream()
                 .map(entity -> toModificationsInfosFilteringExcluded(entity, excluded))
                 .toList();
@@ -918,7 +921,15 @@ public class NetworkModificationRepository {
         }
 
         if (targetCompositeUuid != null) {
-            // moved into a composite
+            // Check if targeted composite isn't already inside modificationUuid
+            ModificationEntity movingEntity = modificationRepository.findById(modificationUuid)
+                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
+                            String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
+            if (movingEntity instanceof CompositeModificationEntity movingComposite
+                    && containsComposite(movingComposite, targetCompositeUuid)) {
+                throw new NetworkModificationException(MOVE_MODIFICATION_ERROR,
+                        String.format("Moving composite (%s) into (%s) would create a cycle", modificationUuid, targetCompositeUuid));
+            }
             CompositeModificationEntity targetComposite = compositeModificationRepository.findById(targetCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, targetCompositeUuid)));
@@ -926,7 +937,7 @@ public class NetworkModificationRepository {
             insertModifications(targetSubMods, movedEntities, beforeUuid);
             rewriteCompositeSubModifications(targetCompositeUuid, targetSubMods);
         } else {
-            // moved to the root level of the network modification table
+            // Moved to the root level of the network modification table
             ModificationGroupEntity group = getOrCreateModificationGroup(groupUuid);
             List<ModificationEntity> rootMods = group.getModifications().stream()
                     .filter(Objects::nonNull)
@@ -943,5 +954,18 @@ public class NetworkModificationRepository {
         for (int i = 0; i < orderedSubMods.size(); i++) {
             compositeModificationRepository.insertCompositeSubModification(compositeId, orderedSubMods.get(i).getId(), i);
         }
+    }
+
+    private boolean containsComposite(CompositeModificationEntity composite, UUID targetUuid) {
+        for (ModificationEntity sub : composite.getModifications()) {
+            if (sub.getId().equals(targetUuid)) {
+                return true;
+            }
+            if (sub instanceof CompositeModificationEntity subComposite
+                    && containsComposite(subComposite, targetUuid)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
