@@ -601,4 +601,58 @@ class CompositeControllerTest {
         ModificationEntity movedEntity = modificationRepository.getModificationEntity(rootModUuid);
         assertNull(movedEntity.getGroup());
     }
+
+    @Test
+    void testMoveSubModificationCycleDetection() throws Exception {
+        List<ModificationInfos> leafMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        List<UUID> leafUuids = leafMods.stream().map(ModificationInfos::getUuid).toList();
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(leafUuids)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID innerCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(List.of(innerCompositeUuid))).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID outerCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Fetch the copy of innerComposite inside outerComposite
+        Map<UUID, List<ModificationInfos>> outerMap = mapper.readValue(
+                mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", outerCompositeUuid))
+                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
+                new TypeReference<>() { });
+        UUID actualInnerCompositeUuid = outerMap.get(outerCompositeUuid).stream()
+                .filter(m -> COMPOSITE_MODIFICATION == m.getType())
+                .map(ModificationInfos::getUuid)
+                .findFirst().orElseThrow();
+
+        // Add outerComposite to the group so it has a groupUuid context
+        runRequestAsync(mockMvc,
+                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}?action=INSERT", TEST_GROUP_ID)
+                        .content(getJsonBodyModificationCompositeInfos(List.of(Pair.of(outerCompositeUuid, "outer"))))
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+
+        // Fetch the copy of outerComposite in the group
+        List<ModificationInfos> groupMods = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        UUID actualOuterCompositeUuid = groupMods.stream()
+                .filter(m -> COMPOSITE_MODIFICATION == m.getType())
+                .map(ModificationInfos::getUuid)
+                .findFirst().orElseThrow();
+
+        // Attempting to move outerComposite into its own descendant (actualInnerCompositeUuid)
+        // must be rejected to prevent a cycle
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
+                        TEST_GROUP_ID, actualOuterCompositeUuid)
+                        .queryParam("sourceCompositeUuid", actualOuterCompositeUuid.toString())
+                        .queryParam("targetCompositeUuid", actualInnerCompositeUuid.toString()))
+                .andExpect(status().is4xxClientError());
+
+        // Moving a composite into itself must also be rejected
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
+                        TEST_GROUP_ID, actualOuterCompositeUuid)
+                        .queryParam("sourceCompositeUuid", actualOuterCompositeUuid.toString())
+                        .queryParam("targetCompositeUuid", actualOuterCompositeUuid.toString()))
+                .andExpect(status().is4xxClientError());
+    }
 }
