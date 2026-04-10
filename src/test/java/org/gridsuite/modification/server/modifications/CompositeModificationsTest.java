@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2026, RTE (http://www.rte-france.com)
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -104,6 +104,11 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
                 status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
         assertSelectCount(7);
+
+        SQLStatementCountValidator.reset();
+        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
+            .andExpect(status().isOk());
+        SQLStatementCountValidator.assertSelectCount(8);
     }
 
     @Test

@@ -310,6 +310,7 @@ class ModificationControllerTest {
     @Test
     void testModificationGroups() throws Exception {
         MvcResult mvcResult;
+        String resultAsString;
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
                 .equipmentType(IdentifiableType.SWITCH)
@@ -329,24 +330,33 @@ class ModificationControllerTest {
          // switch opening to create the default group
         List<UUID> bsicListResultUUID = networkModificationService.getModificationGroups();
         assertEquals(bsicListResultUUID, List.of(TEST_GROUP_ID));
-        List<ModificationInfos> bsicListResulModifInfos = networkModificationService.getNetworkModifications(TEST_GROUP_ID, false, true, false);
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", TEST_GROUP_ID)).andExpectAll(
+         status().isOk(),
+         content().contentType(MediaType.APPLICATION_JSON))
+         .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<ModificationInfos> bsicListResulModifInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(1, bsicListResulModifInfos.size());
-        List<ModificationInfos> bsicListResultInfos = networkModificationService.getNetworkModifications(TEST_GROUP_ID, true, true, false);
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID))
+                        .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                        .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<ModificationInfos> bsicListResultInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(1, bsicListResultInfos.size());
 
         // delete the default modification group of a network
         mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
                 .andExpect(status().isOk());
 
-        assertEquals(
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-                assertThrows(NetworkModificationException.class,
-                        () -> networkModificationService.getNetworkModifications(TEST_GROUP_ID, true, true, false)
-                ).getMessage()
-        );
+        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(status().isNotFound(),
+                    content().string(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage()));
 
-        List<ModificationInfos> bsicListModificationInfos = networkModificationService.getNetworkModifications(TEST_GROUP_ID, true, false, false);
-
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true&errorOnGroupNotFound=false", TEST_GROUP_ID)).andExpectAll(
+         status().isOk(),
+         content().contentType(MediaType.APPLICATION_JSON))
+         .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<ModificationInfos> bsicListModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(bsicListModificationInfos, List.of());
     }
 
@@ -1344,9 +1354,14 @@ class ModificationControllerTest {
         TestImpactUtils.testElementImpacts(mapper, networkModificationResultAsString, expectedImpacts);
     }
 
-    private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
+    private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
         // get all modifications for the given group of a network
-        List<ModificationInfos> modificationsTestGroupId = networkModificationService.getNetworkModifications(groupUuid, true, true, false);
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(actualSize, modificationsTestGroupId.size());
     }
 
@@ -1658,11 +1673,11 @@ class ModificationControllerTest {
             .andExpect(status().isOk());
 
         // Get the modifications
-        List<VoltageInitModificationInfos> modificationsInfos2 = networkModificationService.getNetworkModifications(groupUuid, false, true, false)
-                .stream()
-                .filter(VoltageInitModificationInfos.class::isInstance)
-                .map(VoltageInitModificationInfos.class::cast)
-                .toList();
+        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=false", groupUuid)).andExpectAll(
+                status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        List<VoltageInitModificationInfos> modificationsInfos2 = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(1, modificationsInfos2.size());
         assertThat(modificationsInfos2.get(0)).recursivelyEquals(modificationsInfos1);
     }

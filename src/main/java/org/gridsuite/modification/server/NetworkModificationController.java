@@ -49,6 +49,16 @@ public class NetworkModificationController {
         this.lineTypesCatalogService = lineTypesCatalogService;
     }
 
+    @GetMapping(value = "/groups/{groupUuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get modifications list of a group")
+    @ApiResponse(responseCode = "200", description = "List of modifications of the group")
+    public ResponseEntity<List<ModificationInfos>> getNetworkModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                                           @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false, defaultValue = "false") Boolean onlyMetadata,
+                                                                           @Parameter(description = "Stashed modifications") @RequestParam(name = "onlyStashed", required = false, defaultValue = "false") Boolean onlyStashed,
+                                                                           @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
+        return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, onlyStashed));
+    }
+
     @GetMapping(value = "/groups/{groupUuid}/network-modifications/export", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get list modifications to export for a given group")
     @ApiResponse(responseCode = "200", description = "List of modifications of the group to export")

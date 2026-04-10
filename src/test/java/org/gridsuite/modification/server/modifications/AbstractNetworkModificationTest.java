@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2026, RTE (http://www.rte-france.com)
+ * Copyright (c) 2022, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -22,7 +22,6 @@ import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.WireMockUtils;
@@ -98,8 +97,6 @@ public abstract class AbstractNetworkModificationTest {
     protected ObjectMapper mapper;
 
     private Network network;
-    @Autowired
-    private NetworkModificationService networkModificationService;
 
     @BeforeEach
     public void setUp() {
@@ -266,8 +263,14 @@ public abstract class AbstractNetworkModificationTest {
         assertThat(modifications.get(1)).recursivelyEquals(modificationToCopy);
     }
 
-    protected void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
-        List<ModificationInfos> modificationsTestGroupId = networkModificationService.getNetworkModifications(groupUuid, true, true, false);
+    protected void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
+        // get all modifications for the given group of a network
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(actualSize, modificationsTestGroupId.size());
     }
 

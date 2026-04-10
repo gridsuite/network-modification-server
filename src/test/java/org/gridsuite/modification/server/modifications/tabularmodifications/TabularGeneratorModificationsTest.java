@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2026, RTE (http://www.rte-france.com)
+ * Copyright (c) 2023, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -18,7 +18,6 @@ import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.TabularPropertyRepository;
-import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.utils.ApiUtils;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -61,8 +60,6 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
     @Autowired
     private TabularPropertyRepository tabularPropertyRepository;
-    @Autowired
-    private NetworkModificationService networkModificationService;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -129,11 +126,11 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
     }
 
     @Test
-    void testSqlRequestsCountOnGetGroupModifications() {
+    void testSqlRequestsCountOnGetGroupModifications() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
 
         reset();
-        List<ModificationInfos> tabularModifications = networkModificationService.getNetworkModifications(getGroupId(), false, true, false); // Getting two tabular modifications with respectively one and three sub-modifications
+        List<ModificationInfos> tabularModifications = ApiUtils.getGroupModifications(mockMvc, getGroupId()); // Getting two tabular modifications with respectively one and three sub-modifications
         assertSelectCount(10); // 10 before improvements
         assertTabularModificationsEquals(modifications.stream().map(Pair::getRight).toList(), tabularModifications);
     }
@@ -703,8 +700,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
             .toList();
     }
 
-    private void assertTabularModificationsEquals(List<Pair<UUID, ModificationInfos>> expectedModifications, UUID groupUuid) {
-        List<ModificationInfos> tabularModifications = networkModificationService.getNetworkModifications(groupUuid, false, true, false);
+    private void assertTabularModificationsEquals(List<Pair<UUID, ModificationInfos>> expectedModifications, UUID groupUuid) throws Exception {
+        List<ModificationInfos> tabularModifications = ApiUtils.getGroupModifications(mockMvc, groupUuid);
         assertTabularModificationsEquals(expectedModifications.stream().map(Pair::getRight).toList(), tabularModifications);
     }
 
