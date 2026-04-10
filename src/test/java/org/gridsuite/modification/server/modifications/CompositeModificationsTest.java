@@ -56,12 +56,12 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
                 "v1"),
             ModificationCreation.getCreationLoad("v1", "idLoadComposite", "nameLoad", "1.1", LoadType.UNDEFINED),
             CompositeModificationInfos.builder().name("battery composite")
-                .modifications(List.of(ModificationCreation.getCreationBattery("v1", "idBatteryComposite", "nameBattry", "1.1")))
+                .modificationsInfos(List.of(ModificationCreation.getCreationBattery("v1", "idBatteryComposite", "nameBattry", "1.1")))
                 .stashed(false).build()
         );
         return CompositeModificationInfos.builder()
             .name("composite")
-            .modifications(modifications)
+            .modificationsInfos(modifications)
             .stashed(false)
             .build();
     }
@@ -114,18 +114,18 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
     @Test
     void testDBLoadWithOptimization() {
         SubstationCreationInfos siteInfo1 = SubstationCreationInfos.builder().equipmentId("id1").equipmentName("site1").build();
-        CompositeModificationInfos compositeInfo1 = CompositeModificationInfos.builder().name("composite1").modifications(List.of()).build();
-        CompositeModificationInfos compositeInfo2 = CompositeModificationInfos.builder().name("composite2").modifications(List.of(siteInfo1, compositeInfo1)).build();
-        CompositeModificationInfos compositeInfo3 = CompositeModificationInfos.builder().name("composite3").modifications(List.of(createTabularModification(), compositeInfo2)).build();
-        CompositeModificationInfos compositeInfo41 = CompositeModificationInfos.builder().name("composite41").modifications(List.of(compositeInfo3)).build();
+        CompositeModificationInfos compositeInfo1 = CompositeModificationInfos.builder().name("composite1").modificationsInfos(List.of()).build();
+        CompositeModificationInfos compositeInfo2 = CompositeModificationInfos.builder().name("composite2").modificationsInfos(List.of(siteInfo1, compositeInfo1)).build();
+        CompositeModificationInfos compositeInfo3 = CompositeModificationInfos.builder().name("composite3").modificationsInfos(List.of(createTabularModification(), compositeInfo2)).build();
+        CompositeModificationInfos compositeInfo41 = CompositeModificationInfos.builder().name("composite41").modificationsInfos(List.of(compositeInfo3)).build();
         // Use a random number of composites to test the optimization (no N+1 select)
         List<ModificationInfos> compositeInfos = IntStream.range(0, new Random().nextInt(10) + 1)
-            .mapToObj(i -> CompositeModificationInfos.builder().name("composite5" + i).modifications(List.of()).build())
+            .mapToObj(i -> CompositeModificationInfos.builder().name("composite5" + i).modificationsInfos(List.of()).build())
             .map(ModificationInfos.class::cast)
             .toList();
-        CompositeModificationInfos compositeInfo42 = CompositeModificationInfos.builder().name("composite42").modifications(compositeInfos).build();
+        CompositeModificationInfos compositeInfo42 = CompositeModificationInfos.builder().name("composite42").modificationsInfos(compositeInfos).build();
 
-        CompositeModificationInfos compositeInfo = CompositeModificationInfos.builder().name("composite").modifications(List.of(compositeInfo41, compositeInfo42)).build();
+        CompositeModificationInfos compositeInfo = CompositeModificationInfos.builder().name("composite").modificationsInfos(List.of(compositeInfo41, compositeInfo42)).build();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(compositeInfo)));
 
