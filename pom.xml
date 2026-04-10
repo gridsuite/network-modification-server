@@ -21,7 +21,7 @@
 
     <groupId>org.gridsuite</groupId>
     <artifactId>gridsuite-network-modification-server</artifactId>
-    <version>2.33.0-SNAPSHOT</version>
+    <version>2.34.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
     <name>Network modification server</name>
@@ -44,19 +44,13 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>49.1.0-SNAPSHOT</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>50.1.0-SNAPSHOT</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
-        <!-- TODO network-modification.version remove when included in gridsuite-dependencies -->
-        <network-modification.version>0.71.0-SNAPSHOT</network-modification.version>
-        <!-- TODO network-store.version remove when included in powsybl-ws-dependencies -->
-        <network-store-client.version>1.40.0-SNAPSHOT</network-store-client.version>
-        <!-- FIXME to remove when powsybl-ws-dependencies upgrades to springboot 3.5.9 -->
-        <testcontainers.version>1.21.4</testcontainers.version>
     </properties>
 
     <build>
@@ -92,36 +86,6 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
-            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-network-store-client</artifactId>
-                <version>${network-store-client.version}</version>
-            </dependency>
-            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-network-store-iidm-impl</artifactId>
-                <version>${network-store-client.version}</version>
-            </dependency>
-            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-network-store-model</artifactId>
-                <version>${network-store-client.version}</version>
-            </dependency>
-            <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
-            <dependency>
-                <groupId>org.gridsuite</groupId>
-                <artifactId>gridsuite-network-modification</artifactId>
-                <version>${network-modification.version}</version>
-            </dependency>
-            <!-- FIXME to remove when powsybl-ws-dependencies upgrades to springboot 3.5.9 -->
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers</artifactId>
-                <version>${testcontainers.version}</version>
-            </dependency>
             <dependency><!-- To remove when integrate in next release of gridsuite-dependencies or powsybl-ws-dependencies -->
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp-bom</artifactId>
@@ -137,6 +101,11 @@
                 <version>${gridsuite-dependencies.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-network-modification</artifactId>
             </dependency>
 
             <!-- project specific dependencies -->
@@ -198,6 +167,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
 
         <!-- elasticsearch -->

@@ -17,7 +17,6 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ModificationsToCopyInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -47,7 +46,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.gridsuite.modification.server.utils.TestUtils.getJsonBodyModificationsToCopyInfos;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -249,10 +247,7 @@ public abstract class AbstractNetworkModificationTest {
 
         UUID modificationUuid = saveModification(modificationToCopy);
 
-        final String body = getJsonBodyModificationsToCopyInfos(
-                List.of(ModificationsToCopyInfos.builder().uuid(modificationUuid).build()),
-                AbstractNetworkModificationTest.TEST_NETWORK_ID,
-                null);
+        String body = TestUtils.getJsonBody(List.of(modificationUuid), AbstractNetworkModificationTest.TEST_NETWORK_ID, null);
         ResultActions mockMvcResultActions = mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
