@@ -134,7 +134,7 @@ public class NetworkModificationRepository {
     }
 
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
-        CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
+        CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
                 .map(this::toModificationsInfosOptimized)
@@ -428,7 +428,7 @@ public class NetworkModificationRepository {
             .date(compositeEntity.getDate())
             .uuid(compositeEntity.getId())
             .stashed(compositeEntity.getStashed())
-            .modifications(compositeEntity.getModifications().stream().map(this::toModificationsInfosOptimized).toList())
+            .modificationsInfos(compositeEntity.getModifications().stream().map(this::toModificationsInfosOptimized).toList())
             .build();
     }
 
