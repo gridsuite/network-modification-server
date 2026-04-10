@@ -53,7 +53,7 @@
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
         <!-- TODO network-modification.version remove when included in gridsuite-dependencies -->
-        <network-modification.version>0.74.0</network-modification.version>
+        <network-modification.version>0.75.0</network-modification.version>
     </properties>
 
     <build>
@@ -96,20 +96,30 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+          <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
             <dependency>
                 <groupId>com.powsybl</groupId>
                 <artifactId>powsybl-network-store-client</artifactId>
                 <version>${powsybl-network-store.version}</version>
             </dependency>
+          <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
             <dependency>
                 <groupId>com.powsybl</groupId>
                 <artifactId>powsybl-network-store-iidm-impl</artifactId>
                 <version>${powsybl-network-store.version}</version>
             </dependency>
+          <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
             <dependency>
                 <groupId>com.powsybl</groupId>
                 <artifactId>powsybl-network-store-model</artifactId>
                 <version>${powsybl-network-store.version}</version>
+            </dependency>
+          
+            <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-network-modification</artifactId>
+                <version>${network-modification.version}</version>
             </dependency>
             
             <!-- imports -->
@@ -119,12 +129,6 @@
                 <version>${gridsuite-dependencies.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
-            <dependency>
-                <groupId>org.gridsuite</groupId>
-                <artifactId>gridsuite-network-modification</artifactId>
-                <version>${network-modification.version}</version>
             </dependency>
 
             <!-- project specific dependencies -->
