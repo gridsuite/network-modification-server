@@ -66,7 +66,7 @@ public class LineSegmentEntity {
     public static List<LineSegmentInfos> fromLineSegmentsEntity(List<LineSegmentEntity> lineSegmentEntities) {
         List<LineSegmentInfos> lineSegments = new ArrayList<>();
         if (CollectionUtils.isEmpty(lineSegmentEntities)) {
-            return lineSegments;
+            return null;
         }
         for (LineSegmentEntity entity : lineSegmentEntities) {
             lineSegments.add(

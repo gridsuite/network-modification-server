@@ -18,15 +18,16 @@ spring:
 
   cloud:
     function:
-      definition: consumeBuild;consumeCancelBuild
+      definition: consumeBuild1;consumeBuild2;consumeCancelBuild
     stream:
       bindings:
-        consumeBuild-in-0:
+        consumeBuild1-in-0: &consumeBuildConfig
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.run
           group: buildGroup
           consumer:
-            concurrency: 2
             max-attempts: 1
+        consumeBuild2-in-0:
+          <<: *consumeBuildConfig
         publishBuild-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.run
         publishResultBuild-out-0:
@@ -40,7 +41,7 @@ spring:
       output-bindings: publishBuild-out-0;publishResultBuild-out-0;publishCancelBuild-out-0;publishStoppedBuild-out-0
       rabbit:
         bindings:
-          consumeBuild-in-0:
+          consumeBuild1-in-0: &consumeBuildRabbitConfig
             consumer:
               auto-bind-dlq: true
               dead-letter-exchange: ${powsybl-ws.rabbitmq.destination.prefix:}build.run.dlx
@@ -49,6 +50,8 @@ spring:
               quorum:
                 enabled: true
                 delivery-limit: 2
+          consumeBuild2-in-0:
+            <<: *consumeBuildRabbitConfig
 
 powsybl-ws:
   database:

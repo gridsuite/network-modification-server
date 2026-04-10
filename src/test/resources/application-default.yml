@@ -10,6 +10,10 @@ spring:
     hibernate:
       #to turn off schema validation that fails (because of clob types) and blocks tests even if the schema is compatible
       ddl-auto: none
+  cloud:
+    function:
+      # disable all #2 consumers during test - all messages are consumed multiple times otherwise
+      definition: consumeBuild1;consumeCancelBuild
 logging:
   level:
     org.springframework.orm.jpa: INFO
