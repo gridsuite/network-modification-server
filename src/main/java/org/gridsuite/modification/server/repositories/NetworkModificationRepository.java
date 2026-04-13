@@ -927,7 +927,7 @@ public class NetworkModificationRepository {
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             if (movingEntity instanceof CompositeModificationEntity movingComposite
                     && (movingComposite.getId().equals(targetCompositeUuid)
-                    || containsComposite(movingComposite, targetCompositeUuid))) {
+                    || isInsideComposite(movingComposite, targetCompositeUuid))) {
                 throw new NetworkModificationException(MOVE_MODIFICATION_ERROR,
                         String.format("Moving composite (%s) into (%s) would create a cycle", modificationUuid, targetCompositeUuid));
             }
@@ -957,13 +957,13 @@ public class NetworkModificationRepository {
         }
     }
 
-    private boolean containsComposite(CompositeModificationEntity composite, UUID targetUuid) {
+    private boolean isInsideComposite(CompositeModificationEntity composite, UUID targetUuid) {
         for (ModificationEntity sub : composite.getModifications()) {
             if (sub.getId().equals(targetUuid)) {
                 return true;
             }
             if (sub instanceof CompositeModificationEntity subComposite
-                    && containsComposite(subComposite, targetUuid)) {
+                    && isInsideComposite(subComposite, targetUuid)) {
                 return true;
             }
         }
