@@ -93,14 +93,14 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("AC Line 'idLine4': r is invalid", ERROR_MESSAGE_KEY, reportService);
+        assertLogMessage("AC line 'idLine4': r is invalid", ERROR_MESSAGE_KEY, reportService);
 
         lineCreationInfos.setR(100.0);
         lineCreationInfos.setX(Double.NaN);
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("AC Line 'idLine4': x is invalid", ERROR_MESSAGE_KEY, reportService);
+        assertLogMessage("AC line 'idLine4': x is invalid", ERROR_MESSAGE_KEY, reportService);
 
         // try to create an existing line
         lineCreationInfos.setEquipmentId("line2");
@@ -263,7 +263,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         testNetworkModificationsCount(getGroupId(), 1);
 
         assertEquals(
-            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null, activated=true, description=null), equipmentId=idLineEdited, properties=null), equipmentName=nameLineEdited), r=110.0, x=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, operationalLimitsGroups=[OperationalLimitsGroupInfos(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), applicability=SIDE1, limitsProperties=null), OperationalLimitsGroupInfos(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)]), applicability=SIDE2, limitsProperties=null)], selectedOperationalLimitsGroupId1=null, selectedOperationalLimitsGroupId2=null, connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0, connected1=true, connected2=false), g1=15.0, b1=15.0, g2=25.0, b2=25.0)",
+            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null, activated=true, description=null), equipmentId=idLineEdited, properties=null), equipmentName=nameLineEdited), r=110.0, x=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, operationalLimitsGroups=[OperationalLimitsGroupInfos(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), applicability=SIDE1, limitsProperties=null), OperationalLimitsGroupInfos(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)]), applicability=SIDE2, limitsProperties=null)], selectedOperationalLimitsGroupId1=null, selectedOperationalLimitsGroupId2=null, connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0, connected1=true, connected2=false), g1=15.0, b1=15.0, g2=25.0, b2=25.0, lineSegments=null)",
             lineCreation.toString()
         );
     }
@@ -321,6 +321,8 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .connectionDirection2(ConnectablePosition.Direction.BOTTOM)
                 .connectionPosition1(0)
                 .connectionPosition2(0)
+                .lineSegments(List.of(new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", "50", null),
+                    new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", null, 0.95)))
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
