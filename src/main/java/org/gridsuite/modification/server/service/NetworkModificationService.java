@@ -19,6 +19,7 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
@@ -50,6 +51,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.apache.commons.collections4.SetUtils.emptyIfNull;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
@@ -138,23 +140,45 @@ public class NetworkModificationService {
         return modificationRepository.findAllByIdIn(modificationUuids);
     }
 
+    /**
+     * checks that all the modificationUuids are part of the groupUuid, otherwise throws an error
+     */
     @Transactional(readOnly = true)
     public void verifyModifications(UUID groupUuid, Set<UUID> modificationUuids) {
-        if (!networkModificationRepository.getModifications(groupUuid, true, true)
-            .stream().map(ModificationInfos::getUuid)
-            .collect(Collectors.toSet())
-            .containsAll(modificationUuids)) {
+        List<ModificationInfos> rootModifications = networkModificationRepository.getModifications(groupUuid, true, true);
+
+        Set<UUID> childrenUuids = rootModifications.stream()
+            .map(ModificationInfos::getUuid)
+            .collect(Collectors.toSet());
+
+        childrenUuids.addAll(networkModificationRepository.findAllChildrenUuids(
+            rootModifications.stream()
+                .filter(m -> ModificationType.COMPOSITE_MODIFICATION == m.getType())
+                .map(ModificationInfos::getUuid)
+                .toList())
+        );
+
+        if (!childrenUuids.containsAll(modificationUuids)) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
         }
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getNetworkModificationsFromComposite(List<UUID> compositeModificationUuids, boolean onlyMetadata) {
-        if (onlyMetadata) {
-            return networkModificationRepository.getBasicNetworkModificationsFromComposite(compositeModificationUuids);
-        } else {
-            return networkModificationRepository.getCompositeModificationsInfos(compositeModificationUuids);
-        }
+    public List<UUID> findAllChildrenUuids(List<UUID> compositeModificationUuids) {
+        return networkModificationRepository.findAllChildrenUuids(compositeModificationUuids);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, List<ModificationInfos>> getNetworkModificationsFromComposite(List<UUID> compositeModificationUuids, boolean onlyMetadata) {
+        Map<UUID, List<ModificationInfos>> compositeModifications = new HashMap<>();
+        compositeModificationUuids.forEach(compositeModificationUuid -> {
+            if (onlyMetadata) {
+                compositeModifications.put(compositeModificationUuid, networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeModificationUuid)));
+            } else {
+                compositeModifications.put(compositeModificationUuid, networkModificationRepository.getCompositeModificationsInfos(List.of(compositeModificationUuid)));
+            }
+        });
+        return compositeModifications;
     }
 
     private void checkGenerationDispatchFilters(GenerationDispatchInfos generationDispatchInfos) {
@@ -318,7 +342,7 @@ public class NetworkModificationService {
                 Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExclude().get(groupUuid);
                 List<ModificationInfos> modifications = List.of();
                 try {
-                    modifications = networkModificationRepository.getActiveModifications(groupUuid, modificationsToExclude);
+                    modifications = networkModificationRepository.getActiveModifications(groupUuid, emptyIfNull(modificationsToExclude));
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;
@@ -367,6 +391,16 @@ public class NetworkModificationService {
 
         CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = applyModifications && !modifications.isEmpty() ? applyModifications(destinationGroupUuid, modifications, applicationContexts) : CompletableFuture.completedFuture(List.of());
         return futureResult.thenApply(result -> new NetworkModificationsResult(modifications.stream().map(ModificationInfos::getUuid).toList(), result));
+    }
+
+    public void moveSubModification(
+            @NonNull UUID groupUuid,
+            UUID sourceCompositeUuid,
+            UUID targetCompositeUuid,
+            @NonNull UUID modificationUuid,
+            UUID beforeUuid) {
+        networkModificationRepository.moveSubModification(
+                groupUuid, sourceCompositeUuid, targetCompositeUuid, modificationUuid, beforeUuid);
     }
 
     public Map<UUID, UUID> duplicateGroup(UUID sourceGroupUuid, UUID groupUuid) {
