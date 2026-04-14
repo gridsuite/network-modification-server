@@ -51,6 +51,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.apache.commons.collections4.SetUtils.emptyIfNull;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
@@ -341,7 +342,7 @@ public class NetworkModificationService {
                 Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExclude().get(groupUuid);
                 List<ModificationInfos> modifications = List.of();
                 try {
-                    modifications = networkModificationRepository.getActiveModifications(groupUuid, modificationsToExclude);
+                    modifications = networkModificationRepository.getActiveModifications(groupUuid, emptyIfNull(modificationsToExclude));
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;
