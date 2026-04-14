@@ -60,12 +60,12 @@ public class LimitsForLineTypeEntity {
                 .build();
     }
 
-    public LimitsForLineTypeInfos toLineTypeInfos() {
+    public LimitsForLineTypeInfos toLineTypeInfos(int conductorsNumber) {
         return LimitsForLineTypeInfos.builder()
             .id(id)
             .limitSetName(limitSetName)
-            .permanentLimit(permanentLimit)
-            .temporaryLimits(temporaryLimits.stream().map(TemporaryLimitEntity::toTemporaryLimitInfos).toList())
+            .permanentLimit(permanentLimit != null ? permanentLimit * conductorsNumber : null)
+            .temporaryLimits(temporaryLimits.stream().map(t -> t.toTemporaryLimitInfos(conductorsNumber)).toList())
             .area(area)
             .temperature(temperature)
             .build();

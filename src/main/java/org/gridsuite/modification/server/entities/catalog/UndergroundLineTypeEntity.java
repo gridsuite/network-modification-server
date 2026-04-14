@@ -70,7 +70,7 @@ public class UndergroundLineTypeEntity extends LineTypeEntity {
                 limitsForLineTypeEntity.setPermanentLimit(Math.floor(limitsForLineTypeEntity.getPermanentLimit() / shapeFactorValue));
                 limitsForLineTypeEntity.getTemporaryLimits().forEach(temporaryLimit ->
                         temporaryLimit.setLimitValue(Math.floor(temporaryLimit.getLimitValue() / shapeFactorValue)));
-                filterAndAdaptedLimits.add(limitsForLineTypeEntity.toLineTypeInfos());
+                filterAndAdaptedLimits.add(limitsForLineTypeEntity.toLineTypeInfos(1));
             }
         }
         return toDtoBuilder()
