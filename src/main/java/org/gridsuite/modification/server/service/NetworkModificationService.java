@@ -145,61 +145,26 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public void verifyModifications(UUID groupUuid, Set<UUID> modificationUuids) {
         List<ModificationInfos> rootModifications = networkModificationRepository.getModifications(groupUuid, true, true);
-        Set<UUID> rootUuids = rootModifications.stream()
-                .map(ModificationInfos::getUuid)
-                .collect(Collectors.toSet());
 
-        Set<UUID> missing = modificationUuids.stream()
-                .filter(uuid -> !rootUuids.contains(uuid))
-                .collect(Collectors.toSet());
+        Set<UUID> childrenUuids = rootModifications.stream()
+            .map(ModificationInfos::getUuid)
+            .collect(Collectors.toSet());
 
-        if (missing.isEmpty()) {
-            return;
-        }
-
-        // Some UUIDs not at root level: expand all root composites to leaf UUIDs at any depth
-        // and check whether the missing UUIDs appear anywhere in the tree
-        List<UUID> compositeUuidsInGroup = rootModifications.stream()
+        childrenUuids.addAll(networkModificationRepository.findAllChildrenUuids(
+            rootModifications.stream()
                 .filter(m -> ModificationType.COMPOSITE_MODIFICATION == m.getType())
                 .map(ModificationInfos::getUuid)
-                .toList();
-        if (!compositeUuidsInGroup.isEmpty()) {
-            Set<UUID> allLeafUuids = new HashSet<>();
-            expandToLeafUuidsRecursive(compositeUuidsInGroup, allLeafUuids);
-            missing.removeIf(allLeafUuids::contains);
-        }
+                .toList())
+        );
 
-        if (!missing.isEmpty()) {
+        if (!childrenUuids.containsAll(modificationUuids)) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
         }
     }
 
     @Transactional(readOnly = true)
-    public Set<UUID> expandToLeafUuids(List<UUID> modificationUuids) {
-        Set<UUID> result = new HashSet<>();
-        expandToLeafUuidsRecursive(modificationUuids, result);
-        return result;
-    }
-
-    private void expandToLeafUuidsRecursive(List<UUID> uuids, Set<UUID> result) {
-        if (uuids.isEmpty()) {
-            return;
-        }
-        Map<UUID, ModificationType> typeByUuid = modificationRepository.findBaseDataByIdIn(uuids).stream()
-                .collect(Collectors.toMap(ModificationEntity::getId, e -> ModificationType.valueOf(e.getType())));
-
-        List<UUID> composites = new ArrayList<>();
-        for (UUID uuid : uuids) {
-            result.add(uuid);
-            if (ModificationType.COMPOSITE_MODIFICATION == typeByUuid.get(uuid)) {
-                composites.add(uuid);
-            }
-        }
-
-        if (!composites.isEmpty()) {
-            List<UUID> subUuids = networkModificationRepository.getSubModificationUuidsFromComposites(composites);
-            expandToLeafUuidsRecursive(subUuids, result);
-        }
+    public List<UUID> findAllChildrenUuids(List<UUID> compositeModificationUuids) {
+        return networkModificationRepository.findAllChildrenUuids(compositeModificationUuids);
     }
 
     @Transactional(readOnly = true)

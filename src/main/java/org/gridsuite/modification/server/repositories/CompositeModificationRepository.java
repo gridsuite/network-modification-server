@@ -11,13 +11,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
 /**
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
  */
-
+// TODO To be removed when using modificationsOrder like modifications in a group
+@Repository
 public interface CompositeModificationRepository extends JpaRepository<CompositeModificationEntity, UUID> {
 
     @Modifying

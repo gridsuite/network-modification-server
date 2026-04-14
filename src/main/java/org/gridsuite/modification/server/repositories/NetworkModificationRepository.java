@@ -418,7 +418,7 @@ public class NetworkModificationRepository {
                 .build();
     }
 
-    private CompositeModificationInfos loadCompositeModification(CompositeModificationEntity compositeEntity) {
+    private CompositeModificationInfos loadCompositeModification(CompositeModificationEntity compositeEntity, Set<UUID> modificationsToExclude) {
         // Load all sub-composites only for root composites (associated with a group) to avoid N+1 select
         if (compositeEntity.getGroup() != null) {
             List<UUID> uuids = modificationRepository.findOnlyCompositeChildrenUuids(compositeEntity.getId());
@@ -431,13 +431,18 @@ public class NetworkModificationRepository {
             .date(compositeEntity.getDate())
             .uuid(compositeEntity.getId())
             .stashed(compositeEntity.getStashed())
-            .modificationsInfos(compositeEntity.getModifications().stream().map(this::toModificationsInfosOptimized).toList())
+            .modificationsInfos(
+                compositeEntity.getModifications().stream().filter(m -> !modificationsToExclude.contains(m.getId())).map(m -> toModificationsInfosOptimized(m, modificationsToExclude)).toList())
             .build();
     }
 
-    public ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity) {
+    private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity) {
+        return toModificationsInfosOptimized(modificationEntity, Set.of());
+    }
+
+    private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity, Set<UUID> modificationsToExclude) {
         if (modificationEntity instanceof CompositeModificationEntity compositeEntity) {
-            return loadCompositeModification(compositeEntity);
+            return loadCompositeModification(compositeEntity, modificationsToExclude);
         }
         if (modificationEntity instanceof TabularModificationsEntity tabularEntity) {
             return loadTabularModification(tabularEntity);
@@ -448,26 +453,7 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public List<ModificationInfos> getActiveModifications(UUID groupUuid, Set<UUID> modificationsToExclude) {
         List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByGroupId(groupUuid, emptyIfNull(modificationsToExclude));
-        Set<UUID> modificationsEntitiesUuids = modificationsEntities.stream().map(ModificationEntity::getId).collect(Collectors.toSet());
-        Set<UUID> excluded = emptyIfNull(modificationsToExclude).stream()
-                .filter(uuid -> !modificationsEntitiesUuids.contains(uuid))
-                .collect(Collectors.toSet());
-        return modificationsEntities.stream()
-                .map(entity -> toModificationsInfosFilteringExcluded(entity, excluded))
-                .toList();
-    }
-
-    private ModificationInfos toModificationsInfosFilteringExcluded(ModificationEntity entity, Set<UUID> excluded) {
-        if (!(entity instanceof CompositeModificationEntity composite) || excluded.isEmpty()) {
-            return toModificationsInfosOptimized(entity);
-        }
-        List<ModificationInfos> filteredSubs = composite.getModifications().stream()
-                .filter(sub -> !excluded.contains(sub.getId()))
-                .map(sub -> toModificationsInfosFilteringExcluded(sub, excluded))
-                .toList();
-        CompositeModificationInfos infos = (CompositeModificationInfos) toModificationsInfosOptimized(composite);
-        infos.setModificationsInfos(filteredSubs);
-        return infos;
+        return modificationsEntities.stream().map(m -> toModificationsInfosOptimized(m, modificationsToExclude)).toList();
     }
 
     private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
@@ -590,8 +576,8 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<UUID> getSubModificationUuidsFromComposites(@NonNull List<UUID> compositeUuids) {
-        return modificationRepository.findModificationIdsByCompositeModificationIdIn(compositeUuids);
+    public List<UUID> findAllChildrenUuids(@NonNull List<UUID> compositeUuids) {
+        return compositeUuids.stream().flatMap(uuid -> modificationRepository.findAllChildrenUuids(uuid).stream()).toList();
     }
 
     @Transactional(readOnly = true)
@@ -677,15 +663,16 @@ public class NetworkModificationRepository {
                 modificationEntity.setDescription(metadata.getDescription());
             }
             if (metadata.getActivated() != null) {
-                applyActivatedToEntityTree(modificationEntity, metadata.getActivated());
+                updateActivated(modificationEntity, metadata.getActivated());
             }
         }
     }
 
-    private void applyActivatedToEntityTree(@NonNull ModificationEntity entity, @NonNull boolean activated) {
+    // TODO remove when activation for a sub modification (composite) is implemented : no need optimized load
+    private void updateActivated(ModificationEntity entity, boolean activated) {
         entity.setActivated(activated);
         if (entity instanceof CompositeModificationEntity composite) {
-            composite.getModifications().forEach(sub -> applyActivatedToEntityTree(sub, activated));
+            composite.getModifications().forEach(sub -> updateActivated(sub, activated));
         }
     }
 
@@ -862,12 +849,9 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void moveSubModification(
-            @NonNull UUID groupUuid,
-            UUID sourceCompositeUuid,
-            UUID targetCompositeUuid,
-            @NonNull UUID modificationUuid,
-            UUID beforeUuid) {
+    // TODO use modificationsOrder like modifications in a group : remove the OrderColumn annotation in CompositeModificationEntity
+    public void moveSubModification(@NonNull UUID groupUuid, UUID sourceCompositeUuid, UUID targetCompositeUuid,
+                                    @NonNull UUID modificationUuid, UUID beforeUuid) {
 
         boolean sameComposite = sourceCompositeUuid != null
                 && sourceCompositeUuid.equals(targetCompositeUuid);

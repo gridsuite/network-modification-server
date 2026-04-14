@@ -23,12 +23,12 @@ import org.springframework.http.MediaType;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -130,8 +130,13 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(compositeInfo)));
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertRequestsCount(8, 0, 0, 0);
+
+        SQLStatementCountValidator.reset();
+        List<UUID> uuids = networkModificationRepository.findAllChildrenUuids(List.of(modifications.get(0).getUuid()));
+        assertEquals(uuids.size(), uuids.stream().collect(Collectors.toSet()).size());
+        assertEquals(8 + compositeInfos.size(), uuids.size());
     }
 
     private TabularModificationInfos createTabularModification() {
