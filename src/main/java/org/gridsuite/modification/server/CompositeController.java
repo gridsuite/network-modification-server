@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -97,11 +96,11 @@ public class CompositeController {
                 );
     }
 
-    @GetMapping(value = "/leaf-uuids", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/children-uuids", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Recursively expand a list of modification UUIDs with composites and their content UUIDs")
     @ApiResponse(responseCode = "200", description = "The full set of leaf modification UUIDs")
-    public ResponseEntity<Set<UUID>> expandToLeafUuids(@Parameter(description = "Modification UUIDs to expand") @RequestParam("uuids") List<UUID> modificationUuids) {
-        return ResponseEntity.ok().body(networkModificationService.expandToLeafUuids(modificationUuids));
+    public ResponseEntity<List<UUID>> findAllChildrenUuids(@Parameter(description = "Modification UUIDs to expand") @RequestParam("uuids") List<UUID> compositesModificationUuids) {
+        return ResponseEntity.ok().body(networkModificationService.findAllChildrenUuids(compositesModificationUuids));
     }
 
     @PostMapping(value = "/duplication", consumes = MediaType.APPLICATION_JSON_VALUE)

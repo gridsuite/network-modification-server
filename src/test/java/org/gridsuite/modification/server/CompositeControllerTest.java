@@ -537,7 +537,7 @@ class CompositeControllerTest {
         assertEquals(2, actualNestedInnerSubUuids.size());
 
         // Expanding the outer composite should recursively include all nested UUIDs
-        mvcResult = mockMvc.perform(get(URI_COMPOSITE_NETWORK_MODIF_BASE + "/leaf-uuids")
+        mvcResult = mockMvc.perform(get(URI_COMPOSITE_NETWORK_MODIF_BASE + "/children-uuids")
                         .queryParam("uuids", outerCompositeUuid.toString()))
                 .andExpect(status().isOk()).andReturn();
         Set<UUID> result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
