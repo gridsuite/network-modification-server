@@ -850,7 +850,7 @@ public class NetworkModificationRepository {
 
     @Transactional
     // TODO use modificationsOrder like modifications in a group : remove the OrderColumn annotation in CompositeModificationEntity
-    public void moveSubModification(@NonNull UUID groupUuid, @NonNull UUID sourceCompositeUuid, @NonNull UUID targetCompositeUuid,
+    public void moveSubModification(@NonNull UUID groupUuid, UUID sourceCompositeUuid, UUID targetCompositeUuid,
                                     @NonNull UUID modificationUuid, UUID beforeUuid) {
 
         boolean sameComposite = sourceCompositeUuid != null
