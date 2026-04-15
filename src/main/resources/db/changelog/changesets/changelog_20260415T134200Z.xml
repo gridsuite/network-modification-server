@@ -4,10 +4,48 @@
         <addColumn tableName="line_modification_line_segments">
             <column name="pos_line_segments" type="INT"/>
         </addColumn>
+        <!-- Backfill existing rows with deterministic per-line indexes (adjust ORDER BY if a better historical key exists). -->
+        <sql dbms="postgresql">
+            WITH ranked AS (
+                SELECT line_id, line_segments_id,
+                       ROW_NUMBER() OVER (PARTITION BY line_id ORDER BY line_segments_id) - 1 AS pos
+                FROM line_modification_line_segments
+            )
+            UPDATE line_modification_line_segments t
+            SET pos_line_segments = r.pos
+                FROM ranked r
+            WHERE t.line_id = r.line_id
+              AND t.line_segments_id = r.line_segments_id;
+        </sql>
+        <addNotNullConstraint tableName="line_modification_line_segments"
+                              columnName="pos_line_segments"
+                              columnDataType="INT"/>
+        <addUniqueConstraint tableName="line_modification_line_segments"
+                             columnNames="line_id,pos_line_segments"
+                             constraintName="line_modification_line_segments_pos_uk"/>
     </changeSet>
+
     <changeSet author="elcheikhbas (generated)" id="20260415T134200Z-2">
         <addColumn tableName="line_creation_line_segments">
             <column name="pos_line_segments" type="INT" />
         </addColumn>
+        <sql dbms="postgresql">
+            WITH ranked AS (
+                SELECT line_id, line_segments_id,
+                       ROW_NUMBER() OVER (PARTITION BY line_id ORDER BY line_segments_id) - 1 AS pos
+                FROM line_creation_line_segments
+            )
+            UPDATE line_creation_line_segments t
+            SET pos_line_segments = r.pos
+                FROM ranked r
+            WHERE t.line_id = r.line_id
+              AND t.line_segments_id = r.line_segments_id;
+        </sql>
+        <addNotNullConstraint tableName="line_creation_line_segments"
+                              columnName="pos_line_segments"
+                              columnDataType="INT"/>
+        <addUniqueConstraint tableName="line_creation_line_segments"
+                             columnNames="line_id,pos_line_segments"
+                             constraintName="line_creation_line_segments_pos_uk"/>
     </changeSet>
 </databaseChangeLog>
