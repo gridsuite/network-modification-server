@@ -1,8 +1,8 @@
-/*
-  Copyright (c) 2020, RTE (http://www.rte-france.com)
-  This Source Code Form is subject to the terms of the Mozilla Public
-  License, v. 2.0. If a copy of the MPL was not distributed with this
-  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/**
+ * Copyright (c) 2026, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server;
 
@@ -275,12 +275,7 @@ class ModificationControllerTest {
                 status().isOk());
 
         // check group existance
-        mvcResult = mockMvc.perform(get("/v1/groups"))
-                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<UUID> groupUuids = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
+        List<UUID> groupUuids = networkModificationService.getModificationGroups();
         assertEquals(groupUuids, List.of(TEST_GROUP_ID));
 
         // get export modifications Infos group
@@ -326,21 +321,14 @@ class ModificationControllerTest {
         String switchStatusModificationInfosJson = TestUtils.getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
 
         // no groups
-        mvcResult = mockMvc.perform(get("/v1/groups")).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<UUID> bsicListResult = mapper.readValue(resultAsString, new TypeReference<>() { });
+        List<UUID> bsicListResult = networkModificationService.getModificationGroups();
         assertEquals(bsicListResult, List.of());
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
          // switch opening to create the default group
-        mvcResult = mockMvc.perform(get("/v1/groups")).andExpectAll(
-         status().isOk(),
-         content().contentType(MediaType.APPLICATION_JSON))
-         .andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<UUID> bsicListResultUUID = mapper.readValue(resultAsString, new TypeReference<>() { });
+        List<UUID> bsicListResultUUID = networkModificationService.getModificationGroups();
         assertEquals(bsicListResultUUID, List.of(TEST_GROUP_ID));
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", TEST_GROUP_ID)).andExpectAll(
          status().isOk(),
