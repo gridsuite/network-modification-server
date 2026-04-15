@@ -66,6 +66,7 @@ public class LineModificationEntity extends BranchModificationEntity {
         joinColumns = @JoinColumn(name = "line_id"), foreignKey = @ForeignKey(name = "line_modification_id_fk"),
         inverseJoinColumns = @JoinColumn(name = "line_segments_id"), inverseForeignKey = @ForeignKey(name = "line_segments_id_modification_fk"),
         uniqueConstraints = @UniqueConstraint(name = "line_modification_line_segments_uk", columnNames = {"line_segments_id"}))
+    @OrderColumn(name = "pos_line_segments")
     private List<LineSegmentEntity> lineSegments;
 
     public LineModificationEntity(LineModificationInfos lineModificationInfos) {
