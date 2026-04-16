@@ -663,7 +663,7 @@ class CompositeControllerTest {
                         TEST_GROUP_ID, actualComposite1Uuid)
                         .queryParam("sourceCompositeUuid", composite0Uuid.toString())
                         .queryParam("targetCompositeUuid", actualComposite3Uuid.toString()))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().is4xxClientError());
 
         // Case 3: self — move composite1 into itself
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
@@ -671,5 +671,135 @@ class CompositeControllerTest {
                         .queryParam("sourceCompositeUuid", composite0Uuid.toString())
                         .queryParam("targetCompositeUuid", actualComposite1Uuid.toString()))
                 .andExpect(status().is5xxServerError());
+    }
+
+    /**
+     * Builds a chain of composites of the given depth and returns the UUID of the outermost one.
+     * depth=1 → composite → [leaf]
+     * depth=2 → composite → [composite → [leaf]]
+     * etc.
+     * Uses a fresh random group UUID for the leaf so repeated calls don't accumulate modifications
+     * in a shared group and break the size assertion in createSomeSwitchModifications.
+     */
+    private UUID createCompositeChain(int depth) throws Exception {
+        UUID currentUuid = createSomeSwitchModifications(UUID.randomUUID(), 1).getFirst().getUuid();
+        for (int i = 0; i < depth; i++) {
+            MvcResult r = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                            .content(mapper.writeValueAsString(List.of(currentUuid)))
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk()).andReturn();
+            currentUuid = mapper.readValue(r.getResponse().getContentAsString(), new TypeReference<>() { });
+        }
+        return currentUuid;
+    }
+
+    @Test
+    void testCreateCompositeDepthLimitReached() throws Exception {
+        // MAX_COMPOSITE_DEPTH = 5: a chain of 5 composites already has internal depth 5.
+        // Trying to wrap it in one more composite must be rejected.
+        // createCompositeChain(5): leaf wrapped 5 times → depth 5 internally
+        UUID deepChainUuid = createCompositeChain(5);
+
+        // Wrapping this in another composite would reach depth 6 → must fail
+        mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(List.of(deepChainUuid)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is4xxClientError());
+
+        // A chain of 4 composites has internal depth 4 — wrapping it once (total 5) is still valid
+        UUID shallowChainUuid = createCompositeChain(4);
+        mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(List.of(shallowChainUuid)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testMoveSubModificationDepthLimitReached() throws Exception {
+        // Build: targetRoot → [targetComposite(depth=3 internally)]
+        // source: a composite with internal depth 2
+        // depthFromRoot(targetComposite) = 3 - 3 = 0... need targetComposite itself at depth 3 from root.
+        //
+        // Simpler setup:
+        //   targetRoot → [targetComposite → [targetInner → [leaf]]]  (targetComposite depth=2, targetRoot depth=3)
+        //   source: composite → [composite → [composite → [leaf]]]   (source internal depth=3)
+        //   depthFromRoot(targetInner) = rootMaxDepth - targetInnerDepth = 3 - 1 = 2
+        //   check: depthFromRoot + sourceInternalDepth = 2 + 3 = 5 >= 5 → rejected
+
+        // Build target chain: targetInner → [leaf], targetComposite → [targetInner], targetRoot → [targetComposite]
+        UUID targetLeafUuid = createSomeSwitchModifications(TEST_GROUP2_ID, 1).getFirst().getUuid();
+        MvcResult r = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(List.of(targetLeafUuid))).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID targetInnerUuid = mapper.readValue(r.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        r = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(List.of(targetInnerUuid))).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID targetCompositeUuid = mapper.readValue(r.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        r = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(List.of(targetCompositeUuid))).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID targetRootUuid = mapper.readValue(r.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Insert targetRoot into the group so moveSubModification can resolve the group
+        runRequestAsync(mockMvc,
+                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}?action=INSERT", TEST_GROUP_ID)
+                        .content(getJsonBodyModificationCompositeInfos(List.of(Pair.of(targetRootUuid, "targetRoot"))))
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+
+        // Fetch actual UUIDs of copies created by INSERT
+        List<ModificationInfos> groupMods = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        UUID actualTargetRootUuid = groupMods.stream().filter(m -> COMPOSITE_MODIFICATION == m.getType())
+                .map(ModificationInfos::getUuid).findFirst().orElseThrow();
+        UUID actualTargetCompositeUuid = mapper.readValue(
+                        mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", actualTargetRootUuid))
+                                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
+                        new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
+                .get(actualTargetRootUuid).stream()
+                .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
+        UUID actualTargetInnerUuid = mapper.readValue(
+                        mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", actualTargetCompositeUuid))
+                                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
+                        new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
+                .get(actualTargetCompositeUuid).stream()
+                .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
+
+        // Build source: composite with internal depth 2 (sourceInternalDepth = 2)
+        // depthFromRoot(actualTargetInner) = rootMaxDepth(3) - targetInnerDepth(1) = 2
+        // 2 + 2 = 4 < 5 → should be allowed
+        UUID sourceShallowUuid = createCompositeChain(2);
+        runRequestAsync(mockMvc,
+                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}?action=INSERT", TEST_GROUP_ID)
+                        .content(getJsonBodyModificationCompositeInfos(List.of(Pair.of(sourceShallowUuid, "shallow"))))
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+        UUID actualSourceShallowUuid = modificationRepository.getModifications(TEST_GROUP_ID, true, true).stream()
+                .filter(m -> COMPOSITE_MODIFICATION == m.getType())
+                .reduce((first, second) -> second) // last inserted
+                .map(ModificationInfos::getUuid).orElseThrow();
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
+                        TEST_GROUP_ID, actualSourceShallowUuid)
+                        .queryParam("targetCompositeUuid", actualTargetInnerUuid.toString()))
+                .andExpect(status().isOk());
+
+        // Build source: composite with internal depth 3 (sourceInternalDepth = 3)
+        // depthFromRoot(actualTargetInner) = 2, 2 + 3 = 5 >= 5 → must be rejected
+        UUID sourceTooDeepUuid = createCompositeChain(3);
+        runRequestAsync(mockMvc,
+                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}?action=INSERT", TEST_GROUP_ID)
+                        .content(getJsonBodyModificationCompositeInfos(List.of(Pair.of(sourceTooDeepUuid, "tooDeep"))))
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+        UUID actualSourceTooDeepUuid = modificationRepository.getModifications(TEST_GROUP_ID, true, true).stream()
+                .filter(m -> COMPOSITE_MODIFICATION == m.getType())
+                .reduce((first, second) -> second) // last inserted
+                .map(ModificationInfos::getUuid).orElseThrow();
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
+                        TEST_GROUP_ID, actualSourceTooDeepUuid)
+                        .queryParam("targetCompositeUuid", actualTargetInnerUuid.toString()))
+                .andExpect(status().is4xxClientError());
     }
 }
