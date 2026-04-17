@@ -673,14 +673,6 @@ class CompositeControllerTest {
                 .andExpect(status().is5xxServerError());
     }
 
-    /**
-     * Builds a chain of composites of the given depth and returns the UUID of the outermost one.
-     * depth=1 → composite → [leaf]
-     * depth=2 → composite → [composite → [leaf]]
-     * etc.
-     * Uses a fresh random group UUID for the leaf so repeated calls don't accumulate modifications
-     * in a shared group and break the size assertion in createSomeSwitchModifications.
-     */
     private UUID createCompositeChain(int depth) throws Exception {
         UUID currentUuid = createSomeSwitchModifications(UUID.randomUUID(), 1).getFirst().getUuid();
         for (int i = 0; i < depth; i++) {
