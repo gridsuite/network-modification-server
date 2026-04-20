@@ -43,9 +43,11 @@ public class LineCreationEntity extends BranchCreationEntity {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
+        name = "line_creation_line_segments",
         joinColumns = @JoinColumn(name = "line_id"), foreignKey = @ForeignKey(name = "line_id_fk"),
         inverseJoinColumns = @JoinColumn(name = "line_segments_id"), inverseForeignKey = @ForeignKey(name = "line_segments_id_fk"),
         uniqueConstraints = @UniqueConstraint(name = "line_creation_line_segments_uk", columnNames = {"line_segments_id"}))
+    @OrderColumn(name = "pos_line_segments")
     private List<LineSegmentEntity> lineSegments;
 
     public LineCreationEntity(LineCreationInfos lineCreationInfos) {
