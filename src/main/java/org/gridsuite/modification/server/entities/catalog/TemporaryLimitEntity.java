@@ -46,7 +46,7 @@ public class TemporaryLimitEntity {
     public TemporaryLimitInfos toTemporaryLimitInfos(Integer conductorsNumber) {
         return TemporaryLimitInfos.builder()
                 .id(id)
-                .limitValue(conductorsNumber * limitValue)
+                .limitValue(conductorsNumber != null ? conductorsNumber * limitValue : limitValue)
                 .acceptableDuration(acceptableDuration)
                 .name(name)
                 .build();
