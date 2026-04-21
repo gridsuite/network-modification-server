@@ -43,10 +43,10 @@ public class TemporaryLimitEntity {
     @Column
     private String name;
 
-    public TemporaryLimitInfos toTemporaryLimitInfos() {
+    public TemporaryLimitInfos toTemporaryLimitInfos(Integer conductorsNumber) {
         return TemporaryLimitInfos.builder()
                 .id(id)
-                .limitValue(limitValue)
+                .limitValue(conductorsNumber != null ? conductorsNumber * limitValue : limitValue)
                 .acceptableDuration(acceptableDuration)
                 .name(name)
                 .build();
