@@ -111,6 +111,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     interface CompositeDepth {
         String getId();
+
         Integer getDepth();
     }
 
