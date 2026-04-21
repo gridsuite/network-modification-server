@@ -109,6 +109,42 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         "SELECT distinct cast(m.id AS VARCHAR) FROM ModificationHierarchy m ")
     List<UUID> findAllChildrenUuids(UUID compositeUuid);
 
+    interface CompositeDepth {
+        String getId();
+
+        Integer getDepth();
+    }
+
+    @NativeQuery("WITH RECURSIVE ModificationHierarchy (root_id, id, level) AS ( " +
+            "    SELECT m0.id, m0.modification_id, 1 " +
+            "    FROM composite_modification_sub_modifications m0 " +
+            "    INNER JOIN modification mod ON mod.id = m0.modification_id AND mod.stashed = false " +
+            "    WHERE m0.id IN (:compositeUuids) " +
+            "    UNION ALL " +
+            "    SELECT mh.root_id, m.modification_id, mh.level + 1 " +
+            "    FROM composite_modification_sub_modifications m " +
+            "    INNER JOIN modification mod ON mod.id = m.modification_id AND mod.stashed = false " +
+            "    INNER JOIN ModificationHierarchy mh ON m.id = mh.id " +
+            ") " +
+            "SELECT cast(root_id AS VARCHAR) AS id, MAX(level) AS depth FROM ModificationHierarchy GROUP BY root_id")
+    List<CompositeDepth> getCompositesMaxDepth(@Param("compositeUuids") List<UUID> compositeUuids);
+
     @EntityGraph(attributePaths = {"modifications"}, type = EntityGraph.EntityGraphType.LOAD)
     List<CompositeModificationEntity> findAllCompositesWithModificationsByIdIn(List<UUID> compositeUuids);
+
+    @NativeQuery("WITH RECURSIVE Ancestors (id, parent_id) AS ( " +
+            "    SELECT :modificationUuid, cm.id " +
+            "    FROM composite_modification_sub_modifications cm " +
+            "    WHERE cm.modification_id = :modificationUuid " +
+            "    UNION ALL " +
+            "    SELECT a.parent_id, cm.id " +
+            "    FROM composite_modification_sub_modifications cm " +
+            "    INNER JOIN Ancestors a ON cm.modification_id = a.parent_id " +
+            ") " +
+            "SELECT cast(COALESCE(" +
+            "    (SELECT a.parent_id FROM Ancestors a WHERE a.parent_id NOT IN (SELECT modification_id FROM composite_modification_sub_modifications) LIMIT 1)," +
+            "    (SELECT a.id FROM Ancestors a LIMIT 1)," +
+            "    :modificationUuid" +
+            ") AS VARCHAR)")
+    String findRootAncestorUuid(@Param("modificationUuid") UUID modificationUuid);
 }
