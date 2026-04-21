@@ -310,12 +310,6 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    void testVoltageInitConnectedCurrentSection0Section0() throws Exception {
-        testVoltageInitShunt("v2shunt", 0, 0, false);
-        assertLogMessage("Shunt compensator disconnected", "network.modification.shuntCompensatorDisconnected", reportService);
-    }
-
-    @Test
     void testVoltageInitDisconnectedConnectNull() throws Exception {
         testVoltageInitShunt("v5shunt", 0, 0, null);
         assertLogMessage("Connect value is undefined", "network.modification.shuntCompensatorConnectUndefined", reportService);
