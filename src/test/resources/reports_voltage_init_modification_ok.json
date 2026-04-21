@@ -12,7 +12,6 @@
       "network.modification.generatorModification" : "Generator with id=${id} modified :",
       "network.modification.generatorModificationsResume" : "${count} generator(s) have been modified.",
       "network.modification.server.nodeUuid" : "${nodeUuid}",
-      "network.modification.shuntCompensatorDisconnected" : "Shunt compensator disconnected",
       "network.modification.shuntCompensatorModification" : "Shunt compensator with id=${id} modified :",
       "network.modification.shuntCompensatorModificationsResume" : "${count} shunt compensator(s) have been modified.",
       "network.modification.staticVarCompensatorModification" : "Static var compensator with id=${id} modified :",
@@ -175,14 +174,6 @@
             "id" : {
               "value" : "SHUNT3"
             },
-            "reportSeverity" : {
-              "value" : "DETAIL",
-              "type" : "SEVERITY"
-            }
-          }
-        }, {
-          "messageKey" : "network.modification.shuntCompensatorDisconnected",
-          "values" : {
             "reportSeverity" : {
               "value" : "DETAIL",
               "type" : "SEVERITY"
