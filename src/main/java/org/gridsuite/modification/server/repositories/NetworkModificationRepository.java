@@ -152,10 +152,18 @@ public class NetworkModificationRepository {
 
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
-        List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .map(this::toModificationsInfosOptimized)
-                .map(ModificationEntity::fromDTO)
+        // Fetch originals once, preserving order
+        Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
+                .collect(Collectors.toMap(
+                        ModificationEntity::getId,
+                        e -> ModificationEntity.fromDTO(toModificationsInfosOptimized(e))
+                ));
+        // Reorder clones to match caller-specified order
+        List<ModificationEntity> copyEntities = modificationUuids.stream()
+                .map(cloneByUuid::get)
+                .filter(Objects::nonNull)
                 .toList();
+
         compositeEntity.setModifications(copyEntities);
         return modificationRepository.save(compositeEntity).getId();
     }
