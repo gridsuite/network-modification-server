@@ -152,6 +152,11 @@ public class NetworkModificationRepository {
 
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
+        saveModificationsIntoComposite(modificationUuids, compositeEntity);
+        return modificationRepository.save(compositeEntity).getId();
+    }
+
+    private void saveModificationsIntoComposite(@NonNull List<UUID> modificationUuids, @NonNull CompositeModificationEntity compositeEntity) {
         // Fetch originals once, preserving order
         Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
                 .collect(Collectors.toMap(
@@ -165,7 +170,6 @@ public class NetworkModificationRepository {
                 .toList();
 
         compositeEntity.setModifications(copyEntities);
-        return modificationRepository.save(compositeEntity).getId();
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
@@ -177,12 +181,7 @@ public class NetworkModificationRepository {
                     String.format("Modification (%s) is not a composite modification", compositeUuid));
         }
 
-        List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .map(this::toModificationsInfosOptimized)
-                .map(ModificationEntity::fromDTO)
-                .toList();
-        compositeEntity.getModifications().clear();
-        compositeEntity.getModifications().addAll(copyEntities);
+        saveModificationsIntoComposite(modificationUuids, compositeEntity);
         modificationRepository.save(compositeEntity);
     }
 
