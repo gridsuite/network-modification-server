@@ -244,6 +244,7 @@ public class NetworkModificationRepository {
         return modificationsToMove;
     }
 
+    // GÈRE TOUT CE QU'IL FAUT POUR RÉORGA APRÈS DÉPLACEMENT DE CE QUe je vois
     private void insertModifications(List<ModificationEntity> modificationsList, List<ModificationEntity> modificationsToAdd, UUID referenceModificationUuid) {
         // If referenceModificationUuid == null we will append at the end of list, otherwise we will insert before referenceModification
         int insertionIndex = referenceModificationUuid == null ?
@@ -959,7 +960,7 @@ public class NetworkModificationRepository {
                         String.format("Modification (%s) not found in group (%s)", modificationUuid, groupUuid));
             }
             for (int i = 0; i < rootMods.size(); i++) {
-                rootMods.get(i).setModificationsOrder(i);
+                rootMods.get(i).setModificationsOrder(i);// TODO : à dupliquer dans l'autre cas
             }
             group.setModifications(rootMods);
             movedEntities.forEach(entity -> entity.setGroup(null));

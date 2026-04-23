@@ -37,7 +37,7 @@ public class CompositeModificationEntity extends ModificationEntity {
             name = "compositeModificationSubModifications",
             joinColumns = @JoinColumn(name = "id"), foreignKey = @ForeignKey(name = "composite_modification_sub_modifications_id_fk"),
             inverseJoinColumns = @JoinColumn(name = "modificationId"), inverseForeignKey = @ForeignKey(name = "modification_id_fk"))
-    @OrderColumn
+    @OrderColumn // TODO to me removed
     private List<ModificationEntity> modifications = new ArrayList<>();
 
     public CompositeModificationEntity(@NonNull CompositeModificationInfos compositeModificationInfos) {
@@ -61,6 +61,7 @@ public class CompositeModificationEntity extends ModificationEntity {
 
     // when we go back to an empty list, dont use addAll() on the list because JPA could start
     // @OrderColumn to 1 instead of 0
+    // TODO : the change on OrderColumn shold also remove the need for this previous comment
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
         this.setName(compositeModificationInfos.getName());
         modifications.clear();
