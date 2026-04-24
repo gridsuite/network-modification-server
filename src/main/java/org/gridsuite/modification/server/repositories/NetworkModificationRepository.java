@@ -458,7 +458,11 @@ public class NetworkModificationRepository {
             .uuid(compositeEntity.getId())
             .stashed(compositeEntity.getStashed())
             .modificationsInfos(
-                compositeEntity.getModifications().stream().filter(m -> !modificationsToExclude.contains(m.getId())).map(m -> toModificationsInfosOptimized(m, modificationsToExclude)).toList())
+                compositeEntity.getModifications()
+                        .stream()
+                        .filter(m -> !modificationsToExclude.contains(m.getId()))
+                        .sorted(Comparator.comparing(ModificationEntity::getModificationsOrder))
+                        .map(m -> toModificationsInfosOptimized(m, modificationsToExclude)).toList())
             .build();
     }
 

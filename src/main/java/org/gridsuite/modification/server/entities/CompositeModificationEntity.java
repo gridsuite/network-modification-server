@@ -16,6 +16,7 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -46,7 +47,9 @@ public class CompositeModificationEntity extends ModificationEntity {
 
     @Override
     public CompositeModificationInfos toModificationInfos() {
-        List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).toList();
+        List<ModificationInfos> modificationsInfos = modifications.stream()
+                .sorted(Comparator.comparing(ModificationEntity::getModificationsOrder))
+                .map(ModificationEntity::toModificationInfos).toList();
         return CompositeModificationInfos.builder()
                 .name(getName())
                 .activated(getActivated())
@@ -58,14 +61,15 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .build();
     }
 
-    // when we go back to an empty list, dont use addAll() on the list because JPA could start
-    // @OrderColumn to 1 instead of 0
-    // TODO : the change on OrderColumn shold also remove the need for this previous comment
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
         this.setName(compositeModificationInfos.getName());
         modifications.clear();
-        modifications = compositeModificationInfos.getModificationsInfos().stream()
+        modifications.addAll(compositeModificationInfos.getModificationsInfos().stream()
                 .map(ModificationEntity::fromDTO)
-                .toList();
+                .toList());
+
+        for (int i = 0; i < modifications.size(); i++) {
+            modifications.get(i).setModificationsOrder(i);
+        }
     }
 }
