@@ -922,7 +922,7 @@ public class NetworkModificationRepository {
             CompositeModificationEntity composite = compositeModificationRepository.findById(sourceCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, sourceCompositeUuid)));
-            List<ModificationEntity> subMods = new ArrayList<>(composite.getModifications());
+            List<ModificationEntity> subMods = composite.getModifications();
             subMods.sort(Comparator.comparingInt(ModificationEntity::getModificationsOrder));
             List<ModificationEntity> removed = removeModifications(subMods, List.of(modificationUuid));
             if (removed.isEmpty()) {
@@ -940,7 +940,7 @@ public class NetworkModificationRepository {
             CompositeModificationEntity sourceComposite = compositeModificationRepository.findById(sourceCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, sourceCompositeUuid)));
-            notMovedMods = new ArrayList<>(sourceComposite.getModifications());
+            notMovedMods = sourceComposite.getModifications();
             movedMods = removeModifications(notMovedMods, List.of(modificationUuid));
             if (movedMods.isEmpty()) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
@@ -997,7 +997,9 @@ public class NetworkModificationRepository {
             CompositeModificationEntity targetComposite = compositeModificationRepository.findById(targetCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, targetCompositeUuid)));
-            List<ModificationEntity> targetSubMods = new ArrayList<>(targetComposite.getModifications());
+            List<ModificationEntity> targetSubMods = targetComposite.getModifications();
+            // TODO faire une fonction intermédiaire pour ÉVITER DE DEVOIR TOUT LE TEMPS retrier ?
+            targetSubMods.sort(Comparator.comparingInt(ModificationEntity::getModificationsOrder));
             insertModifications(targetSubMods, movedMods, beforeUuid);
         } else {
             // Moved to the root level of the network modification table
