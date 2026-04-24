@@ -163,7 +163,9 @@ public class NetworkModificationRepository {
                 .map(cloneByUuid::get)
                 .filter(Objects::nonNull)
                 .toList();
-
+        for (int order = 0; order < copyEntities.size(); order++) {
+            copyEntities.get(order).setModificationsOrder(order);
+        }
         compositeEntity.setModifications(copyEntities);
         return modificationRepository.save(compositeEntity).getId();
     }
