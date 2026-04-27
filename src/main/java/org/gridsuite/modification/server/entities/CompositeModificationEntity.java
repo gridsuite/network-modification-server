@@ -38,6 +38,7 @@ public class CompositeModificationEntity extends ModificationEntity {
             name = "compositeModificationSubModifications",
             joinColumns = @JoinColumn(name = "id"), foreignKey = @ForeignKey(name = "composite_modification_sub_modifications_id_fk"),
             inverseJoinColumns = @JoinColumn(name = "modificationId"), inverseForeignKey = @ForeignKey(name = "modification_id_fk"))
+    @OrderBy("modificationsOrder asc")
     private List<ModificationEntity> modifications = new ArrayList<>();
 
     public CompositeModificationEntity(@NonNull CompositeModificationInfos compositeModificationInfos) {
