@@ -1019,7 +1019,6 @@ public class NetworkModificationRepository {
                     .filter(Objects::nonNull)
                     .filter(m -> !m.getStashed())
                     .collect(Collectors.toList());
-            movedMods.forEach(movedEntity -> movedEntity.setGroup(group));
             insertModifications(rootMods, movedMods, beforeUuid);
             group.setModifications(rootMods);
         }
