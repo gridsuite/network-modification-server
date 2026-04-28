@@ -11,11 +11,19 @@ import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.dto.tabular.*;
+import org.gridsuite.modification.dto.CompositeModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.dto.tabular.LimitSetsTabularModificationInfos;
+import org.gridsuite.modification.dto.tabular.TabularBaseInfos;
+import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
+import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.entities.*;
+import org.gridsuite.modification.server.entities.CompositeModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationGroupEntity;
+import org.gridsuite.modification.server.entities.ModificationReferenceEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
@@ -131,10 +139,8 @@ public class NetworkModificationRepository {
         return entities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
-    private List<ModificationEntity> saveModificationInfosNonTransactional(UUID groupUuid,
-            List<ModificationInfos> modifications) {
+    private List<ModificationEntity> saveModificationInfosNonTransactional(UUID groupUuid, List<ModificationInfos> modifications) {
         List<ModificationEntity> entities = modifications.stream().map(ModificationEntity::fromDTO).toList();
-
         return saveModificationsNonTransactional(groupUuid, entities);
     }
 
@@ -473,6 +479,19 @@ public class NetworkModificationRepository {
                 .build();
     }
 
+    private ModificationReferenceInfos loadModificationReference(ModificationReferenceEntity modificationEntity) {
+        return ModificationReferenceInfos.builder()
+            .uuid(modificationEntity.getId())
+            .activated(modificationEntity.getActivated())
+            .description(modificationEntity.getDescription())
+            .date(modificationEntity.getDate())
+            .stashed(modificationEntity.getStashed())
+            .referenceId(modificationEntity.getReferenceId())
+            .referenceType(ModificationReferenceInfos.Type.valueOf(modificationEntity.getReferenceType()))
+            .referenceInfos(toModificationsInfosOptimized(modificationRepository.getReferenceById(modificationEntity.getReferenceId())))
+            .build();
+    }
+
     private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity) {
         return toModificationsInfosOptimized(modificationEntity, Set.of(), Map.of());
     }
@@ -494,6 +513,9 @@ public class NetworkModificationRepository {
         }
         if (modificationEntity instanceof TabularModificationsEntity tabularEntity) {
             return loadTabularModification(tabularEntity);
+        }
+        if (modificationEntity instanceof ModificationReferenceEntity referenceEntity) {
+            return loadModificationReference(referenceEntity);
         }
         return modificationEntity.toModificationInfos();
     }
