@@ -102,12 +102,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
-            <dependency>
-                <groupId>org.gridsuite</groupId>
-                <artifactId>gridsuite-network-modification</artifactId>
-            </dependency>
-
+            
             <!-- project specific dependencies -->
             <dependency>
                 <groupId>com.vladmihalcea</groupId>
