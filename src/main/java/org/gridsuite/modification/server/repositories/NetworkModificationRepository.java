@@ -973,22 +973,6 @@ public class NetworkModificationRepository {
         }
 
         if (targetCompositeUuid != null) {
-            // Depth limit check: after the move, the resulting nesting must not exceed MAX_COMPOSITE_DEPTH.
-            // - sourceInternalDepth: how deep the moving modification's own sub-tree goes (0 if it's a leaf)
-            // - rootOfTarget: the topmost composite that owns targetCompositeUuid
-            // - rootMaxDepth: depth of the entire root sub-tree currently
-            // After insertion: new root depth = rootMaxDepth + 1 (the inserted level) + sourceInternalDepth
-            UUID rootOfTarget = findRootAncestorUuid(targetCompositeUuid);
-            Map<UUID, Integer> depthByUuid = getCompositesMaxDepthMap(List.of(modificationUuid, rootOfTarget, targetCompositeUuid));
-            int sourceInternalDepth = depthByUuid.getOrDefault(modificationUuid, 0);
-            int rootMaxDepth = depthByUuid.getOrDefault(rootOfTarget, 0);
-            int targetMaxDepth = depthByUuid.getOrDefault(targetCompositeUuid, 0);
-
-            int depthFromRoot = rootMaxDepth - targetMaxDepth;
-            if (depthFromRoot + sourceInternalDepth >= MAX_COMPOSITE_DEPTH) {
-                throw new NetworkModificationException(COMPOSITE_NESTED_LIMIT_REACHED_ERROR);
-            }
-
             // Check if targeted composite isn't already inside modificationUuid
             ModificationEntity movingEntity = modificationRepository.findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
