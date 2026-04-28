@@ -66,7 +66,7 @@ public class AerialLineTypeEntity extends LineTypeEntity {
                 .limitsForLineType(this.getLimitsForLineType().stream()
                         .filter(limitsForLineTypeEntity -> limitsForLineTypeEntity.getArea().equals(area) &&
                                 limitsForLineTypeEntity.getTemperature().equals(temperature))
-                        .map(LimitsForLineTypeEntity::toLineTypeInfos).toList())
+                        .map(e -> e.toLineTypeInfos(this.conductorsNumber)).toList())
                 .build();
     }
 

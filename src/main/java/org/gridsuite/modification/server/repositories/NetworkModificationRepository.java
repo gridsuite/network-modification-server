@@ -70,6 +70,8 @@ public class NetworkModificationRepository {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationRepository.class);
 
+    private static final int MAX_COMPOSITE_DEPTH = 5;
+
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
                                          GeneratorCreationRepository generatorCreationRepository,
@@ -137,12 +139,31 @@ public class NetworkModificationRepository {
     }
 
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
+        // Only composites contribute to depth — leaves have no entry in the join table and count as 0
+        List<UUID> compositeUuids = new ArrayList<>(modificationRepository.findExistingCompositeModificationIds(modificationUuids));
+        if (!compositeUuids.isEmpty()) {
+            int maxDepth = getCompositesMaxDepthMap(compositeUuids).values().stream()
+                    .mapToInt(Integer::intValue).max()
+                    .orElse(0);
+            if (maxDepth >= MAX_COMPOSITE_DEPTH) {
+                throw new NetworkModificationException(COMPOSITE_NESTED_LIMIT_REACHED_ERROR);
+            }
+        }
+
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
-        List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .map(this::toModificationsInfosOptimized)
-                .map(ModificationEntity::fromDTO)
+        // Fetch originals once, preserving order
+        Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
+                .collect(Collectors.toMap(
+                        ModificationEntity::getId,
+                        e -> ModificationEntity.fromDTO(toModificationsInfosOptimized(e))
+                ));
+        // Reorder clones to match caller-specified order
+        List<ModificationEntity> copyEntities = modificationUuids.stream()
+                .map(cloneByUuid::get)
+                .filter(Objects::nonNull)
                 .toList();
+
         compositeEntity.setModifications(copyEntities);
         return modificationRepository.save(compositeEntity).getId();
     }
@@ -156,9 +177,16 @@ public class NetworkModificationRepository {
                     String.format("Modification (%s) is not a composite modification", compositeUuid));
         }
 
-        List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .map(this::toModificationsInfosOptimized)
-                .map(ModificationEntity::fromDTO)
+        // Fetch originals once, preserving order
+        Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
+                .collect(Collectors.toMap(
+                        ModificationEntity::getId,
+                        e -> ModificationEntity.fromDTO(toModificationsInfosOptimized(e))
+                ));
+        // Reorder clones to match caller-specified order
+        List<ModificationEntity> copyEntities = modificationUuids.stream()
+                .map(cloneByUuid::get)
+                .filter(Objects::nonNull)
                 .toList();
         compositeEntity.getModifications().clear();
         compositeEntity.getModifications().addAll(copyEntities);
@@ -301,20 +329,23 @@ public class NetworkModificationRepository {
     }
 
     public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
-        if (onlyStashed) {
-            return modificationRepository
-                .findAllBaseByGroupIdReverse(getModificationGroup(groupUuid).getId())
-                .stream()
-                .filter(ModificationEntity::getStashed)
-                .map(this::toModificationsInfosOptimized)
-                .collect(Collectors.toList());
-        } else {
-            return modificationRepository
-                .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
-                .stream()
-                .map(this::toModificationsInfosOptimized)
-                .collect(Collectors.toList());
-        }
+        UUID groupId = getModificationGroup(groupUuid).getId();
+        List<ModificationEntity> base = onlyStashed
+                ? modificationRepository.findAllBaseByGroupIdReverse(groupId)
+                : modificationRepository.findAllBaseByGroupId(groupId);
+        Map<UUID, Integer> depths = batchCompositeDepths(base);
+        return base.stream()
+                .filter(m -> !onlyStashed || m.getStashed())
+                .map(m -> toModificationsInfosOptimized(m, Set.of(), depths))
+                .toList();
+    }
+
+    private Map<UUID, Integer> batchCompositeDepths(Collection<ModificationEntity> entities) {
+        List<UUID> compositeIds = entities.stream()
+                .filter(e -> ModificationType.COMPOSITE_MODIFICATION.name().equals(e.getType()))
+                .map(ModificationEntity::getId)
+                .toList();
+        return getCompositesMaxDepthMap(compositeIds);
     }
 
     private List<EquipmentModificationEntity> reorderModifications(List<? extends EquipmentModificationEntity> modifications, List<UUID> subModificationsOrderedUuids) {
@@ -436,13 +467,37 @@ public class NetworkModificationRepository {
             .build();
     }
 
+    private CompositeModificationInfos loadCompositeModificationMetadata(ModificationEntity compositeEntity, Integer maxDepth) {
+        return CompositeModificationInfos.builder()
+                .activated(compositeEntity.getActivated())
+                .description(compositeEntity.getDescription())
+                .date(compositeEntity.getDate())
+                .uuid(compositeEntity.getId())
+                .stashed(compositeEntity.getStashed())
+                .messageType(compositeEntity.getMessageType())
+                .messageValues(compositeEntity.getMessageValues())
+                .maxDepth(maxDepth)
+                .build();
+    }
+
     private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity) {
-        return toModificationsInfosOptimized(modificationEntity, Set.of());
+        return toModificationsInfosOptimized(modificationEntity, Set.of(), Map.of());
     }
 
     private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity, Set<UUID> modificationsToExclude) {
+        return toModificationsInfosOptimized(modificationEntity, modificationsToExclude, Map.of());
+    }
+
+    private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity,
+                                                            Set<UUID> modificationsToExclude,
+                                                            Map<UUID, Integer> precomputedDepths) {
+        // A composite may arrive as a real CompositeModificationEntity (full load, sub-modifications
+        // available) or as a plain ModificationEntity with type == COMPOSITE_MODIFICATION
+        // from findAllBaseByGroupId which strips subclass when retrieving only metadata
         if (modificationEntity instanceof CompositeModificationEntity compositeEntity) {
             return loadCompositeModification(compositeEntity, modificationsToExclude);
+        } else if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
+            return loadCompositeModificationMetadata(modificationEntity, precomputedDepths.get(modificationEntity.getId()));
         }
         if (modificationEntity instanceof TabularModificationsEntity tabularEntity) {
             return loadTabularModification(tabularEntity);
@@ -567,17 +622,30 @@ public class NetworkModificationRepository {
     public List<ModificationInfos> getBasicNetworkModificationsFromComposite(@NonNull List<UUID> uuids) {
         List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationIdIn(uuids);
         Map<UUID, ModificationEntity> entitiesById = modificationRepository.findBaseDataByIdIn(networkModificationsUuids).stream()
-            .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+        Map<UUID, Integer> depths = batchCompositeDepths(entitiesById.values());
         return new ArrayList<>(networkModificationsUuids.stream()
-            .map(entitiesById::get)
-            .filter(Objects::nonNull)
-            .map(this::toModificationsInfosOptimized)
-            .toList());
+                .map(entitiesById::get)
+                .filter(Objects::nonNull)
+                .map(m -> toModificationsInfosOptimized(m, Set.of(), depths))
+                .toList());
     }
 
     @Transactional(readOnly = true)
     public List<UUID> findAllChildrenUuids(@NonNull List<UUID> compositeUuids) {
         return compositeUuids.stream().flatMap(uuid -> modificationRepository.findAllChildrenUuids(uuid).stream()).toList();
+    }
+
+    public Map<UUID, Integer> getCompositesMaxDepthMap(@NonNull List<UUID> compositeUuids) {
+        if (compositeUuids.isEmpty()) {
+            return Map.of();
+        }
+        return modificationRepository.getCompositesMaxDepth(compositeUuids).stream()
+                .collect(Collectors.toMap(c -> UUID.fromString(c.getId()), ModificationRepository.CompositeDepth::getDepth));
+    }
+
+    public UUID findRootAncestorUuid(@NonNull UUID modificationUuid) {
+        return UUID.fromString(modificationRepository.findRootAncestorUuid(modificationUuid));
     }
 
     @Transactional(readOnly = true)
@@ -905,6 +973,22 @@ public class NetworkModificationRepository {
         }
 
         if (targetCompositeUuid != null) {
+            // Depth limit check: after the move, the resulting nesting must not exceed MAX_COMPOSITE_DEPTH.
+            // - sourceInternalDepth: how deep the moving modification's own sub-tree goes (0 if it's a leaf)
+            // - rootOfTarget: the topmost composite that owns targetCompositeUuid
+            // - rootMaxDepth: depth of the entire root sub-tree currently
+            // After insertion: new root depth = rootMaxDepth + 1 (the inserted level) + sourceInternalDepth
+            UUID rootOfTarget = findRootAncestorUuid(targetCompositeUuid);
+            Map<UUID, Integer> depthByUuid = getCompositesMaxDepthMap(List.of(modificationUuid, rootOfTarget, targetCompositeUuid));
+            int sourceInternalDepth = depthByUuid.getOrDefault(modificationUuid, 0);
+            int rootMaxDepth = depthByUuid.getOrDefault(rootOfTarget, 0);
+            int targetMaxDepth = depthByUuid.getOrDefault(targetCompositeUuid, 0);
+
+            int depthFromRoot = rootMaxDepth - targetMaxDepth;
+            if (depthFromRoot + sourceInternalDepth >= MAX_COMPOSITE_DEPTH) {
+                throw new NetworkModificationException(COMPOSITE_NESTED_LIMIT_REACHED_ERROR);
+            }
+
             // Check if targeted composite isn't already inside modificationUuid
             ModificationEntity movingEntity = modificationRepository.findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
