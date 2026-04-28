@@ -16,7 +16,6 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -48,9 +47,7 @@ public class CompositeModificationEntity extends ModificationEntity {
 
     @Override
     public CompositeModificationInfos toModificationInfos() {
-        List<ModificationInfos> modificationsInfos = modifications.stream()
-                .sorted(Comparator.comparing(ModificationEntity::getModificationsOrder))
-                .map(ModificationEntity::toModificationInfos).toList();
+        List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).toList();
         return CompositeModificationInfos.builder()
                 .name(getName())
                 .activated(getActivated())
