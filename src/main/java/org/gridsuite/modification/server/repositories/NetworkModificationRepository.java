@@ -644,10 +644,6 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toMap(c -> UUID.fromString(c.getId()), ModificationRepository.CompositeDepth::getDepth));
     }
 
-    public UUID findRootAncestorUuid(@NonNull UUID modificationUuid) {
-        return UUID.fromString(modificationRepository.findRootAncestorUuid(modificationUuid));
-    }
-
     @Transactional(readOnly = true)
     public List<ModificationInfos> getCompositeModificationsInfos(@NonNull List<UUID> uuids) {
         return getCompositeModificationsInfosNonTransactional(uuids);
