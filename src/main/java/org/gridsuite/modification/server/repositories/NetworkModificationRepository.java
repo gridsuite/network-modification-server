@@ -183,9 +183,16 @@ public class NetworkModificationRepository {
                     String.format("Modification (%s) is not a composite modification", compositeUuid));
         }
 
-        List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .map(this::toModificationsInfosOptimized)
-                .map(ModificationEntity::fromDTO)
+        // Fetch originals once, preserving order
+        Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
+                .collect(Collectors.toMap(
+                        ModificationEntity::getId,
+                        e -> ModificationEntity.fromDTO(toModificationsInfosOptimized(e))
+                ));
+        // Reorder clones to match caller-specified order
+        List<ModificationEntity> copyEntities = modificationUuids.stream()
+                .map(cloneByUuid::get)
+                .filter(Objects::nonNull)
                 .toList();
         compositeEntity.getModifications().clear();
         compositeEntity.getModifications().addAll(copyEntities);
