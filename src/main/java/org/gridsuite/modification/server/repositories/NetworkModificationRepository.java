@@ -27,7 +27,6 @@ import org.gridsuite.modification.server.entities.ModificationReferenceEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
-import org.gridsuite.modification.server.service.DirectoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
