@@ -190,6 +190,9 @@ public class NetworkModificationRepository {
                 .map(cloneByUuid::get)
                 .filter(Objects::nonNull)
                 .toList();
+        for (int order = 0; order < copyEntities.size(); order++) {
+            copyEntities.get(order).setModificationsOrder(order);
+        }
         compositeEntity.getModifications().clear();
         compositeEntity.getModifications().addAll(copyEntities);
         modificationRepository.save(compositeEntity);
