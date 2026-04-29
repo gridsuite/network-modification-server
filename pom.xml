@@ -102,7 +102,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- project specific dependencies -->
             <dependency>
                 <groupId>com.vladmihalcea</groupId>
