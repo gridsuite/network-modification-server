@@ -2,11 +2,15 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
     <changeSet author="deharbemat" id="migrationCompositesOrder">
         <sqlFile
+                dbms="postgresql"
                 encoding="UTF-8"
                 path="migrationCompositesOrder.sql"
                 relativeToChangelogFile="true"
                 splitStatements="true"
                 stripComments="true"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1777454883407-19">
+        <dropPrimaryKey constraintName="COMPOSITE_MODIFICATION_SUB_MODIFICATIONSPK" tableName="COMPOSITE_MODIFICATION_SUB_MODIFICATIONS"/>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1776953906087-20">
         <dropColumn columnName="MODIFICATIONS_ORDER" tableName="COMPOSITE_MODIFICATION_SUB_MODIFICATIONS"/>
