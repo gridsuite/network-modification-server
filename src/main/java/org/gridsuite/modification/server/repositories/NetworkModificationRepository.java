@@ -27,6 +27,7 @@ import org.gridsuite.modification.server.entities.ModificationReferenceEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
+import org.gridsuite.modification.server.service.DirectoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
@@ -487,15 +488,21 @@ public class NetworkModificationRepository {
     }
 
     private ModificationReferenceInfos loadModificationReference(ModificationReferenceEntity modificationEntity) {
+        ModificationEntity referencedEntity = modificationRepository.getReferenceById(modificationEntity.getReferenceId());
+        if (referencedEntity == null) {
+            throw new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getReferenceId()));
+        }
         return ModificationReferenceInfos.builder()
             .uuid(modificationEntity.getId())
+            .messageType(modificationEntity.getMessageType())
+            .messageValues(modificationEntity.getMessageValues())
             .activated(modificationEntity.getActivated())
             .description(modificationEntity.getDescription())
             .date(modificationEntity.getDate())
             .stashed(modificationEntity.getStashed())
             .referenceId(modificationEntity.getReferenceId())
             .referenceType(ModificationReferenceInfos.Type.valueOf(modificationEntity.getReferenceType()))
-            .referenceInfos(toModificationsInfosOptimized(modificationRepository.getReferenceById(modificationEntity.getReferenceId())))
+            .referenceInfos(toModificationsInfosOptimized(referencedEntity))
             .build();
     }
 

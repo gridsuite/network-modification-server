@@ -12,21 +12,25 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @Tag("IntegrationTest")
 class ModificationReferenceTest extends AbstractNetworkModificationTest {
+
+    @Autowired
+    protected ModificationRepository modificationRepository;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -35,12 +39,16 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModification() {
-        ModificationInfos modificationInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
-        modificationInfo = networkModificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(modificationInfo))).getFirst();
+        ModificationInfos loadInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+        ModificationEntity loadEntity = modificationRepository.save(ModificationEntity.fromDTO(loadInfo));
+        ModificationInfos loadMetadataInfo = modificationRepository.findBaseDataByIdIn(List.of(loadEntity.getId())).getFirst().toModificationInfos();
+
         return ModificationReferenceInfos.builder()
+            .messageType(loadMetadataInfo.getMessageType())
+            .messageValues(loadMetadataInfo.getMessageValues())
             .referenceType(ModificationReferenceInfos.Type.SAMPLE)
-            .referenceId(modificationInfo.getUuid())
-            .referenceInfos(modificationInfo)
+            .referenceId(loadMetadataInfo.getUuid())
+            .referenceInfos(loadInfo)
             .stashed(false)
             .build();
     }
@@ -62,11 +70,11 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertNotNull(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
+        assertEquals(ModificationType.LOAD_CREATION.name(), modificationInfos.getMessageType());
     }
 
     @Override
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertNotNull(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
+        assertEquals(ModificationType.LOAD_CREATION.name(), modificationInfos.getMessageType());
     }
 }

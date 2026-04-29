@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -44,6 +43,8 @@ public class ModificationReferenceEntity extends ModificationEntity {
     public ModificationReferenceInfos toModificationInfos() {
         return ModificationReferenceInfos.builder()
             .uuid(getId())
+            .messageType(getMessageType())
+            .messageValues(getMessageValues())
             .activated(getActivated())
             .description(getDescription())
             .date(getDate())
@@ -54,14 +55,23 @@ public class ModificationReferenceEntity extends ModificationEntity {
             .build();
     }
 
+    @Override
+    // Perhaps we should not allow updating reference info (recreating is better)
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((ModificationReferenceInfos) modificationInfos);
+    }
+
     @SneakyThrows
     private void assignAttributes(ModificationReferenceInfos modificationReferenceInfos) {
+        modificationReferenceInfos.check();
+
         this.referenceType = modificationReferenceInfos.getReferenceType().name();
         this.referenceId = modificationReferenceInfos.getReferenceId();
 
-        // appears as the referenced modification
-        this.setMessageType(modificationReferenceInfos.getReferenceInfos().getMessageType());
-        this.setMessageValues(new ObjectMapper().writeValueAsString(modificationReferenceInfos.getReferenceInfos().getMapMessageValues()));
+        // Appears as the referenced modification
+        this.setMessageType(modificationReferenceInfos.getMessageType());
+        this.setMessageValues(modificationReferenceInfos.getMessageValues());
 
         // Transient just for optimization purpose
         // No need to load the referenced modification
