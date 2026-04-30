@@ -52,11 +52,11 @@ public class CompositeController {
             @Parameter(description = "Insertion method", required = true) @RequestParam(value = "action") CompositeModificationAction action,
             @RequestBody Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
         return switch (action) {
-            case SPLIT ->
-                    networkModificationService.splitCompositeModifications(targetGroupUuid, modificationContextInfos)
-                            .thenApply(ResponseEntity.ok()::body);
-            case INSERT ->
-                    networkModificationService.insertCompositeModifications(
+            case SPLIT -> networkModificationService.splitCompositeModifications(
+                            targetGroupUuid,
+                            modificationContextInfos
+                    ).thenApply(ResponseEntity.ok()::body);
+            case INSERT -> networkModificationService.insertCompositeModifications(
                             targetGroupUuid,
                             modificationContextInfos
                     ).thenApply(ResponseEntity.ok()::body);

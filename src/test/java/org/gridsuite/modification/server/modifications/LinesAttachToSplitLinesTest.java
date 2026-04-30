@@ -76,9 +76,9 @@ class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
         assertNull(getNetwork().getLine("l1"));
         assertNull(getNetwork().getLine("l2"));
         assertNull(getNetwork().getLine("l3"));
-        // v2 is gone
-        assertNull(getNetwork().getVoltageLevel("v2"));
-        assertEquals(3, getNetwork().getVoltageLevelCount());
+        // v2 is still here
+        assertNotNull(getNetwork().getVoltageLevel("v2"));
+        assertEquals(4, getNetwork().getVoltageLevelCount());
         // new lines:
         assertNotNull(getNetwork().getLine("nl1"));
         assertNotNull(getNetwork().getLine("nl2"));
