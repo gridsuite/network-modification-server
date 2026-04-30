@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -472,6 +473,25 @@ public class NetworkModificationService {
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, modifications, modificationContextInfos.getSecond()).thenApply(result ->
             new NetworkModificationsResult(ids, result));
+    }
+
+    @Transactional
+    public CompletableFuture<NetworkModificationsResult> mergeNetworkModificationsIntoNewComposite(
+            UUID targetGroupUuid,
+            @NonNull Pair<List<UUID>, List<ModificationApplicationContext>> modificationApplicationContexts) {
+        // TODO : get the target (groupUuid or composite Uuid)
+
+        // TODO : create the composite
+
+        CompositeModificationInfos composite = new CompositeModificationInfos();
+
+        // TODO : assign modifications (remove previous assignment)
+
+        // apply the composite (and implicitely those contained) :
+        return applyModifications(targetGroupUuid, List.of(composite), modificationApplicationContexts.getSecond())
+                .thenApply(results ->
+                        new NetworkModificationsResult(List.of(composite.getUuid()), results)
+                );
     }
 
     @Transactional
