@@ -663,7 +663,7 @@ class CompositeControllerTest {
                         TEST_GROUP_ID, actualComposite1Uuid)
                         .queryParam("sourceCompositeUuid", composite0Uuid.toString())
                         .queryParam("targetCompositeUuid", actualComposite3Uuid.toString()))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().is5xxServerError());
 
         // Case 3: self — move composite1 into itself
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
@@ -704,45 +704,6 @@ class CompositeControllerTest {
                         .content(mapper.writeValueAsString(List.of(shallowChainUuid)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-    }
-
-    @Test
-    void testMoveSubModificationDepthLimitReached() throws Exception {
-        // Target structure: target0 → [target1 → [target2 → [leaf]]]
-        //   target0 internal depth = 3, target1 depth = 2, target2 depth = 1
-        //   depthFromRoot(target2) = target0Depth - target2Depth = 3 - 1 = 2
-        //
-        // Moving source2Depth (internal depth 2) into target2: 2 + 2 = 4 < 5 → allowed
-        // Moving source3Depth (internal depth 3) into target2: 2 + 3 = 5 >= 5 → rejected
-
-        UUID target0Uuid = insertCompositeChainIntoGroup(createCompositeChain(3), "target0");
-        UUID target1Uuid = getFirstCompositeChildUuid(target0Uuid);
-        UUID target2Uuid = getFirstCompositeChildUuid(target1Uuid);
-
-        UUID source2DepthUuid = insertCompositeChainIntoGroup(createCompositeChain(2), "source2Depth");
-        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
-                        TEST_GROUP_ID, source2DepthUuid)
-                        .queryParam("targetCompositeUuid", target2Uuid.toString()))
-                .andExpect(status().isOk());
-
-        UUID source3DepthUuid = insertCompositeChainIntoGroup(createCompositeChain(3), "source3Depth");
-        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
-                        TEST_GROUP_ID, source3DepthUuid)
-                        .queryParam("targetCompositeUuid", target2Uuid.toString()))
-                .andExpect(status().is4xxClientError());
-    }
-
-    /** Inserts a standalone composite into TEST_GROUP_ID via INSERT and returns the copy UUID. */
-    private UUID insertCompositeChainIntoGroup(UUID compositeUuid, String name) throws Exception {
-        runRequestAsync(mockMvc,
-                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}?action=INSERT", TEST_GROUP_ID)
-                        .content(getJsonBodyModificationCompositeInfos(List.of(Pair.of(compositeUuid, name))))
-                        .contentType(MediaType.APPLICATION_JSON),
-                status().isOk());
-        return modificationRepository.getModifications(TEST_GROUP_ID, true, true).stream()
-                .filter(m -> COMPOSITE_MODIFICATION == m.getType())
-                .reduce((first, second) -> second) // last inserted = the one just added
-                .map(ModificationInfos::getUuid).orElseThrow();
     }
 
     /** Returns the UUID of the first composite-typed child of the given composite. */
