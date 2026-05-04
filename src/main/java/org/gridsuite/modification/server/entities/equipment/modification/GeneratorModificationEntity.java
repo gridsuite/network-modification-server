@@ -291,6 +291,10 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .qPercent(toAttributeModification(getQPercent()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
                 .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationInfos(getReactiveCapabilityCurvePoints()))
+                .pMeasurementValue(toAttributeModification(getPMeasurementValue()))
+                .pMeasurementValidity(toAttributeModification(getPMeasurementValidity()))
+                .qMeasurementValue(toAttributeModification(getQMeasurementValue()))
+                .qMeasurementValidity(toAttributeModification(getQMeasurementValidity()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()

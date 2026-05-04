@@ -12,6 +12,9 @@ import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
+import com.powsybl.iidm.network.extensions.Measurement;
+import com.powsybl.iidm.network.extensions.Measurements;
+import org.assertj.core.api.Assertions;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -38,6 +41,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class GeneratorModificationTest extends AbstractInjectionModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
+    private static final Double MEASUREMENT_P_VALUE = 11.0;
+    private static final Double MEASUREMENT_Q_VALUE = -2.0;
+    private static final Boolean MEASUREMENT_P_VALID = false;
+    private static final Boolean MEASUREMENT_Q_VALID = true;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -83,6 +90,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                 .regulatingTerminalVlId(new AttributeModification<>("v1", OperationType.SET))
                 .qPercent(new AttributeModification<>(0.1, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
+                .pMeasurementValue(new AttributeModification<>(MEASUREMENT_P_VALUE, OperationType.SET))
+                .pMeasurementValidity(new AttributeModification<>(MEASUREMENT_P_VALID, OperationType.SET))
+                .qMeasurementValue(new AttributeModification<>(MEASUREMENT_Q_VALUE, OperationType.SET))
+                .qMeasurementValidity(new AttributeModification<>(MEASUREMENT_Q_VALID, OperationType.SET))
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
@@ -133,6 +144,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getStepUpTransformerX());
         assertEquals(ReactiveLimitsKind.CURVE, modifiedGenerator.getReactiveLimits().getKind());
         assertEquals(PROPERTY_VALUE, modifiedGenerator.getProperty(PROPERTY_NAME));
+        assertMeasurements(modifiedGenerator);
     }
 
     @Override
@@ -524,5 +536,17 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
     @Test
     void testConnection() throws Exception {
         assertChangeConnectionState(getNetwork().getGenerator("idGenerator"), true);
+    }
+
+    private void assertMeasurements(Generator generator) {
+        Measurements<?> measurements = (Measurements<?>) generator.getExtension(Measurements.class);
+        assertNotNull(measurements);
+        Collection<Measurement> activePowerMeasurements = measurements.getMeasurements(Measurement.Type.ACTIVE_POWER).stream().toList();
+        assertNotNull(activePowerMeasurements);
+        assertFalse(org.apache.commons.collections4.CollectionUtils.isEmpty(activePowerMeasurements));
+        Assertions.assertThat(activePowerMeasurements).allMatch(m -> m.getValue() == MEASUREMENT_P_VALUE && m.isValid() == MEASUREMENT_P_VALID);
+        Collection<Measurement> reactivePowerMeasurements = measurements.getMeasurements(Measurement.Type.REACTIVE_POWER).stream().toList();
+        assertFalse(org.apache.commons.collections4.CollectionUtils.isEmpty(reactivePowerMeasurements));
+        Assertions.assertThat(reactivePowerMeasurements).allMatch(m -> m.getValue() == MEASUREMENT_Q_VALUE && m.isValid() == MEASUREMENT_Q_VALID);
     }
 }
