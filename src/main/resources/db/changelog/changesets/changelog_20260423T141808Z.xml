@@ -10,7 +10,7 @@
                 stripComments="true"/>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1777454883407-19">
-        <dropPrimaryKey constraintName="COMPOSITE_MODIFICATION_SUB_MODIFICATIONSPK" tableName="COMPOSITE_MODIFICATION_SUB_MODIFICATIONS"/>
+        <dropPrimaryKey constraintName="composite_modification_sub_modificationsPK" tableName="COMPOSITE_MODIFICATION_SUB_MODIFICATIONS"/>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1776953906087-20">
         <dropColumn columnName="MODIFICATIONS_ORDER" tableName="COMPOSITE_MODIFICATION_SUB_MODIFICATIONS"/>
