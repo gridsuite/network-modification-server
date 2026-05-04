@@ -705,15 +705,4 @@ class CompositeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
-
-    /** Returns the UUID of the first composite-typed child of the given composite. */
-    private UUID getFirstCompositeChildUuid(UUID compositeUuid) throws Exception {
-        return mapper.readValue(
-                        mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", compositeUuid))
-                                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                        new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
-                .get(compositeUuid).stream()
-                .filter(m -> COMPOSITE_MODIFICATION == m.getType())
-                .map(ModificationInfos::getUuid).findFirst().orElseThrow();
-    }
 }
