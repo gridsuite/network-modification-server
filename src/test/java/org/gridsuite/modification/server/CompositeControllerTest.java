@@ -672,37 +672,4 @@ class CompositeControllerTest {
                         .queryParam("targetCompositeUuid", actualComposite1Uuid.toString()))
                 .andExpect(status().is5xxServerError());
     }
-
-    private UUID createCompositeChain(int depth) throws Exception {
-        UUID currentUuid = createSomeSwitchModifications(UUID.randomUUID(), 1).getFirst().getUuid();
-        for (int i = 0; i < depth; i++) {
-            MvcResult r = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
-                            .content(mapper.writeValueAsString(List.of(currentUuid)))
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk()).andReturn();
-            currentUuid = mapper.readValue(r.getResponse().getContentAsString(), new TypeReference<>() { });
-        }
-        return currentUuid;
-    }
-
-    @Test
-    void testCreateCompositeDepthLimitReached() throws Exception {
-        // MAX_COMPOSITE_DEPTH = 5: a chain of 5 composites already has internal depth 5.
-        // Trying to wrap it in one more composite must be rejected.
-        // createCompositeChain(5): leaf wrapped 5 times → depth 5 internally
-        UUID deepChainUuid = createCompositeChain(5);
-
-        // Wrapping this in another composite would reach depth 6 → must fail
-        mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
-                        .content(mapper.writeValueAsString(List.of(deepChainUuid)))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError());
-
-        // A chain of 4 composites has internal depth 4 — wrapping it once (total 5) is still valid
-        UUID shallowChainUuid = createCompositeChain(4);
-        mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
-                        .content(mapper.writeValueAsString(List.of(shallowChainUuid)))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-    }
 }

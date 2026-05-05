@@ -70,8 +70,6 @@ public class NetworkModificationRepository {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationRepository.class);
 
-    private static final int MAX_COMPOSITE_DEPTH = 5;
-
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
                                          GeneratorCreationRepository generatorCreationRepository,
@@ -139,17 +137,6 @@ public class NetworkModificationRepository {
     }
 
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
-        // Only composites contribute to depth — leaves have no entry in the join table and count as 0
-        List<UUID> compositeUuids = new ArrayList<>(modificationRepository.findExistingCompositeModificationIds(modificationUuids));
-        if (!compositeUuids.isEmpty()) {
-            int maxDepth = getCompositesMaxDepthMap(compositeUuids).values().stream()
-                    .mapToInt(Integer::intValue).max()
-                    .orElse(0);
-            if (maxDepth >= MAX_COMPOSITE_DEPTH) {
-                throw new NetworkModificationException(COMPOSITE_NESTED_LIMIT_REACHED_ERROR);
-            }
-        }
-
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         // Fetch originals once, preserving order
