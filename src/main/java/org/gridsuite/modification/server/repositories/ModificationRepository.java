@@ -65,6 +65,11 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT cast(modification_id AS VARCHAR) FROM composite_modification_sub_modifications WHERE id = :uuid ORDER BY modifications_order", nativeQuery = true)
     List<UUID> findModificationIdsByCompositeModificationId(UUID uuid);
 
+    // return the uuid of the composite containing the modifcation sent as parameter
+    // TODO : à changer après fusion de ma fiche sur les ordre de modifications de réseau
+    @Query(value = "SELECT cast(id AS UUID) FROM composite_modification_sub_modifications WHERE modification_id = :uuid ORDER BY modifications_order", nativeQuery = true)
+    UUID findCompositeIdByContainedModificationId(UUID uuid);
+
     @Query(value = "SELECT cast(modification_id AS VARCHAR) FROM composite_modification_sub_modifications WHERE id IN (?1) ORDER BY modifications_order", nativeQuery = true)
     List<UUID> findModificationIdsByCompositeModificationIdIn(List<UUID> uuids);
 

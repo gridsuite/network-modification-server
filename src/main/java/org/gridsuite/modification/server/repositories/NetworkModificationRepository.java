@@ -917,6 +917,50 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
+    public CompositeModificationEntity mergeNetworkModificationsIntoNewComposite(
+            List<UUID> mergedModificationsUuids) {
+        // get the target (groupUuid or composite Uuid of the first merged modification + its index in this target)
+        UUID firstModifUuid = mergedModificationsUuids.getFirst();
+        ModificationInfos firstModification = getModificationInfo(firstModifUuid);
+        ModificationEntity firstModificationEntity = getModificationEntity(firstModification.getUuid());
+        int targetIndex = firstModificationEntity.getModificationsOrder();
+        ModificationGroupEntity targetGroup = firstModificationEntity.getGroup();
+        CompositeModificationEntity targetComposite = null;
+        if (targetGroup == null) {
+            // the first modification is inside a composite
+            UUID targetCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(firstModifUuid);
+            targetComposite = compositeModificationRepository.getReferenceById(targetCompositeUuid);
+        }
+
+        // get all the modifications to be merged, remove previous assignment
+        List<ModificationEntity> mergedModifications = mergedModificationsUuids.stream()
+                .map(modificationRepository::getReferenceById)
+                .collect(Collectors.toList());
+        // TODO :remove previous assignments (group/composites..)
+        mergedModifications.forEach(modificationEntity -> modificationEntity.setGroup(null)); // TODO : group should be reordered ??
+
+        // create the composite
+        CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
+        CompositeModificationEntity newCompositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(newCompositeInfos);
+        newCompositeEntity.setModificationsOrder(targetIndex);
+
+        // assign modifications
+        newCompositeEntity.setModifications(mergedModifications);
+        if ( targetGroup != null) {
+            // TODO : réordonancement pour être au même point que la fusionnée num 1
+            newCompositeEntity.setGroup(targetGroup);
+        }
+        if (targetComposite != null) {
+            List<ModificationEntity> modifications = targetComposite.getModifications();
+            modifications.add(newCompositeEntity); // TODO : réordonancement pour être au même point que la fusionnée num 1
+            targetComposite.setModifications(modifications);
+        }
+
+        return modificationRepository.save(newCompositeEntity);
+    }
+
+
+    @Transactional
     // TODO use modificationsOrder like modifications in a group : remove the OrderColumn annotation in CompositeModificationEntity
     public void moveSubModification(@NonNull UUID groupUuid, UUID sourceCompositeUuid, UUID targetCompositeUuid,
                                     @NonNull UUID modificationUuid, UUID beforeUuid) {
