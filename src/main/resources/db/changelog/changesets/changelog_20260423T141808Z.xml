@@ -11,8 +11,10 @@
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1777454883407-19">
         <dropPrimaryKey constraintName="composite_modification_sub_modificationsPK" tableName="COMPOSITE_MODIFICATION_SUB_MODIFICATIONS"/>
-    </changeSet>
-    <changeSet author="deharbemat (generated)" id="1776953906087-20">
         <dropColumn columnName="MODIFICATIONS_ORDER" tableName="COMPOSITE_MODIFICATION_SUB_MODIFICATIONS"/>
+        <addPrimaryKey
+                tableName="COMPOSITE_MODIFICATION_SUB_MODIFICATIONS"
+                columnNames="ID, MODIFICATION_ID"
+                constraintName="composite_modification_sub_modificationsPK"/>
     </changeSet>
 </databaseChangeLog>
