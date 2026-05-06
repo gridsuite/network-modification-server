@@ -131,20 +131,4 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     @EntityGraph(attributePaths = {"modifications"}, type = EntityGraph.EntityGraphType.LOAD)
     List<CompositeModificationEntity> findAllCompositesWithModificationsByIdIn(List<UUID> compositeUuids);
-
-    @NativeQuery("WITH RECURSIVE Ancestors (id, parent_id) AS ( " +
-            "    SELECT :modificationUuid, cm.id " +
-            "    FROM composite_modification_sub_modifications cm " +
-            "    WHERE cm.modification_id = :modificationUuid " +
-            "    UNION ALL " +
-            "    SELECT a.parent_id, cm.id " +
-            "    FROM composite_modification_sub_modifications cm " +
-            "    INNER JOIN Ancestors a ON cm.modification_id = a.parent_id " +
-            ") " +
-            "SELECT cast(COALESCE(" +
-            "    (SELECT a.parent_id FROM Ancestors a WHERE a.parent_id NOT IN (SELECT modification_id FROM composite_modification_sub_modifications) LIMIT 1)," +
-            "    (SELECT a.id FROM Ancestors a LIMIT 1)," +
-            "    :modificationUuid" +
-            ") AS VARCHAR)")
-    String findRootAncestorUuid(@Param("modificationUuid") UUID modificationUuid);
 }
