@@ -718,7 +718,7 @@ public class NetworkModificationRepository {
             }
             if (metadata instanceof CompositeModificationInfos compositeMetadata
                     && modificationEntity instanceof CompositeModificationEntity composite
-                    && composite.getName() != null) {
+                    && compositeMetadata.getName() != null) {
                 compositeModificationRepository.renameCompositeModifications(composite, compositeMetadata);
             }
         }
