@@ -140,9 +140,11 @@
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-client</artifactId>
         </dependency>
+        <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-network-modification</artifactId>
+            <version>${network-modification.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
