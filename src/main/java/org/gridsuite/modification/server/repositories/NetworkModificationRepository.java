@@ -6,10 +6,8 @@
  */
 package org.gridsuite.modification.server.repositories;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
@@ -718,8 +716,10 @@ public class NetworkModificationRepository {
             if (metadata.getActivated() != null) {
                 updateActivated(modificationEntity, metadata.getActivated());
             }
-            if (metadata instanceof CompositeModificationInfos compositeMetadata && modificationEntity instanceof CompositeModificationEntity composite) {
-                renameCompositeModifications(composite, compositeMetadata);
+            if (metadata instanceof CompositeModificationInfos compositeMetadata
+                    && modificationEntity instanceof CompositeModificationEntity composite
+                    && composite.getName() != null) {
+                compositeModificationRepository.renameCompositeModifications(composite, compositeMetadata);
             }
         }
     }
@@ -729,14 +729,6 @@ public class NetworkModificationRepository {
         entity.setActivated(activated);
         if (entity instanceof CompositeModificationEntity composite) {
             composite.getModifications().forEach(sub -> updateActivated(sub, activated));
-        }
-    }
-
-    @SneakyThrows
-    private void renameCompositeModifications(CompositeModificationEntity compositeEntity, CompositeModificationInfos compositeMetadata) {
-        if (compositeMetadata.getName() != null) {
-            compositeEntity.setName(compositeMetadata.getName());
-            compositeEntity.setMessageValues(new ObjectMapper().writeValueAsString(compositeMetadata.getMapMessageValues()));
         }
     }
 
