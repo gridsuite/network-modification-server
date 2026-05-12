@@ -118,7 +118,7 @@ public class NetworkModificationRepository {
     // we want to encapsulate the use of Entity related objects to this service.
     // Nevertheless We have to keep it public for transactional annotation.
     public List<ModificationInfos> saveModifications(UUID groupUuid, List<ModificationEntity> modifications) {
-        List<ModificationEntity> entities = addModificationsToGroupNonTransactional(groupUuid, modifications);
+        List<ModificationEntity> entities = saveModificationsNonTransactional(groupUuid, modifications);
         return entities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
@@ -133,7 +133,7 @@ public class NetworkModificationRepository {
             List<ModificationInfos> modifications) {
         List<ModificationEntity> entities = modifications.stream().map(ModificationEntity::fromDTO).toList();
 
-        return addModificationsToGroupNonTransactional(groupUuid, entities);
+        return saveModificationsNonTransactional(groupUuid, entities);
     }
 
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
@@ -150,9 +150,6 @@ public class NetworkModificationRepository {
                 .map(cloneByUuid::get)
                 .filter(Objects::nonNull)
                 .toList();
-        for (int order = 0; order < copyEntities.size(); order++) {
-            copyEntities.get(order).setModificationsOrder(order);
-        }
         compositeEntity.setModifications(copyEntities);
         return modificationRepository.save(compositeEntity).getId();
     }
@@ -177,15 +174,11 @@ public class NetworkModificationRepository {
                 .map(cloneByUuid::get)
                 .filter(Objects::nonNull)
                 .toList();
-        for (int order = 0; order < copyEntities.size(); order++) {
-            copyEntities.get(order).setModificationsOrder(order);
-        }
-        compositeEntity.getModifications().clear();
-        compositeEntity.getModifications().addAll(copyEntities);
+        compositeEntity.setModifications(copyEntities);
         modificationRepository.save(compositeEntity);
     }
 
-    private List<ModificationEntity> addModificationsToGroupNonTransactional(@NonNull UUID groupUuid, List<ModificationEntity> modifications) {
+    private List<ModificationEntity> saveModificationsNonTransactional(@NonNull UUID groupUuid, List<ModificationEntity> modifications) {
         int order = modificationRepository.countByGroupIdAndStashed(groupUuid, false);
         var modificationGroupEntity = this.modificationGroupRepository
             .findById(groupUuid)

@@ -61,13 +61,19 @@ public class CompositeModificationEntity extends ModificationEntity {
 
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
         this.setName(compositeModificationInfos.getName());
-        modifications.clear();
-        modifications.addAll(compositeModificationInfos.getModificationsInfos().stream()
-                .map(ModificationEntity::fromDTO)
-                .toList());
+        setModifications(compositeModificationInfos.getModificationsInfos().stream()
+            .map(ModificationEntity::fromDTO)
+            .toList());
+    }
 
-        for (int i = 0; i < modifications.size(); i++) {
-            modifications.get(i).setModificationsOrder(i);
+    public void setModifications(List<ModificationEntity> modifications) {
+        if (modifications == null) {
+            throw new IllegalArgumentException("Modifications list for a composite cannot be null");
+        }
+        this.modifications.clear();
+        this.modifications.addAll(modifications);
+        for (int i = 0; i < this.modifications.size(); i++) {
+            this.modifications.get(i).setModificationsOrder(i);
         }
     }
 }
