@@ -109,10 +109,11 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         "WHERE m.id IN (SELECT mh.id FROM ModificationHierarchy mh)")
     List<UUID> findOnlyCompositeChildrenUuids(UUID compositeUuid);
 
+    // Returns the composite uuid and all its children uuid recursively
     @NativeQuery("WITH RECURSIVE ModificationHierarchy (modification_id, path) AS ( " +
             "  SELECT cast(:compositeUuid AS VARCHAR), ARRAY[0] " +
             "  UNION ALL " +
-            "  SELECT cast(sm.modification_id AS VARCHAR), mh.path || (m.modifications_order + 1) " +
+            "  SELECT cast(sm.modification_id AS VARCHAR), mh.path || (m.modifications_order) " +
             "  FROM composite_modification_sub_modifications sm " +
             "  INNER JOIN modification m ON m.id = sm.modification_id " +
             "  INNER JOIN ModificationHierarchy mh ON cast(sm.id AS VARCHAR) = mh.modification_id " +
