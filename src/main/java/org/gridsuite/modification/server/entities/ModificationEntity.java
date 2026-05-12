@@ -53,6 +53,7 @@ public class ModificationEntity {
     @Column(name = "stashed", columnDefinition = "boolean default false")
     private Boolean stashed = false;
 
+    // manages the order inside a group of modification in gridstudy AND for the order inside a composite modification
     @Column(name = "modifications_order")
     private int modificationsOrder;
 

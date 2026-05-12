@@ -123,13 +123,13 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationInfos> saveModificationInfos(UUID groupUuid, List<ModificationInfos> modifications) {
+    public List<ModificationInfos> saveModificationInfos(@NonNull UUID groupUuid, List<ModificationInfos> modifications) {
         List<ModificationEntity> entities = saveModificationInfosNonTransactional(groupUuid, modifications);
         // We can't return input modifications directly because it wouldn't have the IDs coming from the saved entities
         return entities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
-    private List<ModificationEntity> saveModificationInfosNonTransactional(UUID groupUuid,
+    private List<ModificationEntity> saveModificationInfosNonTransactional(@NonNull UUID groupUuid,
             List<ModificationInfos> modifications) {
         List<ModificationEntity> entities = modifications.stream().map(ModificationEntity::fromDTO).toList();
 
@@ -150,7 +150,6 @@ public class NetworkModificationRepository {
                 .map(cloneByUuid::get)
                 .filter(Objects::nonNull)
                 .toList();
-
         compositeEntity.setModifications(copyEntities);
         return modificationRepository.save(compositeEntity).getId();
     }
@@ -175,12 +174,11 @@ public class NetworkModificationRepository {
                 .map(cloneByUuid::get)
                 .filter(Objects::nonNull)
                 .toList();
-        compositeEntity.getModifications().clear();
-        compositeEntity.getModifications().addAll(copyEntities);
+        compositeEntity.setModifications(copyEntities);
         modificationRepository.save(compositeEntity);
     }
 
-    private List<ModificationEntity> saveModificationsNonTransactional(UUID groupUuid, List<ModificationEntity> modifications) {
+    private List<ModificationEntity> saveModificationsNonTransactional(@NonNull UUID groupUuid, List<ModificationEntity> modifications) {
         int order = modificationRepository.countByGroupIdAndStashed(groupUuid, false);
         var modificationGroupEntity = this.modificationGroupRepository
             .findById(groupUuid)
@@ -450,7 +448,11 @@ public class NetworkModificationRepository {
             .uuid(compositeEntity.getId())
             .stashed(compositeEntity.getStashed())
             .modificationsInfos(
-                compositeEntity.getModifications().stream().filter(m -> !modificationsToExclude.contains(m.getId())).map(m -> toModificationsInfosOptimized(m, modificationsToExclude)).toList())
+                    compositeEntity.getModifications()
+                            .stream()
+                            .filter(m -> !modificationsToExclude.contains(m.getId()))
+                            .map(m -> toModificationsInfosOptimized(m, modificationsToExclude))
+                            .toList())
             .build();
     }
 
@@ -578,7 +580,10 @@ public class NetworkModificationRepository {
     }
 
     private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
-        return this.modificationGroupRepository.findById(groupUuid).orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
+        return this.modificationGroupRepository.findById(groupUuid)
+                .orElseGet(
+                        () -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid))
+                );
     }
 
     private Stream<ModificationEntity> getModificationEntityStream(UUID groupUuid) {
@@ -633,12 +638,12 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationInfos> getCompositeModificationsInfos(@NonNull List<UUID> uuids) {
-        return getCompositeModificationsInfosNonTransactional(uuids);
+        return getModificationsInfosInsideCompositesNonTransactional(uuids);
     }
 
-    private List<ModificationInfos> getCompositeModificationsInfosNonTransactional(@NonNull List<UUID> uuids) {
+    private List<ModificationInfos> getModificationsInfosInsideCompositesNonTransactional(@NonNull List<UUID> compositeUuids) {
         List<ModificationInfos> entities = new ArrayList<>();
-        uuids.forEach(uuid -> {
+        compositeUuids.forEach(uuid -> {
             List<UUID> foundEntities = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
             List<ModificationInfos> orderedModifications = foundEntities
                     .stream()
@@ -869,8 +874,8 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationInfos> saveCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = getCompositeModificationsInfosNonTransactional(modificationsUuids);
+    public List<ModificationInfos> extractModificationsFromCompositesAndSave(@NonNull UUID targetGroupUuid, @NonNull List<UUID> compositesUuids) {
+        List<ModificationInfos> modificationInfos = getModificationsInfosInsideCompositesNonTransactional(compositesUuids);
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
         // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
@@ -900,7 +905,6 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    // TODO use modificationsOrder like modifications in a group : remove the OrderColumn annotation in CompositeModificationEntity
     public void moveSubModification(@NonNull UUID groupUuid, UUID sourceCompositeUuid, UUID targetCompositeUuid,
                                     @NonNull UUID modificationUuid, UUID beforeUuid) {
 
@@ -911,48 +915,48 @@ public class NetworkModificationRepository {
             CompositeModificationEntity composite = compositeModificationRepository.findById(sourceCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, sourceCompositeUuid)));
-            List<ModificationEntity> subMods = new ArrayList<>(composite.getModifications());
+            List<ModificationEntity> subMods = composite.getModifications();
             List<ModificationEntity> removed = removeModifications(subMods, List.of(modificationUuid));
             if (removed.isEmpty()) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
                         String.format("Sub-modification (%s) not found in composite (%s)", modificationUuid, sourceCompositeUuid));
             }
             insertModifications(subMods, removed, beforeUuid);
-            rewriteCompositeSubModifications(sourceCompositeUuid, subMods);
             return;
         }
 
-        List<ModificationEntity> movedEntities;
+        List<ModificationEntity> movedMods;
+        List<ModificationEntity> notMovedMods;
         if (sourceCompositeUuid != null) {
             // moved from a composite
             CompositeModificationEntity sourceComposite = compositeModificationRepository.findById(sourceCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, sourceCompositeUuid)));
-            List<ModificationEntity> sourceSubMods = new ArrayList<>(sourceComposite.getModifications());
-            movedEntities = removeModifications(sourceSubMods, List.of(modificationUuid));
-            if (movedEntities.isEmpty()) {
+            notMovedMods = sourceComposite.getModifications();
+            movedMods = removeModifications(notMovedMods, List.of(modificationUuid));
+            if (movedMods.isEmpty()) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
                         String.format("Sub-modification (%s) not found in composite (%s)", modificationUuid, sourceCompositeUuid));
             }
-            rewriteCompositeSubModifications(sourceCompositeUuid, sourceSubMods);
         } else {
             // moved from the root level of the network modification table
             ModificationGroupEntity group = getModificationGroup(groupUuid);
-            List<ModificationEntity> rootMods = group.getModifications()
+            notMovedMods = group.getModifications()
                     .stream()
                     .filter(m -> !m.getStashed())
                     .collect(Collectors.toList());
-            rootMods.removeIf(Objects::isNull);
-            movedEntities = removeModifications(rootMods, List.of(modificationUuid));
-            if (movedEntities.isEmpty()) {
+            notMovedMods.removeIf(Objects::isNull);
+            movedMods = removeModifications(notMovedMods, List.of(modificationUuid));
+            if (movedMods.isEmpty()) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
                         String.format("Modification (%s) not found in group (%s)", modificationUuid, groupUuid));
             }
-            for (int i = 0; i < rootMods.size(); i++) {
-                rootMods.get(i).setModificationsOrder(i);
-            }
-            group.setModifications(rootMods);
-            movedEntities.forEach(entity -> entity.setGroup(null));
+            group.setModifications(notMovedMods);
+            movedMods.forEach(entity -> entity.setGroup(null));
+        }
+        // reordering the composite modifications left (not moved)
+        for (int i = 0; i < notMovedMods.size(); i++) {
+            notMovedMods.get(i).setModificationsOrder(i);
         }
 
         if (targetCompositeUuid != null) {
@@ -969,9 +973,8 @@ public class NetworkModificationRepository {
             CompositeModificationEntity targetComposite = compositeModificationRepository.findById(targetCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, targetCompositeUuid)));
-            List<ModificationEntity> targetSubMods = new ArrayList<>(targetComposite.getModifications());
-            insertModifications(targetSubMods, movedEntities, beforeUuid);
-            rewriteCompositeSubModifications(targetCompositeUuid, targetSubMods);
+            List<ModificationEntity> targetSubMods = targetComposite.getModifications();
+            insertModifications(targetSubMods, movedMods, beforeUuid);
         } else {
             // Moved to the root level of the network modification table
             ModificationGroupEntity group = getOrCreateModificationGroup(groupUuid);
@@ -979,16 +982,8 @@ public class NetworkModificationRepository {
                     .filter(Objects::nonNull)
                     .filter(m -> !m.getStashed())
                     .collect(Collectors.toList());
-            movedEntities.forEach(movedEntity -> movedEntity.setGroup(group));
-            insertModifications(rootMods, movedEntities, beforeUuid);
+            insertModifications(rootMods, movedMods, beforeUuid);
             group.setModifications(rootMods);
-        }
-    }
-
-    private void rewriteCompositeSubModifications(UUID compositeId, List<ModificationEntity> orderedSubMods) {
-        compositeModificationRepository.deleteCompositeSubModifications(compositeId);
-        for (int i = 0; i < orderedSubMods.size(); i++) {
-            compositeModificationRepository.insertCompositeSubModification(compositeId, orderedSubMods.get(i).getId(), i);
         }
     }
 
