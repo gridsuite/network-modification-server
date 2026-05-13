@@ -62,10 +62,22 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modifications_modifications WHERE tabular_modifications_entity_id = :uuid ORDER BY modifications_order", nativeQuery = true)
     List<UUID> findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(UUID uuid);
 
-    @Query(value = "SELECT cast(modification_id AS VARCHAR) FROM composite_modification_sub_modifications WHERE id = :uuid ORDER BY modifications_order", nativeQuery = true)
+    @Query(value = """
+        SELECT CAST(sm.modification_id AS VARCHAR)
+        FROM composite_modification_sub_modifications sm
+        INNER JOIN modification m ON sm.modification_id = m.id
+        WHERE sm.id = :uuid
+        ORDER BY m.modifications_order
+        """, nativeQuery = true)
     List<UUID> findModificationIdsByCompositeModificationId(UUID uuid);
 
-    @Query(value = "SELECT cast(modification_id AS VARCHAR) FROM composite_modification_sub_modifications WHERE id IN (?1) ORDER BY modifications_order", nativeQuery = true)
+    @Query(value = """
+        SELECT CAST(sm.modification_id AS VARCHAR)
+        FROM composite_modification_sub_modifications sm
+        INNER JOIN modification m ON sm.modification_id = m.id
+        WHERE sm.id IN (?1)
+        ORDER BY m.modifications_order
+        """, nativeQuery = true)
     List<UUID> findModificationIdsByCompositeModificationIdIn(List<UUID> uuids);
 
     Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
@@ -97,16 +109,16 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         "WHERE m.id IN (SELECT mh.id FROM ModificationHierarchy mh)")
     List<UUID> findOnlyCompositeChildrenUuids(UUID compositeUuid);
 
-    @NativeQuery("WITH RECURSIVE ModificationHierarchy (id) AS ( " +
-        "  SELECT m0.id" +
-        "  FROM composite_modification_sub_modifications m0 " +
-        "  WHERE m0.id = :compositeUuid " +
-        "  UNION ALL " +
-        "  SELECT distinct m.modification_id" +
-        "  FROM composite_modification_sub_modifications m " +
-        "  INNER JOIN ModificationHierarchy mh ON m.id = mh.id " +
-        ") " +
-        "SELECT distinct cast(m.id AS VARCHAR) FROM ModificationHierarchy m ")
+    // Returns the composite uuid and all its children uuid recursively
+    @NativeQuery("WITH RECURSIVE ModificationHierarchy (modification_id, path) AS ( " +
+            "  SELECT cast(:compositeUuid AS VARCHAR), ARRAY[0] " +
+            "  UNION ALL " +
+            "  SELECT cast(sm.modification_id AS VARCHAR), mh.path || (m.modifications_order) " +
+            "  FROM composite_modification_sub_modifications sm " +
+            "  INNER JOIN modification m ON m.id = sm.modification_id " +
+            "  INNER JOIN ModificationHierarchy mh ON cast(sm.id AS VARCHAR) = mh.modification_id " +
+            ") " +
+            "SELECT modification_id FROM ModificationHierarchy ORDER BY path")
     List<UUID> findAllChildrenUuids(UUID compositeUuid);
 
     interface CompositeDepth {
@@ -131,20 +143,4 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     @EntityGraph(attributePaths = {"modifications"}, type = EntityGraph.EntityGraphType.LOAD)
     List<CompositeModificationEntity> findAllCompositesWithModificationsByIdIn(List<UUID> compositeUuids);
-
-    @NativeQuery("WITH RECURSIVE Ancestors (id, parent_id) AS ( " +
-            "    SELECT :modificationUuid, cm.id " +
-            "    FROM composite_modification_sub_modifications cm " +
-            "    WHERE cm.modification_id = :modificationUuid " +
-            "    UNION ALL " +
-            "    SELECT a.parent_id, cm.id " +
-            "    FROM composite_modification_sub_modifications cm " +
-            "    INNER JOIN Ancestors a ON cm.modification_id = a.parent_id " +
-            ") " +
-            "SELECT cast(COALESCE(" +
-            "    (SELECT a.parent_id FROM Ancestors a WHERE a.parent_id NOT IN (SELECT modification_id FROM composite_modification_sub_modifications) LIMIT 1)," +
-            "    (SELECT a.id FROM Ancestors a LIMIT 1)," +
-            "    :modificationUuid" +
-            ") AS VARCHAR)")
-    String findRootAncestorUuid(@Param("modificationUuid") UUID modificationUuid);
 }

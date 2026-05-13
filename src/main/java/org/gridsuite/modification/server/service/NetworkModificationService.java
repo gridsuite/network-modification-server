@@ -170,15 +170,15 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     public Map<UUID, List<ModificationInfos>> getNetworkModificationsFromComposite(List<UUID> compositeModificationUuids, boolean onlyMetadata) {
-        Map<UUID, List<ModificationInfos>> compositeModifications = new HashMap<>();
+        Map<UUID, List<ModificationInfos>> modifications = new HashMap<>();
         compositeModificationUuids.forEach(compositeModificationUuid -> {
             if (onlyMetadata) {
-                compositeModifications.put(compositeModificationUuid, networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeModificationUuid)));
+                modifications.put(compositeModificationUuid, networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeModificationUuid)));
             } else {
-                compositeModifications.put(compositeModificationUuid, networkModificationRepository.getCompositeModificationsInfos(List.of(compositeModificationUuid)));
+                modifications.put(compositeModificationUuid, networkModificationRepository.getCompositeModificationsInfos(List.of(compositeModificationUuid)));
             }
         });
-        return compositeModifications;
+        return modifications;
     }
 
     private void checkGenerationDispatchFilters(GenerationDispatchInfos generationDispatchInfos) {
@@ -403,10 +403,10 @@ public class NetworkModificationService {
                 groupUuid, sourceCompositeUuid, targetCompositeUuid, modificationUuid, beforeUuid);
     }
 
-    public Map<UUID, UUID> duplicateGroup(UUID sourceGroupUuid, UUID groupUuid) {
+    public Map<UUID, UUID> duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
         try {
             List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
-            List<ModificationInfos> newModifications = networkModificationRepository.saveModificationInfos(groupUuid, modificationToDuplicateInfos);
+            List<ModificationInfos> newModifications = networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationToDuplicateInfos);
 
             Map<UUID, UUID> duplicateModificationMapping = new HashMap<>();
             for (int i = 0; i < modificationToDuplicateInfos.size(); i++) {
@@ -457,8 +457,8 @@ public class NetworkModificationService {
     public CompletableFuture<NetworkModificationsResult> splitCompositeModifications(
             @NonNull UUID targetGroupUuid,
             @NonNull Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
-        List<UUID> modificationsUuids = modificationContextInfos.getFirst().stream().map(Pair::getFirst).toList();
-        List<ModificationInfos> modifications = networkModificationRepository.saveCompositeModifications(targetGroupUuid, modificationsUuids);
+        List<UUID> compositesUuids = modificationContextInfos.getFirst().stream().map(Pair::getFirst).toList();
+        List<ModificationInfos> modifications = networkModificationRepository.extractModificationsFromCompositesAndSave(targetGroupUuid, compositesUuids);
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, modifications, modificationContextInfos.getSecond()).thenApply(result ->
             new NetworkModificationsResult(ids, result));

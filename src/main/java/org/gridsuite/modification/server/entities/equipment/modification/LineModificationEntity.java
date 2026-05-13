@@ -69,6 +69,9 @@ public class LineModificationEntity extends BranchModificationEntity {
     @OrderColumn(name = "pos_line_segments")
     private List<LineSegmentEntity> lineSegments;
 
+    @Column(name = "apply_segments_limits")
+    private boolean applySegmentsLimits;
+
     public LineModificationEntity(LineModificationInfos lineModificationInfos) {
         super(lineModificationInfos);
         assignAttributes(lineModificationInfos);
@@ -87,6 +90,7 @@ public class LineModificationEntity extends BranchModificationEntity {
         g2 = new DoubleModificationEmbedded(lineModificationInfos.getG2());
         b2 = new DoubleModificationEmbedded(lineModificationInfos.getB2());
         lineSegments = assignLineSegments(lineModificationInfos.getLineSegments());
+        applySegmentsLimits = lineModificationInfos.isApplySegmentsLimits();
     }
 
     private List<LineSegmentEntity> assignLineSegments(List<LineSegmentInfos> lineSegmentInfos) {
@@ -147,6 +151,7 @@ public class LineModificationEntity extends BranchModificationEntity {
             .q2MeasurementValue(toAttributeModification(getQ2MeasurementValue()))
             .q2MeasurementValidity(toAttributeModification(getQ2MeasurementValidity()))
             .lineSegments(LineSegmentEntity.fromLineSegmentsEntity(getLineSegments()))
+            .applySegmentsLimits(isApplySegmentsLimits())
              // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
