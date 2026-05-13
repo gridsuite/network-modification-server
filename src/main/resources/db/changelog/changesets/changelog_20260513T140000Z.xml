@@ -1,22 +1,22 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
     <changeSet author="lesoteti" id="addMissingIndexes">
-        <createIndex indexName="boolean_equipment_attribute_modification_voltage_level_topology_modification_id_idx" tableName="boolean_equipment_attribute_modification">
+        <createIndex indexName="boolean_equipment_attribute_modif_vl_topology_modif_id_idx" tableName="boolean_equipment_attribute_modification">
             <column name="voltage_level_topology_modification_id"/>
         </createIndex>
         <createIndex indexName="by_filter_deletion_filters_id_idx" tableName="by_filter_deletion_filters">
             <column name="id"/>
         </createIndex>
-        <createIndex indexName="converter_station_creation_rcc_points_converter_station_creation_entity_id_idx" tableName="converter_station_creation_rcc_points">
+        <createIndex indexName="station_creation_rcc_points_converter_station_creation_id_idx" tableName="converter_station_creation_rcc_points">
             <column name="converter_station_creation_entity_id"/>
         </createIndex>
-        <createIndex indexName="converter_station_modification_rcc_points_converter_station_modification_entity_id_idx" tableName="converter_station_modification_rcc_points">
+        <createIndex indexName="station_modification_rcc_points_modif_entity_id_idx" tableName="converter_station_modification_rcc_points">
             <column name="converter_station_modification_entity_id"/>
         </createIndex>
-        <createIndex indexName="create_voltage_level_topology_switch_kinds_create_voltage_level_topology_id_idx" tableName="create_voltage_level_topology_switch_kinds">
+        <createIndex indexName="create_vl_topology_switch_kinds_create_vl_topology_id_idx" tableName="create_voltage_level_topology_switch_kinds">
             <column name="create_voltage_level_topology_id"/>
         </createIndex>
-        <createIndex indexName="lcc_converter_station_modification_on_side_lcc_converter_station_modification_id_idx" tableName="lcc_converter_station_modification_on_side">
+        <createIndex indexName="lcc_converter_station_modification_on_side_lcc_modification_id_idx" tableName="lcc_converter_station_modification_on_side">
             <column name="lcc_converter_station_modification_id"/>
         </createIndex>
         <createIndex indexName="limits_for_line_type_line_type_id_idx" tableName="limits_for_line_type">
@@ -34,7 +34,7 @@
         <createIndex indexName="move_feeder_bay_modification_id_idx" tableName="move_feeder_bay">
             <column name="modification_id"/>
         </createIndex>
-        <createIndex indexName="shunt_compensator_on_side_lcc_converter_station_creation_entity_id_idx" tableName="shunt_compensator_on_side">
+        <createIndex indexName="shunt_compensator_on_side_lcc_creation_entity_id_idx" tableName="shunt_compensator_on_side">
             <column name="lcc_converter_station_creation_entity_id"/>
         </createIndex>
         <createIndex indexName="variation_filter_assignment_id_idx" tableName="variation_filter">
