@@ -32,12 +32,12 @@ public class CompositeModificationEntity extends ModificationEntity {
     @ColumnDefault("'My Composite'")
     private String name;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(
             name = "compositeModificationSubModifications",
             joinColumns = @JoinColumn(name = "id"), foreignKey = @ForeignKey(name = "composite_modification_sub_modifications_id_fk"),
             inverseJoinColumns = @JoinColumn(name = "modificationId"), inverseForeignKey = @ForeignKey(name = "modification_id_fk"))
-    @OrderColumn
+    @OrderBy("modificationsOrder asc")
     private List<ModificationEntity> modifications = new ArrayList<>();
 
     public CompositeModificationEntity(@NonNull CompositeModificationInfos compositeModificationInfos) {
@@ -59,13 +59,21 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .build();
     }
 
-    // when we go back to an empty list, dont use addAll() on the list because JPA could start
-    // @OrderColumn to 1 instead of 0
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
         this.setName(compositeModificationInfos.getName());
-        modifications.clear();
-        modifications = compositeModificationInfos.getModificationsInfos().stream()
-                .map(ModificationEntity::fromDTO)
-                .toList();
+        setModifications(compositeModificationInfos.getModificationsInfos().stream()
+            .map(ModificationEntity::fromDTO)
+            .toList());
+    }
+
+    public void setModifications(List<ModificationEntity> modifications) {
+        if (modifications == null) {
+            throw new IllegalArgumentException("Modifications list for a composite cannot be null");
+        }
+        this.modifications.clear();
+        this.modifications.addAll(modifications);
+        for (int i = 0; i < this.modifications.size(); i++) {
+            this.modifications.get(i).setModificationsOrder(i);
+        }
     }
 }
