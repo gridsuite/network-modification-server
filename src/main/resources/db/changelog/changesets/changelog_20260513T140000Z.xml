@@ -16,7 +16,7 @@
         <createIndex indexName="create_vl_topology_switch_kinds_create_vl_topology_id_idx" tableName="create_voltage_level_topology_switch_kinds">
             <column name="create_voltage_level_topology_id"/>
         </createIndex>
-        <createIndex indexName="lcc_converter_station_modification_on_side_lcc_modification_id_idx" tableName="lcc_converter_station_modification_on_side">
+        <createIndex indexName="lcc_converter_station_modif_on_side_lcc_modif_id_idx" tableName="lcc_converter_station_modification_on_side">
             <column name="lcc_converter_station_modification_id"/>
         </createIndex>
         <createIndex indexName="limits_for_line_type_line_type_id_idx" tableName="limits_for_line_type">
