@@ -721,6 +721,11 @@ public class NetworkModificationRepository {
             if (metadata.getActivated() != null) {
                 updateActivated(modificationEntity, metadata.getActivated());
             }
+            if (metadata instanceof CompositeModificationInfos compositeMetadata
+                    && modificationEntity instanceof CompositeModificationEntity composite
+                    && compositeMetadata.getName() != null) {
+                compositeModificationRepository.renameCompositeModifications(composite, compositeMetadata);
+            }
         }
     }
 
