@@ -939,7 +939,7 @@ public class NetworkModificationRepository {
 
         // assign modifications
         newCompositeEntity.setModifications(mergedModifications);
-        if ( targetGroup != null) {
+        if (targetGroup != null) {
             // TODO : réordonancement pour être au même point que la fusionnée num 1
             newCompositeEntity.setGroup(targetGroup);
         }
@@ -951,7 +951,6 @@ public class NetworkModificationRepository {
 
         return modificationRepository.save(newCompositeEntity);
     }
-
 
     @Transactional
     public void moveSubModification(@NonNull UUID groupUuid, UUID sourceCompositeUuid, UUID targetCompositeUuid,
