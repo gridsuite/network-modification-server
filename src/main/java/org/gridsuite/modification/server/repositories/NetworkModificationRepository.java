@@ -914,8 +914,7 @@ public class NetworkModificationRepository {
             List<UUID> mergedModificationsUuids) {
         // get the target (groupUuid or composite Uuid of the first merged modification + its index in this target)
         UUID firstModifUuid = mergedModificationsUuids.getFirst();
-        ModificationInfos firstModification = getModificationInfo(firstModifUuid);
-        ModificationEntity firstModificationEntity = getModificationEntity(firstModification.getUuid());
+        ModificationEntity firstModificationEntity = getModificationEntity(firstModifUuid);
         int targetIndex = firstModificationEntity.getModificationsOrder();
         ModificationGroupEntity targetGroup = firstModificationEntity.getGroup();
         CompositeModificationEntity targetComposite = null;
@@ -927,10 +926,21 @@ public class NetworkModificationRepository {
 
         // get all the modifications to be merged, remove previous assignment
         List<ModificationEntity> mergedModifications = mergedModificationsUuids.stream()
-                .map(modificationRepository::getReferenceById)
-                .collect(Collectors.toList());
-        // TODO :remove previous assignments (group/composites..)
-        mergedModifications.forEach(modificationEntity -> modificationEntity.setGroup(null)); // TODO : group should be reordered ??
+                .map(modificationRepository::findById).filter(Optional::isPresent).map(Optional::get).toList();
+        // remove previous assignments of the merged modifications
+        // 1. cleans and reorders the origin group if there is one :
+        ModificationGroupEntity originGroup = mergedModifications.stream()
+                .map(ModificationEntity::getGroup)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+        if (originGroup != null) {
+            List<ModificationEntity> originGroupModifications = originGroup.getModifications();
+            originGroupModifications.removeIf(mod -> mergedModificationsUuids.contains(mod.getId()));
+            originGroup.setModifications(originGroupModifications);
+            mergedModifications.forEach(modificationEntity -> modificationEntity.setGroup(null));
+        }
+        // TODO : 2. from composites
 
         // create the composite
         CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder()
@@ -946,8 +956,7 @@ public class NetworkModificationRepository {
             List<ModificationEntity> modifications = targetGroup.getModifications();
             modifications.add(targetIndex, newCompositeEntity);
             targetGroup.setModifications(modifications);
-        }
-        if (targetComposite != null) {
+        } else {
             List<ModificationEntity> modifications = targetComposite.getModifications();
             modifications.add(targetIndex, newCompositeEntity);
             targetComposite.setModifications(modifications);
