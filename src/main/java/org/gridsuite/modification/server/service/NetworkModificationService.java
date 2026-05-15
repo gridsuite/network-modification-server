@@ -476,7 +476,7 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public CompletableFuture<NetworkModificationsResult> mergeNetworkModificationsIntoNewComposite(
+    public UUID mergeNetworkModificationsIntoNewComposite(
             UUID targetGroupUuid,
             @NonNull Pair<List<UUID>, List<ModificationApplicationContext>> modificationApplicationContexts) {
         List<UUID> mergedModificationsUuids = modificationApplicationContexts.getFirst();
@@ -484,11 +484,7 @@ public class NetworkModificationService {
         CompositeModificationInfos newComposite =
                 networkModificationRepository.mergeNetworkModificationsIntoNewComposite(mergedModificationsUuids).toModificationInfos();
 
-        // apply the composite (and implicitely those contained) :
-        return applyModifications(targetGroupUuid, List.of(newComposite), modificationApplicationContexts.getSecond())
-                .thenApply(results ->
-                        new NetworkModificationsResult(List.of(newComposite.getUuid()), results)
-                );
+        return newComposite.getUuid();
     }
 
     @Transactional

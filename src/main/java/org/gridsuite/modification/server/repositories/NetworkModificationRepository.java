@@ -933,19 +933,23 @@ public class NetworkModificationRepository {
         mergedModifications.forEach(modificationEntity -> modificationEntity.setGroup(null)); // TODO : group should be reordered ??
 
         // create the composite
-        CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
+        CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder()
+                .modificationsInfos(List.of())
+                .name("New composite modification")
+                .build();
         CompositeModificationEntity newCompositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(newCompositeInfos);
         newCompositeEntity.setModificationsOrder(targetIndex);
 
         // assign modifications
         newCompositeEntity.setModifications(mergedModifications);
         if (targetGroup != null) {
-            // TODO : réordonancement pour être au même point que la fusionnée num 1
-            newCompositeEntity.setGroup(targetGroup);
+            List<ModificationEntity> modifications = targetGroup.getModifications();
+            modifications.add(targetIndex, newCompositeEntity);
+            targetGroup.setModifications(modifications);
         }
         if (targetComposite != null) {
             List<ModificationEntity> modifications = targetComposite.getModifications();
-            modifications.add(newCompositeEntity); // TODO : réordonancement pour être au même point que la fusionnée num 1
+            modifications.add(targetIndex, newCompositeEntity);
             targetComposite.setModifications(modifications);
         }
 
