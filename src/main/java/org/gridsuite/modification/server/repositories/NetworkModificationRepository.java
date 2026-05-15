@@ -921,7 +921,7 @@ public class NetworkModificationRepository {
         if (targetGroup == null) {
             // the first modification is inside a composite
             UUID targetCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(firstModifUuid);
-            targetComposite = compositeModificationRepository.getReferenceById(targetCompositeUuid);
+            targetComposite = compositeModificationRepository.findById(targetCompositeUuid).orElse(null);
         }
 
         // get all the modifications to be merged, remove previous assignment
@@ -940,9 +940,22 @@ public class NetworkModificationRepository {
             originGroup.setModifications(originGroupModifications);
             mergedModifications.forEach(modificationEntity -> modificationEntity.setGroup(null));
         }
-        // TODO : 2. from composites
+        // 2. cleans the composites whose submodifications are merged into a new one
+        for (ModificationEntity mergedModification : mergedModifications.stream().filter(mod -> mod.getGroup() == null).toList()) {
+            UUID compositeUuid = modificationRepository.findCompositeIdByContainedModificationId(mergedModification.getId());
+            if (compositeUuid != null) {
+                CompositeModificationEntity previousOwner = compositeModificationRepository.findById(compositeUuid).orElse(null);
+                if (previousOwner != null) {
+                    List<ModificationEntity> modificationsLeft = previousOwner.getModifications()
+                            .stream()
+                            .filter(mod -> !mergedModificationsUuids.contains(mod.getId()))
+                            .toList();
+                    previousOwner.setModifications(modificationsLeft);
+                }
+            }
+        }
 
-        // create the composite
+        // create the new composite
         CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder()
                 .modificationsInfos(List.of())
                 .name("New composite modification")
@@ -952,14 +965,14 @@ public class NetworkModificationRepository {
 
         // assign modifications
         newCompositeEntity.setModifications(mergedModifications);
+        // put the new composite in the target group or composite
         if (targetGroup != null) {
             List<ModificationEntity> modifications = targetGroup.getModifications();
             modifications.add(targetIndex, newCompositeEntity);
             targetGroup.setModifications(modifications);
-        } else {
+        } else if (targetComposite != null) {
             List<ModificationEntity> modifications = targetComposite.getModifications();
             modifications.add(targetIndex, newCompositeEntity);
-            targetComposite.setModifications(modifications);
         }
 
         return modificationRepository.save(newCompositeEntity);
