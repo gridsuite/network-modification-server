@@ -477,10 +477,7 @@ public class NetworkModificationService {
 
     @Transactional
     public UUID mergeNetworkModificationsIntoNewComposite(
-            UUID targetGroupUuid,
-            @NonNull Pair<List<UUID>, List<ModificationApplicationContext>> modificationApplicationContexts) {
-        List<UUID> mergedModificationsUuids = modificationApplicationContexts.getFirst();
-
+            @NonNull List<UUID> mergedModificationsUuids) {
         CompositeModificationInfos newComposite =
                 networkModificationRepository.mergeNetworkModificationsIntoNewComposite(mergedModificationsUuids).toModificationInfos();
 
