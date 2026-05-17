@@ -18,8 +18,6 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
 
@@ -28,9 +26,7 @@ import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applica
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
@@ -50,11 +46,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         modificationToCreate.setEquipmentId("idLine2");
         modificationToCreate.setEquipmentName("nameLine2");
         String modificationToCreateJson = getJsonBody(modificationToCreate, "variant_not_existing");
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk()).andReturn();
-        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        NetworkModificationsResult networkModificationsResult = saveAndApply(modificationToCreateJson);
         assertNotNull(networkModificationsResult);
         assertEquals(1, networkModificationsResult.modificationResults().size());
         assertTrue(networkModificationsResult.modificationResults().getFirst().isEmpty());  // no modifications returned
@@ -67,23 +59,20 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         LineCreationInfos lineCreationInfos = (LineCreationInfos) buildModification();
         lineCreationInfos.setEquipmentId("");
         String lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(lineCreationInfosJson);
         assertLogMessage("Invalid id ''", ERROR_MESSAGE_KEY, reportService);
 
         lineCreationInfos.setEquipmentId("idLine4");
         lineCreationInfos.setVoltageLevelId1("notFoundVoltageLevelId1");
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(lineCreationInfosJson);
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId1").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
 
         lineCreationInfos.setVoltageLevelId1("v1");
         lineCreationInfos.setBusOrBusbarSectionId1("notFoundBusbarSection1");
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(lineCreationInfosJson);
         assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection1").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -91,22 +80,19 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         lineCreationInfos.setBusOrBusbarSectionId1("1.1");
         lineCreationInfos.setR(Double.NaN);
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(lineCreationInfosJson);
         assertLogMessage("AC line 'idLine4': r is invalid", ERROR_MESSAGE_KEY, reportService);
 
         lineCreationInfos.setR(100.0);
         lineCreationInfos.setX(Double.NaN);
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(lineCreationInfosJson);
         assertLogMessage("AC line 'idLine4': x is invalid", ERROR_MESSAGE_KEY, reportService);
 
         // try to create an existing line
         lineCreationInfos.setEquipmentId("line2");
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(lineCreationInfosJson);
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "line2").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }

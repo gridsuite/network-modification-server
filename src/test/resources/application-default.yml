@@ -13,7 +13,7 @@ spring:
   cloud:
     function:
       # disable all #2 consumers during test - all messages are consumed multiple times otherwise
-      definition: consumeBuild1;consumeCancelBuild
+      definition: consumeBuild1;consumeCancelBuild;consumeApplication
 logging:
   level:
     org.springframework.orm.jpa: INFO

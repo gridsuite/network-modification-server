@@ -18,14 +18,11 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -157,11 +154,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .build();
 
         String body = getJsonBody(infos, null);
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri())
-                        .content(body)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn())).andExpect(status().isOk()).andReturn();
+        saveAndApply(body);
     }
 
     @Test
@@ -201,11 +194,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .build();
 
         String body = getJsonBody(infos, null);
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri())
-                .content(body)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn())).andExpect(status().isOk()).andReturn();
+        saveAndApply(body);
     }
 
     @Override

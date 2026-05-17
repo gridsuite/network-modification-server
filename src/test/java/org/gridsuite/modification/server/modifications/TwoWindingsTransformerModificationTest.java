@@ -20,7 +20,6 @@ import org.gridsuite.modification.utils.ModificationUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.*;
 
@@ -315,10 +314,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         twoWindingsTransformerModificationInfos.setEquipmentId("2wt_not_existing");
         String modificationInfosJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri())
-                        .content(modificationInfosJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(modificationInfosJson);
         assertLogMessage(new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_NOT_FOUND, "Two windings transformer '2wt_not_existing' : it does not exist in the network").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }
@@ -653,7 +649,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
             .build();
 
         String modificationToModifyJson = getJsonBody(phaseTapChangerCreation, null);
-        runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToModifyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        saveAndApply(modificationToModifyJson);
 
         PhaseTapChanger phaseTapChanger = twt3.getPhaseTapChanger();
 
@@ -669,7 +665,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         phaseTapChangerCreation.getPhaseTapChanger().setRegulating(new AttributeModification<>(false, OperationType.SET));
 
         String modificationToModifyJson2 = getJsonBody(phaseTapChangerCreation, null);
-        runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToModifyJson2).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        saveAndApply(modificationToModifyJson2);
         phaseTapChanger = getNetwork().getTwoWindingsTransformer(twtId).getPhaseTapChanger();
 
         // modification 2 assert
@@ -684,7 +680,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         phaseTapChangerCreation.getPhaseTapChanger().setRegulating(new AttributeModification<>(true, OperationType.SET));
 
         String modificationToModifyJson3 = getJsonBody(phaseTapChangerCreation, null);
-        runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToModifyJson3).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        saveAndApply(modificationToModifyJson3);
 
         phaseTapChanger = getNetwork().getTwoWindingsTransformer(twtId).getPhaseTapChanger();
 
@@ -716,7 +712,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         String modificationToModifyJson1 = getJsonBody(phaseTapChangerCreation, null);
 
         // modification 1 assert
-        runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToModifyJson1).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        saveAndApply(modificationToModifyJson1);
         assertLogMessage(new NetworkModificationException(MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR, "Regulation value is missing when modifying, phase tap changer can not regulate").getMessage(),
             ERROR_MESSAGE_KEY, reportService);
     }
@@ -759,8 +755,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                         .terminal2Connected(side == TwoSides.TWO ? new AttributeModification<>(expectedState, OperationType.SET) : null)
                         .build();
         String modificationInfosJson = getJsonBody(modificationInfos, null);
-        MvcResult mvcResult = runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
-        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        NetworkModificationsResult networkModificationsResult = saveAndApply(modificationInfosJson);
         assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
 
         if (!Objects.isNull(errorMessage)) {
@@ -774,7 +769,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
             assertEquals(NetworkModificationResult.ApplicationStatus.ALL_OK, extractApplicationStatus(networkModificationsResult).getFirst());
 
             // try to modify again => no change on connection state
-            runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+            saveAndApply(modificationInfosJson);
             assertThat(terminal.isConnected()).isEqualTo(expectedState);
         }
     }
@@ -936,7 +931,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
             .build();
 
         String modificationToModifyJson = getJsonBody(phaseTapChangerCreation, null);
-        runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToModifyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        saveAndApply(modificationToModifyJson);
 
         PhaseTapChanger phaseTapChanger = twt3.getPhaseTapChanger();
 
@@ -982,7 +977,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
             .build();
 
         modificationToModifyJson = getJsonBody(phaseTapChangerCreation, null);
-        runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToModifyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        saveAndApply(modificationToModifyJson);
 
         phaseTapChanger = twt3.getPhaseTapChanger();
 

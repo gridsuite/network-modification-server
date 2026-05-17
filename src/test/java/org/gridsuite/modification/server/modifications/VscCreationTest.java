@@ -15,8 +15,6 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 import java.util.Map;
@@ -28,10 +26,6 @@ import static org.gridsuite.modification.modifications.VscModification.ACTIVE_PO
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
@@ -219,8 +213,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         VscCreationInfos vscCreationInfos = (VscCreationInfos) buildModification();
         vscCreationInfos.setEquipmentId("");
         String vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vscCreationInfosJson);
         assertLogMessage("Invalid id ''", ERROR_MESSAGE_KEY, reportService);
 
         // not found voltage level
@@ -229,8 +222,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         converterStationCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
         vscCreationInfos.setConverterStation2(converterStationCreationInfos);
         vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vscCreationInfosJson);
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -243,8 +235,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
         vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vscCreationInfosJson);
         assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : minimum reactive power is not set").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -256,8 +247,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
         vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vscCreationInfosJson);
         assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : maximum reactive power is not set").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -270,8 +260,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
         vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vscCreationInfosJson);
         assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : maximum reactive power is expected to be greater than or equal to minimum reactive power").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -283,8 +272,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
         vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vscCreationInfosJson);
         assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : P is not set in a reactive capability curve limits point").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -292,8 +280,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         vscCreationInfos = (VscCreationInfos) buildModification();
         vscCreationInfos.setEquipmentId("hvdcLine");
         vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vscCreationInfosJson);
         assertLogMessage(new NetworkModificationException(HVDC_LINE_ALREADY_EXISTS, "hvdcLine").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }
@@ -304,10 +291,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         vscCreationInfos.setAngleDroopActivePowerControl(false);
         String vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+        saveAndApply(vscCreationInfosJson);
         HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
         assertThat(hvdcLine).isNotNull();
         HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
@@ -324,10 +308,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         vscCreationInfos.setDroop(null);
         vscCreationInfos.setP0(null);
         String vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+        saveAndApply(vscCreationInfosJson);
         HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
         assertThat(hvdcLine).isNotNull();
         HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
@@ -368,10 +349,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
 
     private void checkDroopWithAbsentInfos(VscCreationInfos vscCreationInfos) throws Exception {
         String vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+        saveAndApply(vscCreationInfosJson);
         assertLogMessage(new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
                         ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG).getMessage(),
                 ERROR_MESSAGE_KEY, reportService);

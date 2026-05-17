@@ -14,7 +14,6 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.Map;
@@ -25,8 +24,6 @@ import static org.gridsuite.modification.server.report.NetworkModificationServer
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
@@ -97,8 +94,7 @@ class SubstationModificationTest extends AbstractNetworkModificationTest {
                 .country(new AttributeModification<>(Country.JP, OperationType.SET))
                 .build();
         String infosJson = getJsonBody(infos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(infosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(infosJson);
         assertLogMessage("SUBSTATION_NOT_FOUND : Substation unknown does not exist in network", ERROR_MESSAGE_KEY, reportService);
     }
 

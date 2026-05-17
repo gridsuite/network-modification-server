@@ -17,7 +17,6 @@ import org.gridsuite.modification.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -27,8 +26,6 @@ import static org.gridsuite.modification.NetworkModificationException.Type.LINE_
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
 class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificationTest {
@@ -38,8 +35,7 @@ class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificationTest {
         LineSplitWithVoltageLevelInfos lineSplitAbsentLine = (LineSplitWithVoltageLevelInfos) buildModification();
         lineSplitAbsentLine.setLineToSplitId("absent_line_id");
         String lineSplitAbsentLineJson = getJsonBody(lineSplitAbsentLine, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(lineSplitAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(lineSplitAbsentLineJson);
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
         testNetworkModificationsCount(getGroupId(), 1);

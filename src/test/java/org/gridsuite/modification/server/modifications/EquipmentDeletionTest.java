@@ -26,9 +26,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 import java.util.Map;
@@ -38,10 +35,6 @@ import static org.gridsuite.modification.NetworkModificationException.Type.EQUIP
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
 class EquipmentDeletionTest extends AbstractNetworkModificationTest {
@@ -90,11 +83,7 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         String equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, null);
 
         // delete load with error removing dangling switches, because the load connection node is not linked to any other node
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk())
-                .andReturn();
+        saveAndApply(equipmentDeletionInfosJson);
 
         var v5 = getNetwork().getVoltageLevel("v5");
         assertNull(v5.getNodeBreakerView().getTerminal(2));
@@ -106,8 +95,7 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         EquipmentDeletionInfos equipmentDeletionInfos = (EquipmentDeletionInfos) buildModification();
         equipmentDeletionInfos.setEquipmentId("notFoundLoad");
         String body = getJsonBody(equipmentDeletionInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(body);
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }
@@ -134,12 +122,7 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .build();
         String equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk())
-                .andReturn();
-        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        NetworkModificationsResult networkModificationsResult = saveAndApply(equipmentDeletionInfosJson);
         assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
         assertEquals(expectedStatus, extractApplicationStatus(networkModificationsResult).getFirst());
 

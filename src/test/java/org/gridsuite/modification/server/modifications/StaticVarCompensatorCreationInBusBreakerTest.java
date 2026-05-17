@@ -18,7 +18,6 @@ import org.gridsuite.modification.dto.VoltageRegulationType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.Map;
@@ -29,8 +28,6 @@ import static org.gridsuite.modification.NetworkModificationException.Type.EQUIP
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
@@ -111,8 +108,7 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
         staticVarCompensatorCreationInfos.setBusOrBusbarSectionId("notFoundBus");
         String body = getJsonBody(staticVarCompensatorCreationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(body);
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }
@@ -126,8 +122,7 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
         staticVarCompensatorCreationInfos.setRegulatingTerminalType("STATIC_VAR_COMPENSATOR");
 
         String staticVarCompensatorInfosJson = getJsonBody(staticVarCompensatorCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(staticVarCompensatorInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(staticVarCompensatorInfosJson);
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=test not found with type STATIC_VAR_COMPENSATOR").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }

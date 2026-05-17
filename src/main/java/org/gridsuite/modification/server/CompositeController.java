@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
-import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
@@ -47,20 +45,21 @@ public class CompositeController {
     @PutMapping(value = "/groups/{groupUuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Insert a list of composite network modifications passed in body at the end of a group")
     @ApiResponse(responseCode = "200", description = "The composite modification list has been added to the group.")
-    public CompletableFuture<ResponseEntity<NetworkModificationsResult>> insertCompositeModifications(
+    public ResponseEntity<List<UUID>> insertCompositeModifications(
             @Parameter(description = "updated group UUID, where modifications are inserted") @PathVariable("groupUuid") UUID targetGroupUuid,
             @Parameter(description = "Insertion method", required = true) @RequestParam(value = "action") CompositeModificationAction action,
+            @Parameter(description = "Receiver for async apply notification") @RequestParam(value = "receiver", required = false) String receiver,
             @RequestBody Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
-        return switch (action) {
-            case SPLIT -> networkModificationService.splitCompositeModifications(
-                            targetGroupUuid,
-                            modificationContextInfos
-                    ).thenApply(ResponseEntity.ok()::body);
-            case INSERT -> networkModificationService.insertCompositeModifications(
-                            targetGroupUuid,
-                            modificationContextInfos
-                    ).thenApply(ResponseEntity.ok()::body);
+        List<UUID> savedUuids = switch (action) {
+            case SPLIT -> networkModificationService.saveSplitCompositeModifications(
+                            targetGroupUuid, modificationContextInfos.getFirst());
+            case INSERT -> networkModificationService.saveInsertCompositeModifications(
+                            targetGroupUuid, modificationContextInfos.getFirst());
         };
+        if (receiver != null) {
+            networkModificationService.applicationRequest(targetGroupUuid, savedUuids, modificationContextInfos.getSecond(), receiver);
+        }
+        return ResponseEntity.ok(savedUuids);
     }
 
     @PutMapping(value = "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
