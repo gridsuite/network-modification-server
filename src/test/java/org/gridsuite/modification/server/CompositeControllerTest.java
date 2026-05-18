@@ -535,7 +535,6 @@ class CompositeControllerTest {
         assertEquals(TEST_GROUP_ID, remainingEntity.getGroup().getId());
     }
 
-
     @Test
     void testExpandToLeafUuidsNestedComposites() throws Exception {
         // Build nested structure: outerComposite → [innerComposite → [leaf1, leaf2], leaf3]
