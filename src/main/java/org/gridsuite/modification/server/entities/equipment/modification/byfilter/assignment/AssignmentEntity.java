@@ -80,7 +80,7 @@ public class AssignmentEntity extends AbstractAssignmentEntity {
 
         assignAttributes(assignmentInfos);
         assignmentInfos.setFilters(filters.stream()
-                .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName()))
+                .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName(), null))
                 .toList());
         return assignmentInfos;
     }

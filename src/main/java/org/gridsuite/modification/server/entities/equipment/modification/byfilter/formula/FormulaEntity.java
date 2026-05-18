@@ -61,7 +61,7 @@ public class FormulaEntity extends AbstractAssignmentEntity {
     public FormulaInfos toFormulaInfos() {
         FormulaInfos formulaInfos = FormulaInfos.builder()
                 .filters(filters.stream()
-                        .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName()))
+                        .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName(), null))
                         .toList())
                 .fieldOrValue1(ReferenceFieldOrValue.builder()
                         .equipmentField(equipmentField1)

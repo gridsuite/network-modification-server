@@ -21,8 +21,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
+import org.gridsuite.modification.dto.LoadFlowParametersInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
@@ -80,6 +80,8 @@ public class NetworkModificationService {
 
     private final FilterService filterService;
 
+    private final LoadFlowService loadFlowService;
+
     static final String NETWORK_UUID = "networkUuid.keyword";
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
@@ -96,7 +98,8 @@ public class NetworkModificationService {
                                       ModificationApplicationInfosService applicationInfosService,
                                       ElasticsearchOperations elasticsearchOperations,
                                       ModificationRepository modificationRepository,
-                                      FilterService filterService) {
+                                      FilterService filterService,
+                                      LoadFlowService loadFlowService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -107,6 +110,7 @@ public class NetworkModificationService {
         this.elasticsearchOperations = elasticsearchOperations;
         this.modificationRepository = modificationRepository;
         this.filterService = filterService;
+        this.loadFlowService = loadFlowService;
     }
 
     public List<UUID> getModificationGroups() {
@@ -120,20 +124,26 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public NetworkModificationExportInfos getNetworkModificationsInfosToExport(UUID groupUuid, boolean errorOnGroupNotFound) {
-        List<ModificationInfos> allModifications = networkModificationRepository.getModificationsInfosToExport(List.of(groupUuid), errorOnGroupNotFound);
-        List<ModificationInfos> exportable = new ArrayList<>();
-        List<NetworkModificationExportInfos.UnexportedModification> unexported = new ArrayList<>();
-        for (ModificationInfos modification : allModifications) {
-            if (modification instanceof EquipmentModificationInfos) {
-                exportable.add(modification);
-            } else {
-                unexported.add(
-                        new NetworkModificationExportInfos.UnexportedModification(modification.getUuid(), modification.getType())
-                );
-            }
+    public Map<UUID, NetworkModificationExportInfos> getModificationsByGroupsToExport(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
+        if (groupUuids == null || groupUuids.isEmpty()) {
+            return Map.of();
         }
-        return new NetworkModificationExportInfos(exportable, unexported);
+        Map<UUID, List<ModificationInfos>> modsByGroup = new LinkedHashMap<>();
+        for (UUID groupUuid : groupUuids) {
+            List<ModificationInfos> mods = networkModificationRepository.getModificationsInfosToExport(List.of(groupUuid), errorOnGroupNotFound);
+            modsByGroup.put(groupUuid, mods);
+        }
+        List<ModificationInfos> allMods = modsByGroup.values().stream().flatMap(List::stream).toList();
+        Set<UUID> filterUuids = allMods.stream().flatMap(m -> m.getReferencedFilterUuids().stream()).collect(Collectors.toSet());
+        Set<UUID> lfParamsUuids = allMods.stream().flatMap(m -> m.getReferencedLoadFlowParametersUuids().stream()).collect(Collectors.toSet());
+        Map<UUID, AbstractFilter> filters = filterService.getFiltersAsMap(filterUuids);
+        Map<UUID, LoadFlowParametersInfos> lfParams = loadFlowService.getLoadFlowParametersAsMap(lfParamsUuids);
+        allMods.forEach(m -> m.embedReferencedData(filters, lfParams));
+        return modsByGroup.entrySet().stream().collect(Collectors.toMap(
+                Map.Entry::getKey,
+                e -> new NetworkModificationExportInfos(e.getValue()),
+                (a, b) -> a,
+                LinkedHashMap::new));
     }
 
     public List<ModificationEntity> getModificationsByUuids(List<UUID> modificationUuids) {
