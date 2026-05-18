@@ -20,7 +20,9 @@ import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.repositories.CompositeModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -71,6 +73,9 @@ class CompositeControllerTest {
 
     @Autowired
     private NetworkModificationRepository modificationRepository;
+
+    @Autowired
+    private CompositeModificationRepository compositeRepository;
 
     @MockitoBean
     private ReportService reportService;
@@ -490,38 +495,38 @@ class CompositeControllerTest {
 
         assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
-        // Merge the first 2 root-level modifications into a new composite
+        // ---- 1. Merge the first 2 root-level modifications into a new composite
         List<UUID> mergedModificationUuids = rootModUuids.subList(0, 2);
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/composite-modification")
                         .content(mapper.writeValueAsString(mergedModificationUuids))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertNotNull(compositeUuid);
+        UUID firstCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(firstCompositeUuid);
 
         // The root group should now contain the new composite and the remaining non-merged modification
         List<ModificationInfos> rootModificationsAfterMerge = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(2, rootModificationsAfterMerge.size());
-        assertEquals(compositeUuid, rootModificationsAfterMerge.getFirst().getUuid());
+        assertEquals(firstCompositeUuid, rootModificationsAfterMerge.getFirst().getUuid());
         assertEquals(COMPOSITE_MODIFICATION, rootModificationsAfterMerge.getFirst().getType());
         assertEquals(rootModUuids.get(2), rootModificationsAfterMerge.get(1).getUuid());
 
         // The new composite should contain the merged modifications in the same order
         Map<UUID, List<ModificationInfos>> compositeContentMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", compositeUuid))
+                mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", firstCompositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
-        List<ModificationInfos> compositeContent = compositeContentMap.get(compositeUuid);
+        List<ModificationInfos> compositeContent = compositeContentMap.get(firstCompositeUuid);
 
         assertEquals(2, compositeContent.size());
         assertEquals(rootModUuids.get(0), compositeContent.get(0).getUuid());
         assertEquals(rootModUuids.get(1), compositeContent.get(1).getUuid());
 
         // The new composite must belong to TEST_GROUP_ID at root level
-        ModificationEntity compositeEntity = modificationRepository.getModificationEntity(compositeUuid);
-        assertNotNull(compositeEntity.getGroup());
-        assertEquals(TEST_GROUP_ID, compositeEntity.getGroup().getId());
+        CompositeModificationEntity firstComposite = compositeRepository.findById(firstCompositeUuid).orElseThrow();
+        assertNotNull(firstComposite.getGroup());
+        assertEquals(TEST_GROUP_ID, firstComposite.getGroup().getId());
 
         // The merged modifications must no longer belong directly to the group
         ModificationEntity firstMergedEntity = modificationRepository.getModificationEntity(rootModUuids.get(0));
@@ -533,6 +538,43 @@ class CompositeControllerTest {
         ModificationEntity remainingEntity = modificationRepository.getModificationEntity(rootModUuids.get(2));
         assertNotNull(remainingEntity.getGroup());
         assertEquals(TEST_GROUP_ID, remainingEntity.getGroup().getId());
+
+        // ---- 2. now merges a modification which is inside a composite with something that is outside :
+        mergedModificationUuids = List.of(compositeContent.get(0).getUuid(), rootModUuids.get(2));
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/composite-modification")
+                        .content(mapper.writeValueAsString(mergedModificationUuids))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        // this new composite will be generated inside the other composite because its first element was inside it
+        UUID twodepthCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(twodepthCompositeUuid);
+
+        // The root group should now contain the new composite and nothing else
+        rootModificationsAfterMerge = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(1, rootModificationsAfterMerge.size());
+
+        // The first composite should contain the new composite, then the other untouched modification
+        compositeContentMap = mapper.readValue(
+                mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", firstCompositeUuid))
+                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
+                new TypeReference<>() { });
+        compositeContent = compositeContentMap.get(firstCompositeUuid);
+
+        assertEquals(2, compositeContent.size());
+        assertEquals(rootModUuids.get(1), compositeContent.get(0).getUuid());
+        assertEquals(twodepthCompositeUuid, compositeContent.get(1).getUuid());
+
+        // The new 2 depth composite must now belong to the first composite, not to a group
+        CompositeModificationEntity twoDepthComposite = compositeRepository.findById(twodepthCompositeUuid).orElseThrow();
+        assertNull(twoDepthComposite.getGroup());
+        compositeContentMap = mapper.readValue(
+                mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", firstCompositeUuid))
+                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
+                new TypeReference<>() { });
+        assertTrue(compositeContentMap.get(firstCompositeUuid).stream()
+                .map(ModificationInfos::getUuid)
+                .anyMatch(twodepthCompositeUuid::equals));
     }
 
     @Test
