@@ -15,15 +15,11 @@ import org.gridsuite.modification.dto.VoltageLevelModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.springframework.util.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
 
@@ -72,6 +68,11 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
     })
     private DoubleModificationEmbedded ipMax;
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "voltage_level_modification_id", nullable = false,
+            foreignKey = @ForeignKey(name = "busbar_section_v_measurement_vl_id_fk"))
+    private List<BusbarSectionVMeasurementEntity> busbarSectionVMeasurements;
+
     public VoltageLevelModificationEntity(VoltageLevelModificationInfos voltageLevelModificationInfos) {
         super(voltageLevelModificationInfos);
         assignAttributes(voltageLevelModificationInfos);
@@ -89,6 +90,15 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
         this.highVoltageLimit = voltageLevelModificationInfos.getHighVoltageLimit() != null ? new DoubleModificationEmbedded(voltageLevelModificationInfos.getHighVoltageLimit()) : null;
         this.ipMin = voltageLevelModificationInfos.getIpMin() != null ? new DoubleModificationEmbedded(voltageLevelModificationInfos.getIpMin()) : null;
         this.ipMax = voltageLevelModificationInfos.getIpMax() != null ? new DoubleModificationEmbedded(voltageLevelModificationInfos.getIpMax()) : null;
+        if (this.busbarSectionVMeasurements == null) {
+            this.busbarSectionVMeasurements = new ArrayList<>();
+        }
+        this.busbarSectionVMeasurements.clear();
+        if (!CollectionUtils.isEmpty(voltageLevelModificationInfos.getBusbarSectionVMeasurements())) {
+            voltageLevelModificationInfos.getBusbarSectionVMeasurements().stream()
+                    .map(BusbarSectionVMeasurementEntity::new)
+                    .forEach(this.busbarSectionVMeasurements::add);
+        }
     }
 
     @Override
@@ -110,6 +120,10 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
                 .highVoltageLimit(IAttributeModificationEmbeddable.toAttributeModification(getHighVoltageLimit()))
                 .ipMin(IAttributeModificationEmbeddable.toAttributeModification(this.getIpMin()))
                 .ipMax(IAttributeModificationEmbeddable.toAttributeModification(this.getIpMax()))
+                .busbarSectionVMeasurements(CollectionUtils.isEmpty(busbarSectionVMeasurements) ? null :
+                        busbarSectionVMeasurements.stream()
+                                .map(BusbarSectionVMeasurementEntity::toInfos)
+                                .toList())
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
