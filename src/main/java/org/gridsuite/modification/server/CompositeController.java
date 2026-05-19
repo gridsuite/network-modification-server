@@ -78,7 +78,7 @@ public class CompositeController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping(value = "/composite-modification", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Merge some network modifications into a new composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})
     public ResponseEntity<UUID> mergeNetworkModificationsIntoNewComposite(
