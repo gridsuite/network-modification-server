@@ -434,7 +434,13 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         Collection<Measurement> reactivePowerMeasurements = measurements.getMeasurements(Measurement.Type.REACTIVE_POWER).stream().toList();
         assertThat(activePowerMeasurements).isNotEmpty();
         assertThat(reactivePowerMeasurements).isNotEmpty();
-        assertThat(activePowerMeasurements).allMatch(m -> m.getValue() == MEASUREMENT_P_VALUE && m.isValid() == MEASUREMENT_P_VALID);
-        assertThat(reactivePowerMeasurements).allMatch(m -> m.getValue() == MEASUREMENT_Q_VALUE && m.isValid() == MEASUREMENT_Q_VALID);
+        assertThat(activePowerMeasurements).allSatisfy(m -> {
+            assertThat(m.getValue()).isEqualTo(MEASUREMENT_P_VALUE);
+            assertThat(m.isValid()).isEqualTo(MEASUREMENT_P_VALID);
+        });
+        assertThat(reactivePowerMeasurements).allSatisfy(m -> {
+            assertThat(m.getValue()).isEqualTo(MEASUREMENT_Q_VALUE);
+            assertThat(m.isValid()).isEqualTo(MEASUREMENT_Q_VALID);
+        });
     }
 }
