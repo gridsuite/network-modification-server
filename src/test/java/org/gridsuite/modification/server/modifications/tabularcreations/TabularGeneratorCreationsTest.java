@@ -18,7 +18,6 @@ import org.gridsuite.modification.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.SubstationCreationInfos;
 import org.gridsuite.modification.dto.tabular.*;
-import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -26,7 +25,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 import java.util.Map;
@@ -38,11 +36,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -247,11 +243,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
             .build();
         String tabularCreationJson = getJsonBody(creationInfos, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-            .andExpect(status().isOk()).andReturn();
+        saveAndApply(tabularCreationJson);
         assertLogMessage("Tabular creation: 2 generators have been created", "network.modification.tabular.creation", reportService);
     }
 
@@ -298,11 +290,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .build();
         String tabularCreationJson = getJsonBody(creationInfos, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                        .andExpect(status().isOk()).andReturn();
+        saveAndApply(tabularCreationJson);
         assertLogMessage("Tabular creation: No generators have been created", "network.modification.tabular.creation.error", reportService);
     }
 
@@ -337,16 +325,13 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .build();
         String tabularCreationJson = getJsonBody(creationInfos, null);
 
-        // creation
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted());
-        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-            .andExpect(status().isOk()).andReturn();
-        NetworkModificationsResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertNotNull(result);
-        assertEquals(1, result.modificationUuids().size());
-        UUID modifId = result.modificationUuids().get(0);
+        MvcResult createResult = mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID)
+                .content(tabularCreationJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        List<UUID> modifUuids = mapper.readValue(createResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(modifUuids);
+        assertEquals(1, modifUuids.size());
+        UUID modifId = modifUuids.get(0);
 
         // try to get via the group
         UnsupportedOperationException exception = assertThrows(

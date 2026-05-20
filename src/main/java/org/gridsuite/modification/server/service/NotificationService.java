@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.service;
 
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.dto.WorkflowType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,5 +66,14 @@ public class NotificationService {
                 .setHeader(RECEIVER_HEADER, receiver)
                 .build();
         sendMessage(message, "publishCancelBuild-out-0");
+    }
+
+    public void emitApplicationMessage(@NonNull Message<String> message) {
+        sendMessage(message, "publishApplication-out-0");
+    }
+
+    public void emitApplicationResultMessage(@NonNull NetworkModificationsResult result, @NonNull String receiver) {
+        sendMessage(MessageBuilder.withPayload(result).setHeader(RECEIVER_HEADER, receiver).build(),
+            "publishApplicationResult-out-0");
     }
 }

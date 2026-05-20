@@ -15,7 +15,6 @@ import org.gridsuite.modification.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
 
 import java.util.Map;
 import java.util.UUID;
@@ -24,8 +23,6 @@ import static org.gridsuite.modification.NetworkModificationException.Type.OPERA
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
 class OperatingStatusModificationEnergiseSideTwoLineTest extends AbstractNetworkModificationTest {
@@ -95,8 +92,7 @@ class OperatingStatusModificationEnergiseSideTwoLineTest extends AbstractNetwork
         modificationInfos.setEquipmentId("cantdisconnect");
         String modificationJson = getJsonBody(modificationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(modificationJson);
         assertLogMessage(new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to energise equipment end").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }

@@ -993,7 +993,9 @@ class BuildTest {
 
         // Incremental mode : No error send with exception
         ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, variantId, reportUuid, reporterId);
-        NetworkModificationsResult networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext)).join();
+        List<UUID> savedUuids = networkModificationService.saveNetworkModification(groupUuid, loadCreationInfos);
+        List<Optional<NetworkModificationResult>> applyResults = networkModificationService.applyModificationsByUuids(groupUuid, savedUuids, List.of(applicationContext));
+        NetworkModificationsResult networkModificationsResult = new NetworkModificationsResult(savedUuids, applyResults);
         assertEquals(1, networkModificationsResult.modificationResults().size());
         assertTrue(networkModificationsResult.modificationResults().get(0).isPresent());
         testEmptyImpactsWithErrors(networkModificationResult);
@@ -1002,7 +1004,9 @@ class BuildTest {
 
         // Save mode only (variant does not exist) : No log and no error send with exception
         applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, UUID.randomUUID().toString(), reportUuid, reporterId);
-        networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext)).join();
+        savedUuids = networkModificationService.saveNetworkModification(groupUuid, loadCreationInfos);
+        applyResults = networkModificationService.applyModificationsByUuids(groupUuid, savedUuids, List.of(applicationContext));
+        networkModificationsResult = new NetworkModificationsResult(savedUuids, applyResults);
         assertEquals(1, networkModificationsResult.modificationResults().size());
         assertTrue(networkModificationsResult.modificationResults().get(0).isEmpty());
         testNetworkModificationsCount(groupUuid, 3);

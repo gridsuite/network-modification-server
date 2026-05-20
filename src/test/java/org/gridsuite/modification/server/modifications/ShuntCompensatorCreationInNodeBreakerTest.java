@@ -97,8 +97,7 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
         modificationToCreate.setEquipmentId("v5shunt");
         assertNotNull(getNetwork().getShuntCompensator("v5shunt"));
         String modificationToCreateJson = getJsonBody(modificationToCreate, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(modificationToCreateJson);
         assertLogMessage(new NetworkModificationException(SHUNT_COMPENSATOR_ALREADY_EXISTS, "v5shunt").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }
@@ -109,8 +108,7 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
         modificationToCreate.setMaximumSectionCount(0);
 
         String modificationToCreateJson = getJsonBody(modificationToCreate, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(modificationToCreateJson);
         assertLogMessage(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Maximum section count should be greater or equal to 1").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }
@@ -122,8 +120,7 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
         modificationToCreate.setSectionCount(3);
 
         String modificationToCreateJson = getJsonBody(modificationToCreate, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(modificationToCreateJson);
         assertLogMessage(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Section count should be between 0 and Maximum section count (2), actual : 3").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }
@@ -134,8 +131,7 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
         dto.setConnectionPosition(2);
         String modificationToCreateJson = getJsonBody(dto, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(modificationToCreateJson);
     }
 
     @Test

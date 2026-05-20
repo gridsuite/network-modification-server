@@ -19,7 +19,6 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
 
 import java.util.Collection;
 import java.util.List;
@@ -29,8 +28,6 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
 class LoadModificationTest extends AbstractInjectionModificationTest {
@@ -122,8 +119,7 @@ class LoadModificationTest extends AbstractInjectionModificationTest {
                 .build();
         String loadModificationInfosJson = getJsonBody(loadModificationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(loadModificationInfosJson);
         assertLogMessage("Load 'v1load': load type is null", ERROR_MESSAGE_KEY, reportService);
     }
 
