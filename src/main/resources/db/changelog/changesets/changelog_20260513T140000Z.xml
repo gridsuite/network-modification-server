@@ -10,7 +10,7 @@
         <createIndex indexName="modification_application_modification_uuid_idx" tableName="modification_application">
             <column name="modification_uuid"/>
         </createIndex>
-        <createIndex indexName="substationModification_id_idx" tableName="substationModification">
+        <createIndex indexName="substationModification_id_idx" tableName="substation_modification">
             <column name="id"/>
         </createIndex>
     </changeSet>
