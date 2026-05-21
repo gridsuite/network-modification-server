@@ -4,41 +4,14 @@
         <createIndex indexName="boolean_equipment_attribute_modif_vl_topology_modif_id_idx" tableName="boolean_equipment_attribute_modification">
             <column name="voltage_level_topology_modification_id"/>
         </createIndex>
-        <createIndex indexName="by_filter_deletion_filters_id_idx" tableName="by_filter_deletion_filters">
-            <column name="id"/>
-        </createIndex>
-        <createIndex indexName="station_creation_rcc_points_converter_station_creation_id_idx" tableName="converter_station_creation_rcc_points">
-            <column name="converter_station_creation_entity_id"/>
-        </createIndex>
-        <createIndex indexName="station_modification_rcc_points_modif_entity_id_idx" tableName="converter_station_modification_rcc_points">
-            <column name="converter_station_modification_entity_id"/>
-        </createIndex>
-        <createIndex indexName="create_vl_topology_switch_kinds_create_vl_topology_id_idx" tableName="create_voltage_level_topology_switch_kinds">
-            <column name="create_voltage_level_topology_id"/>
-        </createIndex>
-        <createIndex indexName="lcc_converter_station_modif_on_side_lcc_modif_id_idx" tableName="lcc_converter_station_modification_on_side">
-            <column name="lcc_converter_station_modification_id"/>
-        </createIndex>
-        <createIndex indexName="limits_for_line_type_line_type_id_idx" tableName="limits_for_line_type">
-            <column name="line_type_id"/>
-        </createIndex>
-        <createIndex indexName="limits_property_operational_limit_group_id_idx" tableName="limits_property">
-            <column name="operational_limit_group_id"/>
-        </createIndex>
         <createIndex indexName="limits_property_modification_operational_limit_group_id_idx" tableName="limits_property_modification">
             <column name="operational_limit_group_id"/>
         </createIndex>
         <createIndex indexName="modification_application_modification_uuid_idx" tableName="modification_application">
             <column name="modification_uuid"/>
         </createIndex>
-        <createIndex indexName="move_feeder_bay_modification_id_idx" tableName="move_feeder_bay">
-            <column name="modification_id"/>
-        </createIndex>
-        <createIndex indexName="shunt_compensator_on_side_lcc_creation_entity_id_idx" tableName="shunt_compensator_on_side">
-            <column name="lcc_converter_station_creation_entity_id"/>
-        </createIndex>
-        <createIndex indexName="variation_filter_assignment_id_idx" tableName="variation_filter">
-            <column name="assignment_id"/>
+        <createIndex indexName="substationModification_id_idx" tableName="substationModification">
+            <column name="id"/>
         </createIndex>
     </changeSet>
 </databaseChangeLog>

@@ -26,7 +26,8 @@ import java.util.UUID;
 @Table(
     name = "modification_application",
     indexes = {
-        @Index(name = "idx_modification_application_networkUuid", columnList = "networkUuid")
+        @Index(name = "idx_modification_application_networkUuid", columnList = "networkUuid"),
+        @Index(name = "idx_modification_application_modification_uuid", columnList = "modification_uuid")
     }
 )
 public class ModificationApplicationEntity {

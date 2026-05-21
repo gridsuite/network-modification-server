@@ -7,12 +7,7 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,7 +25,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "limits_property_modification")
+@Table(name = "limits_property_modification",
+        indexes = @Index(name = "limits_property_modification_operational_limit_group_id_idx", columnList = "operational_limit_group_id"))
 public class LimitsPropertyModificationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
