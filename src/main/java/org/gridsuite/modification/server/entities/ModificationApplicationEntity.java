@@ -27,7 +27,7 @@ import java.util.UUID;
     name = "modification_application",
     indexes = {
         @Index(name = "idx_modification_application_networkUuid", columnList = "networkUuid"),
-        @Index(name = "idx_modification_application_modification_uuid", columnList = "modification_uuid")
+        @Index(name = "modification_application_modification_uuid_idx", columnList = "modification_uuid")
     }
 )
 public class ModificationApplicationEntity {
