@@ -18,7 +18,7 @@ import jakarta.persistence.*;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "substationModification", indexes = @Index(name = "substationModification_id_idx", columnList = "id"))
+@Table(name = "substationModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "substationModification_id_fk_constraint"))
 public class SubstationModificationEntity extends BasicEquipmentModificationEntity {
     @Column(name = "country")

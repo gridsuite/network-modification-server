@@ -1,17 +1,18 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="lesoteti" id="addMissingIndexes">
+    <changeSet author="lesoteti (generated)" id="1779456210794-3">
         <createIndex indexName="boolean_equipment_attribute_modif_vl_topology_modif_id_idx" tableName="boolean_equipment_attribute_modification">
             <column name="voltage_level_topology_modification_id"/>
         </createIndex>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1779456210794-4">
         <createIndex indexName="limits_property_modification_operational_limit_group_id_idx" tableName="limits_property_modification">
             <column name="operational_limit_group_id"/>
         </createIndex>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1779456210794-5">
         <createIndex indexName="modification_application_modification_uuid_idx" tableName="modification_application">
             <column name="modification_uuid"/>
-        </createIndex>
-        <createIndex indexName="substationModification_id_idx" tableName="substation_modification">
-            <column name="id"/>
         </createIndex>
     </changeSet>
 </databaseChangeLog>
