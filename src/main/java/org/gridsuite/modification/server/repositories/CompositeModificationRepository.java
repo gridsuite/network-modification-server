@@ -6,6 +6,9 @@
  */
 package org.gridsuite.modification.server.repositories;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
+import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -16,4 +19,11 @@ import java.util.UUID;
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
  */
 @Repository
-public interface CompositeModificationRepository extends JpaRepository<CompositeModificationEntity, UUID> { }
+public interface CompositeModificationRepository extends JpaRepository<CompositeModificationEntity, UUID> {
+
+    @SneakyThrows
+    default void renameCompositeModifications(CompositeModificationEntity compositeEntity, CompositeModificationInfos compositeMetadata) {
+        compositeEntity.setName(compositeMetadata.getName());
+        compositeEntity.setMessageValues(new ObjectMapper().writeValueAsString(compositeMetadata.getMapMessageValues()));
+    }
+}
