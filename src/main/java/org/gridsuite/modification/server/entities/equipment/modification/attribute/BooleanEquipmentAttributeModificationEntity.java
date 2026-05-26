@@ -6,14 +6,10 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.Table;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -21,7 +17,8 @@ import jakarta.persistence.Table;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "booleanEquipmentAttributeModification")
+@Table(name = "booleanEquipmentAttributeModification",
+        indexes = @Index(name = "boolean_equipment_attribute_modif_vl_topology_modif_id_idx", columnList = "voltage_level_topology_modification_id"))
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "boolean_equipment_attribute_modification_id_fk_constraint"))
 public class BooleanEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<Boolean> {
 
