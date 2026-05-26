@@ -12,10 +12,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
+import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.SupervisionService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,11 +31,14 @@ import java.util.UUID;
 public class SupervisionController {
     private final SupervisionService supervisionService;
 
+    private final LineTypesCatalogService lineTypesCatalogService;
+
     private final RestClient restClient;
 
-    public SupervisionController(SupervisionService supervisionService,
+    public SupervisionController(SupervisionService supervisionService, LineTypesCatalogService lineTypesCatalogService,
                                  RestClient restClient) {
         this.supervisionService = supervisionService;
+        this.lineTypesCatalogService = lineTypesCatalogService;
         this.restClient = restClient;
     }
 
@@ -93,5 +98,21 @@ public class SupervisionController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Modifications index name")})
     public ResponseEntity<String> getModificationsIndexName() {
         return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(supervisionService.getModificationIndexName());
+    }
+
+    @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Create or add a line types catalog")
+    @ApiResponse(responseCode = "200", description = "The line types catalog is created or added")
+    public ResponseEntity<Void> addLineTypes(@RequestParam("file") MultipartFile file) {
+        lineTypesCatalogService.addLineTypes(file);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping(value = "/network-modifications/catalog/line_types", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Delete line types catalog")
+    @ApiResponse(responseCode = "200", description = "The line types catalog is deleted")
+    public ResponseEntity<Void> deleteLineTypesCatalog() {
+        lineTypesCatalogService.deleteLineTypesCatalog();
+        return ResponseEntity.ok().build();
     }
 }
