@@ -54,7 +54,6 @@
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
         <!-- TODO network-modification.version remove when included in gridsuite-dependencies -->
         <network-modification.version>0.83.0</network-modification.version>
-        <liquibase.version>4.31.1</liquibase.version>
     </properties>
 
     <build>
