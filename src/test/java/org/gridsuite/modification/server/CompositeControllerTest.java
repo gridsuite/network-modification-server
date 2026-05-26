@@ -497,7 +497,7 @@ class CompositeControllerTest {
 
         // ---- 1. Merge the first 2 root-level modifications into a new composite
         List<UUID> mergedModificationUuids = rootModUuids.subList(0, 2);
-        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/composite-modification")
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(mergedModificationUuids))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -541,7 +541,7 @@ class CompositeControllerTest {
 
         // ---- 2. now merges a modification which is inside a composite with something that is outside :
         mergedModificationUuids = List.of(compositeContent.get(0).getUuid(), rootModUuids.get(2));
-        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/composite-modification")
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(mergedModificationUuids))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
