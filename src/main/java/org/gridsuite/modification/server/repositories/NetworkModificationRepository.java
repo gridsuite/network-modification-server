@@ -910,8 +910,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public CompositeModificationEntity mergeNetworkModificationsIntoNewComposite(
-            List<UUID> mergedModificationsUuids) {
+    public CompositeModificationEntity mergeNetworkModificationsIntoNewComposite(List<UUID> mergedModificationsUuids) {
         // get the target (groupUuid or composite Uuid of the first merged modification + its index in this target)
         UUID firstModifUuid = mergedModificationsUuids.getFirst();
         ModificationEntity firstModificationEntity = getModificationEntity(firstModifUuid);
@@ -927,7 +926,6 @@ public class NetworkModificationRepository {
         // get all the modifications to be merged, remove previous assignment
         List<ModificationEntity> mergedModifications = mergedModificationsUuids.stream()
                 .map(modificationRepository::findById).filter(Optional::isPresent).map(Optional::get).toList();
-        // remove previous assignments of the merged modifications
         // 1. cleans and reorders the origin group if there is one :
         ModificationGroupEntity originGroup = mergedModifications.stream()
                 .map(ModificationEntity::getGroup)
@@ -958,7 +956,7 @@ public class NetworkModificationRepository {
         // create the new composite
         CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder()
                 .modificationsInfos(List.of())
-                .name("New composite modification")
+                .name("Composite modification")
                 .build();
         CompositeModificationEntity newCompositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(newCompositeInfos);
         newCompositeEntity.setModificationsOrder(targetIndex);
