@@ -176,6 +176,7 @@ public class NetworkModificationRepository {
                 .map(cloneByUuid::get)
                 .filter(Objects::nonNull)
                 .toList();
+        deleteCompositeChildrenSubtree(List.of(compositeEntity));
         compositeEntity.setModifications(copyEntities);
         modificationRepository.save(compositeEntity);
     }
@@ -191,50 +192,6 @@ public class NetworkModificationRepository {
             order++;
         }
         return modificationRepository.saveAll(modifications);
-    }
-
-    @Transactional
-    public List<ModificationInfos> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
-        List<ModificationEntity> movedModifications = moveModificationsNonTransactional(destinationGroupUuid, originGroupUuid, modificationsToMoveUUID, referenceModificationUuid);
-        return movedModifications.stream().map(this::toModificationsInfosOptimized).toList();
-    }
-
-    private List<ModificationEntity> moveModificationsNonTransactional(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
-        // read origin group and modifications
-        ModificationGroupEntity originModificationGroupEntity = getModificationGroup(originGroupUuid);
-        List<ModificationEntity> originModificationEntities = originModificationGroupEntity.getModifications()
-            .stream()
-            .filter(modificationEntity -> !modificationEntity.getStashed())
-            .collect(Collectors.toList());
-        // To remove null entities when @orderColumn is not a contiguous sequence starting from 0 (to be fixed?)
-        // (there are several places in this file where we filter non-null modification entities)
-        originModificationEntities.removeIf(Objects::isNull);
-
-        // remove from origin list
-        List<ModificationEntity> modificationsToMove = removeModifications(originModificationEntities, modificationsToMoveUUID);
-        if (modificationsToMove.isEmpty()) {
-            return List.of();
-        }
-
-        if (originGroupUuid.equals(destinationGroupUuid)) { // single group case
-            // insert into origin list
-            insertModifications(originModificationEntities, modificationsToMove, referenceModificationUuid);
-        } else { // 2-group case
-            // before moving origin modifications between nodes, remove applications since they are not applicable anymore
-            modificationApplicationInfosService.deleteAllByModificationIds(modificationsToMove.stream().map(ModificationEntity::getId).collect(Collectors.toList()));
-            // read destination group and modifications (group must be created if missing)
-            ModificationGroupEntity destinationModificationGroupEntity = getOrCreateModificationGroup(destinationGroupUuid);
-            List<ModificationEntity> destinationModificationEntities = new ArrayList<>(destinationModificationGroupEntity.getModifications());            destinationModificationEntities.removeIf(Objects::isNull);
-            // insert into destination list
-            insertModifications(destinationModificationEntities, modificationsToMove, referenceModificationUuid);
-            // update destination group
-            destinationModificationGroupEntity.setModifications(destinationModificationEntities);
-        }
-
-        // update origin group
-        originModificationGroupEntity.setModifications(originModificationEntities);
-
-        return modificationsToMove;
     }
 
     @Transactional
@@ -285,13 +242,11 @@ public class NetworkModificationRepository {
             modificationApplicationInfosService.deleteAllByModificationIds(
                     moved.stream().map(ModificationEntity::getId).toList());
         }
-        sourceChildren.removeAll(moved);
 
         List<ModificationEntity> targetChildren = new ArrayList<>(target.getModifications());
         targetChildren.removeIf(Objects::isNull);
         insertModifications(targetChildren, moved, beforeModificationUuid);
         target.setModifications(targetChildren);
-
         return moved;
     }
 
@@ -895,11 +850,33 @@ public class NetworkModificationRepository {
         List<TabularModificationsEntity> tabularModificationsToDelete = modificationEntities.stream().filter(TabularModificationsEntity.class::isInstance).map(TabularModificationsEntity.class::cast).toList();
         tabularModificationsToDelete.forEach(this::deleteTabularModification);
 
+        List<CompositeModificationEntity> compositesToDelete = modificationEntities.stream()
+                .filter(CompositeModificationEntity.class::isInstance)
+                .map(CompositeModificationEntity.class::cast)
+                .toList();
+        deleteCompositeChildrenSubtree(compositesToDelete);
+
         // delete other modification types with "in" requests
         List<UUID> uuidsToDelete = modificationEntities.stream().filter(Predicate.not(TabularModificationsEntity.class::isInstance)).map(ModificationEntity::getId).toList();
         if (!uuidsToDelete.isEmpty()) {
             modificationApplicationInfosService.deleteAllByModificationIds(uuidsToDelete);
             modificationRepository.deleteAllByIdIn(uuidsToDelete);
+        }
+    }
+
+    private void deleteCompositeChildrenSubtree(List<CompositeModificationEntity> composites) {
+        List<UUID> subModification = composites.stream().map(ModificationEntity::getId).toList();
+        List<ModificationEntity> descendants = new ArrayList<>();
+        while (!subModification.isEmpty()) {
+            List<ModificationEntity> children = modificationRepository.findAllByContainers(subModification, ModificationContainerType.COMPOSITE);
+            descendants.addAll(children);
+            subModification = children.stream()
+                    .filter(c -> ModificationType.COMPOSITE_MODIFICATION.name().equals(c.getType()))
+                    .map(ModificationEntity::getId)
+                    .toList();
+        }
+        if (!descendants.isEmpty()) {
+            deleteModifications(modificationRepository.findAllById(descendants.stream().map(ModificationEntity::getId).toList()));
         }
     }
 
