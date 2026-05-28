@@ -107,18 +107,17 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
         assertEquals(0.8, identifiableShortCircuit.getIpMax(), 0);
         assertEquals(0.7, identifiableShortCircuit.getIpMin(), 0);
         assertEquals(PROPERTY_VALUE, getNetwork().getVoltageLevel("v1").getProperty(PROPERTY_NAME));
-        assertBusbarSectionMeasurement(getNetwork().getBusbarSection("1.1"));
+        assertBusbarSectionMeasurement(getNetwork().getBusbarSection("1.1"), MEASUREMENT_V_VALUE, MEASUREMENT_V_VALID);
     }
 
-    private void assertBusbarSectionMeasurement(BusbarSection bbs) {
+    private void assertBusbarSectionMeasurement(BusbarSection bbs, double expectedValue, boolean expectedValid) {
         assertNotNull(bbs);
         Measurements<?> measurements = (Measurements<?>) bbs.getExtension(Measurements.class);
         assertNotNull(measurements);
         Collection<Measurement> voltageMeasurements = measurements.getMeasurements(Measurement.Type.VOLTAGE).stream().toList();
-        assertThat(voltageMeasurements).isNotEmpty();
-        assertThat(voltageMeasurements).allSatisfy(m -> {
-            assertThat(m.getValue()).isEqualTo(MEASUREMENT_V_VALUE);
-            assertThat(m.isValid()).isEqualTo(MEASUREMENT_V_VALID);
+        assertThat(voltageMeasurements).isNotEmpty().allSatisfy(m -> {
+            assertThat(m.getValue()).isEqualTo(expectedValue);
+            assertThat(m.isValid()).isEqualTo(expectedValid);
         });
     }
 
@@ -280,7 +279,7 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
     void testBusbarSectionMeasurementUpdateExistingPath() throws Exception {
         // Apply first modification: adds a new voltage measurement to the BBS (add path)
         applyModification((VoltageLevelModificationInfos) buildModification());
-        assertBusbarSectionMeasurement(getNetwork().getBusbarSection("1.1"));
+        assertBusbarSectionMeasurement(getNetwork().getBusbarSection("1.1"), MEASUREMENT_V_VALUE, MEASUREMENT_V_VALID);
 
         // Apply second modification: updates the existing voltage measurement (update/upsert path)
         final double updatedValue = 380.0;
@@ -297,16 +296,7 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
                 .build();
         applyModification(updateModif);
 
-        BusbarSection bbs = getNetwork().getBusbarSection("1.1");
-        assertNotNull(bbs);
-        Measurements<?> measurements = (Measurements<?>) bbs.getExtension(Measurements.class);
-        assertNotNull(measurements);
-        Collection<Measurement> voltageMeasurements = measurements.getMeasurements(Measurement.Type.VOLTAGE).stream().toList();
-        assertThat(voltageMeasurements).hasSize(1);
-        assertThat(voltageMeasurements).allSatisfy(m -> {
-            assertThat(m.getValue()).isEqualTo(updatedValue);
-            assertThat(m.isValid()).isEqualTo(updatedValidity);
-        });
+        assertBusbarSectionMeasurement(getNetwork().getBusbarSection("1.1"), updatedValue, updatedValidity);
     }
 
     private void applyModification(VoltageLevelModificationInfos infos) throws Exception {

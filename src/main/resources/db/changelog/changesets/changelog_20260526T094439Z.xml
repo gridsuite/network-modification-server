@@ -15,22 +15,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="benrejebmoh (generated)" id="1779788708250-4">
-        <addPrimaryKey columnNames="line_id, pos_line_segments" constraintName="line_creation_line_segmentsPK" tableName="line_creation_line_segments"/>
-    </changeSet>
-    <changeSet author="benrejebmoh (generated)" id="1779788708250-5">
-        <addPrimaryKey columnNames="line_id, pos_line_segments" constraintName="line_modification_line_segmentsPK" tableName="line_modification_line_segments"/>
-    </changeSet>
     <changeSet author="benrejebmoh (generated)" id="1779788708250-6">
         <addForeignKeyConstraint baseColumnNames="voltage_level_modification_id" baseTableName="busbar_section_v_measurement" constraintName="busbar_section_v_measurement_vl_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_level_modification" validate="true"/>
-    </changeSet>
-    <changeSet author="benrejebmoh (generated)" id="1779788708250-7">
-        <dropUniqueConstraint constraintName="LINE_CREATION_LINE_SEGMENTS_POS_UK" tableName="LINE_CREATION_LINE_SEGMENTS"/>
-    </changeSet>
-    <changeSet author="benrejebmoh (generated)" id="1779788708250-8">
-        <dropUniqueConstraint constraintName="LINE_MODIFICATION_LINE_SEGMENTS_POS_UK" tableName="LINE_MODIFICATION_LINE_SEGMENTS"/>
-    </changeSet>
-    <changeSet author="benrejebmoh (generated)" id="1779788708250-1">
-        <dropDefaultValue columnDataType="boolean" columnName="apply_segments_limits" tableName="line_modification"/>
     </changeSet>
 </databaseChangeLog>
