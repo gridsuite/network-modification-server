@@ -117,8 +117,7 @@ public class NetworkModificationController {
                         modificationContextInfos.getFirst(),
                         modificationContextInfos.getSecond(),
                         canApply
-                ).thenApply(ResponseEntity.ok()::body);
-
+            ).thenApply(ResponseEntity.ok()::body);
         };
     }
 
