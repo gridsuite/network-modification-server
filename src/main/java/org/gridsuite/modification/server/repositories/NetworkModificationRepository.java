@@ -912,9 +912,9 @@ public class NetworkModificationRepository {
     @Transactional
     public CompositeModificationEntity assembleNetworkModificationsIntoNewComposite(List<UUID> assembledModificationsUuids) {
         // get the target (groupUuid or composite Uuid of the first assembled modification + its index in this target)
-        UUID firstModifUuid = assembledModificationsUuids.getFirst();
-        ModificationEntity firstModificationEntity = getModificationEntity(firstModifUuid);
-        int targetIndex = firstModificationEntity.getModificationsOrder();
+        final UUID firstModifUuid = assembledModificationsUuids.getFirst();
+        final ModificationEntity firstModificationEntity = getModificationEntity(firstModifUuid);
+        final int targetIndex = firstModificationEntity.getModificationsOrder();
         ModificationGroupEntity targetGroup = firstModificationEntity.getGroup();
         CompositeModificationEntity targetComposite = null;
         if (targetGroup == null) {
@@ -971,6 +971,9 @@ public class NetworkModificationRepository {
         } else if (targetComposite != null) {
             List<ModificationEntity> modifications = targetComposite.getModifications();
             modifications.add(targetIndex, newCompositeEntity);
+            for (int i = 0; i < targetComposite.getModifications().size(); i++) {
+                targetComposite.getModifications().get(i).setModificationsOrder(i);
+            }
         }
 
         return modificationRepository.save(newCompositeEntity);
@@ -1025,10 +1028,6 @@ public class NetworkModificationRepository {
             }
             group.setModifications(notMovedMods);
             movedMods.forEach(entity -> entity.setGroup(null));
-        }
-        // reordering the composite modifications left (not moved)
-        for (int i = 0; i < notMovedMods.size(); i++) {
-            notMovedMods.get(i).setModificationsOrder(i);
         }
 
         if (targetCompositeUuid != null) {

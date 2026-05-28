@@ -491,12 +491,12 @@ class CompositeControllerTest {
     void testAssembleNetworkModificationsIntoNewComposite() throws Exception {
         // Create 3 root-level modifications in the group
         List<ModificationInfos> rootMods = createSomeSwitchModifications(TEST_GROUP_ID, 3);
-        List<UUID> rootModUuids = rootMods.stream().map(ModificationInfos::getUuid).toList();
+        final List<UUID> originalRootModUuids = rootMods.stream().map(ModificationInfos::getUuid).toList();
 
         assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
         // ---- 1. Assemble the first 2 root-level modifications into a new composite
-        List<UUID> assembledModificationUuids = rootModUuids.subList(0, 2);
+        List<UUID> assembledModificationUuids = originalRootModUuids.subList(0, 2);
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(assembledModificationUuids))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -510,7 +510,7 @@ class CompositeControllerTest {
         assertEquals(2, rootModificationsAfterAssemble.size());
         assertEquals(firstCompositeUuid, rootModificationsAfterAssemble.getFirst().getUuid());
         assertEquals(COMPOSITE_MODIFICATION, rootModificationsAfterAssemble.getFirst().getType());
-        assertEquals(rootModUuids.get(2), rootModificationsAfterAssemble.get(1).getUuid());
+        assertEquals(originalRootModUuids.get(2), rootModificationsAfterAssemble.get(1).getUuid());
 
         // The new composite should contain the assembled modifications in the same order
         Map<UUID, List<ModificationInfos>> compositeContentMap = mapper.readValue(
@@ -520,8 +520,8 @@ class CompositeControllerTest {
         List<ModificationInfos> compositeContent = compositeContentMap.get(firstCompositeUuid);
 
         assertEquals(2, compositeContent.size());
-        assertEquals(rootModUuids.get(0), compositeContent.get(0).getUuid());
-        assertEquals(rootModUuids.get(1), compositeContent.get(1).getUuid());
+        assertEquals(originalRootModUuids.get(0), compositeContent.get(0).getUuid());
+        assertEquals(originalRootModUuids.get(1), compositeContent.get(1).getUuid());
 
         // The new composite must belong to TEST_GROUP_ID at root level
         CompositeModificationEntity firstComposite = compositeRepository.findById(firstCompositeUuid).orElseThrow();
@@ -529,18 +529,18 @@ class CompositeControllerTest {
         assertEquals(TEST_GROUP_ID, firstComposite.getGroup().getId());
 
         // The assembled modifications must no longer belong directly to the group
-        ModificationEntity firstAssembledEntity = modificationRepository.getModificationEntity(rootModUuids.get(0));
-        ModificationEntity secondAssembledEntity = modificationRepository.getModificationEntity(rootModUuids.get(1));
+        ModificationEntity firstAssembledEntity = modificationRepository.getModificationEntity(originalRootModUuids.get(0));
+        ModificationEntity secondAssembledEntity = modificationRepository.getModificationEntity(originalRootModUuids.get(1));
         assertNull(firstAssembledEntity.getGroup());
         assertNull(secondAssembledEntity.getGroup());
 
         // The non-assembled modification must still belong to TEST_GROUP_ID
-        ModificationEntity remainingEntity = modificationRepository.getModificationEntity(rootModUuids.get(2));
-        assertNotNull(remainingEntity.getGroup());
-        assertEquals(TEST_GROUP_ID, remainingEntity.getGroup().getId());
+        ModificationEntity remainingInGroupEntity = modificationRepository.getModificationEntity(originalRootModUuids.get(2));
+        assertNotNull(remainingInGroupEntity.getGroup());
+        assertEquals(TEST_GROUP_ID, remainingInGroupEntity.getGroup().getId());
 
         // ---- 2. now assembles a modification which is inside a composite with something that is outside :
-        assembledModificationUuids = List.of(compositeContent.getFirst().getUuid(), rootModUuids.get(2));
+        assembledModificationUuids = List.of(compositeContent.getFirst().getUuid(), remainingInGroupEntity.getId());
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(assembledModificationUuids))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -562,8 +562,8 @@ class CompositeControllerTest {
         compositeContent = compositeContentMap.get(firstCompositeUuid);
 
         assertEquals(2, compositeContent.size());
-        assertEquals(rootModUuids.get(1), compositeContent.get(0).getUuid());
-        assertEquals(twodepthCompositeUuid, compositeContent.get(1).getUuid());
+        assertEquals(twodepthCompositeUuid, compositeContent.get(0).getUuid());
+        assertEquals(originalRootModUuids.get(1), compositeContent.get(1).getUuid());
 
         // The new 2 depth composite must now belong to the first composite, not to a group
         CompositeModificationEntity twoDepthComposite = compositeRepository.findById(twodepthCompositeUuid).orElseThrow();
