@@ -15,6 +15,7 @@ spring:
         order_updates: true
         jdbc:
           batch_size: 512
+        show_sql: true
 
   cloud:
     function:

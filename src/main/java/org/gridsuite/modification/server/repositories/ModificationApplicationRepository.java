@@ -18,9 +18,9 @@ import java.util.UUID;
  * @author Kevin Le Saulnier <kevin.lesaulnier at rte-france.com>
  */
 public interface ModificationApplicationRepository extends JpaRepository<ModificationApplicationEntity, UUID> {
-    void deleteAllByNetworkUuidAndModificationGroupIdIn(UUID networkUuid, List<UUID> groupUuid);
+    void deleteAllByNetworkUuidAndModificationContainerIdIn(UUID networkUuid, List<UUID> groupUuid);
 
-    void deleteAllByModificationGroupIdIn(List<UUID> groupUuid);
+    void deleteAllByModificationContainerIdIn(List<UUID> groupUuid);
 
     void deleteAllByModificationIdIn(List<UUID> modificationIds);
 

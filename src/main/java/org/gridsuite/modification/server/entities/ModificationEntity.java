@@ -24,14 +24,20 @@ import java.util.UUID;
 import static org.gridsuite.modification.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
 
 /**
- * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Slimane Amar {@literal <slimane.amar at rte-france.com>}
  */
 @NoArgsConstructor
 @Getter
 @Setter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "modification")
+@Table(
+        name = "modification",
+        indexes = {
+            // The cascade / lookup queries hit (container_type, container_id) constantly.
+            @Index(name = "modification_container_idx", columnList = "container_type, container_id")
+        }
+)
 public class ModificationEntity {
 
     @Id
@@ -45,15 +51,9 @@ public class ModificationEntity {
     @Column(name = "date", columnDefinition = "timestamptz")
     private Instant date;
 
-    @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"))
-    @ManyToOne(fetch = FetchType.LAZY)
-    @Setter
-    private ModificationGroupEntity group;
-
     @Column(name = "stashed", columnDefinition = "boolean default false")
     private Boolean stashed = false;
 
-    // manages the order inside a group of modification in gridstudy AND for the order inside a composite modification
     @Column(name = "modifications_order")
     private int modificationsOrder;
 
@@ -69,7 +69,16 @@ public class ModificationEntity {
     @Column(name = "description", columnDefinition = "CLOB")
     private String description;
 
-    public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues, String description) {
+    // Updates are managed by the container collection to avoid duplicate writes
+    @Column(name = "container_id", updatable = false)
+    private UUID containerId;
+
+    @Column(name = "container_type")
+    @Enumerated(EnumType.STRING)
+    private ModificationContainerType containerType;
+
+    public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated,
+                              String messageType, String messageValues, String description) {
         this.id = id;
         this.type = type;
         this.date = date;
@@ -100,14 +109,14 @@ public class ModificationEntity {
 
     public ModificationInfos toModificationInfos() {
         ModificationInfos modificationInfos = ModificationInfos.builder()
-            .uuid(this.id)
-            .date(this.date)
-            .stashed(this.stashed)
-            .activated(this.activated)
-            .description(this.description)
-            .messageType(this.messageType)
-            .messageValues(this.messageValues)
-            .build();
+                .uuid(this.id)
+                .date(this.date)
+                .stashed(this.stashed)
+                .activated(this.activated)
+                .description(this.description)
+                .messageType(this.messageType)
+                .messageValues(this.messageValues)
+                .build();
         modificationInfos.setType(ModificationType.valueOf(this.type));
         return modificationInfos;
     }
@@ -128,6 +137,20 @@ public class ModificationEntity {
             this.setDescription(modificationInfos.getDescription());
         }
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
+    }
+
+    public void attachToContainer(@NonNull ModificationContainer container) {
+        // containerId is written by the parent's @OneToMany @JoinColumn — don't touch.
+        this.containerType = container.getContainerType();
+    }
+
+    public void detachFromContainer() {
+        this.containerType = null;
+        // Similarly: Hibernate will null containerId when we leave the collection.
+    }
+
+    public boolean isIn(ModificationContainerType type) {
+        return this.containerType == type;
     }
 
     public static ModificationEntity fromDTO(ModificationInfos dto) {

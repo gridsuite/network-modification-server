@@ -476,12 +476,12 @@ class CompositeControllerTest {
 
         // The moved modification must now belong to TEST_GROUP_ID (has a group at root level)
         ModificationEntity movedEntity = modificationRepository.getModificationEntity(movingUuid);
-        assertNotNull(movedEntity.getGroup());
-        assertEquals(TEST_GROUP_ID, movedEntity.getGroup().getId());
+        assertNotNull(movedEntity.getContainerId());
+        assertEquals(TEST_GROUP_ID, movedEntity.getContainerId());
 
         // The remaining sub-modification must still have no group (still owned by the composite)
         ModificationEntity remainingEntity = modificationRepository.getModificationEntity(actualSubUuids.get(1));
-        assertNull(remainingEntity.getGroup());
+        assertNull(remainingEntity.getContainerId());
     }
 
     @Test
@@ -599,7 +599,7 @@ class CompositeControllerTest {
 
         // The moved modification must now have no group (owned by the composite, not the group)
         ModificationEntity movedEntity = modificationRepository.getModificationEntity(rootModUuid);
-        assertNull(movedEntity.getGroup());
+        assertNull(movedEntity.getContainerId());
     }
 
     @Test

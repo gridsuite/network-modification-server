@@ -1,0 +1,42 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet id="unify-modification-container-model" author="marcellinh">
+        <addColumn tableName="modification">
+            <column name="container_id" type="UUID"/>
+            <column name="container_type" type="VARCHAR(32)"/>
+        </addColumn>
+        <sql>
+            UPDATE modification
+            SET container_id   = group_id,
+                container_type = 'GROUP'
+            WHERE group_id IS NOT NULL
+              AND container_id IS NULL;
+        </sql>
+
+
+        <sql>
+            UPDATE modification m
+            SET container_id = (
+                SELECT j.id
+                FROM composite_modification_sub_modifications j
+                WHERE j.modification_id = m.id
+            ),
+                container_type = 'COMPOSITE'
+            WHERE m.container_id IS NULL
+              AND EXISTS (
+                SELECT 1
+                FROM composite_modification_sub_modifications j
+                WHERE j.modification_id = m.id
+            );
+        </sql>
+
+        <createIndex tableName="modification" indexName="modification_container_idx">
+            <column name="container_type"/>
+            <column name="container_id"/>
+        </createIndex>
+        <dropForeignKeyConstraint baseTableName="modification"
+                                  constraintName="group_id_fk_constraint"/>
+        <dropColumn tableName="modification" columnName="group_id"/>
+        <dropTable tableName="composite_modification_sub_modifications"/>
+    </changeSet>
+</databaseChangeLog>
