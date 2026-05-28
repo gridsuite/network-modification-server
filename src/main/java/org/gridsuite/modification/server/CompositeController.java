@@ -79,14 +79,12 @@ public class CompositeController {
     }
 
     @PostMapping(value = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Merge some network modifications into a new composite modification")
+    @Operation(summary = "Assemble some network modifications into a new composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})
-    public ResponseEntity<UUID> mergeNetworkModificationsIntoNewComposite(
-            @RequestBody List<UUID> mergedModificationsUuids) {
-
+    public ResponseEntity<UUID> assembleNetworkModificationsIntoNewComposite(
+            @RequestBody List<UUID> assembledModificationsUuids) {
         return ResponseEntity.ok().body(
-                networkModificationService.mergeNetworkModificationsIntoNewComposite(
-                        mergedModificationsUuids)
+                networkModificationService.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids)
         );
     }
 
