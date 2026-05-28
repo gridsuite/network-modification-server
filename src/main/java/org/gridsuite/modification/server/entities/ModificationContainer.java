@@ -22,5 +22,7 @@ public interface ModificationContainer {
 
     void addModification(ModificationEntity child, int position);
 
+    void setModifications(List<ModificationEntity> newChildren);
+
     boolean removeModification(UUID childId);
 }

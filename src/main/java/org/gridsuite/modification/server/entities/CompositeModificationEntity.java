@@ -34,7 +34,7 @@ public class CompositeModificationEntity extends ModificationEntity implements M
     @ColumnDefault("'My Composite'")
     private String name;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @JoinColumn(name = "container_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @SQLRestriction("container_type = 'COMPOSITE'")
     @OrderBy("modificationsOrder asc")

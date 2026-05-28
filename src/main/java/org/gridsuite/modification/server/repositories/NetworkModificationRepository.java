@@ -261,8 +261,6 @@ public class NetworkModificationRepository {
         boolean sameContainer = sourceType == targetType && sourceContainerId.equals(targetContainerId);
         ModificationContainer target = sameContainer ? source : loadOrCreateContainer(targetType, targetContainerId);
 
-        // Snapshot of the source: fresh ArrayList, no nulls, no stashed.
-        // Stashed filtering only matters for groups (composites can't be stashed); harmless for composites.
         List<ModificationEntity> sourceChildren = source.getModifications().stream()
                 .filter(Objects::nonNull)
                 .filter(m -> !Boolean.TRUE.equals(m.getStashed()))
@@ -273,66 +271,29 @@ public class NetworkModificationRepository {
             return List.of();
         }
 
-        // Composite-into-itself / composite-into-descendant cycle check.
         if (targetType == ModificationContainerType.COMPOSITE) {
             assertNoCompositeCycle(moved, targetContainerId);
         }
 
-        // ───── Same-container reorder ──────────────────────────────────────────
-        // One collection, one persister, no race. Use the existing setModifications() flow:
-        // it clears the managed list and re-adds in the new order, renumbering as it goes.
         if (sameContainer) {
             insertModifications(sourceChildren, moved, beforeModificationUuid);
-            publishChildren(source, sourceChildren);
+            source.setModifications(sourceChildren);
             return moved;
         }
 
-        // ───── Cross-container move ────────────────────────────────────────────
-        // Key insight: we only mutate the TARGET's managed collection. We do NOT remove
-        // anything from the source's collection. Hibernate's collection persisters diff
-        // snapshot-vs-current:
-        //   - source: snapshot == current (we didn't touch it) → no UPDATE.
-        //   - target: current contains the new row             → one UPDATE setting container_id.
-        // The source's @SQLRestriction (container_type = 'GROUP'/'COMPOSITE') will naturally
-        // filter the moved row out on the next fresh load, because the row's container_type
-        // is now the target's.
-        //
-        // Caveat: in this same transaction, source.getModifications() still contains the
-        // moved entity (it's the in-memory snapshot, not a re-query). Callers must not rely
-        // on the source collection being up-to-date after a cross-container move within
-        // the same transaction.
-
-        // Applications belong to the (network, modification) pair and don't survive a node change.
-        // Only group sources have applications; composite children don't.
         if (sourceType == ModificationContainerType.GROUP) {
             modificationApplicationInfosService.deleteAllByModificationIds(
                     moved.stream().map(ModificationEntity::getId).toList());
         }
+        sourceChildren.removeAll(moved);
 
-        // Build the target's new ordering off a fresh snapshot (never alias target.modifications).
         List<ModificationEntity> targetChildren = new ArrayList<>(target.getModifications());
         targetChildren.removeIf(Objects::isNull);
         insertModifications(targetChildren, moved, beforeModificationUuid);
-
-        // Publish the target only. This re-attaches the moved entities to the target via
-        // attachToContainer(), renumbers modificationsOrder for everything in the target,
-        // and lets Hibernate's target-side collection persister write container_id once.
-        publishChildren(target, targetChildren);
-
-        // Renumber the source's remaining children in memory. We can't publish via the
-        // setModifications() path on the source (that would trigger the disassociation
-        // UPDATE we're trying to avoid). Just update modificationsOrder directly on the
-        // entities that stayed — Hibernate's dirty-checker will pick up the field changes
-        // and emit per-row UPDATEs on modifications_order only, no FK column touched.
-        for (int i = 0; i < sourceChildren.size(); i++) {
-            sourceChildren.get(i).setModificationsOrder(i);
-        }
+        target.setModifications(targetChildren);
 
         return moved;
     }
-
-
-// ──── helpers ────────────────────────────────────────────────────────────
 
     private ModificationContainer loadContainer(ModificationContainerType type, UUID id) {
         return switch (type) {
@@ -351,19 +312,6 @@ public class NetworkModificationRepository {
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, id)));
             // composites are never auto-created on a move; that's a user-driven operation
         };
-    }
-
-    private void publishChildren(ModificationContainer container, List<ModificationEntity> children) {
-        // Both ModificationGroupEntity and CompositeModificationEntity expose setModifications().
-        // The interface doesn't declare it (it's a write-the-whole-list operation, not part of the
-        // container contract), so dispatch by concrete type.
-        if (container instanceof ModificationGroupEntity g) {
-            g.setModifications(children);
-        } else if (container instanceof CompositeModificationEntity c) {
-            c.setModifications(children);
-        } else {
-            throw new IllegalStateException("Unknown container type: " + container.getClass());
-        }
     }
 
     private void assertNoCompositeCycle(List<ModificationEntity> moving, UUID targetCompositeId) {
@@ -1062,11 +1010,13 @@ public class NetworkModificationRepository {
     }
 
     public ModificationContainerType getContainerType(UUID containerUuid) {
-        if(modificationGroupRepository.findById(containerUuid).isPresent()) {
+        if (modificationGroupRepository.existsById(containerUuid)) {
             return ModificationContainerType.GROUP;
-        } else if (compositeModificationRepository.findById(containerUuid).isPresent()) {
+        }
+        if (compositeModificationRepository.existsById(containerUuid)) {
             return ModificationContainerType.COMPOSITE;
         }
-        return null;
+        throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
+                String.format("No modification container found for id %s", containerUuid));
     }
 }

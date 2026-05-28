@@ -28,14 +28,6 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
     @Column(name = "id")
     private UUID id;
 
-    /**
-     * Children of this group. The {@code @JoinColumn} writes {@code container_id}; the
-     * {@code @SQLRestriction} ensures we only read rows whose {@code container_type = 'GROUP'}.
-     * The {@code container_type} value itself is set on the child via
-     * {@link ModificationEntity#attachToContainer(ModificationContainer)} in {@link #addModification}.
-     *
-     * <p>Deletion is handled manually (see NetworkModificationRepository), so no remove/orphan cascade here.
-     */
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @JoinColumn(name = "container_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @SQLRestriction("container_type = 'GROUP'")
