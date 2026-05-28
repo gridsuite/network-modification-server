@@ -188,8 +188,6 @@ public class NetworkModificationRepository {
             .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
         for (ModificationEntity m : modifications) {
             modificationGroupEntity.addModification(m, order++);
-            m.setModificationsOrder(order);
-            order++;
         }
         return modificationRepository.saveAll(modifications);
     }
