@@ -58,12 +58,12 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, onlyStashed));
     }
 
-    @GetMapping(value = "/groups/{groupUuid}/network-modifications/export", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get list modifications to export for a given group")
-    @ApiResponse(responseCode = "200", description = "List of modifications of the group to export")
-    public ResponseEntity<NetworkModificationExportInfos> getNetworkModificationsToExport(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
-                                                                                          @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
-        return ResponseEntity.ok().body(networkModificationService.getNetworkModificationsInfosToExport(groupUuid, errorOnGroupNotFound));
+    @PostMapping(value = "/groups/modifications/export", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Export network modifications for multiple groups in a single batched call")
+    @ApiResponse(responseCode = "200", description = "Modifications grouped by groupUuid, with embedded filters and load-flow parameters")
+    public ResponseEntity<Map<UUID, NetworkModificationExportInfos>> getModificationsByGroupsToExport(@RequestBody List<UUID> groupUuids,
+                                                                                                      @RequestParam(value = "errorOnGroupNotFound", required = false, defaultValue = "false") boolean errorOnGroupNotFound) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.getModificationsByGroupsToExport(groupUuids, errorOnGroupNotFound));
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications/verify", produces = MediaType.APPLICATION_JSON_VALUE)

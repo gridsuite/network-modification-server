@@ -75,7 +75,7 @@ public class ByFilterDeletionEntity extends ModificationEntity {
                 .activated(getActivated())
                 .description(getDescription())
                 .filters(getFilters().stream()
-                        .map(filter -> new FilterInfos(filter.getFilterId(), filter.getName()))
+                        .map(filter -> new FilterInfos(filter.getFilterId(), filter.getName(), null))
                         .collect(Collectors.toList()))
                 .equipmentType(getEquipmentType()).build();
     }

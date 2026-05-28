@@ -67,7 +67,7 @@ class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTe
         AbstractFilter filterEquipments = getFilterEquipments(FILTER_ID_1, List.of(identifiableAttributes));
 
         FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(new FilterInfos(FILTER_ID_1, "filter1")))
+                .filters(List.of(new FilterInfos(FILTER_ID_1, "filter1", null)))
                 .editedField(GeneratorField.ACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
                 .operator(Operator.ADDITION)

@@ -7,26 +7,15 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author Maissa Souissi <maissa.souissi@rte-france.com>
  */
 public record NetworkModificationExportInfos(
         @JsonProperty("modifications")
-        List<ModificationInfos> exportedModifications,
-
-        @JsonProperty("unexported")
-        List<UnexportedModification> unexportedModifications
+        List<ModificationInfos> exportedModifications
 ) {
-
-    public record UnexportedModification(
-            UUID uuid,
-            ModificationType type
-    ) {
-    }
 }

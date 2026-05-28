@@ -17,7 +17,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.UUID;
+import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationServerException.handleChangeError;
 
@@ -53,5 +53,19 @@ public class LoadFlowService implements ILoadFlowService {
                 throw handleChangeError(e, NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR);
             }
         }
+    }
+
+    public Map<UUID, LoadFlowParametersInfos> getLoadFlowParametersAsMap(Collection<UUID> uuids) {
+        if (uuids == null || uuids.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, LoadFlowParametersInfos> result = new HashMap<>();
+        for (UUID id : new LinkedHashSet<>(uuids)) {
+            LoadFlowParametersInfos params = getLoadFlowParametersInfos(id);
+            if (params != null) {
+                result.put(id, params);
+            }
+        }
+        return result;
     }
 }

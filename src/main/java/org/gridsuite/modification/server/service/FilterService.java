@@ -20,10 +20,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -77,5 +74,17 @@ public class FilterService implements IFilterService {
                 f.getIdentifiableAttributes().stream().map(i -> new IdentifiableAttributes(i.getId(), i.getType(), i.getDistributionKey())).toList(),
                 f.getNotFoundEquipments()))
             .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
+    }
+
+    public Map<UUID, AbstractFilter> getFiltersAsMap(Collection<UUID> filterUuids) {
+        if (filterUuids == null || filterUuids.isEmpty()) {
+            return Map.of();
+        }
+        List<AbstractFilter> filters = getFilters(new ArrayList<>(new LinkedHashSet<>(filterUuids)));
+        if (filters == null) {
+            return Map.of();
+        }
+        return filters.stream().filter(f -> f.getId() != null)
+                .collect(Collectors.toMap(AbstractFilter::getId, Function.identity(), (a, b) -> a));
     }
 }

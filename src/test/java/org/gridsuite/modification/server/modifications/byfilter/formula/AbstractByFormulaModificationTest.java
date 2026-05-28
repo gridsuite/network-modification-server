@@ -59,13 +59,13 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
     protected static final UUID FILTER_ID_6 = UUID.randomUUID();
     protected static final UUID FILTER_WITH_ALL_WRONG_IDS = UUID.randomUUID();
     protected static final UUID FILTER_WITH_ONE_WRONG_ID = UUID.randomUUID();
-    protected final FilterInfos filter1 = new FilterInfos(FILTER_ID_1, "filter1");
-    protected final FilterInfos filter2 = new FilterInfos(FILTER_ID_2, "filter2");
-    protected final FilterInfos filter3 = new FilterInfos(FILTER_ID_3, "filter3");
-    protected final FilterInfos filter4 = new FilterInfos(FILTER_ID_4, "filter4");
-    protected final FilterInfos filter5 = new FilterInfos(FILTER_ID_5, "filter5");
-    protected final FilterInfos filter6 = new FilterInfos(FILTER_ID_6, "filter6");
-    protected final FilterInfos filterWithOneWrongId = new FilterInfos(FILTER_WITH_ONE_WRONG_ID, "filterWithOneWrongId");
+    protected final FilterInfos filter1 = new FilterInfos(FILTER_ID_1, "filter1", null);
+    protected final FilterInfos filter2 = new FilterInfos(FILTER_ID_2, "filter2", null);
+    protected final FilterInfos filter3 = new FilterInfos(FILTER_ID_3, "filter3", null);
+    protected final FilterInfos filter4 = new FilterInfos(FILTER_ID_4, "filter4", null);
+    protected final FilterInfos filter5 = new FilterInfos(FILTER_ID_5, "filter5", null);
+    protected final FilterInfos filter6 = new FilterInfos(FILTER_ID_6, "filter6", null);
+    protected final FilterInfos filterWithOneWrongId = new FilterInfos(FILTER_WITH_ONE_WRONG_ID, "filterWithOneWrongId", null);
 
     protected static final String PATH = "/v1/filters/metadata";
 
@@ -151,7 +151,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
         AbstractFilter filter = getFilterEquipments(FILTER_WITH_ALL_WRONG_IDS, List.of());
 
         List<FormulaInfos> formulaInfos = getFormulaInfos().stream()
-                .peek(formula -> formula.setFilters(List.of(new FilterInfos(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId"))))
+                .peek(formula -> formula.setFilters(List.of(new FilterInfos(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId", null))))
                 .toList();
 
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ALL_WRONG_IDS))

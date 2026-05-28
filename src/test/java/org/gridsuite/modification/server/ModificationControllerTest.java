@@ -276,8 +276,6 @@ class ModificationControllerTest {
         NetworkModificationExportInfos exportInfos = mapper.readValue(resultAsString, NetworkModificationExportInfos.class);
 
         assertEquals(1, exportInfos.exportedModifications().size());
-        assertEquals(1, exportInfos.unexportedModifications().size());
-        assertEquals(exportInfos.unexportedModifications().getFirst().type(), byFormulaModificationInfos.getType());
 
         // delete group
         mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
@@ -294,7 +292,6 @@ class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         exportInfos = mapper.readValue(resultAsString, NetworkModificationExportInfos.class);
         assertEquals(exportInfos.exportedModifications(), List.of());
-        assertEquals(exportInfos.unexportedModifications(), List.of());
     }
 
     @Test
