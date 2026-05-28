@@ -78,8 +78,7 @@ public class ModificationEntity {
     @Enumerated(EnumType.STRING)
     private ModificationContainerType containerType;
 
-    public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated,
-                              String messageType, String messageValues, String description) {
+    public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues, String description) {
         this.id = id;
         this.type = type;
         this.date = date;
@@ -146,12 +145,8 @@ public class ModificationEntity {
     }
 
     public void detachFromContainer() {
-        this.containerType = null;
         // Similarly: Hibernate will null containerId when we leave the collection.
-    }
-
-    public boolean isIn(ModificationContainerType type) {
-        return this.containerType == type;
+        this.containerType = null;
     }
 
     public static ModificationEntity fromDTO(ModificationInfos dto) {
