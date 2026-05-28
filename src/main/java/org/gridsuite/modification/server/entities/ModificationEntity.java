@@ -109,14 +109,14 @@ public class ModificationEntity {
 
     public ModificationInfos toModificationInfos() {
         ModificationInfos modificationInfos = ModificationInfos.builder()
-                .uuid(this.id)
-                .date(this.date)
-                .stashed(this.stashed)
-                .activated(this.activated)
-                .description(this.description)
-                .messageType(this.messageType)
-                .messageValues(this.messageValues)
-                .build();
+            .uuid(this.id)
+            .date(this.date)
+            .stashed(this.stashed)
+            .activated(this.activated)
+            .description(this.description)
+            .messageType(this.messageType)
+            .messageValues(this.messageValues)
+            .build();
         modificationInfos.setType(ModificationType.valueOf(this.type));
         return modificationInfos;
     }
