@@ -37,10 +37,10 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) FROM ModificationEntity m WHERE m.containerId = ?1 order by m.modificationsOrder desc")
     List<ModificationEntity> findAllBaseByContainerIdReverse(UUID uuid);
 
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) FROM ModificationEntity m WHERE m.containerId = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
+    @Query(value = "SELECT m FROM ModificationEntity m WHERE m.containerId = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
     List<ModificationEntity> findAllByContainerId(@Param("containerId") UUID containerId, @Param("stashed") Boolean stashed);
 
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) FROM ModificationEntity m WHERE m.containerId = ?1 AND m.stashed = false AND m.activated = true AND m.id NOT IN (?2) order by m.modificationsOrder")
+    @Query(value = "SELECT m FROM ModificationEntity m WHERE m.containerId = ?1 AND m.stashed = false AND m.activated = true AND m.id NOT IN (?2) order by m.modificationsOrder")
     List<ModificationEntity> findAllActiveModificationsByContainerId(UUID containerUuid, Set<UUID> excludedList);
 
     @Query(value = "SELECT new ModificationEntity(m.id, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
