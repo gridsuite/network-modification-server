@@ -281,9 +281,13 @@ public class NetworkModificationRepository {
 
     private boolean isInsideComposite(CompositeModificationEntity composite, UUID targetUuid) {
         for (ModificationEntity sub : composite.getModifications()) {
-            if (sub.getId().equals(targetUuid)) return true;
+            if (sub.getId().equals(targetUuid)) {
+                return true;
+            }
             if (sub instanceof CompositeModificationEntity subComposite
-                    && isInsideComposite(subComposite, targetUuid)) return true;
+                    && isInsideComposite(subComposite, targetUuid)) {
+                return true;
+            }
         }
         return false;
     }

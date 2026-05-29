@@ -108,21 +108,21 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      * (i.e. only the composites in the subtree, leaves excluded).
      */
     @NativeQuery("""
-    WITH RECURSIVE descendants(id) AS (
-        SELECT m.id
-          FROM modification m
-         WHERE m.container_id = :compositeUuid
-           AND m.container_type = 'COMPOSITE'
-        UNION ALL
-        SELECT m.id
-          FROM modification m
-          JOIN descendants d ON m.container_id = d.id
-         WHERE m.container_type = 'COMPOSITE'
-    )
-    SELECT CAST(c.id AS VARCHAR)
-      FROM composite_modification c
-     WHERE c.id IN (SELECT id FROM descendants)
-    """)
+            WITH RECURSIVE descendants(id) AS (
+                SELECT m.id
+                  FROM modification m
+                 WHERE m.container_id = :compositeUuid
+                   AND m.container_type = 'COMPOSITE'
+                UNION ALL
+                SELECT m.id
+                  FROM modification m
+                  JOIN descendants d ON m.container_id = d.id
+                 WHERE m.container_type = 'COMPOSITE'
+            )
+            SELECT CAST(c.id AS VARCHAR)
+              FROM composite_modification c
+             WHERE c.id IN (SELECT id FROM descendants)
+            """)
     List<UUID> findOnlyCompositeChildrenUuids(@Param("compositeUuid") UUID compositeUuid);
 
     /**
@@ -130,20 +130,21 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      * ordered depth-first by {@code modifications_order} at each level.
      */
     @NativeQuery("""
-    WITH RECURSIVE hierarchy(id, path) AS (
-        SELECT CAST(:compositeUuid AS uuid), ARRAY[0]
-        UNION ALL
-        SELECT m.id, h.path || m.modifications_order
-          FROM modification m
-          JOIN hierarchy h ON m.container_id = h.id
-         WHERE m.container_type = 'COMPOSITE'
-    )
-    SELECT CAST(id AS VARCHAR) FROM hierarchy ORDER BY path
-    """)
+            WITH RECURSIVE hierarchy(id, path) AS (
+                SELECT CAST(:compositeUuid AS uuid), ARRAY[0]
+                UNION ALL
+                SELECT m.id, h.path || m.modifications_order
+                  FROM modification m
+                  JOIN hierarchy h ON m.container_id = h.id
+                 WHERE m.container_type = 'COMPOSITE'
+            )
+            SELECT CAST(id AS VARCHAR) FROM hierarchy ORDER BY path
+            """)
     List<UUID> findAllChildrenUuids(@Param("compositeUuid") UUID compositeUuid);
 
     interface CompositeDepth {
         String getId();
+
         Integer getDepth();
     }
 
@@ -152,25 +153,24 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      * (unstashed) descendant tree. Composites with no unstashed children do not appear in the result.
      */
     @NativeQuery("""
-    WITH RECURSIVE hierarchy(root_id, id, level) AS (
-        SELECT m.container_id, m.id, 1
-          FROM modification m
-         WHERE m.container_id IN (:compositeUuids)
-           AND m.container_type = 'COMPOSITE'
-           AND m.stashed = false
-        UNION ALL
-        SELECT h.root_id, m.id, h.level + 1
-          FROM modification m
-          JOIN hierarchy h ON m.container_id = h.id
-         WHERE m.container_type = 'COMPOSITE'
-           AND m.stashed = false
-    )
-    SELECT CAST(root_id AS VARCHAR) AS id, MAX(level) AS depth
-      FROM hierarchy
-     GROUP BY root_id
-    """)
+            WITH RECURSIVE hierarchy(root_id, id, level) AS (
+                SELECT m.container_id, m.id, 1
+                  FROM modification m
+                 WHERE m.container_id IN (:compositeUuids)
+                   AND m.container_type = 'COMPOSITE'
+                   AND m.stashed = false
+                UNION ALL
+                SELECT h.root_id, m.id, h.level + 1
+                  FROM modification m
+                  JOIN hierarchy h ON m.container_id = h.id
+                 WHERE m.container_type = 'COMPOSITE'
+                   AND m.stashed = false
+            )
+            SELECT CAST(root_id AS VARCHAR) AS id, MAX(level) AS depth
+              FROM hierarchy
+             GROUP BY root_id
+            """)
     List<CompositeDepth> getCompositesMaxDepth(@Param("compositeUuids") List<UUID> compositeUuids);
-
 
     @EntityGraph(attributePaths = {"modifications"}, type = EntityGraph.EntityGraphType.LOAD)
     List<CompositeModificationEntity> findAllCompositesWithModificationsByIdIn(List<UUID> compositeUuids);
