@@ -93,8 +93,9 @@ public class ModificationEntity {
         this.date = Instant.now().truncatedTo(ChronoUnit.MICROS);
         // Do not put this stashed status in assignAttributes, it's not part of a network modification as such.
         this.stashed = modificationInfos.getStashed();
-        // On creation, default a missing activation flag to true (a null value otherwise means "leave status unchanged" on update)
-        this.activated = modificationInfos.getActivated() != null ? modificationInfos.getActivated() : true;
+        if (modificationInfos.getActivated() != null) {
+            this.activated = modificationInfos.getActivated();
+        }
 
         assignAttributes(modificationInfos);
     }
