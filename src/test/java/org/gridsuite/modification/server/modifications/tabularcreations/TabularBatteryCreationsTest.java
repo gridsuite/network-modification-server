@@ -45,7 +45,6 @@ class TabularBatteryCreationsTest extends AbstractNetworkModificationTest {
         List<ModificationInfos> creations = List.of(
             BatteryCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("B1").equipmentName("b1").voltageLevelId("v1").busOrBusbarSectionId("1.1")
                 .minP(100.0).maxP(600.0).targetP(400.).targetQ(50.)
                 .minQ(20.0).maxQ(25.0).droop(5f).participate(true).reactiveCapabilityCurve(true)
@@ -63,7 +62,6 @@ class TabularBatteryCreationsTest extends AbstractNetworkModificationTest {
             .modifications(creations)
             .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
             .stashed(false)
-            .activated(true)
             .build();
     }
 
@@ -72,7 +70,6 @@ class TabularBatteryCreationsTest extends AbstractNetworkModificationTest {
         List<ModificationInfos> creations = List.of(
                 BatteryCreationInfos.builder()
                         .stashed(false)
-                        .activated(true)
                         .equipmentId("B1").equipmentName("newName")
                         .minP(101.0).maxP(601.0).targetP(401.).targetQ(51.)
                         .build()
@@ -82,7 +79,6 @@ class TabularBatteryCreationsTest extends AbstractNetworkModificationTest {
                 .modifications(creations)
                 .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
-                .activated(true)
                 .build();
     }
 

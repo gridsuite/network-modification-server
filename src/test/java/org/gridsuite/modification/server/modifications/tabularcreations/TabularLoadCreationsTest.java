@@ -43,7 +43,6 @@ class TabularLoadCreationsTest extends AbstractNetworkModificationTest {
         List<ModificationInfos> creations = List.of(
                 LoadCreationInfos.builder()
                         .stashed(false)
-                        .activated(true)
                         .equipmentId("idLoad1")
                         .equipmentName("nameLoad1")
                         .voltageLevelId("v2")
@@ -61,7 +60,6 @@ class TabularLoadCreationsTest extends AbstractNetworkModificationTest {
             .modifications(creations)
             .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
             .stashed(false)
-            .activated(true)
             .build();
     }
 
@@ -70,7 +68,6 @@ class TabularLoadCreationsTest extends AbstractNetworkModificationTest {
         List<ModificationInfos> creations = List.of(
                 LoadCreationInfos.builder()
                         .stashed(false)
-                        .activated(true)
                         .equipmentId("idLoad1")
                         .equipmentName("newName")
                         .p0(201.0)
@@ -82,7 +79,6 @@ class TabularLoadCreationsTest extends AbstractNetworkModificationTest {
                 .modifications(creations)
                 .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
-                .activated(true)
                 .build();
     }
 

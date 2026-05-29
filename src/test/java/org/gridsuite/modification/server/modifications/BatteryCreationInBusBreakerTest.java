@@ -45,7 +45,6 @@ class BatteryCreationInBusBreakerTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return BatteryCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("idBattery2")
                 .equipmentName("nameBattery2")
                 .voltageLevelId("v1")
@@ -73,7 +72,6 @@ class BatteryCreationInBusBreakerTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return BatteryCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("idBattery2Edited")
                 .equipmentName("nameBatteryModified")
                 .voltageLevelId("v1")

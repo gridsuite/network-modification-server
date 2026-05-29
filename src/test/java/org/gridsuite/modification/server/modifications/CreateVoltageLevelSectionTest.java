@@ -69,7 +69,6 @@ class CreateVoltageLevelSectionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return CreateVoltageLevelSectionInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .voltageLevelId("vl1")
                 .busbarSectionId("b3")
                 .busbarIndex(1)

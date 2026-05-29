@@ -48,7 +48,6 @@ class LccCreationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return LccCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("lcc1")
                 .equipmentName("lcc1Name")
                 .nominalV(39.)
@@ -80,7 +79,6 @@ class LccCreationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return LccCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("lcc1Edited")
                 .equipmentName("lcc2Name")
                 .nominalV(53.)

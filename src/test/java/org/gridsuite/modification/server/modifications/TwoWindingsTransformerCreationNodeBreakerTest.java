@@ -52,7 +52,6 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
     protected ModificationInfos buildModification() {
         return TwoWindingsTransformerCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("new2wt")
                 .equipmentName("new2wt")
                 .r(1.)
@@ -176,7 +175,6 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
     protected ModificationInfos buildModificationUpdate() {
         return TwoWindingsTransformerCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("new2wtUpdate")
                 .equipmentName("new2wtUpdate")
                 .r(10.)

@@ -47,7 +47,6 @@ class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificationTest 
     protected ModificationInfos buildModification() {
         return GeneratorCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("idGenerator2")
                 .equipmentName("nameGenerator2")
                 .voltageLevelId("v1")
@@ -88,7 +87,6 @@ class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificationTest 
         return GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator2Edited")
                 .stashed(false)
-                .activated(true)
                 .equipmentName("nameGeneratorModified")
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")

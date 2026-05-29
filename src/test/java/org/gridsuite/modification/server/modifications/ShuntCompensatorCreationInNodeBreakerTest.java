@@ -47,7 +47,6 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
     protected ModificationInfos buildModification() {
         return ShuntCompensatorCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneId")
                 .equipmentName("hop")
@@ -67,7 +66,6 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneIdEdited")
                 .equipmentName("hopEdited")

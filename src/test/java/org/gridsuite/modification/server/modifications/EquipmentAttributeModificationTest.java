@@ -46,7 +46,6 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder()
             .stashed(false)
-            .activated(true)
             .uuid(modificationUuid)
             .date(Instant.parse("2021-02-19T00:00:00Z"))
             .equipmentId("equipmentId")
@@ -58,7 +57,6 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .stashed(false)
-            .activated(true)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(true)
@@ -152,7 +150,6 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         // bad equipment attribute name
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .stashed(false)
-            .activated(true)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("close") // bad
             .equipmentAttributeValue(true)
@@ -185,7 +182,6 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
     protected EquipmentAttributeModificationInfos buildModification() {
         return EquipmentAttributeModificationInfos.builder()
             .stashed(false)
-            .activated(true)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(true)
@@ -197,7 +193,6 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
     protected EquipmentAttributeModificationInfos buildModificationUpdate() {
         return EquipmentAttributeModificationInfos.builder()
             .stashed(false)
-            .activated(true)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(false)

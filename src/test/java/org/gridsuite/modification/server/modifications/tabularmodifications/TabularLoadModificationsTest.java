@@ -44,7 +44,6 @@ class TabularLoadModificationsTest extends AbstractNetworkModificationTest {
                 .modifications(modifications)
                 .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
-                .activated(true)
                 .build();
     }
 
@@ -60,7 +59,6 @@ class TabularLoadModificationsTest extends AbstractNetworkModificationTest {
                 .modifications(modifications)
                 .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
-                .activated(true)
                 .build();
     }
 

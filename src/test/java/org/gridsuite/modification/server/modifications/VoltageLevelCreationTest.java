@@ -59,7 +59,6 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return VoltageLevelCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("VoltageLevelIdEdited")
                 .equipmentName("VoltageLevelEdited")
                 .substationId("s2")

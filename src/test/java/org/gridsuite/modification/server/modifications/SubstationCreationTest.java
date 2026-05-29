@@ -40,7 +40,6 @@ class SubstationCreationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return SubstationCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("SubstationId")
                 .equipmentName("SubstationName")
                 .country(Country.AF)
@@ -52,7 +51,6 @@ class SubstationCreationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return SubstationCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("SubstationIdEdited")
                 .equipmentName("SubstationNameEdited")
                 .country(Country.CI)

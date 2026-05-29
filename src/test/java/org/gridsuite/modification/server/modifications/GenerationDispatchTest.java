@@ -663,7 +663,6 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
     void testGetGenerationDispatchWithCheckFiltersExistence() throws Exception {
         ModificationInfos modification = GenerationDispatchInfos.builder()
             .stashed(false)
-            .activated(true)
             .lossCoefficient(20.)
             .defaultOutageRate(0.)
             .generatorsWithoutOutage(List.of(GeneratorsFilterInfos.builder().id(FILTER_ID_1).name("filter1").build(),
@@ -716,7 +715,6 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return GenerationDispatchInfos.builder()
             .stashed(false)
-            .activated(true)
             .lossCoefficient(20.)
             .defaultOutageRate(0.)
             .generatorsWithoutOutage(List.of())
@@ -730,7 +728,6 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return GenerationDispatchInfos.builder()
             .stashed(false)
-            .activated(true)
             .lossCoefficient(50.)
             .defaultOutageRate(25.)
             .generatorsWithoutOutage(List.of(GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name1").build()))

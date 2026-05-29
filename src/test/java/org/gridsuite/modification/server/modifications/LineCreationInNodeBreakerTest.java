@@ -303,7 +303,6 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return LineCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("idLine")
                 .equipmentName("nameLine")
                 .r(100.0)
@@ -332,7 +331,6 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
                 .r(110.0)

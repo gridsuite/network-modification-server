@@ -78,7 +78,6 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                 .modifications(modifications)
                 .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
-                .activated(true)
                 .build();
     }
 
@@ -94,7 +93,6 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                 .modifications(modifications)
                 .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
-                .activated(true)
                 .build();
     }
 
@@ -578,7 +576,6 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         List<ModificationInfos> modifications = List.of(
                 StaticVarCompensatorCreationInfos.builder()
                         .stashed(false)
-                        .activated(true)
                         .equipmentId("idStaticVarCompensator1")
                         .equipmentName("nameStaticVarCompensator1")
                         .voltageLevelId("v2")

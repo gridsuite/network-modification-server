@@ -179,7 +179,6 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
 
         ModificationInfos modificationToCreate = LoadScalingInfos.builder()
             .stashed(false)
-            .activated(true)
             .uuid(LOAD_SCALING_ID)
             .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
             .variationType(VariationType.DELTA_P)
@@ -360,7 +359,6 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
 
         return LoadScalingInfos.builder()
             .stashed(false)
-            .activated(true)
             .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1, variation2, variation3, variation4, variation5))
@@ -383,7 +381,6 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
 
         return LoadScalingInfos.builder()
             .stashed(false)
-            .activated(true)
             .uuid(LOAD_SCALING_ID)
             .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
             .variationType(VariationType.TARGET_P)
@@ -489,7 +486,6 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 .build();
         LoadScalingInfos loadScalingInfo = LoadScalingInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .uuid(LOAD_SCALING_ID)
                 .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
                 .variationType(VariationType.TARGET_P)

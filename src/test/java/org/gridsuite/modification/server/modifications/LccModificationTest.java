@@ -32,7 +32,6 @@ public class LccModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return LccModificationInfos.builder()
             .stashed(false)
-            .activated(true)
             .equipmentId("hvdcLine")
             .equipmentName(new AttributeModification<>("lcc1Name", OperationType.SET))
             .nominalV(new AttributeModification<>(39., OperationType.SET))
@@ -50,7 +49,6 @@ public class LccModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return LccModificationInfos.builder()
             .stashed(false)
-            .activated(true)
             .equipmentId("lcc1Edited")
             .equipmentName(new AttributeModification<>("lcc1NameEdited", OperationType.SET))
             .nominalV(new AttributeModification<>(53., OperationType.SET))

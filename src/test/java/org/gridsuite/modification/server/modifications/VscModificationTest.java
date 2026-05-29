@@ -46,7 +46,6 @@ class VscModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return VscModificationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("hvdcLine")
                 .equipmentName(new AttributeModification<>("hvdcLine", OperationType.SET))
                 .nominalV(new AttributeModification<>(39., OperationType.SET))
@@ -70,7 +69,6 @@ class VscModificationTest extends AbstractNetworkModificationTest {
         return ConverterStationModificationInfos.builder()
                 .equipmentId("v1vsc")
                 .stashed(false)
-                .activated(true)
                 .equipmentName(new AttributeModification<>("v1vsc-name", OperationType.SET))
                 .lossFactor(new AttributeModification<>(0.1F, OperationType.SET))
                 .reactivePowerSetpoint(new AttributeModification<>(0.2, OperationType.SET))
@@ -87,7 +85,6 @@ class VscModificationTest extends AbstractNetworkModificationTest {
         return ConverterStationModificationInfos.builder()
                 .equipmentId("v1vsc")
                 .stashed(false)
-                .activated(true)
                 .build();
     }
 
@@ -95,7 +92,6 @@ class VscModificationTest extends AbstractNetworkModificationTest {
         return ConverterStationModificationInfos.builder()
                 .equipmentId("v2vsc")
                 .stashed(false)
-                .activated(true)
                 .equipmentName(new AttributeModification<>("v2vsc-name", OperationType.SET))
                 .lossFactor(new AttributeModification<>(0.1F, OperationType.SET))
                 .reactivePowerSetpoint(new AttributeModification<>(0.2, OperationType.SET))
@@ -111,7 +107,6 @@ class VscModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return VscModificationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("vsc1Edited")
                 .equipmentName(new AttributeModification<>("newV1VscEdited", OperationType.SET))
                 .nominalV(new AttributeModification<>(40., OperationType.SET))
@@ -357,7 +352,6 @@ class VscModificationTest extends AbstractNetworkModificationTest {
     void testDtoContainRequiredData() {
         VscModificationInfos modificationInfos = VscModificationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("hvdcLine")
                 .build();
 
@@ -371,7 +365,6 @@ class VscModificationTest extends AbstractNetworkModificationTest {
     void testModifyOperatorActiveRange() throws Exception {
         VscModificationInfos modificationInfos = VscModificationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("hvdcLine")
                 .converterStation1(buildConverterStationWithReactiveCapabilityCurve())
                 .converterStation2(buildConverterStationWithMinMaxReactiveLimits())

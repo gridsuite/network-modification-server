@@ -56,7 +56,6 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
     protected ModificationInfos buildModification() {
         return BatteryModificationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("v3Battery")
                 .equipmentName(new AttributeModification<>("newV1Battery", OperationType.SET))
                 .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
@@ -87,7 +86,6 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return BatteryModificationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("idBatteryEdited")
                 .equipmentName(new AttributeModification<>("newV1BatteryEdited", OperationType.SET))
                 .targetP(new AttributeModification<>(81.0, OperationType.SET))

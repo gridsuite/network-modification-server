@@ -49,7 +49,6 @@ class VscCreationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return VscCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("vsc1")
                 .equipmentName("vsc1Name")
                 .nominalV(39.)
@@ -121,7 +120,6 @@ class VscCreationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return VscCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("vsc1Edited")
                 .equipmentName("vsc2Name")
                 .nominalV(53.)

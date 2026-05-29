@@ -51,7 +51,6 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
     protected ModificationInfos buildModification() {
         return StaticVarCompensatorCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("idStaticVarCompensator1")
                 .equipmentName("nameStaticVarCompensator1")
                 .voltageLevelId("v2")
@@ -75,7 +74,6 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
     protected ModificationInfos buildModificationUpdate() {
         return StaticVarCompensatorCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("idStaticVarCompensator1Edited")
                 .equipmentName("staticVarCompensatorNameEdited")
                 .maxSusceptance(null)
@@ -227,7 +225,6 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
         assertNull(getNetwork().getStaticVarCompensator("idStaticVarCompensator3"));
         compensatorCreationInfos = StaticVarCompensatorCreationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("idStaticVarCompensator3")
                 .equipmentName("nameStaticVarCompensator3")
                 .voltageLevelId("v2")

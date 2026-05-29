@@ -110,7 +110,6 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
             .modifications(creations)
             .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
             .stashed(false)
-            .activated(true)
             .build();
     }
 
@@ -145,7 +144,6 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .modifications(creations)
                 .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
-                .activated(true)
                 .build();
     }
 
@@ -327,7 +325,6 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         List<ModificationInfos> creations = List.of(
                 SubstationCreationInfos.builder()
                         .stashed(false)
-                        .activated(true)
                         .equipmentId("SubstationId")
                         .equipmentName("SubstationName")
                         .country(Country.AF)

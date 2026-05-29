@@ -55,7 +55,6 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
     protected ModificationInfos buildModification() {
         return GeneratorModificationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("idGenerator")
                 .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
@@ -104,7 +103,6 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         return GeneratorModificationInfos.builder()
                 .equipmentId("idGeneratorEdited")
                 .stashed(false)
-                .activated(true)
                 .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1GeneratorEdited", OperationType.SET))
                 .targetP(new AttributeModification<>(81.0, OperationType.SET))
@@ -504,7 +502,6 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         createGeneratorOnBus(v1, "idGenerator1", "bus111", 42.1, 1.0);
         GeneratorModificationInfos generatorModificationInfos = GeneratorModificationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId("idGenerator1")
                 .connectionPosition(new AttributeModification<>(1, OperationType.SET))
                 .build();

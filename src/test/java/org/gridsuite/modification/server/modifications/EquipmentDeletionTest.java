@@ -55,7 +55,6 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentType(IdentifiableType.LOAD)
                 .equipmentId("v1load")
                 .build();
@@ -65,7 +64,6 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentType(IdentifiableType.GENERATOR)
                 .equipmentId("idGenerator")
                 .build();
@@ -86,7 +84,6 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
 
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentType(IdentifiableType.LOAD)
                 .equipmentId("v5load")
                 .build();
@@ -131,7 +128,6 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         HvdcLccDeletionInfos hvdcLccDeletionInfos = hvdcLccDeletionEntity.toDto();
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentType(IdentifiableType.HVDC_LINE)
                 .equipmentId(hvdcLineName)
                 .equipmentInfos(hvdcLccDeletionInfos)

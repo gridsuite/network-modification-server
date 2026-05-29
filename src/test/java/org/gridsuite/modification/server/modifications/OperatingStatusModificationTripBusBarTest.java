@@ -41,7 +41,6 @@ class OperatingStatusModificationTripBusBarTest extends AbstractNetworkModificat
     protected ModificationInfos buildModification() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId(TARGET_BUSBAR_ID)
                 .action(OperatingStatusModificationInfos.ActionType.TRIP).build();
     }
@@ -50,7 +49,6 @@ class OperatingStatusModificationTripBusBarTest extends AbstractNetworkModificat
     protected ModificationInfos buildModificationUpdate() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
-                .activated(true)
                 .equipmentId(TARGET_BUSBAR_ID)
                 .action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
