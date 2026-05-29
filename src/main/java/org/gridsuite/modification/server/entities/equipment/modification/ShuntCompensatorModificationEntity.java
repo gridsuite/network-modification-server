@@ -7,6 +7,12 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -18,15 +24,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerModificationEmbedded;
-
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 import org.springframework.util.CollectionUtils;
-
 import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
 
 /**
@@ -86,10 +84,12 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
     }
 
     private void assignAttributes(ShuntCompensatorModificationInfos shuntCompensatorModificationInfos) {
-        this.maximumSectionCount = shuntCompensatorModificationInfos.getMaximumSectionCount() != null ? new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getMaximumSectionCount()) : null;
+        this.maximumSectionCount = shuntCompensatorModificationInfos.getMaximumSectionCount() != null ? new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getMaximumSectionCount())
+                : null;
         this.sectionCount = shuntCompensatorModificationInfos.getSectionCount() != null ? new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getSectionCount()) : null;
         this.maxQAtNominalV = shuntCompensatorModificationInfos.getMaxQAtNominalV() != null ? new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getMaxQAtNominalV()) : null;
-        this.shuntCompensatorType = shuntCompensatorModificationInfos.getShuntCompensatorType() != null ? new EnumModificationEmbedded<>(shuntCompensatorModificationInfos.getShuntCompensatorType()) : null;
+        this.shuntCompensatorType = shuntCompensatorModificationInfos.getShuntCompensatorType() != null ? new EnumModificationEmbedded<>(shuntCompensatorModificationInfos.getShuntCompensatorType())
+                : null;
         this.maxSusceptance = shuntCompensatorModificationInfos.getMaxSusceptance() != null ? new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getMaxSusceptance()) : null;
     }
 

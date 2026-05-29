@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.powsybl.iidm.network.IdentifiableType;
-
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -36,9 +35,9 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public abstract class AbstractBaseImpact {
 
-
     public enum ImpactType {
         SIMPLE,
+
         COLLECTION
     }
 

@@ -148,7 +148,7 @@ class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificationTest 
 
     @Test
     void testCreateWithRegulatedTerminalError() throws Exception {
-         // invalid regulating terminal id <---> regulation terminal type
+        // invalid regulating terminal id <---> regulation terminal type
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setRegulatingTerminalType("LINE");
         generatorCreationInfos.setRegulatingTerminalId("titi");
