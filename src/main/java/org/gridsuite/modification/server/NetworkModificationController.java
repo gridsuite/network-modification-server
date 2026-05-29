@@ -110,7 +110,7 @@ public class NetworkModificationController {
                     modificationContextInfos.getSecond()
             ).thenApply(ResponseEntity.ok()::body);
             case MOVE -> networkModificationService.moveModifications(
-                        sourceContainerId,
+                        sourceContainerId == null ? targetContainerId : sourceContainerId,
                         targetContainerId,
                         beforeModificationUuid,
                         modificationContextInfos.getFirst(),

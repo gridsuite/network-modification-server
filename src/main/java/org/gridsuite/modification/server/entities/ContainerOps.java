@@ -6,9 +6,7 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Shared insert/remove logic used by both container implementations. Kept package-private
@@ -25,20 +23,6 @@ final class ContainerOps {
         child.attachToContainer(owner);
         list.add(target, child);
         renumber(list);
-    }
-
-    static boolean removeById(List<ModificationEntity> list, UUID childId) {
-        Iterator<ModificationEntity> it = list.iterator();
-        while (it.hasNext()) {
-            ModificationEntity m = it.next();
-            if (childId.equals(m.getId())) {
-                it.remove();
-                m.detachFromContainer();
-                renumber(list);
-                return true;
-            }
-        }
-        return false;
     }
 
     private static void renumber(List<ModificationEntity> list) {

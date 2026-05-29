@@ -153,7 +153,9 @@ public class NetworkModificationRepository {
                 .filter(Objects::nonNull)
                 .toList();
         compositeEntity.setModifications(copyEntities);
-        return modificationRepository.save(compositeEntity).getId();
+        CompositeModificationEntity saved = modificationRepository.save(compositeEntity);
+        fixupContainerIds(List.of(saved));
+        return saved.getId();
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
@@ -189,7 +191,17 @@ public class NetworkModificationRepository {
         for (ModificationEntity m : modifications) {
             modificationGroupEntity.addModification(m, order++);
         }
-        return modificationRepository.saveAll(modifications);
+        List<ModificationEntity> saved = modificationRepository.saveAll(modifications);
+        fixupContainerIds(saved);
+        return saved;
+    }
+
+    private void fixupContainerIds(List<ModificationEntity> roots) {
+        for (ModificationEntity root : roots) {
+            if (root instanceof ModificationContainer container) {
+                container.reattachDescendants();
+            }
+        }
     }
 
     @Transactional
@@ -342,6 +354,7 @@ public class NetworkModificationRepository {
                 .map(ModificationEntity::fromDTO)
                 .toList();
         List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
+        fixupContainerIds(newEntities);
 
         // Iterate through sourceEntities and newEntities collections simultaneously to map sourceId -> newId
         Map<UUID, UUID> ids = new HashMap<>();
@@ -492,7 +505,7 @@ public class NetworkModificationRepository {
 
     private CompositeModificationInfos loadCompositeModification(CompositeModificationEntity compositeEntity, Set<UUID> modificationsToExclude) {
         // Load all sub-composites only for root composites (associated with a group) to avoid N+1 select
-        if (compositeEntity.getContainerId() != null) {
+        if (compositeEntity.getContainerType() == ModificationContainerType.GROUP) {
             List<UUID> uuids = modificationRepository.findOnlyCompositeChildrenUuids(compositeEntity.getId());
             modificationRepository.findAllCompositesWithModificationsByIdIn(uuids);
         }
@@ -591,8 +604,6 @@ public class NetworkModificationRepository {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
             if (!groupEntity.getModifications().isEmpty()) {
-                //TODO: is there a way to avoid doing this setGroup(null) that triggers a useless update since the entity will be deleted right after
-                groupEntity.getModifications().forEach(ModificationEntity::detachFromContainer);
                 List<ModificationEntity> modifications = groupEntity.getModifications();
                 deleteModifications(modifications.stream().filter(Objects::nonNull).toList());
             }

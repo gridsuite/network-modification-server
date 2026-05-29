@@ -13,12 +13,12 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
@@ -35,9 +35,10 @@ public class CompositeModificationEntity extends ModificationEntity implements M
     private String name;
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-    @JoinColumn(name = "container_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @JoinColumn(name = "container_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), insertable = false, updatable = false)
     @SQLRestriction("container_type = 'COMPOSITE'")
     @OrderBy("modificationsOrder asc")
+    @BatchSize(size = 100)
     private List<ModificationEntity> modifications = new ArrayList<>();
 
     public CompositeModificationEntity(@NonNull CompositeModificationInfos compositeModificationInfos) {
@@ -93,10 +94,5 @@ public class CompositeModificationEntity extends ModificationEntity implements M
     @Override
     public void addModification(ModificationEntity child, int position) {
         ContainerOps.insert(this, this.modifications, child, position);
-    }
-
-    @Override
-    public boolean removeModification(UUID childId) {
-        return ContainerOps.removeById(this.modifications, childId);
     }
 }

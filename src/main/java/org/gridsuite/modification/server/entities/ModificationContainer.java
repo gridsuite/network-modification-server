@@ -24,5 +24,19 @@ public interface ModificationContainer {
 
     void setModifications(List<ModificationEntity> newChildren);
 
-    boolean removeModification(UUID childId);
+    default void reattachDescendants() {
+        UUID parentId = getId();
+        ModificationContainerType parentType = getContainerType();
+        for (ModificationEntity child : getModifications()) {
+            if (child == null) {
+                continue;
+            }
+            if (!parentId.equals(child.getContainerId()) || parentType != child.getContainerType()) {
+                child.attachToContainer(this);
+            }
+            if (child instanceof ModificationContainer nested) {
+                nested.reattachDescendants();
+            }
+        }
+    }
 }

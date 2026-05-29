@@ -253,9 +253,10 @@ class ModificationIndexationTest {
         Move this modification to group 2, variant 2
          */
         UUID groupUuid2 = UUID.randomUUID();
+        modificationRepository.saveModifications(groupUuid2, List.of()); // create empty target group so getContainerType resolves it
         NetworkModificationsResult modificationsResult = networkModificationService.moveModifications(
-            groupUuid2,
             groupUuid1,
+            groupUuid2,
             null,
             modifications.stream().map(ModificationInfos::getUuid).toList(),
             List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID())),

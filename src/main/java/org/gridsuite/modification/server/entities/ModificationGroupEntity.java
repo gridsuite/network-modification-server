@@ -29,7 +29,7 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
     private UUID id;
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-    @JoinColumn(name = "container_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @JoinColumn(name = "container_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), insertable = false, updatable = false)
     @SQLRestriction("container_type = 'GROUP'")
     @OrderBy("modificationsOrder asc")
     private List<ModificationEntity> modifications = new ArrayList<>();
@@ -46,11 +46,6 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
     @Override
     public void addModification(ModificationEntity child, int position) {
         ContainerOps.insert(this, this.modifications, child, position);
-    }
-
-    @Override
-    public boolean removeModification(UUID childId) {
-        return ContainerOps.removeById(this.modifications, childId);
     }
 
     /**

@@ -92,12 +92,12 @@ class SupervisionTest {
         Mockito.when(modificationApplicationEntity2.getModification()).thenReturn(modificationMock);
 
         List<ModificationApplicationEntity> allModifications = List.of(modificationApplicationEntity, modificationApplicationEntity2);
-        when(modificationApplicationRepository.findWithModificationAndGroupByNetworkUuid(networkUuid)).thenReturn(allModifications);
+        when(modificationApplicationRepository.findWithModificationByNetworkUuid(networkUuid)).thenReturn(allModifications);
 
         supervisionService.reindexByNetworkUuid(networkUuid);
 
         verify(modificationApplicationInfosRepository, times(1)).deleteAllByNetworkUuid(networkUuid);
-        verify(modificationApplicationRepository, times(1)).findWithModificationAndGroupByNetworkUuid(networkUuid);
+        verify(modificationApplicationRepository, times(1)).findWithModificationByNetworkUuid(networkUuid);
         verify(modificationApplicationInfosRepository, times(1)).saveAll(modificationListCaptor.capture());
         assertThat(modificationListCaptor.getValue()).usingRecursiveComparison().isEqualTo(allModifications.stream().map(ModificationApplicationEntity::toModificationApplicationInfos).toList());
     }

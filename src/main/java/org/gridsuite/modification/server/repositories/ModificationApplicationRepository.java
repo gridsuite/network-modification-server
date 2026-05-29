@@ -24,8 +24,8 @@ public interface ModificationApplicationRepository extends JpaRepository<Modific
 
     void deleteAllByModificationIdIn(List<UUID> modificationIds);
 
-    @EntityGraph(attributePaths = {"modification", "modification.group"}, type = EntityGraph.EntityGraphType.LOAD)
-    List<ModificationApplicationEntity> findWithModificationAndGroupByNetworkUuid(UUID networkUuid);
+    @EntityGraph(attributePaths = {"modification"}, type = EntityGraph.EntityGraphType.LOAD)
+    List<ModificationApplicationEntity> findWithModificationByNetworkUuid(UUID networkUuid);
 
     @Query("SELECT distinct ma.networkUuid from ModificationApplicationEntity ma")
     List<UUID> findDistinctNetworkUuids();

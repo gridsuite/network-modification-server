@@ -71,7 +71,7 @@ public class ModificationEntity {
     private String description;
 
     // Updates are managed by the container collection to avoid duplicate writes
-    @Column(name = "container_id", updatable = false)
+    @Column(name = "container_id")
     private UUID containerId;
 
     @Column(name = "container_type")
@@ -140,12 +140,12 @@ public class ModificationEntity {
     }
 
     public void attachToContainer(@NonNull ModificationContainer container) {
-        // containerId is written by the parent's @OneToMany @JoinColumn — don't touch.
+        this.containerId = container.getId();
         this.containerType = container.getContainerType();
     }
 
     public void detachFromContainer() {
-        // Similarly: Hibernate will null containerId when we leave the collection.
+        this.containerId = null;
         this.containerType = null;
     }
 
