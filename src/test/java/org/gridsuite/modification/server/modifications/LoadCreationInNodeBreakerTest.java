@@ -112,6 +112,7 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return LoadCreationInfos.builder()
             .stashed(false)
+            .activated(true)
             .equipmentId("idLoad1")
             .equipmentName("nameLoad1")
             .voltageLevelId("v2")
@@ -129,6 +130,7 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return LoadCreationInfos.builder()
             .stashed(false)
+            .activated(true)
             .equipmentId("idLoad1Edited")
             .equipmentName("nameLoad1Edited")
             .voltageLevelId("v2Edited")

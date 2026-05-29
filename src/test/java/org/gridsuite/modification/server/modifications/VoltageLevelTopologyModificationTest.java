@@ -196,6 +196,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
 
         VoltageLevelTopologyModificationInfos infos = VoltageLevelTopologyModificationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("v1")
                 .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
                 .build();

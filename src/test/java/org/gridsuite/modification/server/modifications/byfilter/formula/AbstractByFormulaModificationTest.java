@@ -223,6 +223,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
                 .identifiableType(getIdentifiableType())
                 .formulaInfosList(getFormulaInfos())
                 .stashed(false)
+                .activated(true)
                 .build();
     }
 
@@ -232,6 +233,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
                 .identifiableType(getIdentifiableType())
                 .formulaInfosList(getUpdatedFormulaInfos())
                 .stashed(false)
+                .activated(true)
                 .build();
     }
 

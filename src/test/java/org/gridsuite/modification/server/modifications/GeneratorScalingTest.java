@@ -183,6 +183,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         ModificationInfos modificationToCreate = GeneratorScalingInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .uuid(GENERATOR_SCALING_ID)
                 .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
                 .variationType(VariationType.DELTA_P)
@@ -224,6 +225,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .build();
         var generatorScalingInfo = GeneratorScalingInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation))
                 .build();
@@ -270,6 +272,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .build();
         var generatorScalingInfo = GeneratorScalingInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation))
                 .build();
@@ -355,6 +358,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         return GeneratorScalingInfos.builder()
                 .stashed(false)
+                .activated(true)
                 //.date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .variationType(VariationType.DELTA_P)
                 .variations(List.of(variation1, variation2, variation3, variation4, variation5))
@@ -376,6 +380,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         return GeneratorScalingInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .uuid(GENERATOR_SCALING_ID)
                 //.date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .variationType(VariationType.TARGET_P)
@@ -479,6 +484,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .build();
         var generatorScalingInfo = GeneratorScalingInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation))
                 .build();

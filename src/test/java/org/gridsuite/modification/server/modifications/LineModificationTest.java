@@ -75,6 +75,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return LineModificationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .voltageLevelId1(new AttributeModification<>("v1", OperationType.SET))
@@ -161,6 +162,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return LineModificationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified1", OperationType.SET))
                 .x(new AttributeModification<>(1.1, OperationType.SET))
@@ -421,6 +423,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .add();
         LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .enableOLGModification(true)
@@ -440,6 +443,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         line.setName(null);
         LineModificationInfos lineModificationInfos1 = LineModificationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("ModifiedName", OperationType.SET))
                 .enableOLGModification(true)
@@ -525,6 +529,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
     void changeLineConnectablePosition() throws Exception {
         LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("line3")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .voltageLevelId1(new AttributeModification<>("v1", OperationType.SET))
@@ -548,6 +553,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
     void changeLineConnectablePositionWithoutBusBarSection() throws Exception {
         LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("line3")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .connectionName1(new AttributeModification<>("line3", OperationType.SET))
@@ -586,6 +592,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .add();
         LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("line10")
                 .connectionName1(new AttributeModification<>("cnLine10", OperationType.SET))
                 .connectionDirection1(new AttributeModification<>(ConnectablePosition.Direction.TOP, OperationType.SET))
@@ -624,6 +631,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         // by only setting this extension fields in the modification applied
         LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
             .stashed(false)
+            .activated(true)
             .equipmentId("line3")
             .connectionPosition1(new AttributeModification<>(1, OperationType.SET))
             .connectionName1(new AttributeModification<>("feeder1", OperationType.SET))
@@ -644,6 +652,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         // update position field in this existing extension
         lineModificationInfos = LineModificationInfos.builder()
             .stashed(false)
+            .activated(true)
             .equipmentId("line3")
             .connectionPosition1(new AttributeModification<>(2, OperationType.SET))
             .build();

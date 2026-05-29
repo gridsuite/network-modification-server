@@ -46,6 +46,7 @@ class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return DeleteVoltageLevelOnLineInfos.builder()
                .stashed(false)
+               .activated(true)
                .lineToAttachTo1Id("l1")
                .lineToAttachTo2Id("l2")
                .replacingLine1Id("replacementLineId")
@@ -57,6 +58,7 @@ class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return DeleteVoltageLevelOnLineInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .lineToAttachTo1Id("line00")
                 .lineToAttachTo2Id("line11")
                 .replacingLine1Id("replacingLineId2")
@@ -87,6 +89,7 @@ class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
         // test create with incorrect line id
         DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = DeleteVoltageLevelOnLineInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("ll")
                 .replacingLine1Id("replacementLineId")

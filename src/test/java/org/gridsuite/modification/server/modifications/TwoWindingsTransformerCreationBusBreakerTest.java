@@ -50,6 +50,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
     protected ModificationInfos buildModification() {
         return TwoWindingsTransformerCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("new2wt")
                 .equipmentName("new2wt")
                 .r(1.)
@@ -168,6 +169,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
     protected ModificationInfos buildModificationUpdate() {
         return TwoWindingsTransformerCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("new2wtUpdate")
                 .equipmentName("new2wtUpdate")
                 .r(2.3)
@@ -340,6 +342,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
         // create new 2wt in voltage level with bus/breaker topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("id2wt1")
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
@@ -360,6 +363,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
         testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos, 1);
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos2 = TwoWindingsTransformerCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("id2wt1WithRatioTapChanger2")
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
@@ -398,6 +402,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                 .build();
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("id2wt1WithPhaseTapChanger")
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")

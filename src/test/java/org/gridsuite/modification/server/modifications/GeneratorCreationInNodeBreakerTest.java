@@ -46,6 +46,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         // create new generator in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         return GeneratorCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("idGenerator1")
                 .equipmentName("idGenerator1")
                 .voltageLevelId("v2")
@@ -85,6 +86,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("idGenerator2")
                 .equipmentName("nameGeneratorModified")
                 .voltageLevelId("v1")

@@ -42,6 +42,7 @@ class GroovyScriptTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return GroovyScriptInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .script("network.getGenerator('idGenerator').targetP=12\n")
                 .build();
     }
@@ -50,6 +51,7 @@ class GroovyScriptTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return GroovyScriptInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .script("network.getGenerator('idGenerator').targetP=15\n")
                 .build();
     }
@@ -70,6 +72,7 @@ class GroovyScriptTest extends AbstractNetworkModificationTest {
 
         GroovyScriptInfos groovyScriptInfos = GroovyScriptInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .script("network.getGenerator('idGenerator').targetP=12\n")
                 .build();
         String groovyScriptInfosJson = getJsonBody(groovyScriptInfos, null);

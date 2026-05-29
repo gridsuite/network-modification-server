@@ -216,6 +216,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
                 .equipmentType(getIdentifiableType())
                 .assignmentInfosList(getAssignmentInfos())
                 .stashed(false)
+                .activated(true)
                 .build();
     }
 
@@ -225,6 +226,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
                 .equipmentType(getIdentifiableType())
                 .assignmentInfosList(getUpdatedAssignmentInfos())
                 .stashed(false)
+                .activated(true)
                 .build();
     }
 

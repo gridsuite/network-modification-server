@@ -44,6 +44,7 @@ class TabularShuntCompensatorCreationsTest extends AbstractNetworkModificationTe
         List<ModificationInfos> creations = List.of(
                 ShuntCompensatorCreationInfos.builder()
                         .stashed(false)
+                        .activated(true)
                         .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
                         .equipmentId("shuntOneId")
                         .equipmentName("hop")
@@ -63,6 +64,7 @@ class TabularShuntCompensatorCreationsTest extends AbstractNetworkModificationTe
             .modifications(creations)
             .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
             .stashed(false)
+            .activated(true)
             .build();
     }
 
@@ -71,6 +73,7 @@ class TabularShuntCompensatorCreationsTest extends AbstractNetworkModificationTe
         List<ModificationInfos> creations = List.of(
                 ShuntCompensatorCreationInfos.builder()
                         .stashed(false)
+                        .activated(true)
                         .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
                         .equipmentId("shuntOneId")
                         .equipmentName("New name")
@@ -84,6 +87,7 @@ class TabularShuntCompensatorCreationsTest extends AbstractNetworkModificationTe
                 .modifications(creations)
                 .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
+                .activated(true)
                 .build();
     }
 

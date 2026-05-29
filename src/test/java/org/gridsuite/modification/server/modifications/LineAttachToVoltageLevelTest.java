@@ -55,6 +55,7 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
         operationalLimitsList.add(limitsGroup);
         return LineCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId(lineName)
                 .r(50.6)
                 .x(25.3)
@@ -66,6 +67,7 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
     private static VoltageLevelCreationInfos getNewVoltageLevel() {
         return VoltageLevelCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("newVoltageLevel")
                 .equipmentName("NewVoltageLevel")
                 .nominalV(379.3)
@@ -90,6 +92,7 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return LineAttachToVoltageLevelInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .lineToAttachToId("line3")
                 .percent(10.0)
                 .attachmentPointId("AttPointId")   // created VL
@@ -109,6 +112,7 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return LineAttachToVoltageLevelInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .lineToAttachToId("line2")
                 .percent(30.0)
                 .attachmentPointId("newAttPointId")

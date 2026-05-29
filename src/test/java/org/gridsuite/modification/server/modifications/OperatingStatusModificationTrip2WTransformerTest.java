@@ -41,6 +41,7 @@ class OperatingStatusModificationTrip2WTransformerTest extends AbstractNetworkMo
     protected ModificationInfos buildModification() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId(TARGET_BRANCH_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(OperatingStatusModificationInfos.ActionType.TRIP).build();
@@ -50,6 +51,7 @@ class OperatingStatusModificationTrip2WTransformerTest extends AbstractNetworkMo
     protected ModificationInfos buildModificationUpdate() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId(UPDATE_BRANCH_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelIdEdited")
                 .action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build();

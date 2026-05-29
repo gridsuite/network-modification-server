@@ -57,12 +57,14 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
             ModificationCreation.getCreationLoad("v1", "idLoadComposite", "nameLoad", "1.1", LoadType.UNDEFINED),
             CompositeModificationInfos.builder().name("battery composite")
                 .modificationsInfos(List.of(ModificationCreation.getCreationBattery("v1", "idBatteryComposite", "nameBattry", "1.1")))
-                .stashed(false).build()
+                .stashed(false)
+                .activated(true).build()
         );
         return CompositeModificationInfos.builder()
             .name("composite")
             .modificationsInfos(modifications)
             .stashed(false)
+            .activated(true)
             .build();
     }
 
@@ -150,6 +152,7 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
                 .modifications(generatorModifications)
                 .stashed(false)
+                .activated(true)
                 .build();
     }
 }

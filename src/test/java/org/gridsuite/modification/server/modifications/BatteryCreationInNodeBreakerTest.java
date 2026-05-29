@@ -51,6 +51,7 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         // create new battery in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         return BatteryCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("idBattery1")
                 .equipmentName("idBattery1")
                 .voltageLevelId("v2")
@@ -78,6 +79,7 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return BatteryCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("idBattery2Edited")
                 .equipmentName("nameBatteryModified")
                 .voltageLevelId("v1")

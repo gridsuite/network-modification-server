@@ -25,6 +25,7 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
     private static LineCreationInfos getAttachmentLine() {
         return LineCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("attachmentLine")
                 .r(50.6)
                 .x(25.3)
@@ -34,6 +35,7 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
     private static VoltageLevelCreationInfos getNewVoltageLevel() {
         return VoltageLevelCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("newVoltageLevel")
                 .equipmentName("NewVoltageLevel")
                 .nominalV(379.3)
@@ -53,8 +55,11 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
         return VoltageLevelCreationInfos.builder()
                 .equipmentId("AttPointId")
                 .stashed(false)
+                .activated(true)
                 .nominalV(0)
-                .substationCreation(SubstationCreationInfos.builder().stashed(false)
+                .substationCreation(SubstationCreationInfos.builder()
+                        .stashed(false)
+                        .activated(true)
                         .equipmentId("attachmentPointSubstation")
                         .equipmentName("attachmentPointSubstationName")
                         .country(Country.FR)
@@ -89,6 +94,7 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return LineAttachToVoltageLevelInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .lineToAttachToId("line3")
                 .percent(20.0)
                 .attachmentPointId("AttPointId")
@@ -110,6 +116,7 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
         return LineAttachToVoltageLevelInfos.builder()
                 .lineToAttachToId("line3Edited")
                 .stashed(false)
+                .activated(true)
                 .percent(10.0)
                 .attachmentPointId("AttPointId")   // created VL
                 .attachmentPointName("attPointName")

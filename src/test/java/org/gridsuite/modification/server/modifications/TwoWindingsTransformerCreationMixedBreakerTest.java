@@ -43,6 +43,7 @@ class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetworkModi
     protected ModificationInfos buildModification() {
         return TwoWindingsTransformerCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("id2wt1")
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
@@ -151,6 +152,7 @@ class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetworkModi
     protected ModificationInfos buildModificationUpdate() {
         return TwoWindingsTransformerCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("new2wtUpdate")
                 .equipmentName("new2wtUpdate")
                 .r(2.3)

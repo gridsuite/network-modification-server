@@ -43,6 +43,7 @@ class SubstationModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return SubstationModificationInfos.builder()
             .stashed(false)
+            .activated(true)
             .equipmentId("s3")
             .equipmentName(new AttributeModification<>("newName", OperationType.SET))
             .country(new AttributeModification<>(Country.BQ, OperationType.SET))
@@ -58,6 +59,7 @@ class SubstationModificationTest extends AbstractNetworkModificationTest {
         return SubstationModificationInfos.builder()
             .equipmentId("s3Edited")
             .stashed(false)
+            .activated(true)
             .equipmentName(new AttributeModification<>("newNameEdited1", OperationType.SET))
             .country(new AttributeModification<>(Country.JP, OperationType.SET))
             .properties(null)

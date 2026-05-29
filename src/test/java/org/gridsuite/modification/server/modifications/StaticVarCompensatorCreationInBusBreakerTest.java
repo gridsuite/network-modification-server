@@ -49,6 +49,7 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
     protected ModificationInfos buildModification() {
         return StaticVarCompensatorCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("idStaticVarCompensator2")
                 .equipmentName("nameStaticVarCompensator2")
                 .voltageLevelId("v1")
@@ -81,6 +82,7 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
     protected ModificationInfos buildModificationUpdate() {
         return StaticVarCompensatorCreationInfos.builder()
                 .stashed(false)
+                .activated(true)
                 .equipmentId("idStaticVarCompensator2Edited")
                 .equipmentName("staticVarCompensatorNameEdited")
                 .voltageRegulationType(VoltageRegulationType.LOCAL)
