@@ -28,7 +28,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "limits_for_line_type")
+@Table(name = "limits_for_line_type", indexes = {@Index(name = "limits_for_line_type_idx", columnList = "line_type_id")})
 public class LimitsForLineTypeEntity {
 
     @Id
