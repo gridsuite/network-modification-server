@@ -42,7 +42,7 @@ public class LccConverterStationCreationEntity extends InjectionCreationEntity {
     private Float powerFactor;
 
     @ElementCollection
-    @CollectionTable(name = "shunt_compensator_on_side",
+    @CollectionTable(name = "shunt_compensator_on_side", indexes = {@Index(name = "shunt_compensator_on_side_index", columnList = "lcc_converter_station_creation_entity_id")},
             foreignKey = @ForeignKey(name = "lcc_converter_station_creation_shunt_compensators_on_side_fk"))
     private List<ShuntCompensatorCreationEmbeddable> shuntCompensatorsOnSide;
 
