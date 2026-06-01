@@ -56,13 +56,13 @@ public class ByFilterDeletionEntity extends ModificationEntity {
         this.equipmentType = byFilterDeletionInfos.getEquipmentType();
         if (filters == null) {
             this.filters = byFilterDeletionInfos.getFilters().stream()
-                    .map(VariationFilterEntity::new)
-                    .collect(Collectors.toList());
+                .map(VariationFilterEntity::new)
+                .collect(Collectors.toList());
         } else {
             filters.clear();
             filters.addAll(byFilterDeletionInfos.getFilters().stream()
-                    .map(VariationFilterEntity::new)
-                    .collect(Collectors.toList()));
+                .map(VariationFilterEntity::new)
+                .collect(Collectors.toList()));
         }
     }
 
