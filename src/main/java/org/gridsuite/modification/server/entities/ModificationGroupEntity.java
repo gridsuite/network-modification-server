@@ -28,6 +28,8 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
     @Column(name = "id")
     private UUID id;
 
+    // Purely used for read purpose, the relationship is driven by container_id to avoid write conflicts in between entities having a @JoinColumn on container_id
+    // SQLRestriction ensure we always go through (container_type, container_id) index
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @JoinColumn(name = "container_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), insertable = false, updatable = false)
     @SQLRestriction("container_type = 'GROUP'")

@@ -34,7 +34,6 @@ import static org.gridsuite.modification.NetworkModificationException.Type.MISSI
 @Table(
         name = "modification",
         indexes = {
-            // The cascade / lookup queries hit (container_type, container_id) constantly.
             @Index(name = "modification_container_idx", columnList = "container_type, container_id")
         }
 )
