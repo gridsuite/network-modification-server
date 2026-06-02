@@ -16,8 +16,8 @@ import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.IntegerAssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.assignment.StringAssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.equipmentfield.LineField;
+import org.gridsuite.modification.dto.byfilter.assignment.EnumAssignmentInfos;
+import org.gridsuite.modification.model.byfilter.equipmentfield.LineField;
 
 import java.util.Date;
 import java.util.List;
@@ -141,25 +141,25 @@ public class LineModificationByAssignmentTest extends AbstractModificationByAssi
             .value(90)
             .build();
 
-        StringAssignmentInfos assignmentInfos7 = StringAssignmentInfos.builder()
+        EnumAssignmentInfos assignmentInfos7 = EnumAssignmentInfos.builder()
             .filters(List.of(filter1))
             .editedField(LineField.SELECTED_OPERATIONAL_LIMITS_GROUP_ID1.name())
             .value("group1")
             .build();
 
-        StringAssignmentInfos assignmentInfos8 = StringAssignmentInfos.builder()
+        EnumAssignmentInfos assignmentInfos8 = EnumAssignmentInfos.builder()
             .filters(List.of(filter2))
             .editedField(LineField.SELECTED_OPERATIONAL_LIMITS_GROUP_ID2.name())
             .value("group2")
             .build();
 
-        StringAssignmentInfos assignmentInfos9 = StringAssignmentInfos.builder()
+        EnumAssignmentInfos assignmentInfos9 = EnumAssignmentInfos.builder()
             .filters(List.of(filter3))
             .editedField(LineField.SELECTED_OPERATIONAL_LIMITS_GROUP_ID1.name())
             .value(null)
             .build();
 
-        StringAssignmentInfos assignmentInfos10 = StringAssignmentInfos.builder()
+        EnumAssignmentInfos assignmentInfos10 = EnumAssignmentInfos.builder()
             .filters(List.of(filter3))
             .editedField(LineField.SELECTED_OPERATIONAL_LIMITS_GROUP_ID2.name())
             .value("")

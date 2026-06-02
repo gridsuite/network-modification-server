@@ -17,7 +17,7 @@ import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.IntegerAssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.equipmentfield.ShuntCompensatorField;
+import org.gridsuite.modification.model.byfilter.equipmentfield.ShuntCompensatorField;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;

@@ -73,7 +73,7 @@ public class AssignmentEntity extends AbstractAssignmentEntity {
                 .value(value)
                 .propertyName(propertyName)
                 .build();
-            case STRING -> StringAssignmentInfos.builder()
+            case STRING -> EnumAssignmentInfos.builder()
                 .value(value)
                 .build();
         };

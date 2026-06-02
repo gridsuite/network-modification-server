@@ -15,7 +15,7 @@ import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.EnumAssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.equipmentfield.LoadField;
+import org.gridsuite.modification.model.byfilter.equipmentfield.LoadField;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 
 import java.util.Date;

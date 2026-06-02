@@ -785,7 +785,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         PhaseTapChanger phaseTapChanger = twt.getPhaseTapChanger();
         List<ReportNode> regulationReports = new ArrayList<>();
         processPhaseTapRegulation(phaseTapChanger, null, true,
-            new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET),
+            new org.gridsuite.modification.model.AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, org.gridsuite.modification.model.OperationType.SET),
             null, null, null, regulationReports);
         assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, phaseTapChanger.getRegulationMode());
         assertTrue(Double.isNaN(phaseTapChanger.getRegulationValue()));
@@ -793,27 +793,27 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         assertFalse(phaseTapChanger.isRegulating());
 
         processPhaseTapRegulation(phaseTapChanger, null, true,
-            new AttributeModification<>(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL, OperationType.SET),
-            new AttributeModification<>(10.0, OperationType.SET), null,
-            new AttributeModification<>(true, OperationType.SET), regulationReports);
+            new org.gridsuite.modification.model.AttributeModification<>(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL, org.gridsuite.modification.model.OperationType.SET),
+            new org.gridsuite.modification.model.AttributeModification<>(10.0, org.gridsuite.modification.model.OperationType.SET), null,
+            new org.gridsuite.modification.model.AttributeModification<>(true, org.gridsuite.modification.model.OperationType.SET), regulationReports);
         assertEquals(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL, phaseTapChanger.getRegulationMode());
         assertEquals(10.0, phaseTapChanger.getRegulationValue());
         assertEquals(0.0, phaseTapChanger.getTargetDeadband());
         assertTrue(phaseTapChanger.isRegulating());
 
         processPhaseTapRegulation(phaseTapChanger, null, true,
-            new AttributeModification<>(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL, OperationType.SET),
+            new org.gridsuite.modification.model.AttributeModification<>(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL, org.gridsuite.modification.model.OperationType.SET),
             null, null,
-            new AttributeModification<>(false, OperationType.SET), regulationReports);
+            new org.gridsuite.modification.model.AttributeModification<>(false, org.gridsuite.modification.model.OperationType.SET), regulationReports);
         assertEquals(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL, phaseTapChanger.getRegulationMode());
         assertEquals(10.0, phaseTapChanger.getRegulationValue());
         assertEquals(0.0, phaseTapChanger.getTargetDeadband());
         assertFalse(phaseTapChanger.isRegulating());
 
         processPhaseTapRegulation(phaseTapChanger, null, true,
-            new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET),
-            new AttributeModification<>(12.0, OperationType.SET),
-            new AttributeModification<>(8.0, OperationType.SET),
+            new org.gridsuite.modification.model.AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, org.gridsuite.modification.model.OperationType.SET),
+            new org.gridsuite.modification.model.AttributeModification<>(12.0, org.gridsuite.modification.model.OperationType.SET),
+            new org.gridsuite.modification.model.AttributeModification<>(8.0, org.gridsuite.modification.model.OperationType.SET),
             null,
             regulationReports);
         assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, phaseTapChanger.getRegulationMode());
@@ -831,18 +831,18 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         List<ReportNode> regulationReports = new ArrayList<>();
         PhaseTapChangerAdder adder = twt.newPhaseTapChanger();
         preparePhaseTapChangerAdder(adder);
-        AttributeModification<Double> regulationValueModification = new AttributeModification<>(10.0, OperationType.SET);
-        AttributeModification<Boolean> regulatingModification = new AttributeModification<>(true, OperationType.SET);
+        org.gridsuite.modification.model.AttributeModification<Double> regulationValueModification = new org.gridsuite.modification.model.AttributeModification<>(10.0, org.gridsuite.modification.model.OperationType.SET);
+        org.gridsuite.modification.model.AttributeModification<Boolean> regulatingModification = new org.gridsuite.modification.model.AttributeModification<>(true, org.gridsuite.modification.model.OperationType.SET);
         String message = assertThrows(NetworkModificationException.class, () -> processPhaseTapRegulation(null, adder, false,
             null, regulationValueModification, null, regulatingModification, regulationReports)).getMessage();
         assertEquals("CREATE_TWO_WINDINGS_TRANSFORMER_ERROR : Regulation mode is missing when creating tap phase changer with regulation enabled", message);
 
-        AttributeModification<PhaseTapChanger.RegulationMode> regulationModeModification = new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET);
+        org.gridsuite.modification.model.AttributeModification<PhaseTapChanger.RegulationMode> regulationModeModification = new org.gridsuite.modification.model.AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, org.gridsuite.modification.model.OperationType.SET);
         String message2 = assertThrows(NetworkModificationException.class, () -> processPhaseTapRegulation(null, adder, false,
             regulationModeModification, null, null, regulatingModification, regulationReports)).getMessage();
         assertEquals("CREATE_TWO_WINDINGS_TRANSFORMER_ERROR : Regulation value is missing when creating tap phase changer with regulation enabled", message2);
         processPhaseTapRegulation(null, adder, false,
-            new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET),
+            new org.gridsuite.modification.model.AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, org.gridsuite.modification.model.OperationType.SET),
             null, null, null, regulationReports);
         adder.add();
         PhaseTapChanger phaseTapChanger = twt.getPhaseTapChanger();
@@ -854,9 +854,9 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         PhaseTapChangerAdder adder1 = twt.newPhaseTapChanger();
         preparePhaseTapChangerAdder(adder1);
         processPhaseTapRegulation(null, adder1, false,
-            new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET),
-            new AttributeModification<>(10.0, OperationType.SET), null,
-            new AttributeModification<>(true, OperationType.SET), regulationReports);
+            new org.gridsuite.modification.model.AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, org.gridsuite.modification.model.OperationType.SET),
+            new org.gridsuite.modification.model.AttributeModification<>(10.0, org.gridsuite.modification.model.OperationType.SET), null,
+            new org.gridsuite.modification.model.AttributeModification<>(true, org.gridsuite.modification.model.OperationType.SET), regulationReports);
         adder1.add();
         phaseTapChanger = twt.getPhaseTapChanger();
         assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, phaseTapChanger.getRegulationMode());

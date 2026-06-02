@@ -182,7 +182,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
                 .build();
         MoveVoltageLevelFeederBays moveVoltageLevelFeederBays = (MoveVoltageLevelFeederBays) moveVoltageLevelFeederBaysInfos.toModification();
         assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS", moveVoltageLevelFeederBays.getName());
-        String message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification)).getMessage();
+        String message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, org.gridsuite.modification.mapper.ModificationModelMapper.INSTANCE.map(connectablePositionModification))).getMessage();
         assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS_ERROR : MoveVoltageLevelFeederBays is not implemented for class com.powsybl.network.store.iidm.impl.ThreeWindingsTransformerImpl", message);
         // busbar not found on a branch
         MoveFeederBayInfos connectablePositionModification2 = MoveFeederBayInfos.builder()
@@ -193,7 +193,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
             .connectionPosition(4)
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
-        message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification2)).getMessage();
+        message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, org.gridsuite.modification.mapper.ModificationModelMapper.INSTANCE.map(connectablePositionModification2))).getMessage();
         assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS_ERROR : Invalid connection side: THREE for branch line1", message);
         // injection with no error
         MoveFeederBayInfos connectablePositionModification3 = MoveFeederBayInfos.builder()
@@ -204,7 +204,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
             .connectionPosition(4)
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
-        Terminal terminal = moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification3);
+        Terminal terminal = moveVoltageLevelFeederBays.getTerminal(network, org.gridsuite.modification.mapper.ModificationModelMapper.INSTANCE.map(connectablePositionModification3));
         assertEquals("v3", terminal.getVoltageLevel().getId());
         assertEquals("v3Battery", terminal.getConnectable().getId());
         // branch side 2 with no error
@@ -216,7 +216,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
             .connectionPosition(4)
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
-        terminal = moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification4);
+        terminal = moveVoltageLevelFeederBays.getTerminal(network, org.gridsuite.modification.mapper.ModificationModelMapper.INSTANCE.map(connectablePositionModification4));
         assertEquals("v4", terminal.getVoltageLevel().getId());
         assertEquals("line1", terminal.getConnectable().getId());
         assertEquals(TwoSides.TWO, network.getLine("line1").getSide(terminal));

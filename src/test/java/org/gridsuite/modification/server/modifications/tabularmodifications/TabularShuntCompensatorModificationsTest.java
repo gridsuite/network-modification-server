@@ -132,13 +132,13 @@ import static org.mockito.Mockito.when;
                 .withMessageTemplate("test")
                 .build();
 
-        tabularModification.specificCheck(shuntModification, network, reportNode);
+        tabularModification.specificCheck((org.gridsuite.modification.model.EquipmentModificationModel) org.gridsuite.modification.mapper.ModificationModelMapper.INSTANCE.toModel(shuntModification), network, reportNode);
 
         shuntModification.setShuntCompensatorType(AttributeModification.toAttributeModification(ShuntCompensatorType.CAPACITOR, OperationType.SET));
-        tabularModification.specificCheck(shuntModification, network, reportNode);
+        tabularModification.specificCheck((org.gridsuite.modification.model.EquipmentModificationModel) org.gridsuite.modification.mapper.ModificationModelMapper.INSTANCE.toModel(shuntModification), network, reportNode);
 
         shuntModification.setMaxQAtNominalV(null);
-        tabularModification.specificCheck(shuntModification, network, reportNode);
+        tabularModification.specificCheck((org.gridsuite.modification.model.EquipmentModificationModel) org.gridsuite.modification.mapper.ModificationModelMapper.INSTANCE.toModel(shuntModification), network, reportNode);
 
         assertEquals(TypedValue.WARN_SEVERITY, reportNode.getChildren().get(0).getValues().get(ReportConstants.SEVERITY_KEY));
     }
@@ -167,7 +167,7 @@ import static org.mockito.Mockito.when;
                 .withResourceBundles("i18n.reports")
                 .withMessageTemplate("test")
                 .build();
-        tabularModification.specificCheck(shuntModification, network, reportNode);
+        tabularModification.specificCheck((org.gridsuite.modification.model.EquipmentModificationModel) org.gridsuite.modification.mapper.ModificationModelMapper.INSTANCE.toModel(shuntModification), network, reportNode);
 
         assertEquals(TypedValue.ERROR_SEVERITY, reportNode.getChildren().get(0).getValues().get(ReportConstants.SEVERITY_KEY));
 
@@ -197,7 +197,7 @@ import static org.mockito.Mockito.when;
                 .withMessageTemplate("test")
                 .build();
 
-        tabularModification.specificCheck(shuntModification, network, reportNode);
+        tabularModification.specificCheck((org.gridsuite.modification.model.EquipmentModificationModel) org.gridsuite.modification.mapper.ModificationModelMapper.INSTANCE.toModel(shuntModification), network, reportNode);
         assertEquals(0, reportNode.getChildren().size());
     }
 }

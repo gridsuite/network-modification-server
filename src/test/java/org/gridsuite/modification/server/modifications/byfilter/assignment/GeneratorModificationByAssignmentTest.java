@@ -16,7 +16,7 @@ import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.BooleanAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.equipmentfield.GeneratorField;
+import org.gridsuite.modification.model.byfilter.equipmentfield.GeneratorField;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
