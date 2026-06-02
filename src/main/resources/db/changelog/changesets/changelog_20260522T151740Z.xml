@@ -27,6 +27,11 @@
                 WHERE j.modification_id = m.id
             );
         </sql>
+
+        <rollback>
+            <dropColumn tableName="modification" columnName="container_id"/>
+            <dropColumn tableName="modification" columnName="container_type"/>
+        </rollback>
     </changeSet>
     <changeSet id="unify-modification-container-model-drop-legacy" author="marcellinh">
         <createIndex tableName="modification" indexName="modification_container_idx">
@@ -37,5 +42,33 @@
                                   constraintName="group_id_fk_constraint"/>
         <dropColumn tableName="modification" columnName="group_id"/>
         <dropTable tableName="composite_modification_sub_modifications"/>
+
+        <rollback>
+            <addColumn tableName="modification">
+                <column name="group_id" type="UUID" />
+            </addColumn>
+            <createTable tableName="composite_modification_sub_modifications">
+                <column name="id" type="UUID">
+                    <constraints nullable="false" primaryKey="true" primaryKeyName="composite_modification_sub_modificationsPK"/>
+                </column>
+                <column name="modification_id" type="UUID">
+                    <constraints nullable="false"/>
+                </column>
+            </createTable>
+            <addForeignKeyConstraint baseColumnNames="id" baseTableName="composite_modification_sub_modifications" constraintName="composite_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="composite_modification" validate="true"/>
+            <addForeignKeyConstraint baseColumnNames="modification_id" baseTableName="composite_modification_sub_modifications" constraintName="modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+            <sql>
+                UPDATE modification
+                SET group_id = container_id
+                WHERE container_type = 'GROUP';
+            </sql>
+            <sql>
+                INSERT INTO composite_modification_sub_modifications (id, modification_id)
+                SELECT container_id, id
+                FROM modification
+                WHERE container_type = 'COMPOSITE';
+            </sql>
+            <addForeignKeyConstraint baseColumnNames="group_id" baseTableName="modification" constraintName="group_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification_group" validate="true"/>
+        </rollback>
     </changeSet>
 </databaseChangeLog>
