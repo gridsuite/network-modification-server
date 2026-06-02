@@ -37,6 +37,7 @@ public class ByFilterDeletionEntity extends ModificationEntity {
     @JoinTable(
             name = "byFilterDeletionFilters",
             joinColumns = @JoinColumn(name = "id"), foreignKey = @ForeignKey(name = "by_filter_deletion_id_fk"),
+            indexes = {@Index(name = "by_filter_deletion_filters_id_idx", columnList = "id"), @Index(name = "by_filter_deletion_filters_filterid_idx", columnList = "filter_id")},
             inverseJoinColumns = @JoinColumn(name = "filterId"), inverseForeignKey = @ForeignKey(name = "variation_filter_id_fk"))
     private List<VariationFilterEntity> filters;
 

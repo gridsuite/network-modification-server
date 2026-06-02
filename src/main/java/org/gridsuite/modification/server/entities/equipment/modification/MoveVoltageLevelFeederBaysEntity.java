@@ -32,7 +32,7 @@ public class MoveVoltageLevelFeederBaysEntity extends ModificationEntity {
 
     @ElementCollection
     @CollectionTable(
-        name = "move_feeder_bay",
+        name = "move_feeder_bay", indexes = {@Index(name = "move_feeder_bay_modification_idx", columnList = "modification_id")},
         joinColumns = @JoinColumn(name = "modification_id"),
             foreignKey = @ForeignKey(name = "move_feeder_bay_modification_id_fk_constraint")
     )
