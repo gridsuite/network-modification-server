@@ -153,9 +153,7 @@ public class NetworkModificationRepository {
                 .filter(Objects::nonNull)
                 .toList();
         compositeEntity.setModifications(copyEntities);
-        CompositeModificationEntity saved = modificationRepository.save(compositeEntity);
-        fixupContainerIds(List.of(saved));
-        return saved.getId();
+        return modificationRepository.save(compositeEntity).getId();
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
@@ -191,17 +189,7 @@ public class NetworkModificationRepository {
         for (ModificationEntity m : modifications) {
             modificationGroupEntity.addModification(m, order++);
         }
-        List<ModificationEntity> saved = modificationRepository.saveAll(modifications);
-        fixupContainerIds(saved);
-        return saved;
-    }
-
-    private void fixupContainerIds(List<ModificationEntity> roots) {
-        for (ModificationEntity root : roots) {
-            if (root instanceof ModificationContainer container) {
-                container.reattachDescendants();
-            }
-        }
+        return modificationRepository.saveAll(modifications);
     }
 
     @Transactional
@@ -354,7 +342,6 @@ public class NetworkModificationRepository {
                 .map(ModificationEntity::fromDTO)
                 .toList();
         List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
-        fixupContainerIds(newEntities);
 
         // Iterate through sourceEntities and newEntities collections simultaneously to map sourceId -> newId
         Map<UUID, UUID> ids = new HashMap<>();
