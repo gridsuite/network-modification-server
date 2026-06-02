@@ -19,7 +19,7 @@ final class ContainerOps {
 
     static void insert(ModificationContainer owner, List<ModificationEntity> list,
                        ModificationEntity child, int position) {
-        int target = Math.max(0, Math.min(position, list.size()));
+        int target = Math.clamp(position, 0, list.size());
         child.attachToContainer(owner);
         list.add(target, child);
         renumber(list);
