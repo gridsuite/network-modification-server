@@ -82,6 +82,7 @@ public class CompositeModificationEntity extends ModificationEntity implements M
         if (newChildren == null) {
             throw new IllegalArgumentException("Modifications list for a composite cannot be null");
         }
+        this.modifications.forEach(ModificationEntity::detachFromContainer);
         this.modifications.clear();
         for (int i = 0; i < newChildren.size(); i++) {
             ModificationEntity child = newChildren.get(i);

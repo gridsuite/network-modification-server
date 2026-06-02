@@ -12,8 +12,6 @@
             WHERE group_id IS NOT NULL
               AND container_id IS NULL;
         </sql>
-
-
         <sql>
             UPDATE modification m
             SET container_id = (
@@ -29,7 +27,16 @@
                 WHERE j.modification_id = m.id
             );
         </sql>
-
+    </changeSet>
+    <changeSet id="unify-modification-container-model-drop-legacy" author="marcellinh">
+        <preConditions onFail="HALT">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM modification
+                WHERE container_id IS NULL
+                   OR container_type IS NULL
+            </sqlCheck>
+        </preConditions>
         <createIndex tableName="modification" indexName="modification_container_idx">
             <column name="container_type"/>
             <column name="container_id"/>

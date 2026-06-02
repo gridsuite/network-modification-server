@@ -53,6 +53,7 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
      * Re-numbers {@code modificationsOrder} and re-points each child at this group.
      */
     public void setModifications(List<ModificationEntity> newChildren) {
+        this.modifications.forEach(ModificationEntity::detachFromContainer);
         this.modifications.clear();
         if (newChildren == null || newChildren.isEmpty()) {
             return;
