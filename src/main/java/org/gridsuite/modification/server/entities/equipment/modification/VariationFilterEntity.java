@@ -19,6 +19,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+
 import java.util.UUID;
 
 /**
@@ -28,7 +29,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "VariationFilter", indexes = @Index(name = "formula_id_idx", columnList = "formula_id"))
+@Table(name = "VariationFilter", indexes = {
+    @Index(name = "formula_id_idx", columnList = "formula_id"),
+    @Index(name = "variation_filter_assignment_id_idx", columnList = "assignment_id")})
 public class VariationFilterEntity {
 
     @Id

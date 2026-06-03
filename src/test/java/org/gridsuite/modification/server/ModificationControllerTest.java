@@ -473,6 +473,26 @@ class ModificationControllerTest {
     }
 
     @Test
+    void updateModificationMetadataDoesNotModifyFieldsNotProvided() {
+        // create a composite modification and set all its metadata fields
+        UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of());
+        modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder()
+                .name("composite name")
+                .description("composite description")
+                .activated(false)
+                .build());
+
+        // update the metadata again without providing any field
+        modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder().build());
+
+        // every field not provided must keep its previous value
+        CompositeModificationInfos result = (CompositeModificationInfos) modificationRepository.getModificationInfo(compositeUuid);
+        assertEquals("composite name", result.getName());
+        assertEquals("composite description", result.getDescription());
+        assertEquals(false, result.getActivated());
+    }
+
+    @Test
     void testDeleteModification() throws Exception {
         MvcResult mvcResult;
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
