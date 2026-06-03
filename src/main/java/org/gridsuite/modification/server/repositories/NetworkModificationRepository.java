@@ -217,8 +217,10 @@ public class NetworkModificationRepository {
                 ? source
                 : loadContainer(targetType, targetId, true);
 
-        List<ModificationEntity> sourceChildren = new ArrayList<>(
-                modificationRepository.findActiveByContainer(sourceId, sourceType));
+        List<ModificationEntity> sourceChildren = source.getModifications().stream()
+                .filter(Objects::nonNull)
+                .filter(m -> !Boolean.TRUE.equals(m.getStashed()))
+                .collect(Collectors.toCollection(ArrayList::new));
 
         List<ModificationEntity> moved = removeModifications(sourceChildren, modificationUuids);
         if (moved.isEmpty()) {
@@ -240,7 +242,7 @@ public class NetworkModificationRepository {
                     moved.stream().map(ModificationEntity::getId).toList());
         }
 
-        List<ModificationEntity> targetChildren = new ArrayList<>(modificationRepository.findActiveByContainer(targetId, targetType));
+        List<ModificationEntity> targetChildren = new ArrayList<>(target.getModifications());
         targetChildren.removeIf(Objects::isNull);
         insertModifications(targetChildren, moved, beforeModificationUuid);
         target.setModifications(targetChildren);
