@@ -207,19 +207,18 @@ public class NetworkModificationRepository {
     }
 
     private List<ModificationEntity> moveModificationsNonTransactional(
-            ModificationContainerType sourceType, UUID sourceContainerId,
-            ModificationContainerType targetType, UUID targetContainerId,
+            ModificationContainerType sourceType, UUID sourceId,
+            ModificationContainerType targetType, UUID targetId,
             List<UUID> modificationUuids,
             UUID beforeModificationUuid) {
+        boolean sameContainer = sourceType == targetType && sourceId.equals(targetId);
+        ModificationContainer source = loadContainer(sourceType, sourceId, false);
+        ModificationContainer target = sameContainer
+                ? source
+                : loadContainer(targetType, targetId, true);
 
-        ModificationContainer source = loadContainer(sourceType, sourceContainerId);
-        boolean sameContainer = sourceType == targetType && sourceContainerId.equals(targetContainerId);
-        ModificationContainer target = sameContainer ? source : loadOrCreateContainer(targetType, targetContainerId);
-
-        List<ModificationEntity> sourceChildren = source.getModifications().stream()
-                .filter(Objects::nonNull)
-                .filter(m -> !Boolean.TRUE.equals(m.getStashed()))
-                .collect(Collectors.toCollection(ArrayList::new));
+        List<ModificationEntity> sourceChildren = new ArrayList<>(
+                modificationRepository.findActiveByContainer(sourceId, sourceType));
 
         List<ModificationEntity> moved = removeModifications(sourceChildren, modificationUuids);
         if (moved.isEmpty()) {
@@ -227,7 +226,7 @@ public class NetworkModificationRepository {
         }
 
         if (targetType == ModificationContainerType.COMPOSITE) {
-            assertNoCompositeCycle(moved, targetContainerId);
+            assertNoCompositeCycle(moved, targetId);
         }
 
         if (sameContainer) {
@@ -241,29 +240,22 @@ public class NetworkModificationRepository {
                     moved.stream().map(ModificationEntity::getId).toList());
         }
 
-        List<ModificationEntity> targetChildren = new ArrayList<>(target.getModifications());
+        List<ModificationEntity> targetChildren = new ArrayList<>(modificationRepository.findActiveByContainer(targetId, targetType));
         targetChildren.removeIf(Objects::isNull);
         insertModifications(targetChildren, moved, beforeModificationUuid);
         target.setModifications(targetChildren);
         return moved;
     }
 
-    private ModificationContainer loadContainer(ModificationContainerType type, UUID id) {
+    private ModificationContainer loadContainer(ModificationContainerType type, UUID id, boolean createIfMissing) {
         return switch (type) {
-            case GROUP -> getModificationGroup(id);
+            case GROUP -> createIfMissing
+                    ? getOrCreateModificationGroup(id)
+                    : getModificationGroup(id);
             case COMPOSITE -> compositeModificationRepository.findById(id)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
+                    .orElseThrow(() -> new NetworkModificationException(
+                            MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, id)));
-        };
-    }
-
-    private ModificationContainer loadOrCreateContainer(ModificationContainerType type, UUID id) {
-        return switch (type) {
-            case GROUP -> getOrCreateModificationGroup(id);
-            case COMPOSITE -> compositeModificationRepository.findById(id)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
-                            String.format(MODIFICATION_NOT_FOUND_MESSAGE, id)));
-            // composites are never auto-created on a move; that's a user-driven operation
         };
     }
 

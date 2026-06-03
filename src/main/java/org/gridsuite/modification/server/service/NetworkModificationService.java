@@ -401,14 +401,9 @@ public class NetworkModificationService {
                 targetType, targetContainerId,
                 modificationUuids, beforeModificationUuid);
 
-        boolean sameContainer = sourceType == targetType
-                && sourceContainerId.equals(targetContainerId);
-        // same-container reorder doesn't re-apply (semantics unchanged)
-        boolean applyModifications = canApply && !sameContainer;
-
-        // Apply only makes sense for GROUP targets (composites aren't applied to a network).
-        boolean shouldApply = applyModifications
-                && targetType == ModificationContainerType.GROUP
+        boolean shouldApply = canApply
+                && !sourceContainerId.equals(targetContainerId)
+                && targetType == ModificationContainerType.GROUP 
                 && !modifications.isEmpty();
 
         CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = shouldApply
