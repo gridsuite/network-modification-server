@@ -403,7 +403,7 @@ public class NetworkModificationService {
 
         boolean shouldApply = canApply
                 && !sourceContainerId.equals(targetContainerId)
-                && targetType == ModificationContainerType.GROUP 
+                && targetType == ModificationContainerType.GROUP
                 && !modifications.isEmpty();
 
         CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = shouldApply

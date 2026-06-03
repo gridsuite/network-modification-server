@@ -82,10 +82,10 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
                                                  @Param("type") ModificationContainerType type);
 
     @Query("""
-      SELECT m FROM ModificationEntity m
-      WHERE m.containerId = :id AND m.containerType = :type AND m.stashed = false
-      ORDER BY m.modificationsOrder ASC
-    """)
+              SELECT m FROM ModificationEntity m
+              WHERE m.containerId = :id AND m.containerType = :type AND m.stashed = false
+              ORDER BY m.modificationsOrder ASC
+            """)
     List<ModificationEntity> findActiveByContainer(@Param("id") UUID containerId,
                                                    @Param("type") ModificationContainerType type);
 
