@@ -13,6 +13,7 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.*;
+import org.gridsuite.modification.model.tabular.TabularBaseModel;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
@@ -117,27 +118,27 @@ public class NetworkModificationRepository {
     // This method should be package-private and not used as API of the service as it uses ModificationEntity and
     // we want to encapsulate the use of Entity related objects to this service.
     // Nevertheless We have to keep it public for transactional annotation.
-    public List<ModificationInfos> saveModifications(UUID groupUuid, List<ModificationEntity> modifications) {
+    public List<ModificationDto> saveModifications(UUID groupUuid, List<ModificationEntity> modifications) {
         List<ModificationEntity> entities = saveModificationsNonTransactional(groupUuid, modifications);
         return entities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
     @Transactional
-    public List<ModificationInfos> saveModificationInfos(@NonNull UUID groupUuid, List<ModificationInfos> modifications) {
-        List<ModificationEntity> entities = saveModificationInfosNonTransactional(groupUuid, modifications);
+    public List<ModificationDto> saveModificationDto(@NonNull UUID groupUuid, List<ModificationDto> modifications) {
+        List<ModificationEntity> entities = saveModificationDtoNonTransactional(groupUuid, modifications);
         // We can't return input modifications directly because it wouldn't have the IDs coming from the saved entities
         return entities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
-    private List<ModificationEntity> saveModificationInfosNonTransactional(@NonNull UUID groupUuid,
-            List<ModificationInfos> modifications) {
+    private List<ModificationEntity> saveModificationDtoNonTransactional(@NonNull UUID groupUuid,
+            List<ModificationDto> modifications) {
         List<ModificationEntity> entities = modifications.stream().map(ModificationEntity::fromDTO).toList();
 
         return saveModificationsNonTransactional(groupUuid, entities);
     }
 
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
-        CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
+        CompositeModificationDto compositeInfos = CompositeModificationDto.builder().modificationsInfos(List.of()).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         // Fetch originals once, preserving order
         Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
@@ -192,7 +193,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationInfos> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
+    public List<ModificationDto> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
         List<ModificationEntity> movedModifications = moveModificationsNonTransactional(destinationGroupUuid, originGroupUuid, modificationsToMoveUUID, referenceModificationUuid);
         return movedModifications.stream().map(this::toModificationsInfosOptimized).toList();
     }
@@ -298,11 +299,11 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
+    public List<ModificationDto> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
         return getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
     }
 
-    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean onlyStashed) {
+    public List<ModificationDto> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean onlyStashed) {
         try {
             return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsInfos(List.of(groupUuid), onlyStashed);
         } catch (NetworkModificationException e) {
@@ -313,7 +314,7 @@ public class NetworkModificationRepository {
         }
     }
 
-    public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
+    public List<ModificationDto> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
         UUID groupId = getModificationGroup(groupUuid).getId();
         List<ModificationEntity> base = onlyStashed
                 ? modificationRepository.findAllBaseByGroupIdReverse(groupId)
@@ -408,7 +409,7 @@ public class NetworkModificationRepository {
         return modifications;
     }
 
-    private TabularBaseInfos loadTabularModification(TabularModificationsEntity tabularEntity) {
+    private TabularBaseModel loadTabularModification(TabularModificationsEntity tabularEntity) {
         // fetch embedded modifications uuids only
         List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(tabularEntity.getId());
         // optimized entities full loading, per type
@@ -456,8 +457,8 @@ public class NetworkModificationRepository {
             .build();
     }
 
-    private CompositeModificationInfos loadCompositeModificationMetadata(ModificationEntity compositeEntity, Integer maxDepth) {
-        return CompositeModificationInfos.builder()
+    private CompositeModificationDto loadCompositeModificationMetadata(ModificationEntity compositeEntity, Integer maxDepth) {
+        return CompositeModificationDto.builder()
                 .activated(compositeEntity.getActivated())
                 .description(compositeEntity.getDescription())
                 .date(compositeEntity.getDate())
@@ -469,15 +470,15 @@ public class NetworkModificationRepository {
                 .build();
     }
 
-    private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity) {
+    private ModificationDto toModificationsInfosOptimized(ModificationEntity modificationEntity) {
         return toModificationsInfosOptimized(modificationEntity, Set.of(), Map.of());
     }
 
-    private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity, Set<UUID> modificationsToExclude) {
+    private ModificationDto toModificationsInfosOptimized(ModificationEntity modificationEntity, Set<UUID> modificationsToExclude) {
         return toModificationsInfosOptimized(modificationEntity, modificationsToExclude, Map.of());
     }
 
-    private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity,
+    private ModificationDto toModificationsInfosOptimized(ModificationEntity modificationEntity,
                                                             Set<UUID> modificationsToExclude,
                                                             Map<UUID, Integer> precomputedDepths) {
         // A composite may arrive as a real CompositeModificationEntity (full load, sub-modifications
@@ -495,18 +496,18 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getActiveModifications(UUID groupUuid, @NonNull Set<UUID> modificationsToExclude) {
+    public List<ModificationDto> getActiveModifications(UUID groupUuid, @NonNull Set<UUID> modificationsToExclude) {
         List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByGroupId(groupUuid, emptyIfNull(modificationsToExclude));
         return modificationsEntities.stream().map(m -> toModificationsInfosOptimized(m, modificationsToExclude)).toList();
     }
 
-    private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
+    private List<ModificationDto> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
         return groupUuids.stream().flatMap(this::getModificationEntityStream)
                 .filter(m -> !onlyStashed || m.getStashed() == onlyStashed)
                 .map(this::toModificationsInfosOptimized).toList();
     }
 
-    public List<ModificationInfos> getModificationsInfosToExport(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
+    public List<ModificationDto> getModificationsInfosToExport(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
         try {
             return groupUuids.stream().flatMap(this::getModificationEntityStream)
                     .filter(modification -> !modification.getStashed())
@@ -520,7 +521,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public ModificationInfos getModificationInfo(UUID modificationUuid) {
+    public ModificationDto getModificationInfo(UUID modificationUuid) {
         return toModificationsInfosOptimized(getModificationEntity(modificationUuid));
     }
 
@@ -595,7 +596,7 @@ public class NetworkModificationRepository {
         return modificationRepository.countByGroupIdAndStashed(groupUuid, stashed);
     }
 
-    private List<ModificationInfos> getModificationsInfosNonTransactional(List<UUID> uuids) {
+    private List<ModificationDto> getModificationsInfosNonTransactional(List<UUID> uuids) {
         // Spring-data findAllById doc says: the order of elements in the result is not guaranteed
         Map<UUID, ModificationEntity> entities = modificationRepository.findAllById(uuids)
             .stream()
@@ -608,10 +609,10 @@ public class NetworkModificationRepository {
 
     /**
      * returns the data from all the network modifications contained in the composite modifications sent as parameter
-     * but only returns the basic data common to all the modifications form the ModificationInfos, not from the extended classes
+     * but only returns the basic data common to all the modifications form the ModificationDto, not from the extended classes
      */
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getBasicNetworkModificationsFromComposite(@NonNull List<UUID> uuids) {
+    public List<ModificationDto> getBasicNetworkModificationsFromComposite(@NonNull List<UUID> uuids) {
         List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationIdIn(uuids);
         Map<UUID, ModificationEntity> entitiesById = modificationRepository.findBaseDataByIdIn(networkModificationsUuids).stream()
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
@@ -637,15 +638,15 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getCompositeModificationsInfos(@NonNull List<UUID> uuids) {
+    public List<ModificationDto> getCompositeModificationsInfos(@NonNull List<UUID> uuids) {
         return getModificationsInfosInsideCompositesNonTransactional(uuids);
     }
 
-    private List<ModificationInfos> getModificationsInfosInsideCompositesNonTransactional(@NonNull List<UUID> compositeUuids) {
-        List<ModificationInfos> entities = new ArrayList<>();
+    private List<ModificationDto> getModificationsInfosInsideCompositesNonTransactional(@NonNull List<UUID> compositeUuids) {
+        List<ModificationDto> entities = new ArrayList<>();
         compositeUuids.forEach(uuid -> {
             List<UUID> foundEntities = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
-            List<ModificationInfos> orderedModifications = foundEntities
+            List<ModificationDto> orderedModifications = foundEntities
                     .stream()
                     .map(this::getModificationInfo)
                     .toList();
@@ -656,11 +657,11 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getUnstashedModificationsInfos(@NonNull UUID groupUuid) {
+    public List<ModificationDto> getUnstashedModificationsInfos(@NonNull UUID groupUuid) {
         return getUnstashedModificationsInfosNonTransactional(groupUuid);
     }
 
-    private List<ModificationInfos> getUnstashedModificationsInfosNonTransactional(UUID groupUuid) {
+    private List<ModificationDto> getUnstashedModificationsInfosNonTransactional(UUID groupUuid) {
         return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(this::toModificationsInfosOptimized).toList();
     }
 
@@ -710,7 +711,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
+    public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationDto metadata) {
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
@@ -738,19 +739,19 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
+    public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationDto modificationDto) {
         ModificationEntity entity = getModificationEntity(modificationUuid);
         // Tabular modifications optimization:
         // Before updating/adding with new sub-modifications, we delete and clear existing sub-modifications manually
         // to avoid JPA to make a huge query to find them (no need to read them, they are going to be replaced).
-        if (modificationInfos.getType() == ModificationType.TABULAR_CREATION
-                || modificationInfos.getType() == ModificationType.TABULAR_MODIFICATION
-                || modificationInfos.getType() == ModificationType.LIMIT_SETS_TABULAR_MODIFICATION) {
+        if (modificationDto.getType() == ModificationType.TABULAR_CREATION
+                || modificationDto.getType() == ModificationType.TABULAR_MODIFICATION
+                || modificationDto.getType() == ModificationType.LIMIT_SETS_TABULAR_MODIFICATION) {
             TabularModificationsEntity tabularEntity = (TabularModificationsEntity) entity;
             deleteTabularModificationSubModifications(tabularEntity);
-            tabularEntity.update(modificationInfos);
+            tabularEntity.update(modificationDto);
         } else {
-            entity.update(modificationInfos);
+            entity.update(modificationDto);
         }
     }
 
@@ -871,31 +872,31 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationInfos> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = originGroupUuid != null ? getUnstashedModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
-        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
-        // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
+    public List<ModificationDto> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
+        List<ModificationDto> modificationDtos = originGroupUuid != null ? getUnstashedModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
+        List<ModificationEntity> newEntities = saveModificationDtoNonTransactional(targetGroupUuid, modificationDtos);
+        // We can't return ModificationDto directly because it wouldn't have the IDs coming from the new saved entities
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
     @Transactional
-    public List<ModificationInfos> extractModificationsFromCompositesAndSave(@NonNull UUID targetGroupUuid, @NonNull List<UUID> compositesUuids) {
-        List<ModificationInfos> modificationInfos = getModificationsInfosInsideCompositesNonTransactional(compositesUuids);
-        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
-        // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
+    public List<ModificationDto> extractModificationsFromCompositesAndSave(@NonNull UUID targetGroupUuid, @NonNull List<UUID> compositesUuids) {
+        List<ModificationDto> modificationDtos = getModificationsInfosInsideCompositesNonTransactional(compositesUuids);
+        List<ModificationEntity> newEntities = saveModificationDtoNonTransactional(targetGroupUuid, modificationDtos);
+        // We can't return ModificationDto directly because it wouldn't have the IDs coming from the new saved entities
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
     @Transactional
-    public List<ModificationInfos> insertCompositeModifications(
+    public List<ModificationDto> insertCompositeModifications(
             @NonNull UUID targetGroupUuid,
             @NonNull List<Pair<UUID, String>> compositesUuidName) {
         List<UUID> compositeUuids = compositesUuidName.stream().map(Pair::getFirst).toList();
-        List<ModificationInfos> newCompositeModifications = new ArrayList<>();
-        List<ModificationInfos> modificationInfos = getModificationsInfosNonTransactional(compositeUuids);
+        List<ModificationDto> newCompositeModifications = new ArrayList<>();
+        List<ModificationDto> modificationDto = getModificationsInfosNonTransactional(compositeUuids);
         // apply the new composite name to the corresponding composite modifications
         for (Pair<UUID, String> compositeUuidName : compositesUuidName) {
-            CompositeModificationInfos newCompositeModification = (CompositeModificationInfos) modificationInfos.stream()
+            CompositeModificationInfos newCompositeModification = (CompositeModificationInfos) modificationDto.stream()
                     .filter(modif -> modif.getUuid().equals(compositeUuidName.getFirst()))
                     .findFirst().orElse(null);
             if (newCompositeModification != null) {
@@ -905,7 +906,7 @@ public class NetworkModificationRepository {
                 LOGGER.error("Could not find composite modification with uuid {} to apply its name {}", compositeUuidName.getFirst(), compositeUuidName.getSecond());
             }
         }
-        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
+        List<ModificationEntity> newEntities = saveModificationDtoNonTransactional(targetGroupUuid, newCompositeModifications);
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 

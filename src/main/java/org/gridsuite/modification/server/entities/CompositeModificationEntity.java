@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationDto;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
@@ -47,7 +47,7 @@ public class CompositeModificationEntity extends ModificationEntity {
 
     @Override
     public CompositeModificationInfos toModificationInfos() {
-        List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).toList();
+        List<ModificationDto> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).toList();
         return CompositeModificationInfos.builder()
                 .name(getName())
                 .activated(getActivated())

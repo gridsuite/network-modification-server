@@ -9,7 +9,8 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.DeleteAttachingLineInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.model.DeleteAttachingLineModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import jakarta.persistence.Column;
@@ -46,9 +47,9 @@ public class DeleteAttachingLineEntity extends ModificationEntity {
     }
 
     @Override
-    public void update(ModificationInfos modificationInfos) {
+    public void update(ModificationDto modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((DeleteAttachingLineInfos) modificationInfos);
+        assignAttributes((DeleteAttachingLineModel) modificationInfos);
     }
 
     @Override
@@ -71,7 +72,7 @@ public class DeleteAttachingLineEntity extends ModificationEntity {
                 .replacingLine1Name(getReplacingLine1Name());
     }
 
-    private void assignAttributes(DeleteAttachingLineInfos deleteAttachingLineInfos) {
+    private void assignAttributes(DeleteAttachingLineModel deleteAttachingLineInfos) {
         lineToAttachTo1Id = deleteAttachingLineInfos.getLineToAttachTo1Id();
         lineToAttachTo2Id = deleteAttachingLineInfos.getLineToAttachTo2Id();
         attachedLineId = deleteAttachingLineInfos.getAttachedLineId();

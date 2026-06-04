@@ -12,7 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.dto.LimitsPropertyInfos;
+import org.gridsuite.modification.model.LimitsPropertyModel;
 
 import java.util.UUID;
 
@@ -39,11 +39,11 @@ public class LimitsPropertyEntity {
     @Column(name = "value_", nullable = false)
     private String value;
 
-    public static LimitsPropertyEntity fromLimitsPropertyInfos(LimitsPropertyInfos propertyInfos) {
+    public static LimitsPropertyEntity fromLimitsPropertyInfos(LimitsPropertyModel propertyInfos) {
         return new LimitsPropertyEntity(null, propertyInfos.name(), propertyInfos.value());
     }
 
-    public LimitsPropertyInfos toLimitsPropertyInfos() {
-        return new LimitsPropertyInfos(name, value);
+    public LimitsPropertyModel toLimitsPropertyInfos() {
+        return new LimitsPropertyModel(name, value);
     }
 }

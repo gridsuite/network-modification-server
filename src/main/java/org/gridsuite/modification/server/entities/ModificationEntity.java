@@ -10,10 +10,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
 
-import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationDto;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 
 import java.lang.reflect.Constructor;
@@ -85,7 +84,7 @@ public class ModificationEntity {
         this.type = type;
     }
 
-    protected ModificationEntity(ModificationInfos modificationInfos) {
+    protected ModificationEntity(ModificationDto modificationInfos) {
         if (modificationInfos == null) {
             throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
         }
@@ -101,21 +100,11 @@ public class ModificationEntity {
         assignAttributes(modificationInfos);
     }
 
-    public ModificationInfos toModificationInfos() {
-        ModificationInfos modificationInfos = ModificationInfos.builder()
-            .uuid(this.id)
-            .date(this.date)
-            .stashed(this.stashed)
-            .activated(this.activated)
-            .description(this.description)
-            .messageType(this.messageType)
-            .messageValues(this.messageValues)
-            .build();
-        modificationInfos.setType(ModificationType.valueOf(this.type));
-        return modificationInfos;
+    public ModificationDto toModificationInfos() {
+        return null;
     }
 
-    public void update(ModificationInfos modificationInfos) {
+    public void update(ModificationDto modificationInfos) {
         // Basic attributes are immutable in the database
         if (modificationInfos == null) {
             throw new NullPointerException("Impossible to update entity from null DTO");
@@ -124,7 +113,7 @@ public class ModificationEntity {
     }
 
     @SneakyThrows
-    private void assignAttributes(ModificationInfos modificationInfos) {
+    private void assignAttributes(ModificationDto modificationInfos) {
         this.setType(modificationInfos.getType().name());
         this.setMessageType(modificationInfos.getType().name());
         if (modificationInfos.getDescription() != null) {
@@ -133,7 +122,7 @@ public class ModificationEntity {
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
     }
 
-    public static ModificationEntity fromDTO(ModificationInfos dto) {
+    public static ModificationEntity fromDTO(ModificationDto dto) {
         if (dto instanceof EquipmentAttributeModificationInfos infos) {
             return EquipmentAttributeModificationEntity.createAttributeEntity(infos);
         }

@@ -10,9 +10,9 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.InjectionModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.OperationType;
+import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.model.InjectionModificationModel;
+import org.gridsuite.modification.model.constants.OperationType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
@@ -96,18 +96,18 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
     })
     private BooleanModificationEmbedded qMeasurementValidity;
 
-    protected InjectionModificationEntity(InjectionModificationInfos modificationInfos) {
+    protected InjectionModificationEntity(ModificationDto modificationInfos) {
         super(modificationInfos);
-        assignAttributes(modificationInfos);
+        assignAttributes((InjectionModificationModel) modificationInfos);
     }
 
     @Override
-    public void update(ModificationInfos modificationInfos) {
+    public void update(ModificationDto modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((InjectionModificationInfos) modificationInfos);
+        assignAttributes((InjectionModificationModel) modificationInfos);
     }
 
-    private void assignAttributes(InjectionModificationInfos modificationInfos) {
+    private void assignAttributes(InjectionModificationModel modificationInfos) {
         this.voltageLevelIdValue = modificationInfos.getVoltageLevelId() != null ? modificationInfos.getVoltageLevelId().getValue() : null;
         this.voltageLevelIdOp = modificationInfos.getVoltageLevelId() != null ? modificationInfos.getVoltageLevelId().getOp() : null;
         this.busOrBusbarSectionIdValue = modificationInfos.getBusOrBusbarSectionId() != null ? modificationInfos.getBusOrBusbarSectionId().getValue() : null;

@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.dto.ShuntCompensatorType;
 

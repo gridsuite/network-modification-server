@@ -10,7 +10,6 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAt
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.ByFilterDeletionInfos;
 import org.gridsuite.modification.dto.FilterInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;

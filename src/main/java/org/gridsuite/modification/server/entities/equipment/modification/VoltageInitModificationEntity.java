@@ -12,7 +12,6 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.dto.VoltageInitGeneratorModificationInfos;
 import org.gridsuite.modification.dto.VoltageInitModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageInitBusModificationInfos;
 import org.gridsuite.modification.dto.VoltageInitShuntCompensatorModificationInfos;
 import org.gridsuite.modification.dto.VoltageInitStaticVarCompensatorModificationInfos;

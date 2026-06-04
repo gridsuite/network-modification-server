@@ -13,7 +13,6 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.LoadCreationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.tabular.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;

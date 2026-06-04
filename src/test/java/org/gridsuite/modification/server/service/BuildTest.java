@@ -66,7 +66,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupModel.Applicability.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.junit.jupiter.api.Assertions.*;
@@ -603,10 +603,10 @@ class BuildTest {
                 .connected2(true)
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(
+                        OperationalLimitsGroupModel.builder().id("olg1").currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(3.).build()).applicability(SIDE1)
                         .build(),
-                        OperationalLimitsGroupInfos.builder().id("olg2").currentLimits(
+                        OperationalLimitsGroupModel.builder().id("olg2").currentLimits(
                                 CurrentLimitsInfos.builder().permanentLimit(2.).build()).applicability(SIDE2)
                             .build()
                     )

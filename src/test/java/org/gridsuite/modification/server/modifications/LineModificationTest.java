@@ -38,8 +38,8 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupModel.Applicability.SIDE1;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupModel.Applicability.SIDE2;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -133,7 +133,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                 ).build(),
                         OperationalLimitsGroupModificationInfos.builder()
                                 .id("DEFAULT")
-                                .applicability(OperationalLimitsGroupInfos.Applicability.SIDE1)
+                                .applicability(OperationalLimitsGroupModel.Applicability.SIDE1)
                                 .limitsProperties(Collections.emptyList())
                                 .modificationType(OperationalLimitsGroupModificationType.MODIFY)
                                 .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACE)
@@ -172,7 +172,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .enableOLGModification(true)
                 .operationalLimitsGroups(List.of(OperationalLimitsGroupModificationInfos.builder()
                         .id("DEFAULT")
-                        .applicability(OperationalLimitsGroupInfos.Applicability.SIDE1)
+                        .applicability(OperationalLimitsGroupModel.Applicability.SIDE1)
                         .limitsProperties(Collections.emptyList())
                         .modificationType(OperationalLimitsGroupModificationType.MODIFY)
                         .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACE)

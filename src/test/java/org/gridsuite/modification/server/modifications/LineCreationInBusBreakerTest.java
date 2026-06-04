@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.BUS_NOT_FOUND;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupModel.Applicability.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -113,7 +113,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId2("bus2")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder()
+                        OperationalLimitsGroupModel.builder()
                             .currentLimits(
                                 CurrentLimitsInfos.builder().permanentLimit(1.0).temporaryLimits(Collections.emptyList()).build()
                             )
@@ -147,7 +147,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId2("bus2")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupModel.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()
                         ).applicability(SIDE1).limitsProperties(List.of(new LimitsPropertyInfos(PROPERTY_NAME, PROPERTY_VALUE))).build()
                     )
@@ -178,7 +178,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId2("bus2")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder()
+                        OperationalLimitsGroupModel.builder()
                             .id("limitSet1")
                             .currentLimits(
                                 CurrentLimitsInfos.builder().permanentLimit(-1.0).build())
@@ -206,7 +206,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId2("bus2")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupModel.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(1.0).build())
                             .applicability(SIDE2).build()
                     )
@@ -242,10 +242,10 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
             .busOrBusbarSectionId1("bus1")
             .operationalLimitsGroups(
                 List.of(
-                    OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(
+                    OperationalLimitsGroupModel.builder().id("olg1").currentLimits(
                         CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
                         .applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
-                    OperationalLimitsGroupInfos.builder().id("olg2").currentLimits(
+                    OperationalLimitsGroupModel.builder().id("olg2").currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
                         .applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                 )

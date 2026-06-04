@@ -10,12 +10,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.dto.CurrentLimitsModificationInfos;
 
 import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.*;
+import org.gridsuite.modification.model.CurrentLimitsModificationModel;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -43,15 +43,15 @@ public class CurrentLimitsModificationEntity {
     )
     private List<CurrentTemporaryLimitModificationEmbeddable> temporaryLimits;
 
-    public CurrentLimitsModificationInfos toCurrentLimitsInfos() {
-        return CurrentLimitsModificationInfos
+    public CurrentLimitsModificationModel toCurrentLimitsModel() {
+        return CurrentLimitsModificationModel
                 .builder()
                 .permanentLimit(getPermanentLimit())
                 .temporaryLimits(CurrentTemporaryLimitModificationEmbeddable.fromEmbeddableCurrentTemporaryLimits(getTemporaryLimits()))
                 .build();
     }
 
-    public CurrentLimitsModificationEntity(CurrentLimitsModificationInfos currentLimitsModificationInfos) {
+    public CurrentLimitsModificationEntity(CurrentLimitsModificationModel currentLimitsModificationInfos) {
         this(null, currentLimitsModificationInfos.getPermanentLimit(), CurrentTemporaryLimitModificationEmbeddable.toEmbeddableCurrentTemporaryLimits(currentLimitsModificationInfos.getTemporaryLimits()));
     }
 }

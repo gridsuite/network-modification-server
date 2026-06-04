@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.ConverterStationCreationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationDto;
 import org.gridsuite.modification.dto.VscCreationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
@@ -74,12 +74,12 @@ public class VscCreationEntity extends EquipmentCreationEntity {
     private ConverterStationCreationEntity converterStation2;
 
     public VscCreationEntity(@NonNull VscCreationInfos vscCreationInfos) {
-        super(vscCreationInfos);
+        super((ModificationDto) vscCreationInfos);
         assignAttributes(vscCreationInfos);
     }
 
     @Override
-    public void update(@NonNull ModificationInfos modificationInfos) {
+    public void update(@NonNull ModificationDto modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((VscCreationInfos) modificationInfos);
     }
@@ -130,7 +130,7 @@ public class VscCreationEntity extends EquipmentCreationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

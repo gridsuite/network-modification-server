@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 import java.lang.reflect.Constructor;
 
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.EntityRegistry;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 

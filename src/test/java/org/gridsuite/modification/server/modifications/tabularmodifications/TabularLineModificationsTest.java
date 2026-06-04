@@ -29,8 +29,8 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupModel.Applicability.SIDE1;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupModel.Applicability.SIDE2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -167,7 +167,7 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
         );
     }
 
-    public static OperationalLimitsGroupModificationInfos buildOperationalLimitsGroupDefaultModification(OperationalLimitsGroupInfos.Applicability applicability) {
+    public static OperationalLimitsGroupModificationInfos buildOperationalLimitsGroupDefaultModification(OperationalLimitsGroupModel.Applicability applicability) {
         return OperationalLimitsGroupModificationInfos.builder()
                 .id("testName")
                 .applicability(applicability)

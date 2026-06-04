@@ -9,11 +9,11 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.BranchCreationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 
 import jakarta.persistence.*;
-import org.gridsuite.modification.dto.OperationalLimitsGroupInfos;
+import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.model.BranchCreationModel;
+import org.gridsuite.modification.model.OperationalLimitsGroupModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,19 +81,18 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     @Column(name = "selectedOperationalLimitsGroupId2")
     private String selectedOperationalLimitsGroupId2;
 
-    protected BranchCreationEntity(BranchCreationInfos branchCreationInfos) {
+    protected BranchCreationEntity(ModificationDto branchCreationInfos) {
         super(branchCreationInfos);
-        assignAttributes(branchCreationInfos);
+        assignAttributes((BranchCreationModel) branchCreationInfos);
     }
 
     @Override
-    public void update(ModificationInfos modificationInfos) {
+    public void update(ModificationDto modificationInfos) {
         super.update(modificationInfos);
-        BranchCreationInfos branchCreationInfos = (BranchCreationInfos) modificationInfos;
-        assignAttributes(branchCreationInfos);
+        assignAttributes((BranchCreationModel) modificationInfos);
     }
 
-    private void assignAttributes(BranchCreationInfos branchCreationInfos) {
+    private void assignAttributes(BranchCreationModel branchCreationInfos) {
         x = branchCreationInfos.getX();
         r = branchCreationInfos.getR();
         voltageLevelId1 = branchCreationInfos.getVoltageLevelId1();
@@ -118,7 +117,7 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
      * in order to prevent Hibernate from losing the reference during cascade cleaning
      */
     private List<OperationalLimitsGroupEntity> assignOperationalLimitsGroups(
-            List<OperationalLimitsGroupInfos> operationalLimitsGroupInfos,
+            List<OperationalLimitsGroupModel> operationalLimitsGroupInfos,
             List<OperationalLimitsGroupEntity> operationalLimitsGroups
     ) {
         List<OperationalLimitsGroupEntity> updatedLimitsGroups = operationalLimitsGroups;

@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.LineModificationInfos;
 import org.gridsuite.modification.dto.LineSegmentInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.creation.LineSegmentEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;

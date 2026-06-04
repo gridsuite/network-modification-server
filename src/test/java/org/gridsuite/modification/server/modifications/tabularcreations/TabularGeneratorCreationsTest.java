@@ -15,7 +15,6 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.GeneratorCreationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.SubstationCreationInfos;
 import org.gridsuite.modification.dto.tabular.*;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;

@@ -10,11 +10,12 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
-import org.gridsuite.modification.dto.GeneratorsFilterInfos;
 import org.gridsuite.modification.dto.GeneratorsFrequencyReserveInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.SubstationsGeneratorsOrderingInfos;
+import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.model.GenerationDispatchModel;
+import org.gridsuite.modification.model.SubstationsGeneratorsOrderingModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import jakarta.persistence.CascadeType;
@@ -69,7 +70,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
     }
 
     @Override
-    public void update(@NonNull ModificationInfos modificationInfos) {
+    public void update(@NonNull ModificationDto modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((GenerationDispatchInfos) modificationInfos);
     }
@@ -101,7 +102,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
         }
     }
 
-    public static List<GeneratorsFilterEmbeddable> toEmbeddableGeneratorsFilters(List<GeneratorsFilterInfos> generators) {
+    public static List<GeneratorsFilterEmbeddable> toEmbeddableGeneratorsFilters(List<FilterInfos> generators) {
         return generators == null ? null : generators.stream()
             .map(generator -> new GeneratorsFilterEmbeddable(generator.getId(), generator.getName()))
             .collect(Collectors.toList());
@@ -119,10 +120,10 @@ public class GenerationDispatchEntity extends ModificationEntity {
         return generatorsFrequencyReserveEntities;
     }
 
-    private List<GeneratorsFilterInfos> toGeneratorsFilters(List<GeneratorsFilterEmbeddable> generatorsFilters) {
+    private List<FilterInfos> toGeneratorsFilters(List<GeneratorsFilterEmbeddable> generatorsFilters) {
         return generatorsFilters != null ? generatorsFilters
                 .stream()
-                .map(generator -> new GeneratorsFilterInfos(generator.getId(), generator.getName()))
+                .map(generator -> new FilterInfos(generator.getId(), generator.getName()))
                 .collect(Collectors.toList()) : null;
     }
 
@@ -132,15 +133,15 @@ public class GenerationDispatchEntity extends ModificationEntity {
             generatorsFrequencyReserveInfos = generatorsFrequencyReserve.stream()
                 .filter(Objects::nonNull)
                 .map(generator -> {
-                    List<GeneratorsFilterInfos> generatorsFilterInfos = generator.getGeneratorsFilters().stream().map(filter ->
-                        new GeneratorsFilterInfos(filter.getId(), filter.getName())).collect(Collectors.toList());
+                    List<FilterInfos> generatorsFilterInfos = generator.getGeneratorsFilters().stream().map(filter ->
+                        new FilterInfos(filter.getId(), filter.getName())).collect(Collectors.toList());
                     return new GeneratorsFrequencyReserveInfos(generatorsFilterInfos, generator.getFrequencyReserve());
                 }).collect(Collectors.toList());
         }
         return generatorsFrequencyReserveInfos;
     }
 
-    public static List<GeneratorsOrderingEntity> toSubstationsGeneratorsOrdering(List<SubstationsGeneratorsOrderingInfos> substations) {
+    public static List<GeneratorsOrderingEntity> toSubstationsGeneratorsOrdering(List<SubstationsGeneratorsOrderingModel> substations) {
         List<GeneratorsOrderingEntity> substationsGeneratorsOrderingEntities = null;
         if (substations != null) {
             substationsGeneratorsOrderingEntities = substations.stream().map(substation ->
@@ -150,11 +151,11 @@ public class GenerationDispatchEntity extends ModificationEntity {
         return substationsGeneratorsOrderingEntities;
     }
 
-    private List<SubstationsGeneratorsOrderingInfos> toSubstationsGeneratorsOrderingInfos(List<GeneratorsOrderingEntity> generatorsOrdering) {
-        List<SubstationsGeneratorsOrderingInfos> substationsGeneratorsOrderingInfos = null;
+    private List<SubstationsGeneratorsOrderingModel> toSubstationsGeneratorsOrderingInfos(List<GeneratorsOrderingEntity> generatorsOrdering) {
+        List<SubstationsGeneratorsOrderingModel> substationsGeneratorsOrderingInfos = null;
         if (generatorsOrdering != null) {
             substationsGeneratorsOrderingInfos = generatorsOrdering.stream()
-                .map(generator -> new SubstationsGeneratorsOrderingInfos(generator.getSubstationIds())).collect(Collectors.toList());
+                .map(generator -> new SubstationsGeneratorsOrderingModel(generator.getSubstationIds())).collect(Collectors.toList());
         }
         return substationsGeneratorsOrderingInfos;
     }

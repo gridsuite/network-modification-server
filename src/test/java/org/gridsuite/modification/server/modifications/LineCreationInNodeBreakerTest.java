@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.util.*;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupModel.Applicability.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
@@ -128,10 +128,10 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId2("1.1")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupModel.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.).build()
                         ).applicability(SIDE1).build(),
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupModel.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(6.).build()
                         ).applicability(SIDE2).build()
                     )
@@ -173,12 +173,12 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId2("1.1")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupModel.builder().currentLimits(
                             CurrentLimitsInfos.builder()
                                 .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").value(200.0).acceptableDuration(600).build()))
                                 .build()
                         ).applicability(SIDE1).build(),
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupModel.builder().currentLimits(
                             CurrentLimitsInfos.builder()
                                 .temporaryLimits(List.of(
                                     CurrentTemporaryLimitCreationInfos.builder().name("IT10").value(200.0).acceptableDuration(600).build(),
@@ -225,13 +225,13 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId2("1.1")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupModel.builder().currentLimits(
                             CurrentLimitsInfos.builder()
                                 .permanentLimit(200.)
                                 .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").value(200.0).acceptableDuration(600).build()))
                             .build()
                         ).applicability(SIDE1).build(),
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupModel.builder().currentLimits(
                             CurrentLimitsInfos.builder()
                                 .permanentLimit(100.)
                                 .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT20").value(600.0).acceptableDuration(1200).build()))
@@ -263,7 +263,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         testNetworkModificationsCount(getGroupId(), 1);
 
         assertEquals(
-            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null, activated=null, description=null), equipmentId=idLineEdited, properties=null), equipmentName=nameLineEdited), r=110.0, x=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, operationalLimitsGroups=[OperationalLimitsGroupInfos(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), applicability=SIDE1, limitsProperties=null), OperationalLimitsGroupInfos(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)]), applicability=SIDE2, limitsProperties=null)], selectedOperationalLimitsGroupId1=null, selectedOperationalLimitsGroupId2=null, connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0, connected1=true, connected2=false), g1=15.0, b1=15.0, g2=25.0, b2=25.0, lineSegments=null)",
+            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null, activated=null, description=null), equipmentId=idLineEdited, properties=null), equipmentName=nameLineEdited), r=110.0, x=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, operationalLimitsGroups=[OperationalLimitsGroupModel(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), applicability=SIDE1, limitsProperties=null), OperationalLimitsGroupModel(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)]), applicability=SIDE2, limitsProperties=null)], selectedOperationalLimitsGroupId1=null, selectedOperationalLimitsGroupId2=null, connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0, connected1=true, connected2=false), g1=15.0, b1=15.0, g2=25.0, b2=25.0, lineSegments=null)",
             lineCreation.toString()
         );
     }
@@ -272,7 +272,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     void testCreateLimitsProperties() {
         LineCreationInfos modificationInfos = (LineCreationInfos) buildModification();
         modificationInfos.setOperationalLimitsGroups(List.of(
-            OperationalLimitsGroupInfos.builder()
+            OperationalLimitsGroupModel.builder()
                 .id("newLimit")
                 .applicability(SIDE1)
                 .limitsProperties(List.of(new LimitsPropertyInfos(PROP1_NAME, PROP1_VALUE),
@@ -345,10 +345,10 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId2("1.1")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupModel.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build()
                         ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupModel.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build()
                         ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )

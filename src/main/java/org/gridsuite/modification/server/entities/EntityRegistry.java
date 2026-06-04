@@ -33,7 +33,7 @@ public final class EntityRegistry {
         throw new UnsupportedOperationException("Utility class");
     }
 
-    private static final Map<Class<? extends ModificationInfos>, Class<? extends ModificationEntity>> REGISTRY = new HashMap<>();
+    private static final Map<Class<? extends ModificationDto>, Class<? extends ModificationEntity>> REGISTRY = new HashMap<>();
     private static final Map<Class<?>, Class<? extends EquipmentAttributeModificationEntity<?>>> ATTRIBUTE_REGISTRY = new HashMap<>();
 
     static {
@@ -49,7 +49,6 @@ public final class EntityRegistry {
         register(VscCreationInfos.class, VscCreationEntity.class);
         register(ConverterStationCreationInfos.class, ConverterStationCreationEntity.class);
         register(LccCreationInfos.class, LccCreationEntity.class);
-        register(LccConverterStationCreationInfos.class, LccConverterStationCreationEntity.class);
         register(CreateVoltageLevelSectionInfos.class, CreateVoltageLevelSectionEntity.class);
 
         // // modification
@@ -112,7 +111,7 @@ public final class EntityRegistry {
         registerAttribute(Double.class, DoubleEquipmentAttributeModificationEntity.class);
     }
 
-    public static void register(Class<? extends ModificationInfos> dtoClass, Class<? extends ModificationEntity> entityClass) {
+    public static void register(Class<? extends ModificationDto> dtoClass, Class<? extends ModificationEntity> entityClass) {
         REGISTRY.put(dtoClass, entityClass);
     }
 
@@ -120,7 +119,7 @@ public final class EntityRegistry {
         ATTRIBUTE_REGISTRY.put(attributeValueClass, entityClass);
     }
 
-    public static Class<? extends ModificationEntity> getEntityClass(Class<? extends ModificationInfos> dtoClass) {
+    public static Class<? extends ModificationEntity> getEntityClass(Class<? extends ModificationDto> dtoClass) {
         return REGISTRY.get(dtoClass);
     }
 

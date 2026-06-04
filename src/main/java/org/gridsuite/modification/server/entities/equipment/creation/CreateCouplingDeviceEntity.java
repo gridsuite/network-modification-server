@@ -10,9 +10,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.dto.CreateCouplingDeviceInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.model.CouplingDeviceModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 /**
@@ -35,7 +35,7 @@ public class CreateCouplingDeviceEntity extends ModificationEntity {
     private String busOrBbsId2;
 
     @Override
-    public void update(@NonNull ModificationInfos modificationInfos) {
+    public void update(@NonNull ModificationDto modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((CreateCouplingDeviceInfos) modificationInfos);
     }
@@ -48,9 +48,9 @@ public class CreateCouplingDeviceEntity extends ModificationEntity {
         }
     }
 
-    public CreateCouplingDeviceEntity(CreateCouplingDeviceInfos createCouplingDeviceInfos) {
+    public CreateCouplingDeviceEntity(ModificationDto createCouplingDeviceInfos) {
         super(createCouplingDeviceInfos);
-        assignAttributes(createCouplingDeviceInfos);
+        assignAttributes((CreateCouplingDeviceInfos) createCouplingDeviceInfos);
     }
 
     @Override
@@ -66,7 +66,7 @@ public class CreateCouplingDeviceEntity extends ModificationEntity {
             .activated(getActivated())
             .description(getDescription())
             .voltageLevelId(getVoltageLevelId())
-            .couplingDeviceInfos(CouplingDeviceInfos.builder()
+            .couplingDeviceInfos(CouplingDeviceModel.builder()
                 .busbarSectionId1(getBusOrBbsId1())
                 .busbarSectionId2(getBusOrBbsId2())
                 .build());

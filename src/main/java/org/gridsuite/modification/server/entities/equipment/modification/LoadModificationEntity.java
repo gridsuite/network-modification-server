@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.LoadModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.OperationType;
 
 import jakarta.persistence.*;

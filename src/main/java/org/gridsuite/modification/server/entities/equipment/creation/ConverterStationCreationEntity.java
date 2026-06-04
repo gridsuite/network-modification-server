@@ -12,6 +12,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.ConverterStationCreationInfos;
+import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.model.ConverterStationCreationModel;
 import org.gridsuite.modification.server.dto.DTOUtils;
 
 import java.util.List;
@@ -60,11 +62,16 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
     private Boolean reactiveCapabilityCurve;
 
     public ConverterStationCreationEntity(ConverterStationCreationInfos converterStationCreationInfos) {
+        super((ModificationDto) converterStationCreationInfos);
+        assignAttributes(converterStationCreationInfos);
+    }
+
+    public ConverterStationCreationEntity(ConverterStationCreationModel converterStationCreationInfos) {
         super(converterStationCreationInfos);
         assignAttributes(converterStationCreationInfos);
     }
 
-    private void assignAttributes(ConverterStationCreationInfos converterStationCreationInfos) {
+    private void assignAttributes(ConverterStationCreationModel converterStationCreationInfos) {
         this.lossFactor = converterStationCreationInfos.getLossFactor();
         this.minQ = converterStationCreationInfos.getMinQ();
         this.maxQ = converterStationCreationInfos.getMaxQ();

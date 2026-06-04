@@ -11,7 +11,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.AttributeModification;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ShuntCompensatorModificationInfos;
 import org.gridsuite.modification.dto.ShuntCompensatorType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;

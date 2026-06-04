@@ -11,9 +11,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.ConverterStationModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.model.ConverterStationModificationModel;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
@@ -80,12 +80,12 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     }
 
     @Override
-    public void update(@NonNull ModificationInfos modificationInfos) {
+    public void update(@NonNull ModificationDto modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((ConverterStationModificationInfos) modificationInfos);
     }
 
-    private void assignAttributes(ConverterStationModificationInfos converterStationModificationInfos) {
+    private void assignAttributes(ConverterStationModificationModel converterStationModificationInfos) {
         this.lossFactor = converterStationModificationInfos.getLossFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getLossFactor()) : null;
         this.minQ = converterStationModificationInfos.getMinQ() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMinQ()) : null;
         this.maxQ = converterStationModificationInfos.getMaxQ() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMaxQ()) : null;

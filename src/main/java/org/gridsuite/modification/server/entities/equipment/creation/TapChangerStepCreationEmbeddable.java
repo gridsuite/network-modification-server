@@ -10,9 +10,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.TapChangerType;
-import org.gridsuite.modification.dto.TapChangerStepCreationInfos;
 
 import jakarta.persistence.*;
+import org.gridsuite.modification.model.TapChangerStepCreationModel;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,27 +51,27 @@ public class TapChangerStepCreationEmbeddable {
     @Column(name = "alpha")
     private Double alpha;
 
-    public static List<TapChangerStepCreationEmbeddable> toEmbeddableRatioTapChangerSteps(List<TapChangerStepCreationInfos> tapChangerSteps) {
+    public static List<TapChangerStepCreationEmbeddable> toEmbeddableRatioTapChangerSteps(List<TapChangerStepCreationModel> tapChangerSteps) {
         return tapChangerSteps == null ? null :
                 tapChangerSteps.stream()
                         .map(tapChangerStep -> new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, tapChangerStep.getIndex(), tapChangerStep.getRho(), tapChangerStep.getR(), tapChangerStep.getX(), tapChangerStep.getG(), tapChangerStep.getB(), null))
                         .collect(Collectors.toList());
     }
 
-    public static List<TapChangerStepCreationEmbeddable> toEmbeddablePhaseTapChangerSteps(List<TapChangerStepCreationInfos> tapChangerSteps) {
+    public static List<TapChangerStepCreationEmbeddable> toEmbeddablePhaseTapChangerSteps(List<TapChangerStepCreationModel> tapChangerSteps) {
         return tapChangerSteps == null ? null :
                 tapChangerSteps.stream()
                         .map(tapChangerStep -> new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, tapChangerStep.getIndex(), tapChangerStep.getRho(), tapChangerStep.getR(), tapChangerStep.getX(), tapChangerStep.getG(), tapChangerStep.getB(), tapChangerStep.getAlpha()))
                         .collect(Collectors.toList());
     }
 
-    public TapChangerStepCreationInfos toModificationInfos() {
+    public TapChangerStepCreationModel toModificationInfos() {
         return toTapChangerStepCreationInfosBuilder().build();
     }
 
-    private TapChangerStepCreationInfos.TapChangerStepCreationInfosBuilder toTapChangerStepCreationInfosBuilder() {
+    private TapChangerStepCreationModel.TapChangerStepCreationModelBuilder toTapChangerStepCreationInfosBuilder() {
         if (getTapChangerType().equals(TapChangerType.PHASE)) {
-            return TapChangerStepCreationInfos.builder()
+            return TapChangerStepCreationModel.builder()
                     .index(getIndex())
                     .rho(getRho())
                     .r(getR())
@@ -79,7 +80,7 @@ public class TapChangerStepCreationEmbeddable {
                     .b(getB())
                     .alpha(getAlpha());
         } else if (getTapChangerType().equals(TapChangerType.RATIO)) {
-            return TapChangerStepCreationInfos.builder()
+            return TapChangerStepCreationModel.builder()
                     .index(getIndex())
                     .rho(getRho())
                     .r(getR())
@@ -87,6 +88,6 @@ public class TapChangerStepCreationEmbeddable {
                     .g(getG())
                     .b(getB());
         }
-        return TapChangerStepCreationInfos.builder();
+        return TapChangerStepCreationModel.builder();
     }
 }

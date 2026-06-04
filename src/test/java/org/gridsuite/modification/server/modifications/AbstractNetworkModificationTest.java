@@ -16,7 +16,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
-import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationDto;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -132,7 +132,7 @@ public abstract class AbstractNetworkModificationTest {
     public void testCreate() throws Exception {
         MvcResult mvcResult;
         NetworkModificationsResult networkModificationsResult;
-        ModificationInfos modificationToCreate = buildModification();
+        ModificationDto modificationToCreate = buildModification();
         String bodyJson = getJsonBody(modificationToCreate, null);
 
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
@@ -143,13 +143,13 @@ public abstract class AbstractNetworkModificationTest {
         assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
         assertResultImpacts(getNetworkImpacts(networkModificationsResult));
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
-        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        ModificationDto createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
         assertAfterNetworkModificationCreation();
 
-        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationDto createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
     }
 
@@ -157,7 +157,7 @@ public abstract class AbstractNetworkModificationTest {
     public void testCreateDisabledModification() throws Exception {
         MvcResult mvcResult;
         NetworkModificationsResult networkModificationsResult;
-        ModificationInfos modificationToCreate = buildModification();
+        ModificationDto modificationToCreate = buildModification();
         modificationToCreate.setActivated(false);
         String modificationToCreateJson = getJsonBody(modificationToCreate, null);
 
@@ -170,14 +170,14 @@ public abstract class AbstractNetworkModificationTest {
 
         assertEquals(0, getNetworkImpacts(networkModificationsResult).size());
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
-        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        ModificationDto createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
         // when modification is not active, element created by the modifications should NOT be present in network
         assertAfterNetworkModificationDeletion();
 
-        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationDto createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
         assertEquals(false, createdModificationWithOnlyMetadata.getActivated());
     }
@@ -186,7 +186,7 @@ public abstract class AbstractNetworkModificationTest {
     public void testRead() throws Exception {
         MvcResult mvcResult;
         NetworkModificationResult networkModificationResult;
-        ModificationInfos modificationToRead = buildModification();
+        ModificationDto modificationToRead = buildModification();
 
         UUID modificationUuid = saveModification(modificationToRead);
 
@@ -195,13 +195,13 @@ public abstract class AbstractNetworkModificationTest {
         networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.getApplicationStatus());
         String resultAsString = mvcResult.getResponse().getContentAsString();
-        ModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() { });
+        ModificationDto receivedModification = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(receivedModification).recursivelyEquals(modificationToRead);
     }
 
     @Test
     public void testUpdate() throws Exception {
-        ModificationInfos modificationToUpdate = buildModification();
+        ModificationDto modificationToUpdate = buildModification();
 
         UUID modificationUuid = saveModification(modificationToUpdate);
 
@@ -215,18 +215,18 @@ public abstract class AbstractNetworkModificationTest {
         // TODO Need a test for substations impacted
         //assertThat(bsmListResult.get(0)).recursivelyEquals(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"));
 
-        ModificationInfos updatedModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        ModificationDto updatedModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
         assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        ModificationInfos updatedModificationwithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationDto updatedModificationwithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
         testUpdateModificationMessage(updatedModificationwithOnlyMetadata);
 
     }
 
     @Test
     public void testDelete() throws Exception {
-        ModificationInfos modificationToDelete = buildModification();
+        ModificationDto modificationToDelete = buildModification();
 
         UUID modificationUuid = saveModification(modificationToDelete);
 
@@ -235,7 +235,7 @@ public abstract class AbstractNetworkModificationTest {
                         .queryParam("uuids", modificationUuid.toString()))
                 .andExpect(status().isOk());
 
-        List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationDto> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
 
         assertTrue(storedModifications.isEmpty());
         assertAfterNetworkModificationDeletion();
@@ -243,7 +243,7 @@ public abstract class AbstractNetworkModificationTest {
 
     @Test
     public void testCopy() throws Exception {
-        ModificationInfos modificationToCopy = buildModification();
+        ModificationDto modificationToCopy = buildModification();
 
         UUID modificationUuid = saveModification(modificationToCopy);
 
@@ -255,7 +255,7 @@ public abstract class AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
 
-        List<ModificationInfos> modifications = networkModificationRepository
+        List<ModificationDto> modifications = networkModificationRepository
                 .getModifications(TEST_GROUP_ID, false, true);
 
         assertEquals(2, modifications.size());
@@ -270,13 +270,13 @@ public abstract class AbstractNetworkModificationTest {
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
+        List<ModificationDto> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(actualSize, modificationsTestGroupId.size());
     }
 
     /** Save a network modification into the repository and return its UUID. */
-    protected UUID saveModification(ModificationInfos modificationInfos) {
-        ModificationEntity entity = ModificationEntity.fromDTO(modificationInfos);
+    protected UUID saveModification(ModificationDto modificationDto) {
+        ModificationEntity entity = ModificationEntity.fromDTO(modificationDto);
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(entity));
         return entity.getId();
     }
@@ -305,28 +305,28 @@ public abstract class AbstractNetworkModificationTest {
         return URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
     }
 
-    protected String getJsonBody(ModificationInfos modificationInfos, String variantId) throws JsonProcessingException {
-        return TestUtils.getJsonBody(modificationInfos, AbstractNetworkModificationTest.TEST_NETWORK_ID, variantId);
+    protected String getJsonBody(ModificationDto modificationDto, String variantId) throws JsonProcessingException {
+        return TestUtils.getJsonBody(modificationDto, AbstractNetworkModificationTest.TEST_NETWORK_ID, variantId);
     }
 
     protected abstract Network createNetwork(UUID networkUuid);
 
-    protected abstract ModificationInfos buildModification();
+    protected abstract ModificationDto buildModification();
 
-    protected abstract ModificationInfos buildModificationUpdate();
+    protected abstract ModificationDto buildModificationUpdate();
 
     protected abstract void assertAfterNetworkModificationCreation();
 
     protected abstract void assertAfterNetworkModificationDeletion();
 
     @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("{}", modificationInfos.getMessageValues());
+    protected void testCreationModificationMessage(ModificationDto modificationDto) throws Exception {
+        assertEquals("{}", modificationDto.getMapMessageValues().toString());
     }
 
     @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("{}", modificationInfos.getMessageValues());
+    protected void testUpdateModificationMessage(ModificationDto modificationDto) throws Exception {
+        assertEquals("{}", modificationDto.getMapMessageValues().toString());
     }
 
     protected List<NetworkModificationResult.ApplicationStatus> extractApplicationStatus(NetworkModificationsResult networkModificationsResult) {

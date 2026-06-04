@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.Switch;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.gridsuite.modification.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.dto.CreateCouplingDeviceInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.Set;

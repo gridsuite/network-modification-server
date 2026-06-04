@@ -8,14 +8,14 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.BasicEquipmentModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.OperationType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
+import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.model.BasicEquipmentModificationModel;
+import org.gridsuite.modification.model.constants.OperationType;
 
 /**
  * @author Nicolas Noir <nicolas.noir at rte-france.com>
@@ -31,18 +31,18 @@ public class BasicEquipmentModificationEntity extends EquipmentModificationEntit
     @Enumerated(EnumType.STRING)
     private OperationType equipmentNameOp;
 
-    protected BasicEquipmentModificationEntity(BasicEquipmentModificationInfos modificationInfos) {
+    protected BasicEquipmentModificationEntity(ModificationDto modificationInfos) {
         super(modificationInfos);
-        assignAttributes(modificationInfos);
+        assignAttributes((BasicEquipmentModificationModel) modificationInfos);
     }
 
     @Override
-    public void update(ModificationInfos modificationInfos) {
+    public void update(ModificationDto modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((BasicEquipmentModificationInfos) modificationInfos);
+        assignAttributes((BasicEquipmentModificationModel) modificationInfos);
     }
 
-    private void assignAttributes(BasicEquipmentModificationInfos modificationInfos) {
+    private void assignAttributes(BasicEquipmentModificationModel modificationInfos) {
         this.equipmentNameValue = modificationInfos.getEquipmentName() != null ? modificationInfos.getEquipmentName().getValue() : null;
         this.equipmentNameOp = modificationInfos.getEquipmentName() != null ? modificationInfos.getEquipmentName().getOp() : null;
     }

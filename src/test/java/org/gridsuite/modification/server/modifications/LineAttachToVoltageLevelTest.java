@@ -41,10 +41,10 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
         propertyOne.setName("property");
         propertyOne.setValue("value");
         propertiesList.add(propertyOne);
-        List<OperationalLimitsGroupInfos> operationalLimitsList = new ArrayList<>();
-        OperationalLimitsGroupInfos limitsGroup = new OperationalLimitsGroupInfos();
+        List<OperationalLimitsGroupModel> operationalLimitsList = new ArrayList<>();
+        OperationalLimitsGroupModel limitsGroup = new OperationalLimitsGroupModel();
         limitsGroup.setId("groupId");
-        limitsGroup.setApplicability(OperationalLimitsGroupInfos.Applicability.SIDE1);
+        limitsGroup.setApplicability(OperationalLimitsGroupModel.Applicability.SIDE1);
         // to make the tests pass (when comparing otherwise it is null and not an empty list)
         limitsGroup.setLimitsProperties(Collections.emptyList());
         CurrentLimitsInfos currentLimitsInfos = new CurrentLimitsInfos();

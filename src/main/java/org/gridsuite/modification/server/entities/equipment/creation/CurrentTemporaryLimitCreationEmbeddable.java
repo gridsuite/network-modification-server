@@ -9,10 +9,11 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.CurrentTemporaryLimitCreationInfos;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import org.gridsuite.modification.model.CurrentTemporaryLimitCreationModel;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,17 +35,17 @@ public class CurrentTemporaryLimitCreationEmbeddable {
     @Column(name = "acceptableDuration")
     private Integer acceptableDuration;
 
-    public static List<CurrentTemporaryLimitCreationEmbeddable> toEmbeddableCurrentTemporaryLimits(List<CurrentTemporaryLimitCreationInfos> limits) {
+    public static List<CurrentTemporaryLimitCreationEmbeddable> toEmbeddableCurrentTemporaryLimits(List<CurrentTemporaryLimitCreationModel> limits) {
         return limits == null ? null :
                 limits.stream()
                         .map(limit -> new CurrentTemporaryLimitCreationEmbeddable(limit.getName(), limit.getValue(), limit.getAcceptableDuration()))
                         .collect(Collectors.toList());
     }
 
-    public static List<CurrentTemporaryLimitCreationInfos> fromEmbeddableCurrentTemporaryLimits(List<CurrentTemporaryLimitCreationEmbeddable> limits) {
+    public static List<CurrentTemporaryLimitCreationModel> fromEmbeddableCurrentTemporaryLimits(List<CurrentTemporaryLimitCreationEmbeddable> limits) {
         return limits == null ? null :
                 limits.stream()
-                        .map(limit -> new CurrentTemporaryLimitCreationInfos(limit.getName(), limit.getValue(), limit.getAcceptableDuration()))
+                        .map(limit -> new CurrentTemporaryLimitCreationModel(limit.getName(), limit.getValue(), limit.getAcceptableDuration()))
                         .collect(Collectors.toList());
     }
 }

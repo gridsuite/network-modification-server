@@ -12,7 +12,6 @@ import com.powsybl.iidm.network.SwitchKind;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.dto.FreePropertyInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;

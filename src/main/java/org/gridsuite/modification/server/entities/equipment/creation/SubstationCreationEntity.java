@@ -11,8 +11,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import jakarta.persistence.*;
-import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationDto;
 import org.gridsuite.modification.dto.SubstationCreationInfos;
+import org.gridsuite.modification.model.SubstationCreationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -29,17 +30,22 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
     @Column(name = "country")
     private Country country;
 
-    private void assignAttributes(SubstationCreationInfos substationCreationInfos) {
+    private void assignAttributes(SubstationCreationModel substationCreationInfos) {
         country = substationCreationInfos.getCountry();
     }
 
     public SubstationCreationEntity(SubstationCreationInfos substationCreationInfos) {
+        super((ModificationDto) substationCreationInfos);
+        assignAttributes(substationCreationInfos);
+    }
+
+    public SubstationCreationEntity(SubstationCreationModel substationCreationInfos) {
         super(substationCreationInfos);
         assignAttributes(substationCreationInfos);
     }
 
     @Override
-    public void update(ModificationInfos modificationInfos) {
+    public void update(ModificationDto modificationInfos) {
         super.update(modificationInfos);
         SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) modificationInfos;
         assignAttributes(substationCreationInfos);
@@ -50,25 +56,31 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
         return toSubstationCreationInfosBuilder().build();
     }
 
-    public SubstationCreationInfos toSubstationCreationInfos() {
-        return toSubstationCreationInfosBuilder().build();
+    public SubstationCreationModel toSubstationCreationModel() {
+        return SubstationCreationModel.builder().equipmentId(getEquipmentId())
+            .equipmentName(getEquipmentName())
+            .country(getCountry())
+            .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                getProperties().stream()
+                    .map(FreePropertyEntity::toModel)
+                    .toList()).build();
     }
 
     private SubstationCreationInfos.SubstationCreationInfosBuilder<?, ?> toSubstationCreationInfosBuilder() {
         return SubstationCreationInfos
-                .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
-                .equipmentId(getEquipmentId())
-                .equipmentName(getEquipmentName())
-                .country(getCountry())
-                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
-                    getProperties().stream()
-                        .map(FreePropertyEntity::toInfos)
-                        .toList());
+            .builder()
+            .uuid(getId())
+            .date(getDate())
+            .stashed(getStashed())
+            .activated(getActivated())
+            .description(getDescription())
+            .equipmentId(getEquipmentId())
+            .equipmentName(getEquipmentName())
+            .country(getCountry())
+            .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                getProperties().stream()
+                    .map(FreePropertyEntity::toModel)
+                    .toList());
     }
 }
 

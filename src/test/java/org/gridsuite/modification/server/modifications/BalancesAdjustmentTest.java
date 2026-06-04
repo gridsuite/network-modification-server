@@ -12,6 +12,10 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.loadflow.LoadFlowParameters;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.model.BalancesAdjustmentAreaModel;
+import org.gridsuite.modification.model.ModificationModel;
+import org.gridsuite.modification.model.constants.ShiftEquipmentType;
+import org.gridsuite.modification.model.constants.ShiftType;
 import org.gridsuite.modification.server.service.LoadFlowService;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
@@ -76,31 +80,31 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected ModificationInfos buildModification() {
+    protected ModificationModel buildModification() {
         return BalancesAdjustmentModificationInfos.builder()
                 .areas(List.of(
-                        BalancesAdjustmentAreaInfos.builder()
+                        BalancesAdjustmentAreaModel.builder()
                                 .name("FR")
                                 .countries(List.of(Country.FR))
                                 .netPosition(-45d)
                                 .shiftType(ShiftType.PROPORTIONAL)
                                 .shiftEquipmentType(ShiftEquipmentType.GENERATOR)
                                 .build(),
-                        BalancesAdjustmentAreaInfos.builder()
+                        BalancesAdjustmentAreaModel.builder()
                                 .name("NE")
                                 .countries(List.of(Country.NE))
                                 .netPosition(-54d)
                                 .shiftType(ShiftType.BALANCED)
                                 .shiftEquipmentType(ShiftEquipmentType.GENERATOR)
                                 .build(),
-                        BalancesAdjustmentAreaInfos.builder()
+                        BalancesAdjustmentAreaModel.builder()
                                 .name("GE")
                                 .countries(List.of(Country.GE))
                                 .netPosition(0d)
                                 .shiftType(ShiftType.PROPORTIONAL)
                                 .shiftEquipmentType(ShiftEquipmentType.LOAD)
                                 .build(),
-                        BalancesAdjustmentAreaInfos.builder()
+                        BalancesAdjustmentAreaModel.builder()
                                 .name("AU")
                                 .countries(List.of(Country.AU))
                                 .netPosition(100d)
@@ -265,7 +269,7 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return BalancesAdjustmentModificationInfos.builder()
                 .areas(List.of(
-                        BalancesAdjustmentAreaInfos.builder()
+                        BalancesAdjustmentAreaModel.builder()
                                 .name("FR")
                                 .countries(List.of(Country.FR))
                                 .netPosition(-45d)

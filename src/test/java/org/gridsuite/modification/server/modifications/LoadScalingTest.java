@@ -20,7 +20,6 @@ import org.gridsuite.modification.VariationMode;
 import org.gridsuite.modification.VariationType;
 import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.LoadScalingInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;

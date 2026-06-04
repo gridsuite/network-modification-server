@@ -12,7 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.GeneratorCreationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.model.GeneratorCreationModel;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
@@ -109,12 +110,12 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     }
 
     @Override
-    public void update(@NonNull ModificationInfos modificationInfos) {
+    public void update(@NonNull ModificationDto modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((GeneratorCreationInfos) modificationInfos);
+        assignAttributes((GeneratorCreationModel) modificationInfos);
     }
 
-    private void assignAttributes(GeneratorCreationInfos generatorCreationInfos) {
+    private void assignAttributes(GeneratorCreationModel generatorCreationInfos) {
         this.energySource = generatorCreationInfos.getEnergySource();
         this.minP = generatorCreationInfos.getMinP();
         this.maxP = generatorCreationInfos.getMaxP();

@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.MoveFeederBayInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.MoveVoltageLevelFeederBaysInfos;
 import org.gridsuite.modification.modifications.MoveVoltageLevelFeederBays;
 import org.gridsuite.modification.server.utils.NetworkCreation;
