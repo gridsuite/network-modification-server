@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -70,8 +71,8 @@ public class ModificationReferenceEntity extends ModificationEntity {
         this.referenceId = modificationReferenceInfos.getReferenceId();
 
         // Appears as the referenced modification
-        this.setMessageType(modificationReferenceInfos.getMessageType());
-        this.setMessageValues(modificationReferenceInfos.getMessageValues());
+        this.setMessageType(modificationReferenceInfos.getReferenceInfos().getType().name());
+        this.setMessageValues(new ObjectMapper().writeValueAsString(modificationReferenceInfos.getReferenceInfos().getMapMessageValues()));
 
         // Transient just for optimization purpose
         // No need to load the referenced modification

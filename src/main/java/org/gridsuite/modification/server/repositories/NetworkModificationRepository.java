@@ -921,17 +921,33 @@ public class NetworkModificationRepository {
         List<UUID> compositeUuids = compositesToBeInserted.stream().map(CompositesToBeInserted::id).toList();
         List<ModificationInfos> newCompositeModifications = new ArrayList<>();
         List<ModificationInfos> modificationInfos = getModificationsInfosNonTransactional(compositeUuids);
-        // apply the new composite name to the corresponding composite modifications
         for (CompositesToBeInserted compositeToBeInserted : compositesToBeInserted) {
-            // TODO : ici prendre en compte isShared et créer une composite modification partagée
-            CompositeModificationInfos newCompositeModification = (CompositeModificationInfos) modificationInfos.stream()
-                    .filter(modif -> modif.getUuid().equals(compositeToBeInserted.id()))
-                    .findFirst().orElse(null);
-            if (newCompositeModification != null) {
-                newCompositeModification.setName(compositeToBeInserted.name());
-                newCompositeModifications.add(newCompositeModification);
+            if ( compositeToBeInserted.isShared()) {
+                CompositeModificationInfos referencedCompositeModification = (CompositeModificationInfos) modificationInfos.stream()
+                        .filter(modif -> modif.getUuid().equals(compositeToBeInserted.id()))
+                        .findFirst().orElse(null);
+                if (referencedCompositeModification != null) {
+                    referencedCompositeModification.setName(compositeToBeInserted.name());
+                    ModificationReferenceInfos newModificationReference = ModificationReferenceInfos.builder()
+                            .referenceId(compositeToBeInserted.id())
+                            .referenceType(ModificationReferenceInfos.Type.SAMPLE)
+                            .referenceInfos(referencedCompositeModification)
+                            .build();
+                    newCompositeModifications.add(newModificationReference);
+                    // TODO : ces partagées doivent être référencées dans directory-server
+                    // puis-je appeler directement les endpoints d Slimane d'ici ??
+                }
             } else {
-                LOGGER.error("Could not find composite modification with uuid {} to apply its name {}", compositeToBeInserted.id(), compositeToBeInserted.name());
+                // apply the new composite name to the corresponding composite modifications
+                CompositeModificationInfos newCompositeModification = (CompositeModificationInfos) modificationInfos.stream()
+                        .filter(modif -> modif.getUuid().equals(compositeToBeInserted.id()))
+                        .findFirst().orElse(null);
+                if (newCompositeModification != null) {
+                    newCompositeModification.setName(compositeToBeInserted.name());
+                    newCompositeModifications.add(newCompositeModification);
+                } else {
+                    LOGGER.error("Could not find composite modification with uuid {} to apply its name {}", compositeToBeInserted.id(), compositeToBeInserted.name());
+                }
             }
         }
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
