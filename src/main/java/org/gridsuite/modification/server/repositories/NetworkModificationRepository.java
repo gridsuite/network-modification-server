@@ -238,7 +238,6 @@ public class NetworkModificationRepository {
         return modificationsToMove;
     }
 
-
     private List<UUID> collectAllModificationUuids(List<ModificationEntity> entities) {
         List<UUID> uuids = new ArrayList<>();
         for (ModificationEntity entity : entities) {

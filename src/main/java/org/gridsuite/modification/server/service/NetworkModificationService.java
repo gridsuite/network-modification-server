@@ -394,7 +394,7 @@ public class NetworkModificationService {
         Map<UUID, UUID> parentByChild = buildParentCompositeMap(originGroupUuid);
         Set<UUID> selection = new HashSet<>(modificationsToMoveUuids);
 
-   List<UUID> subModificationUuids = modificationsToMoveUuids.stream()
+        List<UUID> subModificationUuids = modificationsToMoveUuids.stream()
                 .filter(uuid -> !originRootUuids.contains(uuid))
                 .filter(uuid -> !hasSelectedAncestor(uuid, selection, parentByChild))
                 .toList();
@@ -407,7 +407,7 @@ public class NetworkModificationService {
         List<ModificationInfos> modifications = networkModificationRepository.moveModifications(
                 destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
 
-         boolean shouldApply = applyModifications && !modifications.isEmpty();
+        boolean shouldApply = applyModifications && !modifications.isEmpty();
         CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = shouldApply ? applyModifications(destinationGroupUuid, modifications, applicationContexts) : CompletableFuture.completedFuture(List.of());
         return futureResult.thenApply(result -> new NetworkModificationsResult(modifications.stream().map(ModificationInfos::getUuid).toList(), result));
     }
@@ -660,7 +660,6 @@ public class NetworkModificationService {
         }
         return bbsIds;
     }
-
 
     private Map<UUID, UUID> buildParentCompositeMap(UUID groupUuid) {
         Map<UUID, UUID> parentByChild = new HashMap<>();
