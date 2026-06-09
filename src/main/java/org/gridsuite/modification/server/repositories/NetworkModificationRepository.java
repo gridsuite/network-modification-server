@@ -922,7 +922,7 @@ public class NetworkModificationRepository {
         List<ModificationInfos> newCompositeModifications = new ArrayList<>();
         List<ModificationInfos> modificationInfos = getModificationsInfosNonTransactional(compositeUuids);
         for (CompositesToBeInserted compositeToBeInserted : compositesToBeInserted) {
-            if ( compositeToBeInserted.isShared()) {
+            if (compositeToBeInserted.isShared()) {
                 CompositeModificationInfos referencedCompositeModification = (CompositeModificationInfos) modificationInfos.stream()
                         .filter(modif -> modif.getUuid().equals(compositeToBeInserted.id()))
                         .findFirst().orElse(null);
