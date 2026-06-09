@@ -494,6 +494,14 @@ public class NetworkModificationService {
     }
 
     @Transactional
+    public UUID assembleNetworkModificationsIntoNewComposite(@NonNull List<UUID> assembledModificationsUuids) {
+        CompositeModificationInfos newComposite =
+                networkModificationRepository.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids).toModificationInfos();
+
+        return newComposite.getUuid();
+    }
+
+    @Transactional
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
         return networkModificationRepository.createNetworkCompositeModification(modificationUuids);
     }
