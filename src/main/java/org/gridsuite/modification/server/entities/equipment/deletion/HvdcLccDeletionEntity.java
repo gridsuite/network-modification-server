@@ -11,9 +11,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.modification.model.AbstractEquipmentDeletionInfos;
-import org.gridsuite.modification.model.HvdcLccDeletionInfos;
-import org.gridsuite.modification.model.HvdcLccDeletionInfos.ShuntCompensatorInfos;
+import org.gridsuite.modification.model.AbstractEquipmentDeletionModel;
+import org.gridsuite.modification.model.HvdcLccDeletionModel;
+import org.gridsuite.modification.model.HvdcLccDeletionModel.ShuntCompensatorModel;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,11 +41,11 @@ public class HvdcLccDeletionEntity extends AbstractEquipmentDeletionEntity {
     private List<ShuntCompensatorSelectionEmbeddable> shuntCompensatorsSide2;
 
     @Override
-    public HvdcLccDeletionInfos toDto() {
+    public HvdcLccDeletionModel toDto() {
         var shuntSide1 = this.getShuntCompensatorsSide1();
         var shuntSide2 = this.getShuntCompensatorsSide2();
         if (CollectionUtils.isNotEmpty(shuntSide1) || CollectionUtils.isNotEmpty(shuntSide2)) {
-            var hvdcLccDeletionInfos = new HvdcLccDeletionInfos();
+            var hvdcLccDeletionInfos = new HvdcLccDeletionModel();
             hvdcLccDeletionInfos.setMcsOnSide1(toShuntCompensators(shuntSide1));
             hvdcLccDeletionInfos.setMcsOnSide2(toShuntCompensators(shuntSide2));
             return hvdcLccDeletionInfos;
@@ -53,23 +53,23 @@ public class HvdcLccDeletionEntity extends AbstractEquipmentDeletionEntity {
         return null;
     }
 
-    private List<ShuntCompensatorInfos> toShuntCompensators(List<ShuntCompensatorSelectionEmbeddable> shuntCompensators) {
+    private List<ShuntCompensatorModel> toShuntCompensators(List<ShuntCompensatorSelectionEmbeddable> shuntCompensators) {
         return shuntCompensators != null ? shuntCompensators.stream()
-            .map(s -> ShuntCompensatorInfos.builder()
+            .map(s -> ShuntCompensatorModel.builder()
                 .id(s.getShuntCompensatorId())
                 .connectedToHvdc(s.isConnectedToHvdc()).build())
             .collect(Collectors.toList()) : null;
     }
 
-    public HvdcLccDeletionEntity(AbstractEquipmentDeletionInfos equipmentDeletionInfos) {
-        var dto = (HvdcLccDeletionInfos) equipmentDeletionInfos;
+    public HvdcLccDeletionEntity(AbstractEquipmentDeletionModel equipmentDeletionInfos) {
+        var dto = (HvdcLccDeletionModel) equipmentDeletionInfos;
         if (dto.getMcsOnSide1() != null && !dto.getMcsOnSide1().isEmpty() || dto.getMcsOnSide2() != null && !dto.getMcsOnSide2().isEmpty()) {
             this.shuntCompensatorsSide1 = toEmbeddableShuntCompensators(dto.getMcsOnSide1());
             this.shuntCompensatorsSide2 = toEmbeddableShuntCompensators(dto.getMcsOnSide2());
         }
     }
 
-    private List<ShuntCompensatorSelectionEmbeddable> toEmbeddableShuntCompensators(List<HvdcLccDeletionInfos.ShuntCompensatorInfos> shuntCompensators) {
+    private List<ShuntCompensatorSelectionEmbeddable> toEmbeddableShuntCompensators(List<HvdcLccDeletionModel.ShuntCompensatorModel> shuntCompensators) {
         return shuntCompensators == null ? null : shuntCompensators.stream()
                 .map(s -> new ShuntCompensatorSelectionEmbeddable(s.getId(), s.isConnectedToHvdc()))
                 .collect(Collectors.toList());

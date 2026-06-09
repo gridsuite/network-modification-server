@@ -12,13 +12,13 @@ import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.model.CurrentLimitsInfos;
-import org.gridsuite.modification.model.CurrentTemporaryLimitCreationInfos;
-import org.gridsuite.modification.model.FreePropertyInfos;
-import org.gridsuite.modification.model.OperationalLimitsGroupInfos;
-import org.gridsuite.modification.model.PhaseTapChangerCreationInfos;
-import org.gridsuite.modification.model.RatioTapChangerCreationInfos;
-import org.gridsuite.modification.model.TapChangerStepCreationInfos;
+import org.gridsuite.modification.model.CurrentLimitsModel;
+import org.gridsuite.modification.model.CurrentTemporaryLimitCreationModel;
+import org.gridsuite.modification.model.FreePropertyModel;
+import org.gridsuite.modification.model.OperationalLimitsGroupModel;
+import org.gridsuite.modification.model.PhaseTapChangerCreationModel;
+import org.gridsuite.modification.model.RatioTapChangerCreationModel;
+import org.gridsuite.modification.model.TapChangerStepCreationModel;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.BUS_NOT_FOUND;
-import static org.gridsuite.modification.model.OperationalLimitsGroupInfos.Applicability.*;
+import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testBranchCreationImpacts;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -74,11 +74,11 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                 .connected2(true)
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(
-                            CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
+                        OperationalLimitsGroupModel.builder().id("olg1").currentLimits(
+                            CurrentLimitsModel.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationModel.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
                         ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
-                        OperationalLimitsGroupInfos.builder().id("olg2").currentLimits(
-                            CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
+                        OperationalLimitsGroupModel.builder().id("olg2").currentLimits(
+                            CurrentLimitsModel.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationModel.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
                         ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )
                 )
@@ -86,7 +86,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cn202")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .phaseTapChanger(PhaseTapChangerCreationInfos.builder()
+                .phaseTapChanger(PhaseTapChangerCreationModel.builder()
                         .lowTapPosition(1)
                         .tapPosition(2)
                         .terminalRefConnectableId("idGenerator1")
@@ -95,7 +95,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                         .loadTapChangingCapabilities(true)
                         .terminalRefConnectableType("GENERATOR")
                         .regulationMode(PhaseTapChanger.RegulationMode.CURRENT_LIMITER)
-                        .steps(List.of(TapChangerStepCreationInfos.builder()
+                        .steps(List.of(TapChangerStepCreationModel.builder()
                                         .index(1)
                                         .rho(1)
                                         .r(0)
@@ -104,7 +104,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                                         .b(0)
                                         .alpha(0)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(2)
                                         .rho(1)
                                         .r(0)
@@ -113,7 +113,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                                         .b(0)
                                         .alpha(0.)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(3)
                                         .rho(1)
                                         .r(0)
@@ -123,7 +123,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                                         .alpha(0.)
                                         .build()
                         )).build())
-                .ratioTapChanger(RatioTapChangerCreationInfos.builder()
+                .ratioTapChanger(RatioTapChangerCreationModel.builder()
                         .lowTapPosition(5)
                         .tapPosition(6)
                         .regulating(true)
@@ -133,7 +133,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                         .terminalRefConnectableType("GENERATOR")
                         .loadTapChangingCapabilities(true)
                         .targetV(5.)
-                        .steps(List.of(TapChangerStepCreationInfos.builder()
+                        .steps(List.of(TapChangerStepCreationModel.builder()
                                         .index(5)
                                         .rho(1)
                                         .r(0)
@@ -141,7 +141,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                                         .g(0)
                                         .b(0)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(6)
                                         .rho(1)
                                         .r(0)
@@ -149,7 +149,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                                         .g(0)
                                         .b(0)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(7)
                                         .rho(1)
                                         .r(0)
@@ -157,7 +157,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                                         .g(0)
                                         .b(0)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(8)
                                         .rho(1)
                                         .r(0)
@@ -167,7 +167,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                                         .build()
                         ))
                         .build())
-                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
+                .properties(List.of(FreePropertyModel.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -190,12 +190,12 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                 .busOrBusbarSectionId2("bus3")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(CurrentLimitsInfos.builder()
+                        OperationalLimitsGroupModel.builder().currentLimits(CurrentLimitsModel.builder()
                             .permanentLimit(3.)
-                            .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
+                            .temporaryLimits(List.of(CurrentTemporaryLimitCreationModel.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
                         ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
-                        OperationalLimitsGroupInfos.builder().currentLimits(CurrentLimitsInfos.builder()
-                            .permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
+                        OperationalLimitsGroupModel.builder().currentLimits(CurrentLimitsModel.builder()
+                            .permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationModel.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
                         ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )
                 )
@@ -203,7 +203,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cn2022")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .phaseTapChanger(PhaseTapChangerCreationInfos.builder()
+                .phaseTapChanger(PhaseTapChangerCreationModel.builder()
                         .lowTapPosition(1)
                         .tapPosition(2)
                         .terminalRefConnectableId("v1load")
@@ -212,7 +212,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                         .loadTapChangingCapabilities(true)
                         .terminalRefConnectableType("LOAD")
                         .regulationMode(PhaseTapChanger.RegulationMode.CURRENT_LIMITER)
-                        .steps(List.of(TapChangerStepCreationInfos.builder()
+                        .steps(List.of(TapChangerStepCreationModel.builder()
                                         .index(1)
                                         .rho(1)
                                         .r(0)
@@ -221,7 +221,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                                         .b(0)
                                         .alpha(0)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(2)
                                         .rho(1)
                                         .r(0)
@@ -230,7 +230,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                                         .b(0)
                                         .alpha(0.)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(3)
                                         .rho(1)
                                         .r(0)
@@ -240,7 +240,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                                         .alpha(0.)
                                         .build()
                         )).build())
-                .ratioTapChanger(RatioTapChangerCreationInfos.builder()
+                .ratioTapChanger(RatioTapChangerCreationModel.builder()
                         .lowTapPosition(5)
                         .tapPosition(6)
                         .regulating(true)
@@ -250,7 +250,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                         .terminalRefConnectableType("LOAD")
                         .loadTapChangingCapabilities(true)
                         .targetV(5.)
-                        .steps(List.of(TapChangerStepCreationInfos.builder()
+                        .steps(List.of(TapChangerStepCreationModel.builder()
                                         .index(5)
                                         .rho(1)
                                         .r(0)
@@ -258,7 +258,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                                         .g(0)
                                         .b(0)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(6)
                                         .rho(1)
                                         .r(0)
@@ -266,7 +266,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                                         .g(0)
                                         .b(0)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(7)
                                         .rho(1)
                                         .r(0)
@@ -274,7 +274,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                                         .g(0)
                                         .b(0)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(8)
                                         .rho(1)
                                         .r(0)
@@ -332,7 +332,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
     @Test
     void testCreateTwoWindingsTransformerWithRatioTapChangerInBusBreaker() throws Exception {
         // create new 2wt in voltage level with Bus/breaker topology, having a RatioTapChanger
-        RatioTapChangerCreationInfos ratioTapChangerCreationInfos = RatioTapChangerCreationInfos.builder()
+        RatioTapChangerCreationModel ratioTapChangerCreationInfos = RatioTapChangerCreationModel.builder()
                 .lowTapPosition(0)
                 .tapPosition(1)
                 .regulating(true)
@@ -391,7 +391,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
     @Test
     void testCreateTwoWindingsTransformerWithPhaseTapChangerInBusBreaker() throws Exception {
         // create new 2wt in voltage level with Bus/breaker topology, having a PhaseTapChanger
-        PhaseTapChangerCreationInfos phaseTapChangerCreationInfos = PhaseTapChangerCreationInfos.builder()
+        PhaseTapChangerCreationModel phaseTapChangerCreationInfos = PhaseTapChangerCreationModel.builder()
                 .lowTapPosition(0)
                 .tapPosition(1)
                 .regulating(true)
@@ -442,23 +442,23 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
         testNetworkModificationsCount(getGroupId(), actualSize);
     }
 
-    private static List<TapChangerStepCreationInfos> getTapChangerSteps() {
+    private static List<TapChangerStepCreationModel> getTapChangerSteps() {
         return List.of(
-                TapChangerStepCreationInfos.builder()
+                TapChangerStepCreationModel.builder()
                         .r(39.78473)
                         .x(39.784725)
                         .g(0.)
                         .b(0.)
                         .rho(1.)
                         .build(),
-                TapChangerStepCreationInfos.builder()
+                TapChangerStepCreationModel.builder()
                         .r(39.78474)
                         .x(39.784726)
                         .g(0.)
                         .b(0.)
                         .rho(1.)
                         .build(),
-                TapChangerStepCreationInfos.builder()
+                TapChangerStepCreationModel.builder()
                         .r(39.78475)
                         .x(39.784727)
                         .g(0.)

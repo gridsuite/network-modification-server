@@ -11,7 +11,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.model.OperationalLimitsGroupModificationInfos;
+import org.gridsuite.modification.model.OperationalLimitsGroupModificationModel;
 import org.gridsuite.modification.model.OperationalLimitsGroupsModificationType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 
@@ -255,7 +255,7 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
      * in order to prevent Hibernate from losing the reference during cascade cleaning
      */
     private List<OperationalLimitsGroupModificationEntity> assignOperationalLimitsGroups(
-            List<OperationalLimitsGroupModificationInfos> operationalLimitsGroupInfos,
+            List<OperationalLimitsGroupModificationModel> operationalLimitsGroupInfos,
             List<OperationalLimitsGroupModificationEntity> operationalLimitsGroups
     ) {
         List<OperationalLimitsGroupModificationEntity> updatedLimitsGroups = operationalLimitsGroups;

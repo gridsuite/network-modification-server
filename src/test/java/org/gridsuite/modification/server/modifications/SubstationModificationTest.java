@@ -12,7 +12,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Substation;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.model.AttributeModification;
-import org.gridsuite.modification.model.FreePropertyInfos;
+import org.gridsuite.modification.model.FreePropertyModel;
 import org.gridsuite.modification.model.OperationType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -49,10 +49,10 @@ class SubstationModificationTest extends AbstractNetworkModificationTest {
             .equipmentId("s3")
             .equipmentName(new AttributeModification<>("newName", OperationType.SET))
             .country(new AttributeModification<>(Country.BQ, OperationType.SET))
-            .properties(List.of(FreePropertyInfos.builder().name("p1").value("v1").build(), // new
-                FreePropertyInfos.builder().name("p2").value("v2").build(), // new
-                FreePropertyInfos.builder().name("region").value("south").build(), // update
-                FreePropertyInfos.builder().name("tso").value("").deletionMark(true).build()))// deletion
+            .properties(List.of(FreePropertyModel.builder().name("p1").value("v1").build(), // new
+                FreePropertyModel.builder().name("p2").value("v2").build(), // new
+                FreePropertyModel.builder().name("region").value("south").build(), // update
+                FreePropertyModel.builder().name("tso").value("").deletionMark(true).build()))// deletion
             .build();
     }
 

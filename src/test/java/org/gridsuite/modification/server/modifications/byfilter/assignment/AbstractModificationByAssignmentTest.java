@@ -16,11 +16,11 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.ModificationByAssignmentInfos;
-import org.gridsuite.modification.model.FilterInfos;
+import org.gridsuite.modification.model.FilterModel;
 import org.gridsuite.modification.model.byfilter.DataType;
-import org.gridsuite.modification.model.byfilter.assignment.AssignmentInfos;
-import org.gridsuite.modification.model.byfilter.assignment.DoubleAssignmentInfos;
-import org.gridsuite.modification.model.byfilter.assignment.PropertyAssignmentInfos;
+import org.gridsuite.modification.model.byfilter.assignment.AssignmentModel;
+import org.gridsuite.modification.model.byfilter.assignment.DoubleAssignmentModel;
+import org.gridsuite.modification.model.byfilter.assignment.PropertyAssignmentModel;
 import org.gridsuite.modification.model.byfilter.equipmentfield.PropertyField;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -63,13 +63,13 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
     protected static final UUID FILTER_ID_6 = UUID.randomUUID();
     protected static final UUID FILTER_WITH_ALL_WRONG_IDS = UUID.randomUUID();
     protected static final UUID FILTER_WITH_ONE_WRONG_ID = UUID.randomUUID();
-    protected final FilterInfos filter1 = new FilterInfos(FILTER_ID_1, "filter1");
-    protected final FilterInfos filter2 = new FilterInfos(FILTER_ID_2, "filter2");
-    protected final FilterInfos filter3 = new FilterInfos(FILTER_ID_3, "filter3");
-    protected final FilterInfos filter4 = new FilterInfos(FILTER_ID_4, "filter4");
-    protected final FilterInfos filter5 = new FilterInfos(FILTER_ID_5, "filter5");
-    protected final FilterInfos filter6 = new FilterInfos(FILTER_ID_6, "filter6");
-    protected final FilterInfos filterWithOneWrongId = new FilterInfos(FILTER_WITH_ONE_WRONG_ID, "filterWithOneWrongId");
+    protected final FilterModel filter1 = new FilterModel(FILTER_ID_1, "filter1");
+    protected final FilterModel filter2 = new FilterModel(FILTER_ID_2, "filter2");
+    protected final FilterModel filter3 = new FilterModel(FILTER_ID_3, "filter3");
+    protected final FilterModel filter4 = new FilterModel(FILTER_ID_4, "filter4");
+    protected final FilterModel filter5 = new FilterModel(FILTER_ID_5, "filter5");
+    protected final FilterModel filter6 = new FilterModel(FILTER_ID_6, "filter6");
+    protected final FilterModel filterWithOneWrongId = new FilterModel(FILTER_WITH_ONE_WRONG_ID, "filterWithOneWrongId");
 
     protected static final String PATH = "/v1/filters/metadata";
 
@@ -95,18 +95,18 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
         checkCreationApplicationStatus(List.of(), NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         // Test with empty list of filters in assignment
-        List<AssignmentInfos<?>> assignmentsWithNoFilters = getAssignmentInfos().stream().peek(assignmentInfos -> assignmentInfos.setFilters(List.of())).toList();
+        List<AssignmentModel<?>> assignmentsWithNoFilters = getAssignmentInfos().stream().peek(assignmentInfos -> assignmentInfos.setFilters(List.of())).toList();
         checkCreationApplicationStatus(assignmentsWithNoFilters, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         // Test with editedField = null
-        AssignmentInfos<?> assignmentWithNoEditedField = DoubleAssignmentInfos.builder()
+        AssignmentModel<?> assignmentWithNoEditedField = DoubleAssignmentModel.builder()
                 .value(50.)
                 .filters(List.of())
                 .build();
         checkCreationApplicationStatus(List.of(assignmentWithNoEditedField), NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
     }
 
-    protected void checkCreateWithWarning(List<AssignmentInfos<?>> assignments, List<IdentifierListFilterEquipmentAttributes> existingEquipmentList) throws Exception {
+    protected void checkCreateWithWarning(List<AssignmentModel<?>> assignments, List<IdentifierListFilterEquipmentAttributes> existingEquipmentList) throws Exception {
         AbstractFilter filter = getFilterEquipments(FILTER_WITH_ONE_WRONG_ID, existingEquipmentList);
 
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ONE_WRONG_ID))
@@ -119,7 +119,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(List.of(FILTER_WITH_ONE_WRONG_ID)), false);
     }
 
-    protected void checkCreateWithError(List<AssignmentInfos<?>> assignments, List<AbstractFilter> filterEquipments) throws Exception {
+    protected void checkCreateWithError(List<AssignmentModel<?>> assignments, List<AbstractFilter> filterEquipments) throws Exception {
         String filterIds = filterEquipments.stream()
                 .map(AbstractFilter::getId)
                 .map(UUID::toString)
@@ -142,8 +142,8 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
     public void testModificationWithAllWrongEquipmentIds() throws Exception {
         AbstractFilter filter = getFilterEquipments(FILTER_WITH_ALL_WRONG_IDS, List.of());
 
-        List<AssignmentInfos<?>> assignmentsWithWrongFilter = getAssignmentInfos().stream()
-                .peek(assignmentInfos -> assignmentInfos.setFilters(List.of(new FilterInfos(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId"))))
+        List<AssignmentModel<?>> assignmentsWithWrongFilter = getAssignmentInfos().stream()
+                .peek(assignmentInfos -> assignmentInfos.setFilters(List.of(new FilterModel(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId"))))
                 .toList();
 
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ALL_WRONG_IDS))
@@ -184,7 +184,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).toList()), false);
     }
 
-    protected void checkCreationApplicationStatus(List<? extends AssignmentInfos<?>> assignmentInfos,
+    protected void checkCreationApplicationStatus(List<? extends AssignmentModel<?>> assignmentInfos,
                                                   NetworkModificationResult.ApplicationStatus applicationStatus) throws Exception {
         ModificationByAssignmentInfos modificationByAssignmentInfos = ModificationByAssignmentInfos.builder()
             .equipmentType(getIdentifiableType())
@@ -253,8 +253,8 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
 
     protected abstract List<AbstractFilter> getTestFilters();
 
-    protected List<AssignmentInfos<?>> getAssignmentInfos() {
-        PropertyAssignmentInfos spyAssignmentInfos = spy(PropertyAssignmentInfos.builder()
+    protected List<AssignmentModel<?>> getAssignmentInfos() {
+        PropertyAssignmentModel spyAssignmentInfos = spy(PropertyAssignmentModel.builder()
                 .editedField(PropertyField.FREE_PROPERTIES.name())
                 .propertyName("propertyName")
                 .value("propertyValue")
@@ -264,7 +264,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
         return new ArrayList<>(List.of(spyAssignmentInfos));
     }
 
-    protected abstract List<AssignmentInfos<?>> getUpdatedAssignmentInfos();
+    protected abstract List<AssignmentModel<?>> getUpdatedAssignmentInfos();
 
     protected abstract IdentifiableType getIdentifiableType();
 

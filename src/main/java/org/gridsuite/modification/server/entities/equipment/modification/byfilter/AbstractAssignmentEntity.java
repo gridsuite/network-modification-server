@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification.byfilt
 
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.model.byfilter.AbstractAssignmentInfos;
+import org.gridsuite.modification.model.byfilter.AbstractAssignmentModel;
 
 import java.util.UUID;
 
@@ -27,12 +27,12 @@ public abstract class AbstractAssignmentEntity {
     @Column
     private String editedField;
 
-    protected AbstractAssignmentEntity(AbstractAssignmentInfos abstractAssignmentInfos) {
+    protected AbstractAssignmentEntity(AbstractAssignmentModel abstractAssignmentInfos) {
         this.id = null;
         this.editedField = abstractAssignmentInfos.getEditedField();
     }
 
-    protected void assignAttributes(AbstractAssignmentInfos modificationByFilterInfos) {
+    protected void assignAttributes(AbstractAssignmentModel modificationByFilterInfos) {
         modificationByFilterInfos.setId(id);
         modificationByFilterInfos.setEditedField(editedField);
     }

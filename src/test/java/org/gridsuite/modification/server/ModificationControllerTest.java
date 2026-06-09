@@ -25,15 +25,15 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder;
 import org.gridsuite.modification.model.AttributeModification;
-import org.gridsuite.modification.model.CurrentLimitsInfos;
+import org.gridsuite.modification.model.CurrentLimitsModel;
 import org.gridsuite.modification.model.OperationType;
-import org.gridsuite.modification.model.OperationalLimitsGroupInfos;
-import org.gridsuite.modification.model.VoltageInitBusModificationInfos;
-import org.gridsuite.modification.model.VoltageInitGeneratorModificationInfos;
-import org.gridsuite.modification.model.VoltageInitShuntCompensatorModificationInfos;
-import org.gridsuite.modification.model.VoltageInitStaticVarCompensatorModificationInfos;
-import org.gridsuite.modification.model.VoltageInitTransformerModificationInfos;
-import org.gridsuite.modification.model.VoltageInitVscConverterStationModificationInfos;
+import org.gridsuite.modification.model.OperationalLimitsGroupModel;
+import org.gridsuite.modification.model.VoltageInitBusModificationModel;
+import org.gridsuite.modification.model.VoltageInitGeneratorModificationModel;
+import org.gridsuite.modification.model.VoltageInitShuntCompensatorModificationModel;
+import org.gridsuite.modification.model.VoltageInitStaticVarCompensatorModificationModel;
+import org.gridsuite.modification.model.VoltageInitTransformerModificationModel;
+import org.gridsuite.modification.model.VoltageInitVscConverterStationModificationModel;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -69,8 +69,8 @@ import java.util.stream.Collectors;
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.ModificationType.LINE_MODIFICATION;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.model.OperationalLimitsGroupInfos.Applicability.SIDE1;
-import static org.gridsuite.modification.model.OperationalLimitsGroupInfos.Applicability.SIDE2;
+import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.SIDE1;
+import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.SIDE2;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
@@ -953,9 +953,9 @@ class ModificationControllerTest {
         // create new line in voltage levels with node/breaker topology
         // between voltage level "v1" and busbar section "bus1" and
         //         voltage level "v2" and busbar section "bus2"
-        CurrentLimitsInfos c1 = new CurrentLimitsInfos();
+        CurrentLimitsModel c1 = new CurrentLimitsModel();
         c1.setPermanentLimit(100.0);
-        CurrentLimitsInfos c2 = new CurrentLimitsInfos();
+        CurrentLimitsModel c2 = new CurrentLimitsModel();
         c2.setPermanentLimit(200.0);
         LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
                 .equipmentId("idLine1")
@@ -972,8 +972,8 @@ class ModificationControllerTest {
                 .busOrBusbarSectionId2("bus2")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(c1).applicability(SIDE1).build(),
-                        OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(c2).applicability(SIDE2).build()
+                        OperationalLimitsGroupModel.builder().id("olg1").currentLimits(c1).applicability(SIDE1).build(),
+                        OperationalLimitsGroupModel.builder().id("olg1").currentLimits(c2).applicability(SIDE2).build()
                     )
                 )
                 .build();
@@ -1432,69 +1432,69 @@ class ModificationControllerTest {
         VoltageInitModificationInfos modificationsInfos1 = VoltageInitModificationInfos.builder()
             .stashed(false)
             .generators(List.of(
-                VoltageInitGeneratorModificationInfos.builder()
+                VoltageInitGeneratorModificationModel.builder()
                     .generatorId("G1")
                     .targetQ(10.)
                     .build(),
-                VoltageInitGeneratorModificationInfos.builder()
+                VoltageInitGeneratorModificationModel.builder()
                     .generatorId("G2")
                     .targetV(226.)
                     .build()))
             .transformers(List.of(
-                VoltageInitTransformerModificationInfos.builder()
+                VoltageInitTransformerModificationModel.builder()
                     .transformerId("2WT1")
                     .ratioTapChangerPosition(3)
                     .build(),
-                VoltageInitTransformerModificationInfos.builder()
+                VoltageInitTransformerModificationModel.builder()
                     .transformerId("3WT1")
                     .ratioTapChangerPosition(1)
                     .ratioTapChangerTargetV(225.)
                     .legSide(ThreeSides.TWO)
                     .build()))
             .staticVarCompensators(List.of(
-                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                VoltageInitStaticVarCompensatorModificationModel.builder()
                     .staticVarCompensatorId("SVC1")
                     .reactivePowerSetpoint(50.)
                     .build(),
-                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                VoltageInitStaticVarCompensatorModificationModel.builder()
                     .staticVarCompensatorId("SVC2")
                     .voltageSetpoint(374.)
                     .build()))
             .vscConverterStations(List.of(
-                VoltageInitVscConverterStationModificationInfos.builder()
+                VoltageInitVscConverterStationModificationModel.builder()
                     .vscConverterStationId("VSC1")
                     .reactivePowerSetpoint(40.)
                     .build(),
-                VoltageInitVscConverterStationModificationInfos.builder()
+                VoltageInitVscConverterStationModificationModel.builder()
                     .vscConverterStationId("VSC2")
                     .voltageSetpoint(224.)
                     .build()))
             .shuntCompensators(List.of(
-                VoltageInitShuntCompensatorModificationInfos.builder()
+                VoltageInitShuntCompensatorModificationModel.builder()
                     .shuntCompensatorId("v2shunt")
                     .sectionCount(1)
                     .connect(true)
                     .targetV(225.)
                     .build(),
-                VoltageInitShuntCompensatorModificationInfos.builder()
+                VoltageInitShuntCompensatorModificationModel.builder()
                     .shuntCompensatorId("v5shunt")
                     .sectionCount(0)
                     .connect(false)
                     .build(),
-                VoltageInitShuntCompensatorModificationInfos.builder()
+                VoltageInitShuntCompensatorModificationModel.builder()
                     .shuntCompensatorId("v6shunt")
                     .sectionCount(1)
                     .connect(false)
                     .targetV(380.)
                     .build()))
             .buses(List.of(
-                VoltageInitBusModificationInfos.builder()
+                VoltageInitBusModificationModel.builder()
                     .voltageLevelId("v1")
                     .busId("1.1")
                     .v(225.)
                     .angle(0.)
                     .build(),
-                VoltageInitBusModificationInfos.builder()
+                VoltageInitBusModificationModel.builder()
                     .voltageLevelId("v1")
                     .busId("1.2")
                     .v(226.)

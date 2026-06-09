@@ -11,7 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.LineCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.model.LineSegmentInfos;
+import org.gridsuite.modification.model.LineSegmentModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -69,7 +69,7 @@ public class LineCreationEntity extends BranchCreationEntity {
         lineSegments = assignLineSegments(lineCreationInfos.getLineSegments());
     }
 
-    private List<LineSegmentEntity> assignLineSegments(List<LineSegmentInfos> lineSegmentInfos) {
+    private List<LineSegmentEntity> assignLineSegments(List<LineSegmentModel> lineSegmentInfos) {
         List<LineSegmentEntity> updatedLineSegments = lineSegments;
 
         if (updatedLineSegments == null) {

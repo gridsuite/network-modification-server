@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.modification.model.LineSegmentInfos;
+import org.gridsuite.modification.model.LineSegmentModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,12 +47,12 @@ public class LineSegmentEntity {
     @Column(name = "shape_factor")
     private Double shapeFactor;
 
-    public static List<LineSegmentEntity> toLineSegmentEntities(List<LineSegmentInfos> lineSegmentInfos) {
+    public static List<LineSegmentEntity> toLineSegmentEntities(List<LineSegmentModel> lineSegmentInfos) {
         List<LineSegmentEntity> lineSegments = new ArrayList<>();
         if (CollectionUtils.isEmpty(lineSegmentInfos)) {
             return lineSegments;
         }
-        for (LineSegmentInfos segment : lineSegmentInfos) {
+        for (LineSegmentModel segment : lineSegmentInfos) {
             lineSegments.add(new LineSegmentEntity(null,
                                                 segment.segmentTypeId(),
                                                 segment.segmentDistanceValue(),
@@ -63,14 +63,14 @@ public class LineSegmentEntity {
         return lineSegments;
     }
 
-    public static List<LineSegmentInfos> fromLineSegmentsEntity(List<LineSegmentEntity> lineSegmentEntities) {
-        List<LineSegmentInfos> lineSegments = new ArrayList<>();
+    public static List<LineSegmentModel> fromLineSegmentsEntity(List<LineSegmentEntity> lineSegmentEntities) {
+        List<LineSegmentModel> lineSegments = new ArrayList<>();
         if (CollectionUtils.isEmpty(lineSegmentEntities)) {
             return null;
         }
         for (LineSegmentEntity entity : lineSegmentEntities) {
             lineSegments.add(
-                new LineSegmentInfos(entity.segmentTypeId,
+                new LineSegmentModel(entity.segmentTypeId,
                     entity.segmentDistanceValue,
                     entity.area, entity.temperature,
                     entity.shapeFactor));

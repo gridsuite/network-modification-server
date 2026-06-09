@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.ReactiveVariationMode;
 import org.gridsuite.modification.VariationMode;
-import org.gridsuite.modification.model.FilterInfos;
-import org.gridsuite.modification.model.ScalingVariationInfos;
+import org.gridsuite.modification.model.FilterModel;
+import org.gridsuite.modification.model.ScalingVariationModel;
 
 import java.util.List;
 import java.util.UUID;
@@ -49,12 +49,12 @@ public class ScalingVariationEntity {
     @Column(name = "reactiveVariationMode")
     private ReactiveVariationMode reactiveVariationMode;
 
-    public ScalingVariationEntity(ScalingVariationInfos variationInfos) {
+    public ScalingVariationEntity(ScalingVariationModel variationInfos) {
         this.id = null;
         assignAttributes(variationInfos);
     }
 
-    private void assignAttributes(ScalingVariationInfos variationInfos) {
+    private void assignAttributes(ScalingVariationModel variationInfos) {
         if (filters == null) {
             this.filters = variationInfos.getFilters().stream()
                 .map(VariationFilterEntity::new)
@@ -70,14 +70,14 @@ public class ScalingVariationEntity {
         this.variationValue = variationInfos.getVariationValue();
     }
 
-    public ScalingVariationInfos toScalingVariationInfos() {
-        return ScalingVariationInfos.builder()
+    public ScalingVariationModel toScalingVariationInfos() {
+        return ScalingVariationModel.builder()
                 .id(getId())
                 .variationMode(getVariationMode())
                 .variationValue(getVariationValue())
                 .reactiveVariationMode(getReactiveVariationMode())
                 .filters(this.getFilters().stream()
-                        .map(filter -> new FilterInfos(filter.getFilterId(), filter.getName()))
+                        .map(filter -> new FilterModel(filter.getFilterId(), filter.getName()))
                         .collect(Collectors.toList()))
                 .build();
     }

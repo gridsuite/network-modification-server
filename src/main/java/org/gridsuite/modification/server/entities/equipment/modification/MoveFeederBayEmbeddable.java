@@ -13,7 +13,7 @@ import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.model.MoveFeederBayInfos;
+import org.gridsuite.modification.model.MoveFeederBayModel;
 
 /**
  * @author Etienne Lesot <etienne.lesot at rte-france.com>
@@ -41,8 +41,8 @@ public class MoveFeederBayEmbeddable {
     @Schema(description = "connection_direction")
     private ConnectablePosition.Direction connectionDirection;
 
-    MoveFeederBayInfos toConnectablePositionModificationInfos() {
-        return MoveFeederBayInfos.builder()
+    MoveFeederBayModel toConnectablePositionModificationInfos() {
+        return MoveFeederBayModel.builder()
             .equipmentId(equipmentId)
             .busbarSectionId(busbarSectionId)
             .connectionSide(connectionSide)
@@ -52,7 +52,7 @@ public class MoveFeederBayEmbeddable {
             .build();
     }
 
-    static MoveFeederBayEmbeddable toConnectablePositionModificationEmbeddable(MoveFeederBayInfos moveFeederBayInfos) {
+    static MoveFeederBayEmbeddable toConnectablePositionModificationEmbeddable(MoveFeederBayModel moveFeederBayInfos) {
         return new MoveFeederBayEmbeddable(moveFeederBayInfos.getEquipmentId(),
             moveFeederBayInfos.getBusbarSectionId(),
             moveFeederBayInfos.getConnectionSide(),

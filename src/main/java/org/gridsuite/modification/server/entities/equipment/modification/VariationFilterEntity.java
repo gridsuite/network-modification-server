@@ -17,7 +17,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.model.FilterInfos;
+import org.gridsuite.modification.model.FilterModel;
 
 import java.util.UUID;
 
@@ -45,7 +45,7 @@ public class VariationFilterEntity {
     @Column(name = "name")
     private String name;
 
-    public VariationFilterEntity(@NotNull FilterInfos filterInfos) {
+    public VariationFilterEntity(@NotNull FilterModel filterInfos) {
         this.filterId = filterInfos.getId();
         this.id = null;
         this.name = filterInfos.getName();

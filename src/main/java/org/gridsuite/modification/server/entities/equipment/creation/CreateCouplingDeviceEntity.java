@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.CreateCouplingDeviceInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.model.CouplingDeviceInfos;
+import org.gridsuite.modification.model.CouplingDeviceModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 /**
@@ -66,7 +66,7 @@ public class CreateCouplingDeviceEntity extends ModificationEntity {
             .activated(getActivated())
             .description(getDescription())
             .voltageLevelId(getVoltageLevelId())
-            .couplingDeviceInfos(CouplingDeviceInfos.builder()
+            .couplingDeviceInfos(CouplingDeviceModel.builder()
                 .busbarSectionId1(getBusOrBbsId1())
                 .busbarSectionId2(getBusOrBbsId2())
                 .build());

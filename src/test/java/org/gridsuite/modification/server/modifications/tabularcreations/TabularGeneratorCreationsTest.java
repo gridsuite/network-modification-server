@@ -17,8 +17,8 @@ import org.gridsuite.modification.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.SubstationCreationInfos;
 import org.gridsuite.modification.dto.tabular.*;
-import org.gridsuite.modification.model.FreePropertyInfos;
-import org.gridsuite.modification.model.tabular.TabularPropertyInfos;
+import org.gridsuite.modification.model.FreePropertyModel;
+import org.gridsuite.modification.model.tabular.TabularPropertyModel;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
@@ -109,7 +109,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         return TabularCreationInfos.builder()
             .modificationType(ModificationType.GENERATOR_CREATION)
             .modifications(creations)
-            .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
+            .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(true).build()))
             .stashed(false)
             .build();
     }
@@ -143,7 +143,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         return TabularCreationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_CREATION)
                 .modifications(creations)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }
@@ -329,7 +329,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                         .equipmentId("SubstationId")
                         .equipmentName("SubstationName")
                         .country(Country.AF)
-                        .properties(List.of(FreePropertyInfos.builder().name("DEMO").value("DemoC").build()))
+                        .properties(List.of(FreePropertyModel.builder().name("DEMO").value("DemoC").build()))
                         .build()
         );
         ModificationInfos creationInfos = TabularCreationInfos.builder()

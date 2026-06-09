@@ -23,14 +23,14 @@ import okhttp3.HttpUrl;
 import org.gridsuite.modification.TapChangerType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.model.AttributeModification;
-import org.gridsuite.modification.model.CouplingDeviceInfos;
-import org.gridsuite.modification.model.CurrentLimitsInfos;
-import org.gridsuite.modification.model.FreePropertyInfos;
+import org.gridsuite.modification.model.CouplingDeviceModel;
+import org.gridsuite.modification.model.CurrentLimitsModel;
+import org.gridsuite.modification.model.FreePropertyModel;
 import org.gridsuite.modification.model.OperationType;
-import org.gridsuite.modification.model.OperationalLimitsGroupInfos;
-import org.gridsuite.modification.model.PhaseTapChangerCreationInfos;
-import org.gridsuite.modification.model.RatioTapChangerCreationInfos;
-import org.gridsuite.modification.model.TapChangerStepCreationInfos;
+import org.gridsuite.modification.model.OperationalLimitsGroupModel;
+import org.gridsuite.modification.model.PhaseTapChangerCreationModel;
+import org.gridsuite.modification.model.RatioTapChangerCreationModel;
+import org.gridsuite.modification.model.TapChangerStepCreationModel;
 import org.gridsuite.modification.model.VoltageRegulationType;
 import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.dto.*;
@@ -76,7 +76,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
-import static org.gridsuite.modification.model.OperationalLimitsGroupInfos.Applicability.*;
+import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.junit.jupiter.api.Assertions.*;
@@ -274,7 +274,7 @@ class BuildTest {
                 .busbarCount(2)
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
+                .couplingDevices(Arrays.asList(CouplingDeviceModel.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
                 .build()));
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
@@ -371,7 +371,7 @@ class BuildTest {
                 .busbarCount(2)
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
+                .couplingDevices(Arrays.asList(CouplingDeviceModel.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
                 .build()));
         // add new Load
         // Need an entity with a lazyloaded subentity/collection to test that all required
@@ -527,7 +527,7 @@ class BuildTest {
         entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("cn2").connectionDirection(ConnectablePosition.Direction.UNDEFINED).terminalConnected(true).build()));
         entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad3").equipmentName("newLoad3").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName(null).connectionDirection(ConnectablePosition.Direction.UNDEFINED).terminalConnected(true).build()));
 
-        List<FreePropertyInfos> properties = List.of(FreePropertyInfos.builder().name("DEMO").value("Demo1").build());
+        List<FreePropertyModel> properties = List.of(FreePropertyModel.builder().name("DEMO").value("Demo1").build());
         entities1.add(ModificationEntity.fromDTO(SubstationCreationInfos.builder()
                 .equipmentId("newSubstation")
                 .equipmentName("newSubstation")
@@ -581,7 +581,7 @@ class BuildTest {
                 .busbarCount(2)
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
+                .couplingDevices(Arrays.asList(CouplingDeviceModel.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
                 .build()));
         entities2.add(ModificationEntity.fromDTO(ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt9")
@@ -613,11 +613,11 @@ class BuildTest {
                 .connected2(true)
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(
-                            CurrentLimitsInfos.builder().permanentLimit(3.).build()).applicability(SIDE1)
+                        OperationalLimitsGroupModel.builder().id("olg1").currentLimits(
+                            CurrentLimitsModel.builder().permanentLimit(3.).build()).applicability(SIDE1)
                         .build(),
-                        OperationalLimitsGroupInfos.builder().id("olg2").currentLimits(
-                                CurrentLimitsInfos.builder().permanentLimit(2.).build()).applicability(SIDE2)
+                        OperationalLimitsGroupModel.builder().id("olg2").currentLimits(
+                                CurrentLimitsModel.builder().permanentLimit(2.).build()).applicability(SIDE2)
                             .build()
                     )
                 )
@@ -625,7 +625,7 @@ class BuildTest {
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cn202")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .phaseTapChanger(PhaseTapChangerCreationInfos.builder()
+                .phaseTapChanger(PhaseTapChangerCreationModel.builder()
                         .lowTapPosition(1)
                         .tapPosition(2)
                         .terminalRefConnectableId("v1load")
@@ -633,7 +633,7 @@ class BuildTest {
                         .regulating(false)
                         .terminalRefConnectableType("LOAD")
                         .regulationMode(PhaseTapChanger.RegulationMode.CURRENT_LIMITER)
-                        .steps(List.of(TapChangerStepCreationInfos.builder()
+                        .steps(List.of(TapChangerStepCreationModel.builder()
                                         .index(1)
                                         .rho(1)
                                         .r(0)
@@ -642,7 +642,7 @@ class BuildTest {
                                         .b(0)
                                         .alpha(0)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(2)
                                         .rho(1)
                                         .r(0)
@@ -651,7 +651,7 @@ class BuildTest {
                                         .b(0)
                                         .alpha(0.)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(3)
                                         .rho(1)
                                         .r(0)
@@ -661,7 +661,7 @@ class BuildTest {
                                         .alpha(0.)
                                         .build()
                         )).build())
-                .ratioTapChanger(RatioTapChangerCreationInfos.builder()
+                .ratioTapChanger(RatioTapChangerCreationModel.builder()
                         .lowTapPosition(5)
                         .tapPosition(6)
                         .regulating(true)
@@ -671,7 +671,7 @@ class BuildTest {
                         .terminalRefConnectableType("LOAD")
                         .loadTapChangingCapabilities(true)
                         .targetV(5.)
-                        .steps(List.of(TapChangerStepCreationInfos.builder()
+                        .steps(List.of(TapChangerStepCreationModel.builder()
                                         .index(5)
                                         .rho(1)
                                         .r(0)
@@ -679,7 +679,7 @@ class BuildTest {
                                         .g(0)
                                         .b(0)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(6)
                                         .rho(1)
                                         .r(0)
@@ -687,7 +687,7 @@ class BuildTest {
                                         .g(0)
                                         .b(0)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(7)
                                         .rho(1)
                                         .r(0)
@@ -695,7 +695,7 @@ class BuildTest {
                                         .g(0)
                                         .b(0)
                                         .build(),
-                                TapChangerStepCreationInfos.builder()
+                                TapChangerStepCreationModel.builder()
                                         .index(8)
                                         .rho(1)
                                         .r(0)

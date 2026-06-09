@@ -18,7 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.model.tabular.TabularPropertyInfos;
+import org.gridsuite.modification.model.tabular.TabularPropertyModel;
 
 import java.util.UUID;
 
@@ -46,15 +46,15 @@ public class TabularPropertyEntity {
     @Column(name = "selected")
     private boolean selected = false;
 
-    public TabularPropertyInfos toInfos() {
-        return TabularPropertyInfos.builder()
+    public TabularPropertyModel toInfos() {
+        return TabularPropertyModel.builder()
             .name(name)
             .predefined(predefined)
             .selected(selected)
             .build();
     }
 
-    public TabularPropertyEntity(TabularPropertyInfos propertyInfos) {
+    public TabularPropertyEntity(TabularPropertyModel propertyInfos) {
         this(null, propertyInfos.getName(), propertyInfos.isPredefined(), propertyInfos.isSelected());
     }
 }

@@ -14,8 +14,8 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.LoadCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.tabular.*;
-import org.gridsuite.modification.model.FreePropertyInfos;
-import org.gridsuite.modification.model.tabular.TabularPropertyInfos;
+import org.gridsuite.modification.model.FreePropertyModel;
+import org.gridsuite.modification.model.tabular.TabularPropertyModel;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -53,13 +53,13 @@ class TabularLoadCreationsTest extends AbstractNetworkModificationTest {
                         .q0(60.0)
                         .connectionDirection(ConnectablePosition.Direction.TOP)
                         .connectionName("top")
-                        .properties(List.of(FreePropertyInfos.builder().name("PROPERTY_NAME").value("PROPERTY_VALUE").build()))
+                        .properties(List.of(FreePropertyModel.builder().name("PROPERTY_NAME").value("PROPERTY_VALUE").build()))
                         .build()
         );
         return TabularCreationInfos.builder()
             .modificationType(ModificationType.LOAD_CREATION)
             .modifications(creations)
-            .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
+            .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(true).build()))
             .stashed(false)
             .build();
     }
@@ -78,7 +78,7 @@ class TabularLoadCreationsTest extends AbstractNetworkModificationTest {
         return TabularCreationInfos.builder()
                 .modificationType(ModificationType.LOAD_CREATION)
                 .modifications(creations)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }

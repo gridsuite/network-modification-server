@@ -22,9 +22,9 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.model.GeneratorsFilterInfos;
-import org.gridsuite.modification.model.GeneratorsFrequencyReserveInfos;
-import org.gridsuite.modification.model.SubstationsGeneratorsOrderingInfos;
+import org.gridsuite.modification.model.GeneratorsFilterModel;
+import org.gridsuite.modification.model.GeneratorsFrequencyReserveModel;
+import org.gridsuite.modification.model.SubstationsGeneratorsOrderingModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import java.util.ArrayList;
@@ -101,13 +101,13 @@ public class GenerationDispatchEntity extends ModificationEntity {
         }
     }
 
-    public static List<GeneratorsFilterEmbeddable> toEmbeddableGeneratorsFilters(List<GeneratorsFilterInfos> generators) {
+    public static List<GeneratorsFilterEmbeddable> toEmbeddableGeneratorsFilters(List<GeneratorsFilterModel> generators) {
         return generators == null ? null : generators.stream()
             .map(generator -> new GeneratorsFilterEmbeddable(generator.getId(), generator.getName()))
             .collect(Collectors.toList());
     }
 
-    public static List<GeneratorsFrequencyReserveEntity> toEmbeddableGeneratorsFrequencyReserve(List<GeneratorsFrequencyReserveInfos> generators) {
+    public static List<GeneratorsFrequencyReserveEntity> toEmbeddableGeneratorsFrequencyReserve(List<GeneratorsFrequencyReserveModel> generators) {
         List<GeneratorsFrequencyReserveEntity> generatorsFrequencyReserveEntities = null;
         if (generators != null) {
             generatorsFrequencyReserveEntities = generators.stream().map(generator -> {
@@ -119,28 +119,28 @@ public class GenerationDispatchEntity extends ModificationEntity {
         return generatorsFrequencyReserveEntities;
     }
 
-    private List<GeneratorsFilterInfos> toGeneratorsFilters(List<GeneratorsFilterEmbeddable> generatorsFilters) {
+    private List<GeneratorsFilterModel> toGeneratorsFilters(List<GeneratorsFilterEmbeddable> generatorsFilters) {
         return generatorsFilters != null ? generatorsFilters
                 .stream()
-                .map(generator -> new GeneratorsFilterInfos(generator.getId(), generator.getName()))
+                .map(generator -> new GeneratorsFilterModel(generator.getId(), generator.getName()))
                 .collect(Collectors.toList()) : null;
     }
 
-    private List<GeneratorsFrequencyReserveInfos> toGeneratorsFrequencyReserve(List<GeneratorsFrequencyReserveEntity> generatorsFrequencyReserve) {
-        List<GeneratorsFrequencyReserveInfos> generatorsFrequencyReserveInfos = null;
+    private List<GeneratorsFrequencyReserveModel> toGeneratorsFrequencyReserve(List<GeneratorsFrequencyReserveEntity> generatorsFrequencyReserve) {
+        List<GeneratorsFrequencyReserveModel> generatorsFrequencyReserveInfos = null;
         if (generatorsFrequencyReserve != null) {
             generatorsFrequencyReserveInfos = generatorsFrequencyReserve.stream()
                 .filter(Objects::nonNull)
                 .map(generator -> {
-                    List<GeneratorsFilterInfos> generatorsFilterInfos = generator.getGeneratorsFilters().stream().map(filter ->
-                        new GeneratorsFilterInfos(filter.getId(), filter.getName())).collect(Collectors.toList());
-                    return new GeneratorsFrequencyReserveInfos(generatorsFilterInfos, generator.getFrequencyReserve());
+                    List<GeneratorsFilterModel> generatorsFilterInfos = generator.getGeneratorsFilters().stream().map(filter ->
+                        new GeneratorsFilterModel(filter.getId(), filter.getName())).collect(Collectors.toList());
+                    return new GeneratorsFrequencyReserveModel(generatorsFilterInfos, generator.getFrequencyReserve());
                 }).collect(Collectors.toList());
         }
         return generatorsFrequencyReserveInfos;
     }
 
-    public static List<GeneratorsOrderingEntity> toSubstationsGeneratorsOrdering(List<SubstationsGeneratorsOrderingInfos> substations) {
+    public static List<GeneratorsOrderingEntity> toSubstationsGeneratorsOrdering(List<SubstationsGeneratorsOrderingModel> substations) {
         List<GeneratorsOrderingEntity> substationsGeneratorsOrderingEntities = null;
         if (substations != null) {
             substationsGeneratorsOrderingEntities = substations.stream().map(substation ->
@@ -150,11 +150,11 @@ public class GenerationDispatchEntity extends ModificationEntity {
         return substationsGeneratorsOrderingEntities;
     }
 
-    private List<SubstationsGeneratorsOrderingInfos> toSubstationsGeneratorsOrderingInfos(List<GeneratorsOrderingEntity> generatorsOrdering) {
-        List<SubstationsGeneratorsOrderingInfos> substationsGeneratorsOrderingInfos = null;
+    private List<SubstationsGeneratorsOrderingModel> toSubstationsGeneratorsOrderingInfos(List<GeneratorsOrderingEntity> generatorsOrdering) {
+        List<SubstationsGeneratorsOrderingModel> substationsGeneratorsOrderingInfos = null;
         if (generatorsOrdering != null) {
             substationsGeneratorsOrderingInfos = generatorsOrdering.stream()
-                .map(generator -> new SubstationsGeneratorsOrderingInfos(generator.getSubstationIds())).collect(Collectors.toList());
+                .map(generator -> new SubstationsGeneratorsOrderingModel(generator.getSubstationIds())).collect(Collectors.toList());
         }
         return substationsGeneratorsOrderingInfos;
     }

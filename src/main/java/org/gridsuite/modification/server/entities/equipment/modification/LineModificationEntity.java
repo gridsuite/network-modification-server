@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.LineModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.AttributeModification;
-import org.gridsuite.modification.model.LineSegmentInfos;
+import org.gridsuite.modification.model.LineSegmentModel;
 import org.gridsuite.modification.server.entities.equipment.creation.LineSegmentEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.springframework.util.CollectionUtils;
@@ -93,7 +93,7 @@ public class LineModificationEntity extends BranchModificationEntity {
         applySegmentsLimits = lineModificationInfos.isApplySegmentsLimits();
     }
 
-    private List<LineSegmentEntity> assignLineSegments(List<LineSegmentInfos> lineSegmentInfos) {
+    private List<LineSegmentEntity> assignLineSegments(List<LineSegmentModel> lineSegmentInfos) {
         List<LineSegmentEntity> updatedLineSegments = lineSegments;
 
         if (updatedLineSegments == null) {

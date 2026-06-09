@@ -14,7 +14,7 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
 import org.gridsuite.modification.model.AttributeModification;
 import org.gridsuite.modification.model.OperationType;
-import org.gridsuite.modification.model.tabular.TabularPropertyInfos;
+import org.gridsuite.modification.model.tabular.TabularPropertyModel;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -47,7 +47,7 @@ class TabularSubstationModificationsTest extends AbstractNetworkModificationTest
         return TabularModificationInfos.builder()
                 .modificationType(MOFIFICATION_TYPE)
                 .modifications(modifications)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();
     }
@@ -61,7 +61,7 @@ class TabularSubstationModificationsTest extends AbstractNetworkModificationTest
         return TabularModificationInfos.builder()
                 .modificationType(MOFIFICATION_TYPE)
                 .modifications(modifications)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }

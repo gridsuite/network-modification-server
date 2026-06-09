@@ -7,7 +7,7 @@
 package org.gridsuite.modification.server.entities.equipment.deletion;
 
 import jakarta.persistence.*;
-import org.gridsuite.modification.model.AbstractEquipmentDeletionInfos;
+import org.gridsuite.modification.model.AbstractEquipmentDeletionModel;
 
 import java.util.UUID;
 
@@ -23,5 +23,5 @@ public abstract class AbstractEquipmentDeletionEntity {
     @Column(name = "id")
     private UUID id;
 
-    public abstract AbstractEquipmentDeletionInfos toDto();
+    public abstract AbstractEquipmentDeletionModel toDto();
 }

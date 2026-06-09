@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.model.FreePropertyInfos;
+import org.gridsuite.modification.model.FreePropertyModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import java.util.UUID;
@@ -53,8 +53,8 @@ public class FreePropertyEntity {
     @JoinColumn(name = "equipment_modification_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "free_property_modification_id_fk_constraint"))
     private ModificationEntity modification;
 
-    public FreePropertyInfos toInfos() {
-        return FreePropertyInfos.builder()
+    public FreePropertyModel toInfos() {
+        return FreePropertyModel.builder()
             .name(name)
             .value(value)
             .deletionMark(deletionMark)
@@ -63,7 +63,7 @@ public class FreePropertyEntity {
             .build();
     }
 
-    public FreePropertyEntity(FreePropertyInfos freePropertyInfos) {
+    public FreePropertyEntity(FreePropertyModel freePropertyInfos) {
         this(null, freePropertyInfos.getName(), freePropertyInfos.getValue(), freePropertyInfos.isDeletionMark(),
                 freePropertyInfos.isAdded(), freePropertyInfos.getPreviousValue(), null);
     }

@@ -12,7 +12,7 @@ import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.model.ReactiveCapabilityCurvePointsInfos;
+import org.gridsuite.modification.model.ReactiveCapabilityCurvePointsModel;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
@@ -37,7 +37,7 @@ public class ReactiveCapabilityCurveCreationEmbeddable {
     private Double p;
 
     public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
-            List<ReactiveCapabilityCurvePointsInfos> points) {
+            List<ReactiveCapabilityCurvePointsModel> points) {
         return Objects.isNull(points) || CollectionUtils.isEmpty(points) ? null
                 : points.stream()
                 .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getMinQ(),

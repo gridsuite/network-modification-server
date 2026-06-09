@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.BranchCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.model.OperationalLimitsGroupInfos;
+import org.gridsuite.modification.model.OperationalLimitsGroupModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -117,7 +117,7 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
      * in order to prevent Hibernate from losing the reference during cascade cleaning
      */
     private List<OperationalLimitsGroupEntity> assignOperationalLimitsGroups(
-            List<OperationalLimitsGroupInfos> operationalLimitsGroupInfos,
+            List<OperationalLimitsGroupModel> operationalLimitsGroupInfos,
             List<OperationalLimitsGroupEntity> operationalLimitsGroups
     ) {
         List<OperationalLimitsGroupEntity> updatedLimitsGroups = operationalLimitsGroups;

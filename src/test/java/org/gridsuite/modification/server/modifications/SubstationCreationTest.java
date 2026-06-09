@@ -12,7 +12,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Substation;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.SubstationCreationInfos;
-import org.gridsuite.modification.model.FreePropertyInfos;
+import org.gridsuite.modification.model.FreePropertyModel;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -43,7 +43,7 @@ class SubstationCreationTest extends AbstractNetworkModificationTest {
                 .equipmentId("SubstationId")
                 .equipmentName("SubstationName")
                 .country(Country.AF)
-                .properties(List.of(FreePropertyInfos.builder().name("DEMO").value("DemoC").build()))
+                .properties(List.of(FreePropertyModel.builder().name("DEMO").value("DemoC").build()))
                 .build();
     }
 
@@ -54,7 +54,7 @@ class SubstationCreationTest extends AbstractNetworkModificationTest {
                 .equipmentId("SubstationIdEdited")
                 .equipmentName("SubstationNameEdited")
                 .country(Country.CI)
-                .properties(List.of(FreePropertyInfos.builder().name("DEMO").value("DemoU").build()))
+                .properties(List.of(FreePropertyModel.builder().name("DEMO").value("DemoU").build()))
                 .build();
     }
 

@@ -10,7 +10,7 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAt
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.ByFilterDeletionInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.model.FilterInfos;
+import org.gridsuite.modification.model.FilterModel;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -63,7 +63,7 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
 
     @Test
     void testCreateWithErrors() throws Exception {
-        var filter1 = FilterInfos.builder()
+        var filter1 = FilterModel.builder()
                 .id(FILTER_ID_1)
                 .name("filter1")
                 .build();
@@ -109,7 +109,7 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
 
     @Test
     void testCreateAllFiltersWrong() throws Exception {
-        var filter1 = FilterInfos.builder()
+        var filter1 = FilterModel.builder()
                 .id(FILTER_ID_1)
                 .name("filter1")
                 .build();
@@ -148,17 +148,17 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
 
     @Override
     protected ModificationInfos buildModification() {
-        var filter1 = FilterInfos.builder()
+        var filter1 = FilterModel.builder()
                 .id(FILTER_ID_1)
                 .name("filter1")
                 .build();
 
-        var filter2 = FilterInfos.builder()
+        var filter2 = FilterModel.builder()
                 .id(FILTER_ID_2)
                 .name("filter2")
                 .build();
 
-        var filter3 = FilterInfos.builder()
+        var filter3 = FilterModel.builder()
                 .id(FILTER_ID_3)
                 .name("filter3")
                 .build();
@@ -172,7 +172,7 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        var filter2 = FilterInfos.builder()
+        var filter2 = FilterModel.builder()
                 .id(FILTER_ID_2)
                 .name("filter 2 modified")
                 .build();

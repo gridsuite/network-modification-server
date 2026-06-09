@@ -13,10 +13,10 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.TapChangerType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.model.AttributeModification;
-import org.gridsuite.modification.model.PhaseTapChangerModificationInfos;
-import org.gridsuite.modification.model.RatioTapChangerModificationInfos;
+import org.gridsuite.modification.model.PhaseTapChangerModificationModel;
+import org.gridsuite.modification.model.RatioTapChangerModificationModel;
 import org.gridsuite.modification.model.RegulationSide;
-import org.gridsuite.modification.model.TapChangerStepCreationInfos;
+import org.gridsuite.modification.model.TapChangerStepCreationModel;
 import org.gridsuite.modification.model.VoltageRegulationType;
 import org.gridsuite.modification.server.entities.equipment.creation.TapChangerStepCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
@@ -332,7 +332,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         Optional.ofNullable(twoWindingsTransformerModificationInfos.getPhaseTapChanger()).ifPresent(this::assignPhaseTapChanger);
     }
 
-    private void assignRatioTapChanger(RatioTapChangerModificationInfos ratioTapChanger) {
+    private void assignRatioTapChanger(RatioTapChangerModificationModel ratioTapChanger) {
         this.ratioTapChangerEnabled = ratioTapChanger.getEnabled() != null ? new BooleanModificationEmbedded(ratioTapChanger.getEnabled()) : null;
         this.ratioTapChangerRegulationType = ratioTapChanger.getRegulationType() != null ? new EnumModificationEmbedded<>(ratioTapChanger.getRegulationType()) : null;
         this.ratioTapChangerRegulationSide = ratioTapChanger.getRegulationSide() != null ? new EnumModificationEmbedded<>(ratioTapChanger.getRegulationSide()) : null;
@@ -350,7 +350,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         }
     }
 
-    private void assignPhaseTapChanger(PhaseTapChangerModificationInfos phaseTapChanger) {
+    private void assignPhaseTapChanger(PhaseTapChangerModificationModel phaseTapChanger) {
         this.phaseTapChangerEnabled = phaseTapChanger.getEnabled() != null ? new BooleanModificationEmbedded(phaseTapChanger.getEnabled()) : null;
         this.phaseTapChangerRegulationType = phaseTapChanger.getRegulationType() != null ? new EnumModificationEmbedded<>(phaseTapChanger.getRegulationType()) : null;
         this.phaseTapChangerRegulationSide = phaseTapChanger.getRegulationSide() != null ? new EnumModificationEmbedded<>(phaseTapChanger.getRegulationSide()) : null;
@@ -437,11 +437,11 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
             builder.operationalLimitsGroups(OperationalLimitsGroupModificationEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));
         }
 
-        List<TapChangerStepCreationInfos> ratioTapChangerStepCreationInfos = null;
+        List<TapChangerStepCreationModel> ratioTapChangerStepCreationInfos = null;
         if (ratioTapChangerStepsEmbeddable != null && !ratioTapChangerStepsEmbeddable.isEmpty()) {
             ratioTapChangerStepCreationInfos = ratioTapChangerStepsEmbeddable.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
         }
-        builder.ratioTapChanger(RatioTapChangerModificationInfos.builder()
+        builder.ratioTapChanger(RatioTapChangerModificationModel.builder()
                 .enabled(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerEnabled()))
                 .regulationType(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerRegulationType()))
                 .regulationSide(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerRegulationSide()))
@@ -457,11 +457,11 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 .steps(ratioTapChangerStepCreationInfos)
                 .build());
 
-        List<TapChangerStepCreationInfos> phaseTapChangerStepCreationInfos = null;
+        List<TapChangerStepCreationModel> phaseTapChangerStepCreationInfos = null;
         if (phaseTapChangerStepsEmbeddable != null && !phaseTapChangerStepsEmbeddable.isEmpty()) {
             phaseTapChangerStepCreationInfos = phaseTapChangerStepsEmbeddable.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).toList();
         }
-        builder.phaseTapChanger(PhaseTapChangerModificationInfos.builder()
+        builder.phaseTapChanger(PhaseTapChangerModificationModel.builder()
             .enabled(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerEnabled()))
             .regulationType(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulationType()))
             .regulationSide(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulationSide()))

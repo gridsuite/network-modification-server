@@ -11,7 +11,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.model.LccShuntCompensatorModificationInfos;
+import org.gridsuite.modification.model.LccShuntCompensatorModificationModel;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ public class ShuntCompensatorModificationEmbeddable extends AbstractShuntCompens
         this.deletionMark = deletionMark;
     }
 
-    public static List<ShuntCompensatorModificationEmbeddable> toEmbeddableShuntCompensatorModification(List<LccShuntCompensatorModificationInfos> infos) {
+    public static List<ShuntCompensatorModificationEmbeddable> toEmbeddableShuntCompensatorModification(List<LccShuntCompensatorModificationModel> infos) {
 
         return infos == null ? null :
             infos.stream().map(modifInfo -> new ShuntCompensatorModificationEmbeddable(modifInfo.getId(),
@@ -35,11 +35,11 @@ public class ShuntCompensatorModificationEmbeddable extends AbstractShuntCompens
             .toList();
     }
 
-    public static List<LccShuntCompensatorModificationInfos> fromEmbeddableShuntCompensatorModification(List<ShuntCompensatorModificationEmbeddable> compensatorModificationEmbeddables) {
+    public static List<LccShuntCompensatorModificationModel> fromEmbeddableShuntCompensatorModification(List<ShuntCompensatorModificationEmbeddable> compensatorModificationEmbeddables) {
         return compensatorModificationEmbeddables == null ? null :
             compensatorModificationEmbeddables.stream()
                 .map(compensator ->
-                    new LccShuntCompensatorModificationInfos(compensator.getId(),
+                    new LccShuntCompensatorModificationModel(compensator.getId(),
                         compensator.getName(),
                         compensator.getMaxQAtNominalV(),
                         compensator.getConnectedToHvdc(),

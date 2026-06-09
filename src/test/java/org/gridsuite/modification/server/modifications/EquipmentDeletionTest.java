@@ -16,7 +16,7 @@ import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.model.HvdcLccDeletionInfos;
+import org.gridsuite.modification.model.HvdcLccDeletionModel;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.equipment.deletion.HvdcLccDeletionEntity;
@@ -125,7 +125,7 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         HvdcLccDeletionEntity hvdcLccDeletionEntity = side == 1 ?
                 new HvdcLccDeletionEntity(shuntData, null) :
                 new HvdcLccDeletionEntity(null, shuntData);
-        HvdcLccDeletionInfos hvdcLccDeletionInfos = hvdcLccDeletionEntity.toDto();
+        HvdcLccDeletionModel hvdcLccDeletionInfos = hvdcLccDeletionEntity.toDto();
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .stashed(false)
                 .equipmentType(IdentifiableType.HVDC_LINE)

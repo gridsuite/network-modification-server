@@ -14,7 +14,7 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.model.byfilter.equipmentfield.BatteryField;
-import org.gridsuite.modification.model.byfilter.formula.FormulaInfos;
+import org.gridsuite.modification.model.byfilter.formula.FormulaModel;
 import org.gridsuite.modification.model.byfilter.formula.Operator;
 import org.gridsuite.modification.model.byfilter.formula.ReferenceFieldOrValue;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ class BatteryByFormulaModificationTest extends AbstractByFormulaModificationTest
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(BATTERY_ID_1, 1.0);
         IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 
-        FormulaInfos formulaInfos = FormulaInfos.builder()
+        FormulaModel formulaInfos = FormulaModel.builder()
                 .filters(List.of(filterWithOneWrongId))
                 .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
@@ -97,35 +97,35 @@ class BatteryByFormulaModificationTest extends AbstractByFormulaModificationTest
     }
 
     @Override
-    protected List<FormulaInfos> getFormulaInfos() {
+    protected List<FormulaModel> getFormulaInfos() {
         ReferenceFieldOrValue maxActivePowerRef = ReferenceFieldOrValue.builder().equipmentField(BatteryField.MAXIMUM_ACTIVE_POWER.name()).build();
         ReferenceFieldOrValue minActivePowerRef = ReferenceFieldOrValue.builder().equipmentField(BatteryField.MINIMUM_ACTIVE_POWER.name()).build();
 
-        FormulaInfos formulaInfos1 = getFormulaInfo(BatteryField.MAXIMUM_ACTIVE_POWER.name(),
+        FormulaModel formulaInfos1 = getFormulaInfo(BatteryField.MAXIMUM_ACTIVE_POWER.name(),
                 List.of(filter1, filter2),
                 Operator.ADDITION,
                 maxActivePowerRef,
                 ReferenceFieldOrValue.builder().value(50.).build());
 
-        FormulaInfos formulaInfos2 = getFormulaInfo(BatteryField.MINIMUM_ACTIVE_POWER.name(),
+        FormulaModel formulaInfos2 = getFormulaInfo(BatteryField.MINIMUM_ACTIVE_POWER.name(),
                 List.of(filter3),
                 Operator.PERCENTAGE,
                 ReferenceFieldOrValue.builder().value(30.).build(),
                 minActivePowerRef);
 
-        FormulaInfos formulaInfos3 = getFormulaInfo(BatteryField.ACTIVE_POWER_SET_POINT.name(),
+        FormulaModel formulaInfos3 = getFormulaInfo(BatteryField.ACTIVE_POWER_SET_POINT.name(),
                 List.of(filter5),
                 Operator.SUBTRACTION,
                 maxActivePowerRef,
                 minActivePowerRef);
 
-        FormulaInfos formulaInfos4 = getFormulaInfo(BatteryField.REACTIVE_POWER_SET_POINT.name(),
+        FormulaModel formulaInfos4 = getFormulaInfo(BatteryField.REACTIVE_POWER_SET_POINT.name(),
                 List.of(filter4),
                 Operator.DIVISION,
                 ReferenceFieldOrValue.builder().equipmentField(BatteryField.REACTIVE_POWER_SET_POINT.name()).build(),
                 ReferenceFieldOrValue.builder().value(2.).build());
 
-        FormulaInfos formulaInfos5 = getFormulaInfo(BatteryField.DROOP.name(),
+        FormulaModel formulaInfos5 = getFormulaInfo(BatteryField.DROOP.name(),
                 List.of(filter4),
                 Operator.MULTIPLICATION,
                 ReferenceFieldOrValue.builder().equipmentField(BatteryField.DROOP.name()).build(),
@@ -135,8 +135,8 @@ class BatteryByFormulaModificationTest extends AbstractByFormulaModificationTest
     }
 
     @Override
-    protected List<FormulaInfos> getUpdatedFormulaInfos() {
-        FormulaInfos formulaInfos1 = FormulaInfos.builder()
+    protected List<FormulaModel> getUpdatedFormulaInfos() {
+        FormulaModel formulaInfos1 = FormulaModel.builder()
                 .editedField(BatteryField.MAXIMUM_ACTIVE_POWER.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(200.).build())
                 .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(BatteryField.MAXIMUM_ACTIVE_POWER.name()).build())
@@ -144,7 +144,7 @@ class BatteryByFormulaModificationTest extends AbstractByFormulaModificationTest
                 .filters(List.of(filter1, filter2))
                 .build();
 
-        FormulaInfos formulaInfos2 = FormulaInfos.builder()
+        FormulaModel formulaInfos2 = FormulaModel.builder()
                 .editedField(BatteryField.MINIMUM_ACTIVE_POWER.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(35.).build())
                 .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(BatteryField.MINIMUM_ACTIVE_POWER.name()).build())
@@ -152,7 +152,7 @@ class BatteryByFormulaModificationTest extends AbstractByFormulaModificationTest
                 .filters(List.of(filter3))
                 .build();
 
-        FormulaInfos formulaInfos3 = FormulaInfos.builder()
+        FormulaModel formulaInfos3 = FormulaModel.builder()
                 .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().equipmentField(BatteryField.ACTIVE_POWER_SET_POINT.name()).build())
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(10.).build())

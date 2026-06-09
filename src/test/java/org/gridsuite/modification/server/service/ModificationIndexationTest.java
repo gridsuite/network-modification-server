@@ -18,7 +18,7 @@ import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.apache.commons.collections4.IterableUtils;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.model.AttributeModification;
-import org.gridsuite.modification.model.FreePropertyInfos;
+import org.gridsuite.modification.model.FreePropertyModel;
 import org.gridsuite.modification.model.OperationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
@@ -508,7 +508,7 @@ class ModificationIndexationTest {
     void testUpdateModificationProperties() {
         LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
                 .equipmentId("load1")
-                .properties(List.of(FreePropertyInfos.builder().name("loadPropertyName").value("loadPropertyValue").build()))
+                .properties(List.of(FreePropertyModel.builder().name("loadPropertyName").value("loadPropertyValue").build()))
                 .build();
 
         UUID groupUuid = UUID.randomUUID();
@@ -543,7 +543,7 @@ class ModificationIndexationTest {
 
             SubstationModificationInfos substationModificationInfos = SubstationModificationInfos.builder()
                     .equipmentId("s1")
-                    .properties(List.of(FreePropertyInfos.builder().name("s1PropertyName").value("s1PropertyValue").build()))
+                    .properties(List.of(FreePropertyModel.builder().name("s1PropertyName").value("s1PropertyValue").build()))
                     .build();
 
             UUID groupUuid = UUID.randomUUID();

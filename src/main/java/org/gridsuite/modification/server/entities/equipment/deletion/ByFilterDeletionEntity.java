@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.ByFilterDeletionInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.model.FilterInfos;
+import org.gridsuite.modification.model.FilterModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 
@@ -76,7 +76,7 @@ public class ByFilterDeletionEntity extends ModificationEntity {
                 .activated(getActivated())
                 .description(getDescription())
                 .filters(getFilters().stream()
-                        .map(filter -> new FilterInfos(filter.getFilterId(), filter.getName()))
+                        .map(filter -> new FilterModel(filter.getFilterId(), filter.getName()))
                         .collect(Collectors.toList()))
                 .equipmentType(getEquipmentType()).build();
     }

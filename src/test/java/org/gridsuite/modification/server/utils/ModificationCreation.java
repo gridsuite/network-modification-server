@@ -12,10 +12,10 @@ import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.model.AttributeModification;
-import org.gridsuite.modification.model.CouplingDeviceInfos;
-import org.gridsuite.modification.model.FreePropertyInfos;
+import org.gridsuite.modification.model.CouplingDeviceModel;
+import org.gridsuite.modification.model.FreePropertyModel;
 import org.gridsuite.modification.model.OperationType;
-import org.gridsuite.modification.model.ReactiveCapabilityCurvePointsInfos;
+import org.gridsuite.modification.model.ReactiveCapabilityCurvePointsModel;
 
 import java.util.Arrays;
 
@@ -44,7 +44,7 @@ public final class ModificationCreation {
             .busbarCount(2)
             .sectionCount(2)
             .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-            .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("1A").busbarSectionId2("1B").build())).build();
+            .couplingDevices(Arrays.asList(CouplingDeviceModel.builder().busbarSectionId1("1A").busbarSectionId2("1B").build())).build();
     }
 
     public static BatteryCreationInfos getCreationBattery(String vlId, String batteryId, String batteryName, String busOrBusbarSectionId) {
@@ -63,8 +63,8 @@ public final class ModificationCreation {
                 .droop(5f)
                 .participate(true)
                 .reactiveCapabilityCurve(true)
-                .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurvePointsInfos(2.0, 3.0, 3.1),
-                        new ReactiveCapabilityCurvePointsInfos(5.6, 9.8, 10.8)))
+                .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurvePointsModel(2.0, 3.0, 3.1),
+                        new ReactiveCapabilityCurvePointsModel(5.6, 9.8, 10.8)))
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
                 .build();
@@ -97,8 +97,8 @@ public final class ModificationCreation {
             .regulatingTerminalVlId(regulatingTerminalVlId)
             .qPercent(25.)
             .reactiveCapabilityCurve(true)
-            .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurvePointsInfos(2.0, 3.0, 3.1),
-                new ReactiveCapabilityCurvePointsInfos(5.6, 9.8, 10.8)))
+            .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurvePointsModel(2.0, 3.0, 3.1),
+                new ReactiveCapabilityCurvePointsModel(5.6, 9.8, 10.8)))
             .connectionName("top")
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
@@ -173,11 +173,11 @@ public final class ModificationCreation {
         return builder.build();
     }
 
-    public static FreePropertyInfos getFreeProperty() {
+    public static FreePropertyModel getFreeProperty() {
         return getFreeProperty(PROPERTY_NAME, PROPERTY_VALUE);
     }
 
-    public static FreePropertyInfos getFreeProperty(String name, String value) {
-        return FreePropertyInfos.builder().name(name).value(value).build();
+    public static FreePropertyModel getFreeProperty(String name, String value) {
+        return FreePropertyModel.builder().name(name).value(value).build();
     }
 }

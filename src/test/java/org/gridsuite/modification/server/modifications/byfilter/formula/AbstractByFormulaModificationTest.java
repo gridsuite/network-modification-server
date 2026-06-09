@@ -16,8 +16,8 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.ByFormulaModificationInfos;
-import org.gridsuite.modification.model.FilterInfos;
-import org.gridsuite.modification.model.byfilter.formula.FormulaInfos;
+import org.gridsuite.modification.model.FilterModel;
+import org.gridsuite.modification.model.byfilter.formula.FormulaModel;
 import org.gridsuite.modification.model.byfilter.formula.Operator;
 import org.gridsuite.modification.model.byfilter.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
@@ -59,13 +59,13 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
     protected static final UUID FILTER_ID_6 = UUID.randomUUID();
     protected static final UUID FILTER_WITH_ALL_WRONG_IDS = UUID.randomUUID();
     protected static final UUID FILTER_WITH_ONE_WRONG_ID = UUID.randomUUID();
-    protected final FilterInfos filter1 = new FilterInfos(FILTER_ID_1, "filter1");
-    protected final FilterInfos filter2 = new FilterInfos(FILTER_ID_2, "filter2");
-    protected final FilterInfos filter3 = new FilterInfos(FILTER_ID_3, "filter3");
-    protected final FilterInfos filter4 = new FilterInfos(FILTER_ID_4, "filter4");
-    protected final FilterInfos filter5 = new FilterInfos(FILTER_ID_5, "filter5");
-    protected final FilterInfos filter6 = new FilterInfos(FILTER_ID_6, "filter6");
-    protected final FilterInfos filterWithOneWrongId = new FilterInfos(FILTER_WITH_ONE_WRONG_ID, "filterWithOneWrongId");
+    protected final FilterModel filter1 = new FilterModel(FILTER_ID_1, "filter1");
+    protected final FilterModel filter2 = new FilterModel(FILTER_ID_2, "filter2");
+    protected final FilterModel filter3 = new FilterModel(FILTER_ID_3, "filter3");
+    protected final FilterModel filter4 = new FilterModel(FILTER_ID_4, "filter4");
+    protected final FilterModel filter5 = new FilterModel(FILTER_ID_5, "filter5");
+    protected final FilterModel filter6 = new FilterModel(FILTER_ID_6, "filter6");
+    protected final FilterModel filterWithOneWrongId = new FilterModel(FILTER_WITH_ONE_WRONG_ID, "filterWithOneWrongId");
 
     protected static final String PATH = "/v1/filters/metadata";
 
@@ -89,12 +89,12 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         // Test with empty list of filters in formula
-        List<FormulaInfos> formulaInfosWithNoFilters = getFormulaInfos().stream().peek(formula -> formula.setFilters(List.of())).toList();
+        List<FormulaModel> formulaInfosWithNoFilters = getFormulaInfos().stream().peek(formula -> formula.setFilters(List.of())).toList();
         checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(formulaInfosWithNoFilters).build(),
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         // Test with editedField = null
-        FormulaInfos formulaInfosWithNoEditedField = FormulaInfos.builder()
+        FormulaModel formulaInfosWithNoEditedField = FormulaModel.builder()
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(50.).build())
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(50.).build())
                 .operator(Operator.ADDITION)
@@ -104,7 +104,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
     }
 
-    protected void checkCreateWithWarning(List<FormulaInfos> formulaInfos, List<IdentifierListFilterEquipmentAttributes> existingEquipmentList) throws Exception {
+    protected void checkCreateWithWarning(List<FormulaModel> formulaInfos, List<IdentifierListFilterEquipmentAttributes> existingEquipmentList) throws Exception {
         AbstractFilter filter = getFilterEquipments(FILTER_WITH_ONE_WRONG_ID, existingEquipmentList);
 
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ONE_WRONG_ID))
@@ -122,7 +122,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(List.of(FILTER_WITH_ONE_WRONG_ID)), false);
     }
 
-    protected void checkCreateWithError(List<FormulaInfos> formulaInfos, List<AbstractFilter> filterEquipments) throws Exception {
+    protected void checkCreateWithError(List<FormulaModel> formulaInfos, List<AbstractFilter> filterEquipments) throws Exception {
         String filterIds = filterEquipments.stream()
                 .map(AbstractFilter::getId)
                 .map(UUID::toString)
@@ -150,8 +150,8 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
     public void testModificationWithAllWrongEquipmentIds() throws Exception {
         AbstractFilter filter = getFilterEquipments(FILTER_WITH_ALL_WRONG_IDS, List.of());
 
-        List<FormulaInfos> formulaInfos = getFormulaInfos().stream()
-                .peek(formula -> formula.setFilters(List.of(new FilterInfos(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId"))))
+        List<FormulaModel> formulaInfos = getFormulaInfos().stream()
+                .peek(formula -> formula.setFilters(List.of(new FilterModel(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId"))))
                 .toList();
 
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ALL_WRONG_IDS))
@@ -245,12 +245,12 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
             .build();
     }
 
-    protected FormulaInfos getFormulaInfo(String editedField,
-                                List<FilterInfos> filters,
+    protected FormulaModel getFormulaInfo(String editedField,
+                                List<FilterModel> filters,
                                 Operator operator,
                                 ReferenceFieldOrValue fieldOrValue1,
                                 ReferenceFieldOrValue fieldOrValue2) {
-        return FormulaInfos.builder()
+        return FormulaModel.builder()
                 .editedField(editedField)
                 .filters(filters)
                 .operator(operator)
@@ -274,9 +274,9 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
 
     protected abstract List<AbstractFilter> getTestFilters();
 
-    protected abstract List<FormulaInfos> getFormulaInfos();
+    protected abstract List<FormulaModel> getFormulaInfos();
 
-    protected abstract List<FormulaInfos> getUpdatedFormulaInfos();
+    protected abstract List<FormulaModel> getUpdatedFormulaInfos();
 
     protected abstract IdentifiableType getIdentifiableType();
 

@@ -9,7 +9,7 @@ import org.gridsuite.modification.dto.LccConverterStationModificationInfos;
 import org.gridsuite.modification.dto.LccModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.AttributeModification;
-import org.gridsuite.modification.model.FreePropertyInfos;
+import org.gridsuite.modification.model.FreePropertyModel;
 import org.gridsuite.modification.model.OperationType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
@@ -41,7 +41,7 @@ public class LccModificationTest extends AbstractNetworkModificationTest {
             .convertersMode(new AttributeModification<>(HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER, OperationType.SET))
             .converterStation1(buildLccConverterStation("v1lcc", "lccStationName1", "v1", "1.1"))
             .converterStation2(buildLccConverterStation("v2lcc", "lccStationName2", "v2", "1.1"))
-            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
+            .properties(List.of(FreePropertyModel.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
 
