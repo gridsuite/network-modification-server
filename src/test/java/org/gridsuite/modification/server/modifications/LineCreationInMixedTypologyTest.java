@@ -9,9 +9,10 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.LineCreationInfos;
-import org.gridsuite.modification.dto.LineSegmentInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.FreePropertyModel;
+import org.gridsuite.modification.model.LineSegmentModel;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
@@ -57,9 +58,9 @@ class LineCreationInMixedTypologyTest extends AbstractNetworkModificationTest {
             .connectionDirection2(ConnectablePosition.Direction.TOP)
             .connectionPosition1(0)
             .connectionPosition2(0)
-            .lineSegments(List.of(new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", "50", null),
-                new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", null, 0.95)))
-            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
+            .lineSegments(List.of(new LineSegmentModel(UUID.randomUUID().toString(), 1, "1", "50", null),
+                new LineSegmentModel(UUID.randomUUID().toString(), 1, "1", null, 0.95)))
+            .properties(List.of(FreePropertyModel.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
 

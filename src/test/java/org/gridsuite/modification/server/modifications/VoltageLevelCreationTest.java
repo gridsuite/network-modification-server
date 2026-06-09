@@ -10,9 +10,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.dto.CouplingDeviceInfos;
-import org.gridsuite.modification.dto.FreePropertyInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelCreationInfos;
+import org.gridsuite.modification.model.CouplingDeviceModel;
+import org.gridsuite.modification.model.FreePropertyModel;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -50,7 +51,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         VoltageLevelCreationInfos voltageLevel = ModificationCreation.getCreationVoltageLevel("s2", "vlId", "vlName");
-        voltageLevel.setProperties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()));
+        voltageLevel.setProperties(List.of(FreePropertyModel.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()));
         return voltageLevel;
     }
 
@@ -69,7 +70,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .busbarCount(2)
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("1A").busbarSectionId2("1.A").build()))
+                .couplingDevices(Arrays.asList(CouplingDeviceModel.builder().busbarSectionId1("1A").busbarSectionId2("1.A").build()))
                 .build();
     }
 

@@ -11,6 +11,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VscModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
@@ -19,7 +20,8 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
 import org.springframework.util.CollectionUtils;
 
-import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
+import static org.gridsuite.modification.model.AttributeModification.toAttributeModification;
+
 /**
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
  */
@@ -117,7 +119,7 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
     private ConverterStationModificationEntity converterStation2;
 
     public VscModificationEntity(@NonNull VscModificationInfos vscModificationInfos) {
-        super(vscModificationInfos);
+        super((ModificationInfos) vscModificationInfos);
         assignAttributes(vscModificationInfos);
     }
 
@@ -166,7 +168,7 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 

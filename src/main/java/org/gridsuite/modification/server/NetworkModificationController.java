@@ -12,8 +12,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
+import org.gridsuite.modification.server.service.DtoModelMapper;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.data.util.Pair;
@@ -32,6 +34,8 @@ import java.util.concurrent.CompletableFuture;
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
 
+    private final DtoModelMapper dtoModelMapper;
+
     private enum GroupModificationAction {
         MOVE,
         COPY,
@@ -42,9 +46,10 @@ public class NetworkModificationController {
     private final LineTypesCatalogService lineTypesCatalogService;
 
     public NetworkModificationController(NetworkModificationService networkModificationService,
-                                         LineTypesCatalogService lineTypesCatalogService) {
+                                         LineTypesCatalogService lineTypesCatalogService, DtoModelMapper dtoModelMapper) {
         this.networkModificationService = networkModificationService;
         this.lineTypesCatalogService = lineTypesCatalogService;
+        this.dtoModelMapper = dtoModelMapper;
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -144,7 +149,7 @@ public class NetworkModificationController {
     public CompletableFuture<ResponseEntity<NetworkModificationsResult>> createNetworkModification(
         @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid") UUID groupUuid,
         @RequestBody Pair<ModificationInfos, List<ModificationApplicationContext>> modificationContextInfos) {
-        modificationContextInfos.getFirst().check();
+        dtoModelMapper.map(modificationContextInfos.getFirst()).check();
         return networkModificationService.createNetworkModification(groupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
     }
 

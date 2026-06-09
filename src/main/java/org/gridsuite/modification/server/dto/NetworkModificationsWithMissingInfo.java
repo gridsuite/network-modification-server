@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 
 import java.util.List;
 import java.util.UUID;
@@ -14,5 +14,5 @@ import java.util.UUID;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-public record NetworkModificationsWithMissingInfo(List<ModificationDto> networkModifications, List<UUID> missingCompositeModifications) {
+public record NetworkModificationsWithMissingInfo(List<ModificationInfos> networkModifications, List<UUID> missingCompositeModifications) {
 }

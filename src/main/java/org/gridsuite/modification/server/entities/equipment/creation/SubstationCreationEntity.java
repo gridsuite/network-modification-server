@@ -11,7 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import jakarta.persistence.*;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.SubstationCreationInfos;
 import org.gridsuite.modification.model.SubstationCreationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
@@ -35,7 +35,7 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
     }
 
     public SubstationCreationEntity(SubstationCreationInfos substationCreationInfos) {
-        super((ModificationDto) substationCreationInfos);
+        super((ModificationInfos) substationCreationInfos);
         assignAttributes(substationCreationInfos);
     }
 
@@ -45,7 +45,7 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
     }
 
     @Override
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) modificationInfos;
         assignAttributes(substationCreationInfos);

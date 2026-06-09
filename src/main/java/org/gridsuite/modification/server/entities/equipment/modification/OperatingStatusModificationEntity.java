@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.OperatingStatusModificationInfos;
 
 import jakarta.persistence.*;
@@ -31,7 +32,7 @@ public class OperatingStatusModificationEntity extends EquipmentModificationEnti
     private String energizedVoltageLevelId;
 
     public OperatingStatusModificationEntity(@NonNull OperatingStatusModificationInfos operatingStatusModificationInfos) {
-        super(operatingStatusModificationInfos);
+        super((ModificationInfos) operatingStatusModificationInfos);
         assignAttributes(operatingStatusModificationInfos);
     }
 

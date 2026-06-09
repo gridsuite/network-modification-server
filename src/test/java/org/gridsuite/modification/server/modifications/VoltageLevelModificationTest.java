@@ -16,6 +16,10 @@ import com.powsybl.iidm.network.extensions.Measurement;
 import com.powsybl.iidm.network.extensions.Measurements;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.BusbarSectionVMeasurementModel;
+import org.gridsuite.modification.model.FreePropertyModel;
+import org.gridsuite.modification.model.constants.OperationType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -64,9 +68,9 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
                 .highVoltageLimit(new AttributeModification<>(50D, OperationType.SET))
                 .ipMax(new AttributeModification<>(0.8, OperationType.SET))
                 .ipMin(new AttributeModification<>(0.7, OperationType.SET))
-                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
+                .properties(List.of(FreePropertyModel.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .busbarSectionVMeasurements(List.of(
-                    BusbarSectionVMeasurementInfos.builder()
+                    BusbarSectionVMeasurementModel.builder()
                         .busbarSectionId("1.1")
                         .vMeasurementValue(new AttributeModification<>(MEASUREMENT_V_VALUE, OperationType.SET))
                         .vMeasurementValidity(new AttributeModification<>(MEASUREMENT_V_VALID, OperationType.SET))
@@ -86,7 +90,7 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
                 .ipMax(new AttributeModification<>(0.9, OperationType.SET))
                 .ipMin(new AttributeModification<>(0.5, OperationType.SET))
                 .busbarSectionVMeasurements(List.of(
-                    BusbarSectionVMeasurementInfos.builder()
+                    BusbarSectionVMeasurementModel.builder()
                         .busbarSectionId("1.1")
                         .vMeasurementValue(new AttributeModification<>(380D, OperationType.SET))
                         .vMeasurementValidity(new AttributeModification<>(false, OperationType.SET))
@@ -288,7 +292,7 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("v1")
                 .busbarSectionVMeasurements(List.of(
-                    BusbarSectionVMeasurementInfos.builder()
+                    BusbarSectionVMeasurementModel.builder()
                         .busbarSectionId("1.1")
                         .vMeasurementValue(new AttributeModification<>(updatedValue, OperationType.SET))
                         .vMeasurementValidity(new AttributeModification<>(updatedValidity, OperationType.SET))

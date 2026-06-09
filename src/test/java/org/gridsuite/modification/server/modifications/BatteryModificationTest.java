@@ -16,6 +16,10 @@ import com.powsybl.iidm.network.extensions.BatteryShortCircuit;
 import com.powsybl.iidm.network.extensions.Measurement;
 import com.powsybl.iidm.network.extensions.Measurements;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.FreePropertyModel;
+import org.gridsuite.modification.model.ReactiveCapabilityCurvePointsModel;
+import org.gridsuite.modification.model.constants.OperationType;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -67,8 +71,8 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .minQ(new AttributeModification<>(-100., OperationType.SET))
                 .maxP(new AttributeModification<>(100., OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
-                        new ReactiveCapabilityCurvePointsInfos(100., 100., 0.1),
-                        new ReactiveCapabilityCurvePointsInfos(100., 100., 150.)))
+                        new ReactiveCapabilityCurvePointsModel(100., 100., 0.1),
+                        new ReactiveCapabilityCurvePointsModel(100., 100., 150.)))
                 .droop(new AttributeModification<>(0.1f, OperationType.SET))
                 .directTransX(new AttributeModification<>(0.1, OperationType.SET))
                 .stepUpTransformerX(new AttributeModification<>(0.2, OperationType.SET))
@@ -78,7 +82,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .pMeasurementValidity(new AttributeModification<>(MEASUREMENT_P_VALID, OperationType.SET))
                 .qMeasurementValue(new AttributeModification<>(MEASUREMENT_Q_VALUE, OperationType.SET))
                 .qMeasurementValidity(new AttributeModification<>(MEASUREMENT_Q_VALID, OperationType.SET))
-                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
+                .properties(List.of(FreePropertyModel.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -110,7 +114,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         assertEquals(ReactiveLimitsKind.CURVE, modifiedBattery.getReactiveLimits().getKind());
         Collection<ReactiveCapabilityCurve.Point> points = modifiedBattery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
         List<ReactiveCapabilityCurve.Point> batteryPoints = new ArrayList<>(points);
-        List<ReactiveCapabilityCurvePointsInfos> modificationPoints = batteryModificationInfos.getReactiveCapabilityCurvePoints();
+        List<ReactiveCapabilityCurvePointsModel> modificationPoints = batteryModificationInfos.getReactiveCapabilityCurvePoints();
         if (!CollectionUtils.isEmpty(points)) {
             IntStream.range(0, batteryPoints.size())
                     .forEach(i -> {
@@ -344,14 +348,14 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .add();
         Collection<ReactiveCapabilityCurve.Point> points = battery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
         List<ReactiveCapabilityCurve.Point> batteryPoints = new ArrayList<>(points);
-        List<ReactiveCapabilityCurvePointsInfos> modificationPoints = batteryModificationInfos.getReactiveCapabilityCurvePoints();
+        List<ReactiveCapabilityCurvePointsModel> modificationPoints = batteryModificationInfos.getReactiveCapabilityCurvePoints();
         AtomicReference<Double> maxQ = new AtomicReference<>(Double.NaN);
         AtomicReference<Double> minQ = new AtomicReference<>(Double.NaN);
         if (!CollectionUtils.isEmpty(points)) {
             IntStream.range(0, modificationPoints.size())
                     .forEach(i -> {
                         ReactiveCapabilityCurve.Point oldPoint = batteryPoints.get(i);
-                        ReactiveCapabilityCurvePointsInfos newPoint = modificationPoints.get(i);
+                        ReactiveCapabilityCurvePointsModel newPoint = modificationPoints.get(i);
                         Double oldMaxQ = Double.NaN;
                         Double oldMinQ = Double.NaN;
                         if (oldPoint != null) {

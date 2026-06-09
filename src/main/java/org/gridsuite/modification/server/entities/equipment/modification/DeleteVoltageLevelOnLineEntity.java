@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.DeleteVoltageLevelOnLineInfos;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.DeleteVoltageLevelOnLineModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
@@ -45,7 +45,7 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
     }
 
     @Override
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((DeleteVoltageLevelOnLineModel) modificationInfos);
     }

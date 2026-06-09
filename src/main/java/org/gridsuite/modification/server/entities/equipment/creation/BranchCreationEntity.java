@@ -11,7 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import jakarta.persistence.*;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.BranchCreationModel;
 import org.gridsuite.modification.model.OperationalLimitsGroupModel;
 
@@ -81,13 +81,18 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     @Column(name = "selectedOperationalLimitsGroupId2")
     private String selectedOperationalLimitsGroupId2;
 
-    protected BranchCreationEntity(ModificationDto branchCreationInfos) {
+    protected BranchCreationEntity(ModificationInfos branchCreationInfos) {
         super(branchCreationInfos);
         assignAttributes((BranchCreationModel) branchCreationInfos);
     }
 
+    protected BranchCreationEntity(BranchCreationModel branchCreationModel) {
+        super(branchCreationModel);
+        assignAttributes(branchCreationModel);
+    }
+
     @Override
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((BranchCreationModel) modificationInfos);
     }

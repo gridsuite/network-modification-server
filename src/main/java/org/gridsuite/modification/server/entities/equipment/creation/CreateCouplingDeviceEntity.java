@@ -11,7 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.CreateCouplingDeviceInfos;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.CouplingDeviceModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
@@ -35,7 +35,7 @@ public class CreateCouplingDeviceEntity extends ModificationEntity {
     private String busOrBbsId2;
 
     @Override
-    public void update(@NonNull ModificationDto modificationInfos) {
+    public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((CreateCouplingDeviceInfos) modificationInfos);
     }
@@ -48,7 +48,7 @@ public class CreateCouplingDeviceEntity extends ModificationEntity {
         }
     }
 
-    public CreateCouplingDeviceEntity(ModificationDto createCouplingDeviceInfos) {
+    public CreateCouplingDeviceEntity(ModificationInfos createCouplingDeviceInfos) {
         super(createCouplingDeviceInfos);
         assignAttributes((CreateCouplingDeviceInfos) createCouplingDeviceInfos);
     }

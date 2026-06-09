@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.TapChangerType;
 
 import jakarta.persistence.*;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.TwoWindingsTransformerCreationInfos;
 import org.gridsuite.modification.model.PhaseTapChangerCreationModel;
 import org.gridsuite.modification.model.RatioTapChangerCreationModel;
@@ -115,12 +115,12 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
     private List<TapChangerStepCreationEmbeddable> tapChangerSteps;
 
     @Override
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((TwoWindingsTransformerCreationModel) modificationInfos);
     }
 
-    public TwoWindingsTransformerCreationEntity(ModificationDto twoWindingsTransformerCreationInfos) {
+    public TwoWindingsTransformerCreationEntity(ModificationInfos twoWindingsTransformerCreationInfos) {
         super(twoWindingsTransformerCreationInfos);
         assignAttributes((TwoWindingsTransformerCreationModel) twoWindingsTransformerCreationInfos);
     }

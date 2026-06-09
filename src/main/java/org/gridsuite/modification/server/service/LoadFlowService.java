@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.service;
 import lombok.extern.slf4j.Slf4j;
 import org.gridsuite.modification.ILoadFlowService;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.dto.LoadFlowParametersInfos;
+import org.gridsuite.modification.model.LoadFlowParametersModel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -40,11 +40,11 @@ public class LoadFlowService implements ILoadFlowService {
     }
 
     @Override
-    public LoadFlowParametersInfos getLoadFlowParametersInfos(UUID uuid) {
+    public LoadFlowParametersModel getLoadFlowParametersModel(UUID uuid) {
         String path = UriComponentsBuilder.fromPath(DELIMITER + LOADFLOW_SERVER_API_VERSION + PARAMETERS_URI)
                 .buildAndExpand(uuid).toUriString();
         try {
-            return restTemplate.getForObject(loadFlowServerBaseUri + path, LoadFlowParametersInfos.class);
+            return restTemplate.getForObject(loadFlowServerBaseUri + path, LoadFlowParametersModel.class);
         } catch (HttpStatusCodeException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
                 log.error("Load flow parameters with UUID {} not found", uuid);

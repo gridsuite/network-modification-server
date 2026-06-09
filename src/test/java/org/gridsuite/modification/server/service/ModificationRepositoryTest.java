@@ -13,6 +13,8 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
+import org.gridsuite.modification.model.*;
+import org.gridsuite.modification.model.constants.OperationType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
@@ -35,8 +37,9 @@ import java.util.stream.Collectors;
 
 import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupModel.Applicability.*;
-import static org.gridsuite.modification.dto.VoltageRegulationType.DISTANT;
+import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.SIDE1;
+import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.SIDE2;
+import static org.gridsuite.modification.model.constants.VoltageRegulationType.DISTANT;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -316,7 +319,7 @@ class ModificationRepositoryTest {
                 .participate(false).droop(null).directTransX(null)
                 .stepUpTransformerX(null).regulatingTerminalId("testTerminalId2")
                 .regulatingTerminalType("BATTERY").regulatingTerminalVlId("idVlTest2")
-                .qPercent(25.).reactiveCapabilityCurve(true).reactiveCapabilityCurvePoints(List.of(new ReactiveCapabilityCurvePointsInfos(33., 44., 55.)))
+                .qPercent(25.).reactiveCapabilityCurve(true).reactiveCapabilityCurvePoints(List.of(new ReactiveCapabilityCurvePointsModel(33., 44., 55.)))
                 .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
                 .connectionPosition(3).build());
 
@@ -409,7 +412,7 @@ class ModificationRepositoryTest {
                 .operationalLimitsGroups(
                     List.of(
                         OperationalLimitsGroupModel.builder().currentLimits(
-                            CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build())
+                            CurrentLimitsModel.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build())
                             .applicability(SIDE2)
                             .build()
                     )
@@ -419,7 +422,7 @@ class ModificationRepositoryTest {
                 .operationalLimitsGroups(
                     List.of(
                         OperationalLimitsGroupModel.builder().currentLimits(
-                            CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build())
+                            CurrentLimitsModel.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build())
                             .applicability(SIDE1)
                         .build()
                     )
@@ -429,7 +432,7 @@ class ModificationRepositoryTest {
                 .operationalLimitsGroups(
                     List.of(
                         OperationalLimitsGroupModel.builder().currentLimits(
-                            CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build())
+                            CurrentLimitsModel.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build())
                             .applicability(SIDE1)
                         .build()
                     )
@@ -437,7 +440,7 @@ class ModificationRepositoryTest {
                 .operationalLimitsGroups(
                     List.of(
                         OperationalLimitsGroupModel.builder().currentLimits(
-                                        CurrentLimitsInfos.builder().permanentLimit(4.0).temporaryLimits(Collections.emptyList()).build())
+                                        CurrentLimitsModel.builder().permanentLimit(4.0).temporaryLimits(Collections.emptyList()).build())
                             .applicability(SIDE2)
                         .build()
                     )
@@ -727,7 +730,7 @@ class ModificationRepositoryTest {
                 .equipmentId("idSubstation1")
                 .equipmentName("nameSubstation1")
                 .country(Country.FR)
-                .properties(List.of(FreePropertyInfos.builder().name("DEMO").value("DemoU").build()))
+                .properties(List.of(FreePropertyModel.builder().name("DEMO").value("DemoU").build()))
                 .build());
         var createSubstationEntity2 = ModificationEntity.fromDTO(SubstationCreationInfos.builder()
                 .equipmentId("idSubstation2")
@@ -788,7 +791,7 @@ class ModificationRepositoryTest {
                 .busbarCount(2)
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
+                .couplingDevices(Arrays.asList(CouplingDeviceModel.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
                 .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createVoltLvlEntity1));
@@ -820,7 +823,7 @@ class ModificationRepositoryTest {
                 .busbarCount(2)
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
+                .couplingDevices(Arrays.asList(CouplingDeviceModel.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
                 .build();
     }
 
@@ -1153,69 +1156,69 @@ class ModificationRepositoryTest {
     void testVoltageInitModification() {
         var voltageInitModificationEntity = ModificationEntity.fromDTO(VoltageInitModificationInfos.builder()
             .generators(List.of(
-                VoltageInitGeneratorModificationInfos.builder()
+                VoltageInitGeneratorModificationModel.builder()
                     .generatorId("G1")
                     .targetQ(10.)
                     .build(),
-                VoltageInitGeneratorModificationInfos.builder()
+                VoltageInitGeneratorModificationModel.builder()
                     .generatorId("G2")
                     .targetV(226.)
                     .build()))
             .transformers(List.of(
-                VoltageInitTransformerModificationInfos.builder()
+                VoltageInitTransformerModificationModel.builder()
                     .transformerId("2WT1")
                     .ratioTapChangerPosition(3)
                     .ratioTapChangerTargetV(225.)
                     .build(),
-                VoltageInitTransformerModificationInfos.builder()
+                VoltageInitTransformerModificationModel.builder()
                     .transformerId("3WT1")
                     .ratioTapChangerPosition(1)
                     .legSide(ThreeSides.TWO)
                     .build()))
             .staticVarCompensators(List.of(
-                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                VoltageInitStaticVarCompensatorModificationModel.builder()
                     .staticVarCompensatorId("SVC1")
                     .reactivePowerSetpoint(50.)
                     .build(),
-                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                VoltageInitStaticVarCompensatorModificationModel.builder()
                     .staticVarCompensatorId("SVC2")
                     .voltageSetpoint(374.)
                     .build()))
             .vscConverterStations(List.of(
-                VoltageInitVscConverterStationModificationInfos.builder()
+                VoltageInitVscConverterStationModificationModel.builder()
                     .vscConverterStationId("VSC1")
                     .reactivePowerSetpoint(40.)
                     .build(),
-                VoltageInitVscConverterStationModificationInfos.builder()
+                VoltageInitVscConverterStationModificationModel.builder()
                     .vscConverterStationId("VSC2")
                     .voltageSetpoint(224.)
                     .build()))
             .shuntCompensators(List.of(
-                VoltageInitShuntCompensatorModificationInfos.builder()
+                VoltageInitShuntCompensatorModificationModel.builder()
                     .shuntCompensatorId("v2shunt")
                     .sectionCount(1)
                     .connect(true)
                     .targetV(225.)
                     .build(),
-                VoltageInitShuntCompensatorModificationInfos.builder()
+                VoltageInitShuntCompensatorModificationModel.builder()
                     .shuntCompensatorId("v5shunt")
                     .sectionCount(0)
                     .connect(false)
                     .build(),
-                VoltageInitShuntCompensatorModificationInfos.builder()
+                VoltageInitShuntCompensatorModificationModel.builder()
                     .shuntCompensatorId("v6shunt")
                     .sectionCount(1)
                     .connect(false)
                     .targetV(380.)
                     .build()))
             .buses(List.of(
-                VoltageInitBusModificationInfos.builder()
+                VoltageInitBusModificationModel.builder()
                     .voltageLevelId("1")
                     .busId("B1")
                     .v(225.)
                     .angle(0.)
                     .build(),
-                VoltageInitBusModificationInfos.builder()
+                VoltageInitBusModificationModel.builder()
                     .voltageLevelId("2")
                     .busId("B2")
                     .v(380.)
@@ -1398,9 +1401,9 @@ class ModificationRepositoryTest {
 
     @Test
     void testVoltageLevelTopologyModification() {
-        List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfos = new ArrayList<>(
+        List<EquipmentAttributeModificationModel> equipmentAttributeModificationInfos = new ArrayList<>(
                 Arrays.asList(
-                        EquipmentAttributeModificationInfos.builder()
+                        EquipmentAttributeModificationModel.builder()
                                 .equipmentId("sw1")
                                 .equipmentAttributeName("open")
                                 .equipmentAttributeValue(false)
@@ -1423,7 +1426,7 @@ class ModificationRepositoryTest {
     @Test
     void testCreateCouplingDevice() {
         ModificationEntity modification = ModificationEntity.fromDTO(CreateCouplingDeviceInfos.builder()
-            .couplingDeviceInfos(CouplingDeviceInfos.builder()
+            .couplingDeviceInfos(CouplingDeviceModel.builder()
                 .busbarSectionId1("bbs1")
                 .busbarSectionId2("bbs2")
                 .build())

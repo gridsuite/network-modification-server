@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.tabular.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.springframework.util.CollectionUtils;
@@ -61,11 +62,11 @@ public class TabularModificationsEntity extends ModificationEntity {
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((TabularBaseInfos) modificationInfos);
+        assignAttributes((AbstractTabularInfos) modificationInfos);
     }
 
     @Override
-    public TabularBaseInfos toModificationInfos() {
+    public AbstractTabularInfos toModificationInfos() {
         var builder = switch (ModificationType.valueOf(getType())) {
             case ModificationType.TABULAR_CREATION -> TabularCreationInfos.builder();
             case ModificationType.LIMIT_SETS_TABULAR_MODIFICATION -> LimitSetsTabularModificationInfos.builder();
@@ -87,12 +88,12 @@ public class TabularModificationsEntity extends ModificationEntity {
                 .build();
     }
 
-    private void assignAttributes(TabularBaseInfos tabularBaseInfos) {
-        this.csvFilename = tabularBaseInfos.getCsvFilename();
-        modificationType = tabularBaseInfos.getModificationType();
+    private void assignAttributes(AbstractTabularInfos abstractTabularInfos) {
+        this.csvFilename = abstractTabularInfos.getCsvFilename();
+        modificationType = abstractTabularInfos.getModificationType();
         // properties list
-        List<TabularPropertyEntity> newProperties = tabularBaseInfos.getProperties() == null ? null :
-                tabularBaseInfos.getProperties().stream()
+        List<TabularPropertyEntity> newProperties = abstractTabularInfos.getProperties() == null ? null :
+                abstractTabularInfos.getProperties().stream()
                         .map(TabularPropertyEntity::new)
                         .toList();
         if (this.properties != null) {
@@ -105,12 +106,12 @@ public class TabularModificationsEntity extends ModificationEntity {
         }
         // modifications list
         if (modifications == null) {
-            modifications = tabularBaseInfos.getModifications().stream()
+            modifications = abstractTabularInfos.getModifications().stream()
                     .map(ModificationEntity::fromDTO)
                     .collect(Collectors.toList());
         } else {
             modifications.clear();
-            modifications.addAll(tabularBaseInfos.getModifications().stream()
+            modifications.addAll(abstractTabularInfos.getModifications().stream()
                     .map(ModificationEntity::fromDTO)
                     .toList());
         }

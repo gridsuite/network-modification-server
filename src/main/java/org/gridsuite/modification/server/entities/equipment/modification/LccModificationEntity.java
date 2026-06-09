@@ -23,9 +23,10 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.LccConverterStationModificationInfos;
 import org.gridsuite.modification.dto.LccModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.AttributeModification;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
 import org.springframework.util.CollectionUtils;
@@ -92,7 +93,7 @@ public class LccModificationEntity extends BasicEquipmentModificationEntity {
     private LccConverterStationModificationEntity converterStation2;
 
     public LccModificationEntity(@NonNull LccModificationInfos lccModificationInfos) {
-        super(lccModificationInfos);
+        super((ModificationInfos) lccModificationInfos);
         assignAttributes(lccModificationInfos);
     }
 
@@ -134,7 +135,7 @@ public class LccModificationEntity extends BasicEquipmentModificationEntity {
             // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                 getProperties().stream()
-                    .map(FreePropertyEntity::toInfos)
+                    .map(FreePropertyEntity::toModel)
                     .toList());
     }
 

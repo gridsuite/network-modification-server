@@ -11,7 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import org.gridsuite.modification.TapChangerType;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.TwoWindingsTransformerModificationInfos;
 import org.gridsuite.modification.model.*;
 import org.gridsuite.modification.model.constants.RegulationSide;
@@ -303,13 +303,13 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private BooleanModificationEmbedded ratioTapChangerToBeEstimated;
 
-    public TwoWindingsTransformerModificationEntity(ModificationDto twoWindingsTransformerModificationInfos) {
+    public TwoWindingsTransformerModificationEntity(ModificationInfos twoWindingsTransformerModificationInfos) {
         super(twoWindingsTransformerModificationInfos);
         assignAttributes((TwoWindingsTransformerModificationModel) twoWindingsTransformerModificationInfos);
     }
 
     @Override
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((TwoWindingsTransformerModificationModel) modificationInfos);
     }

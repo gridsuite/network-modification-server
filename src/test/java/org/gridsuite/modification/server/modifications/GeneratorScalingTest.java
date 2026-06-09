@@ -15,10 +15,12 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
+import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.VariationMode;
 import org.gridsuite.modification.VariationType;
 import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.GeneratorScalingInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
@@ -230,7 +232,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(generatorScalingInfo.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
+        assertLogMessage(NetworkModificationException.Type.SCALING_ERROR.name() + ": There is no valid equipment ID among the provided filter(s)",
                 "network.modification.invalidFilters", reportService);
         wireMockUtils.verifyGetRequest(subWrongId, PATH, handleQueryParams(FILTER_WRONG_ID_1), false);
     }

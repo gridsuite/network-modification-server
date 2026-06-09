@@ -13,7 +13,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.BasicEquipmentModificationModel;
 import org.gridsuite.modification.model.constants.OperationType;
 
@@ -31,13 +31,18 @@ public class BasicEquipmentModificationEntity extends EquipmentModificationEntit
     @Enumerated(EnumType.STRING)
     private OperationType equipmentNameOp;
 
-    protected BasicEquipmentModificationEntity(ModificationDto modificationInfos) {
+    protected BasicEquipmentModificationEntity(ModificationInfos modificationInfos) {
         super(modificationInfos);
         assignAttributes((BasicEquipmentModificationModel) modificationInfos);
     }
 
+    protected BasicEquipmentModificationEntity(BasicEquipmentModificationModel basicEquipmentModificationModel) {
+        super(basicEquipmentModificationModel);
+        assignAttributes(basicEquipmentModificationModel);
+    }
+
     @Override
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((BasicEquipmentModificationModel) modificationInfos);
     }

@@ -12,7 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.ConverterStationModificationInfos;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.AttributeModification;
 import org.gridsuite.modification.model.ConverterStationModificationModel;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
@@ -75,12 +76,17 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     private BooleanModificationEmbedded reactiveCapabilityCurve;
 
     public ConverterStationModificationEntity(ConverterStationModificationInfos converterStationModificationInfos) {
-        super(converterStationModificationInfos);
+        super((ModificationInfos) converterStationModificationInfos);
         assignAttributes(converterStationModificationInfos);
     }
 
+    public ConverterStationModificationEntity(ConverterStationModificationModel converterStationModificationModel) {
+        super(converterStationModificationModel);
+        assignAttributes(converterStationModificationModel);
+    }
+
     @Override
-    public void update(@NonNull ModificationDto modificationInfos) {
+    public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((ConverterStationModificationInfos) modificationInfos);
     }

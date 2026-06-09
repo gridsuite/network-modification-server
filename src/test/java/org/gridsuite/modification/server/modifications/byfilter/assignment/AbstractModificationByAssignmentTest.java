@@ -17,12 +17,12 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAt
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.ModificationByAssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.equipmentfield.PropertyField;
+import org.gridsuite.modification.dto.assignment.AssignmentInfos;
+import org.gridsuite.modification.dto.assignment.DoubleAssignmentInfos;
+import org.gridsuite.modification.dto.assignment.PropertyAssignmentInfos;
+import org.gridsuite.modification.model.byfilter.DataType;
+import org.gridsuite.modification.model.byfilter.equipmentfield.PropertyField;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.dto.byfilter.DataType;
-import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.assignment.PropertyAssignmentInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;

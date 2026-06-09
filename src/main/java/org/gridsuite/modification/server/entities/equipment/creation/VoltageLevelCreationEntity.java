@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.model.CouplingDeviceModel;
 import org.gridsuite.modification.model.VoltageLevelCreationModel;
@@ -74,8 +74,13 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     private SubstationCreationEntity substationCreation;
 
     public VoltageLevelCreationEntity(VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        super((ModificationDto) voltageLevelCreationInfos);
+        super((ModificationInfos) voltageLevelCreationInfos);
         assignAttributes(voltageLevelCreationInfos);
+    }
+
+    public VoltageLevelCreationEntity(VoltageLevelCreationModel voltageLevelCreationModel) {
+        super(voltageLevelCreationModel);
+        assignAttributes(voltageLevelCreationModel);
     }
 
     public static List<CouplingDeviceCreationEmbeddable> toEmbeddableCouplingDevices(List<CouplingDeviceModel> couplingDevicesInfos) {
@@ -128,7 +133,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     }
 
     @Override
-    public void update(@NonNull ModificationDto modificationInfos) {
+    public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((VoltageLevelCreationModel) modificationInfos);
     }

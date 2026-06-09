@@ -12,7 +12,7 @@ import lombok.*;
 
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 
 import java.lang.reflect.Constructor;
@@ -84,7 +84,7 @@ public class ModificationEntity {
         this.type = type;
     }
 
-    protected ModificationEntity(ModificationDto modificationInfos) {
+    protected ModificationEntity(ModificationInfos modificationInfos) {
         if (modificationInfos == null) {
             throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
         }
@@ -100,11 +100,11 @@ public class ModificationEntity {
         assignAttributes(modificationInfos);
     }
 
-    public ModificationDto toModificationInfos() {
+    public ModificationInfos toModificationInfos() {
         return null;
     }
 
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         // Basic attributes are immutable in the database
         if (modificationInfos == null) {
             throw new NullPointerException("Impossible to update entity from null DTO");
@@ -113,7 +113,7 @@ public class ModificationEntity {
     }
 
     @SneakyThrows
-    private void assignAttributes(ModificationDto modificationInfos) {
+    private void assignAttributes(ModificationInfos modificationInfos) {
         this.setType(modificationInfos.getType().name());
         this.setMessageType(modificationInfos.getType().name());
         if (modificationInfos.getDescription() != null) {
@@ -122,7 +122,7 @@ public class ModificationEntity {
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
     }
 
-    public static ModificationEntity fromDTO(ModificationDto dto) {
+    public static ModificationEntity fromDTO(ModificationInfos dto) {
         if (dto instanceof EquipmentAttributeModificationInfos infos) {
             return EquipmentAttributeModificationEntity.createAttributeEntity(infos);
         }
@@ -130,7 +130,7 @@ public class ModificationEntity {
         Class<? extends ModificationEntity> entityClass = EntityRegistry.getEntityClass(dto.getClass());
         if (entityClass != null) {
             try {
-                Constructor<? extends ModificationEntity> constructor = entityClass.getConstructor(dto.getClass());
+                Constructor<? extends ModificationEntity> constructor = findConstructor(entityClass, dto.getClass());
                 return constructor.newInstance(dto);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to map DTO to Entity", e);
@@ -138,5 +138,16 @@ public class ModificationEntity {
         } else {
             throw new IllegalArgumentException("No entity class registered for DTO class: " + dto.getClass());
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Constructor<? extends ModificationEntity> findConstructor(Class<? extends ModificationEntity> entityClass, Class<? extends ModificationInfos> dtoClass) throws NoSuchMethodException {
+        for (Constructor<?> constructor : entityClass.getConstructors()) {
+            Class<?>[] parameterTypes = constructor.getParameterTypes();
+            if (parameterTypes.length == 1 && parameterTypes[0].isAssignableFrom(dtoClass)) {
+                return (Constructor<? extends ModificationEntity>) constructor;
+            }
+        }
+        throw new NoSuchMethodException(entityClass.getName() + ".<init>(" + dtoClass.getName() + ")");
     }
 }

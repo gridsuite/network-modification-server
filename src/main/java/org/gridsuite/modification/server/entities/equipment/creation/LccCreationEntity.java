@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.LccConverterStationCreationInfos;
 import org.gridsuite.modification.dto.LccCreationInfos;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.LccCreationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
@@ -63,13 +63,13 @@ public class LccCreationEntity extends EquipmentCreationEntity {
             ))
     private LccConverterStationCreationEntity converterStation2;
 
-    public LccCreationEntity(@NonNull ModificationDto lccCreationInfos) {
+    public LccCreationEntity(@NonNull ModificationInfos lccCreationInfos) {
         super(lccCreationInfos);
         assignAttributes((LccCreationModel) lccCreationInfos);
     }
 
     @Override
-    public void update(@NonNull ModificationDto modificationInfos) {
+    public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((LccCreationModel) modificationInfos);
     }

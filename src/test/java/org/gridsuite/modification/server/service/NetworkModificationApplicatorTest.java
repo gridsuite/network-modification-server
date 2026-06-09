@@ -13,6 +13,7 @@ import com.powsybl.commons.report.ReportNodeAdder;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageInitModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;

@@ -11,7 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.CreateVoltageLevelSectionInfos;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.CreateVoltageLevelSectionModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
@@ -83,7 +83,7 @@ public class CreateVoltageLevelSectionEntity extends ModificationEntity {
     }
 
     @Override
-    public void update(@NonNull ModificationDto modificationInfos) {
+    public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((CreateVoltageLevelSectionModel) modificationInfos);
     }

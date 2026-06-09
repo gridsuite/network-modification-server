@@ -18,6 +18,8 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.Getter;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.ModificationModel;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkInfos;
@@ -60,6 +62,7 @@ public class NetworkModificationApplicator {
     private final LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
 
     private final NetworkModificationObserver networkModificationObserver;
+    private final DtoModelMapper dtoModelMapper;
 
     @Value("${impacts.collection-threshold:50}")
     private Integer collectionThreshold;
@@ -74,7 +77,7 @@ public class NetworkModificationApplicator {
                                          ReportService reportService, FilterService filterService,
                                          LoadFlowService loadFlowService,
                                          NetworkModificationObserver networkModificationObserver,
-                                         LargeNetworkModificationExecutionService largeNetworkModificationExecutionService) {
+                                         LargeNetworkModificationExecutionService largeNetworkModificationExecutionService, DtoModelMapper dtoModelMapper) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.applicationInfosService = applicationInfosService;
@@ -83,6 +86,7 @@ public class NetworkModificationApplicator {
         this.loadFlowService = loadFlowService;
         this.networkModificationObserver = networkModificationObserver;
         this.largeNetworkModificationExecutionService = largeNetworkModificationExecutionService;
+        this.dtoModelMapper = dtoModelMapper;
     }
 
     /* This method is used for incremental modifications
@@ -200,10 +204,10 @@ public class NetworkModificationApplicator {
             reportNode = ReportNode.NO_OP;
         }
         ApplicationStatus groupApplicationStatus = modificationGroupInfos.modifications().stream()
-                .filter(ModificationInfos::getActivated)
+                .filter(m -> m.getActivated() && !m.getStashed())
                 .map(m -> {
                     listener.initModificationApplication(modificationGroupInfos.groupUuid(), m);
-                    return apply(m, listener.getNetwork(), reportNode);
+                    return apply(dtoModelMapper.map(m), listener.getNetwork(), reportNode);
                 })
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
@@ -217,10 +221,10 @@ public class NetworkModificationApplicator {
         return groupApplicationStatus;
     }
 
-    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode) {
-        ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
+    private ApplicationStatus apply(ModificationModel modificationModel, Network network, ReportNode reportNode) {
+        ReportNode subReportNode = modificationModel.createSubReportNode(reportNode);
         try {
-            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode));
+            networkModificationObserver.observeApply(modificationModel.getType(), () -> apply(modificationModel.toModification(), network, subReportNode));
         } catch (Exception e) {
             handleException(subReportNode, e);
         }

@@ -4,6 +4,7 @@ import com.powsybl.iidm.network.IdentifiableType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.gridsuite.modification.dto.ByFormulaModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.formula.FormulaEntity;
 

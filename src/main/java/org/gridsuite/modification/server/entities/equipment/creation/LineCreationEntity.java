@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.LineCreationInfos;
 
 import jakarta.persistence.*;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.LineCreationModel;
 import org.gridsuite.modification.model.LineSegmentModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
@@ -52,12 +52,17 @@ public class LineCreationEntity extends BranchCreationEntity {
     private List<LineSegmentEntity> lineSegments;
 
     public LineCreationEntity(LineCreationInfos lineCreationInfos) {
-        super(lineCreationInfos);
+        super((ModificationInfos) lineCreationInfos);
         assignAttributes(lineCreationInfos);
     }
 
+    public LineCreationEntity(LineCreationModel lineCreationModel) {
+        super(lineCreationModel);
+        assignAttributes(lineCreationModel);
+    }
+
     @Override
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((LineCreationModel) modificationInfos);
     }

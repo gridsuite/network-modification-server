@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.DeleteAttachingLineInfos;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.DeleteAttachingLineModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
@@ -47,7 +47,7 @@ public class DeleteAttachingLineEntity extends ModificationEntity {
     }
 
     @Override
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((DeleteAttachingLineModel) modificationInfos);
     }

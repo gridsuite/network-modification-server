@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.GeneratorCreationInfos;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.GeneratorCreationModel;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
@@ -105,12 +105,12 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
 
     public GeneratorCreationEntity(@NonNull GeneratorCreationInfos generatorCreationInfos) {
-        super(generatorCreationInfos);
+        super((ModificationInfos) generatorCreationInfos);
         assignAttributes(generatorCreationInfos);
     }
 
     @Override
-    public void update(@NonNull ModificationDto modificationInfos) {
+    public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((GeneratorCreationModel) modificationInfos);
     }
@@ -192,7 +192,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                    getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

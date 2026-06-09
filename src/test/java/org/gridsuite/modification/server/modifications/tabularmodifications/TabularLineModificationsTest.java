@@ -11,7 +11,11 @@ import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
-import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
+import org.gridsuite.modification.model.*;
+import org.gridsuite.modification.model.constants.OperationType;
+import org.gridsuite.modification.model.constants.OperationalLimitsGroupModificationType;
+import org.gridsuite.modification.model.constants.TemporaryLimitModificationType;
+import org.gridsuite.modification.model.tabular.TabularPropertyModel;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ApiUtils;
@@ -28,9 +32,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
-import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupModel.Applicability.SIDE1;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupModel.Applicability.SIDE2;
+import static org.gridsuite.modification.model.AttributeModification.toAttributeModification;
+import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.SIDE1;
+import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.SIDE2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -63,7 +67,7 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.LINE_MODIFICATION)
                 .modifications(modifications)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();
     }
@@ -85,7 +89,7 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.LINE_MODIFICATION)
                 .modifications(modifications)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }
@@ -153,31 +157,31 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
         ModificationInfos tabularModification = TabularModificationInfos.builder()
                 .modificationType(ModificationType.LINE_MODIFICATION)
                 .modifications(createLineModificationList(qty))
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(false).build()))
                 .build();
         UUID uuid = saveModification(tabularModification);
         tabularModification.setUuid(uuid);
         return Pair.of(uuid, tabularModification);
     }
 
-    public static List<OperationalLimitsGroupModificationInfos> buildOperationalLimitsGroupDefaultModification() {
+    public static List<OperationalLimitsGroupModificationModel> buildOperationalLimitsGroupDefaultModification() {
         return List.of(
                 buildOperationalLimitsGroupDefaultModification(SIDE1),
                 buildOperationalLimitsGroupDefaultModification(SIDE2)
         );
     }
 
-    public static OperationalLimitsGroupModificationInfos buildOperationalLimitsGroupDefaultModification(OperationalLimitsGroupModel.Applicability applicability) {
-        return OperationalLimitsGroupModificationInfos.builder()
+    public static OperationalLimitsGroupModificationModel buildOperationalLimitsGroupDefaultModification(OperationalLimitsGroupModel.Applicability applicability) {
+        return OperationalLimitsGroupModificationModel.builder()
                 .id("testName")
                 .applicability(applicability)
                 .limitsProperties(Collections.emptyList())
                 .modificationType(OperationalLimitsGroupModificationType.ADD)
                 .temporaryLimitsModificationType(TemporaryLimitModificationType.ADD)
-                .currentLimits(CurrentLimitsModificationInfos.builder()
+                .currentLimits(CurrentLimitsModificationModel.builder()
                         .permanentLimit(1200.)
                         .temporaryLimits(List.of(
-                                CurrentTemporaryLimitModificationInfos.builder()
+                                CurrentTemporaryLimitModificationModel.builder()
                                         .modificationType(TemporaryLimitModificationType.ADD)
                                         .name(toAttributeModification("testLimit", OperationType.SET))
                                         .acceptableDuration(toAttributeModification(2, OperationType.SET))

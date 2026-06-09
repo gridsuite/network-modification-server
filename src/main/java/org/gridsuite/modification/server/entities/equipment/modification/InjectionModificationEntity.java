@@ -10,7 +10,7 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.InjectionModificationModel;
 import org.gridsuite.modification.model.constants.OperationType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
@@ -96,13 +96,18 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
     })
     private BooleanModificationEmbedded qMeasurementValidity;
 
-    protected InjectionModificationEntity(ModificationDto modificationInfos) {
+    protected InjectionModificationEntity(ModificationInfos modificationInfos) {
         super(modificationInfos);
         assignAttributes((InjectionModificationModel) modificationInfos);
     }
 
+    protected InjectionModificationEntity(InjectionModificationModel injectionModificationModel) {
+        super(injectionModificationModel);
+        assignAttributes(injectionModificationModel);
+    }
+
     @Override
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((InjectionModificationModel) modificationInfos);
     }

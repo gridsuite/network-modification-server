@@ -11,6 +11,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelTopologyModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
@@ -41,7 +42,7 @@ public class VoltageLevelTopologyModificationEntity extends EquipmentModificatio
     private List<BooleanEquipmentAttributeModificationEntity> equipmentAttributeModification;
 
     public VoltageLevelTopologyModificationEntity(VoltageLevelTopologyModificationInfos voltageLevelTopologyModificationInfos) {
-        super(voltageLevelTopologyModificationInfos);
+        super((ModificationInfos) voltageLevelTopologyModificationInfos);
         assignAttributes(voltageLevelTopologyModificationInfos);
     }
 
@@ -86,7 +87,7 @@ public class VoltageLevelTopologyModificationEntity extends EquipmentModificatio
                 .description(getDescription())
                 .equipmentAttributeModificationList(Optional.ofNullable(attributeModificationEntities)
                         .map(list -> list.stream()
-                                .map(EquipmentAttributeModificationEntity::toModificationInfos)
+                                .map(EquipmentAttributeModificationEntity::toModificationModel)
                                 .toList())
                         .orElse(null));
     }

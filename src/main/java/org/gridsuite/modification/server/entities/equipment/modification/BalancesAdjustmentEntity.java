@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.BalancesAdjustmentModificationInfos;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.BalancesAdjustmentModificationModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.utils.CountriesUtils;
@@ -89,7 +89,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
     }
 
     @Override
-    public void update(@NonNull ModificationDto modificationInfos) {
+    public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((BalancesAdjustmentModificationModel) modificationInfos);
     }

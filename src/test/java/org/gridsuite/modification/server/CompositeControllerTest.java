@@ -17,6 +17,7 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -46,7 +47,6 @@ import java.util.UUID;
 import static org.gridsuite.modification.ModificationType.COMPOSITE_MODIFICATION;
 import static org.gridsuite.modification.server.utils.NetworkCreation.VARIANT_ID;
 import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
-import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
@@ -117,7 +117,7 @@ class CompositeControllerTest {
                 .modificationsInfos(modificationList)
                 .build();
         UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertThat(modificationRepository.getModificationInfo(compositeModificationUuid)).recursivelyEquals(compositeModificationInfos);
+        org.assertj.core.api.Assertions.assertThat(modificationRepository.getModificationInfo(compositeModificationUuid)).usingRecursiveComparison().isEqualTo(compositeModificationInfos);
 
         List<ModificationInfos> modificationInfosList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(modificationsNumber, modificationInfosList.size());
@@ -146,7 +146,7 @@ class CompositeControllerTest {
                 .modificationsInfos(otherModificationList)
                 .build();
         UUID otherCompositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertThat(modificationRepository.getModificationInfo(otherCompositeModificationUuid)).recursivelyEquals(otherCompositeModificationInfos);
+        org.assertj.core.api.Assertions.assertThat(modificationRepository.getModificationInfo(otherCompositeModificationUuid)).usingRecursiveComparison().isEqualTo(otherCompositeModificationInfos);
 
         // get both composite modifications
         mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids=" + compositeModificationUuid + "&uuids=" + otherCompositeModificationUuid))
@@ -179,7 +179,7 @@ class CompositeControllerTest {
         assertEquals(modificationsNumber * 2, newModificationList.size());
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).toList();
         assertEquals(modificationUuids.getFirst(), newModificationUuidList.getFirst());
-        assertThat(modificationList.getFirst()).recursivelyEquals(newModificationList.get(modificationsNumber));
+        org.assertj.core.api.Assertions.assertThat(modificationList.getFirst()).usingRecursiveComparison().isEqualTo(newModificationList.get(modificationsNumber));
     }
 
     @Test
@@ -284,7 +284,7 @@ class CompositeControllerTest {
         ModificationInfos sourceModificationInfos = modificationRepository.getModificationInfo(compositeModificationUuid);
         ModificationInfos newModificationInfos = modificationRepository.getModificationInfo(returnedNewId);
         // compare duplicate with the source (same data except uuid)
-        assertThat(sourceModificationInfos).recursivelyEquals(newModificationInfos);
+        org.assertj.core.api.Assertions.assertThat(sourceModificationInfos).usingRecursiveComparison().isEqualTo(newModificationInfos);
         // source group has not changed
         List<ModificationInfos> groupModifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
         assertEquals(1, groupModifications.size());

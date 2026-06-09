@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.BusbarSectionVMeasurementInfos;
+import org.gridsuite.modification.model.BusbarSectionVMeasurementModel;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 
@@ -47,14 +47,14 @@ public class BusbarSectionVMeasurementEntity {
     })
     private BooleanModificationEmbedded vMeasurementValidity;
 
-    public BusbarSectionVMeasurementEntity(BusbarSectionVMeasurementInfos infos) {
+    public BusbarSectionVMeasurementEntity(BusbarSectionVMeasurementModel infos) {
         this.busbarSectionId = infos.getBusbarSectionId();
         this.vMeasurementValue = infos.getVMeasurementValue() != null ? new DoubleModificationEmbedded(infos.getVMeasurementValue()) : null;
         this.vMeasurementValidity = infos.getVMeasurementValidity() != null ? new BooleanModificationEmbedded(infos.getVMeasurementValidity()) : null;
     }
 
-    public BusbarSectionVMeasurementInfos toInfos() {
-        return BusbarSectionVMeasurementInfos.builder()
+    public BusbarSectionVMeasurementModel toInfos() {
+        return BusbarSectionVMeasurementModel.builder()
                 .busbarSectionId(busbarSectionId)
                 .vMeasurementValue(toAttributeModification(vMeasurementValue))
                 .vMeasurementValidity(toAttributeModification(vMeasurementValidity))

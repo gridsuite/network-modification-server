@@ -11,7 +11,8 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.VariationType;
-import org.gridsuite.modification.dto.ScalingInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.AbstractScalingInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import jakarta.persistence.*;
 import java.util.List;
@@ -34,7 +35,7 @@ public class ScalingEntity extends ModificationEntity {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ScalingVariationEntity> variations;
 
-    public ScalingEntity(ScalingInfos scalingInfos) {
+    public ScalingEntity(AbstractScalingInfos scalingInfos) {
         super(scalingInfos);
         assignAttributes(scalingInfos);
     }
@@ -42,10 +43,10 @@ public class ScalingEntity extends ModificationEntity {
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((ScalingInfos) modificationInfos);
+        assignAttributes((AbstractScalingInfos) modificationInfos);
     }
 
-    private void assignAttributes(ScalingInfos scalingInfos) {
+    private void assignAttributes(AbstractScalingInfos scalingInfos) {
         variationType = scalingInfos.getVariationType();
         if (variations == null) {
             variations = scalingInfos.getVariations().stream()

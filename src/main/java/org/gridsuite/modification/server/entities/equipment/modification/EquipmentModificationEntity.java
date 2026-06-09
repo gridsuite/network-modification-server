@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.EquipmentModificationModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
@@ -30,7 +30,7 @@ public class EquipmentModificationEntity extends ModificationEntity {
     @OrderColumn(name = "insert_position")
     private List<FreePropertyEntity> properties = new ArrayList<>();
 
-    protected EquipmentModificationEntity(ModificationDto equipmentModificationInfos) {
+    protected EquipmentModificationEntity(ModificationInfos equipmentModificationInfos) {
         super(equipmentModificationInfos);
         assignAttributes((EquipmentModificationModel) equipmentModificationInfos);
     }
@@ -41,7 +41,7 @@ public class EquipmentModificationEntity extends ModificationEntity {
     }
 
     @Override
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((EquipmentModificationModel) modificationInfos);
     }

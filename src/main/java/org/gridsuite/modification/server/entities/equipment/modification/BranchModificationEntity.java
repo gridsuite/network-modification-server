@@ -209,13 +209,13 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     })
     private BooleanModificationEmbedded q2MeasurementValidity;
 
-    protected BranchModificationEntity(ModificationDto branchModificationInfos) {
+    protected BranchModificationEntity(ModificationInfos branchModificationInfos) {
         super(branchModificationInfos);
         assignAttributes((BranchModificationModel) branchModificationInfos);
     }
 
     @Override
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((BranchModificationModel) modificationInfos);
     }

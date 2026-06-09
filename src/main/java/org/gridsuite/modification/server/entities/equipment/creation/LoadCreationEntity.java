@@ -13,7 +13,7 @@ import lombok.NonNull;
 import org.gridsuite.modification.dto.LoadCreationInfos;
 
 import jakarta.persistence.*;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.LoadCreationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
@@ -36,13 +36,13 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     @Column(name = "q0")
     private double q0;
 
-    public LoadCreationEntity(@NonNull ModificationDto loadCreationInfos) {
+    public LoadCreationEntity(@NonNull ModificationInfos loadCreationInfos) {
         super(loadCreationInfos);
         assignAttributes((LoadCreationModel) loadCreationInfos);
     }
 
     @Override
-    public void update(@NonNull ModificationDto modificationInfos) {
+    public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((LoadCreationModel) modificationInfos);
     }

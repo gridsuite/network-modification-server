@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.EquipmentDeletionInfos;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
 /**
@@ -37,12 +37,12 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
     private AbstractEquipmentDeletionEntity equipmentInfos;
 
     public EquipmentDeletionEntity(EquipmentDeletionInfos equipmentDeletionInfos) {
-        super(equipmentDeletionInfos);
+        super((ModificationInfos) equipmentDeletionInfos);
         assignAttributes(equipmentDeletionInfos);
     }
 
     @Override
-    public void update(@NonNull ModificationDto modificationInfos) {
+    public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((EquipmentDeletionInfos) modificationInfos);
     }

@@ -12,7 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.ConverterStationCreationInfos;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.ConverterStationCreationModel;
 import org.gridsuite.modification.server.dto.DTOUtils;
 
@@ -62,7 +62,7 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
     private Boolean reactiveCapabilityCurve;
 
     public ConverterStationCreationEntity(ConverterStationCreationInfos converterStationCreationInfos) {
-        super((ModificationDto) converterStationCreationInfos);
+        super((ModificationInfos) converterStationCreationInfos);
         assignAttributes(converterStationCreationInfos);
     }
 

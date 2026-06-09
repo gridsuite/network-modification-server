@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.InjectionCreationModel;
 
 /**
@@ -40,7 +40,7 @@ public class InjectionCreationEntity extends EquipmentCreationEntity {
     @Column(name = "connected", columnDefinition = "boolean default true")
     private boolean terminalConnected;
 
-    protected InjectionCreationEntity(ModificationDto injectionCreationInfos) {
+    protected InjectionCreationEntity(ModificationInfos injectionCreationInfos) {
         super(injectionCreationInfos);
         assignAttributes((InjectionCreationModel) injectionCreationInfos);
     }
@@ -51,7 +51,7 @@ public class InjectionCreationEntity extends EquipmentCreationEntity {
     }
 
     @Override
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((InjectionCreationModel) modificationInfos);
     }

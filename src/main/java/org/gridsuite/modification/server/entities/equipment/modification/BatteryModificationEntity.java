@@ -11,7 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.BatteryModificationInfos;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.AttributeModification;
 import org.gridsuite.modification.model.BatteryModificationModel;
 import org.gridsuite.modification.server.dto.DTOUtils;
@@ -93,13 +93,13 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     @CollectionTable
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
 
-    public BatteryModificationEntity(@NonNull ModificationDto batteryModificationInfos) {
-        super(batteryModificationInfos);
+    public BatteryModificationEntity(@NonNull BatteryModificationInfos batteryModificationInfos) {
+        super((ModificationInfos) batteryModificationInfos);
         assignAttributes(batteryModificationInfos);
     }
 
     @Override
-    public void update(@NonNull ModificationDto modificationInfos) {
+    public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((BatteryModificationModel) modificationInfos);
     }
@@ -159,7 +159,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

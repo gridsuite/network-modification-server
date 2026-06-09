@@ -10,7 +10,7 @@ import com.powsybl.iidm.network.StaticVarCompensator;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.StaticVarCompensatorCreationInfos;
 import org.gridsuite.modification.model.constants.VoltageRegulationType;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
@@ -88,12 +88,12 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
     private Double highVoltageThreshold;
 
     public StaticCompensatorCreationEntity(StaticVarCompensatorCreationInfos creationInfos) {
-        super((ModificationDto) creationInfos);
+        super((ModificationInfos) creationInfos);
         assignAttributes(creationInfos);
     }
 
     @Override
-    public void update(ModificationDto modificationInfos) {
+    public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos = (StaticVarCompensatorCreationInfos) modificationInfos;
         assignAttributes(staticVarCompensatorCreationInfos);

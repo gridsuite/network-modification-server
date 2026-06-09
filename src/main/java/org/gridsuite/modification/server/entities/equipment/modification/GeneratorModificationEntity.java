@@ -11,9 +11,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.GeneratorModificationInfos;
-import org.gridsuite.modification.dto.VoltageRegulationType;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.constants.VoltageRegulationType;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.springframework.util.CollectionUtils;
@@ -206,7 +207,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
 
     public GeneratorModificationEntity(@NonNull GeneratorModificationInfos generatorModificationInfos) {
-        super(generatorModificationInfos);
+        super((ModificationInfos) generatorModificationInfos);
         assignAttributes(generatorModificationInfos);
     }
 
@@ -297,7 +298,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

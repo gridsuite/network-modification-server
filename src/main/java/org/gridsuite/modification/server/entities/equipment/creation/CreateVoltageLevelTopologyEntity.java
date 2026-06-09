@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.CreateVoltageLevelTopologyInfos;
-import org.gridsuite.modification.dto.ModificationDto;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.CreateVoltageLevelTopologyModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
@@ -41,7 +41,7 @@ public class CreateVoltageLevelTopologyEntity extends ModificationEntity {
     private List<String> switchKinds;
 
     @Override
-    public void update(@NonNull ModificationDto modificationInfos) {
+    public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((CreateVoltageLevelTopologyModel) modificationInfos);
     }
