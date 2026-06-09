@@ -13,7 +13,7 @@ import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.MoveFeederBayInfos;
+import org.gridsuite.modification.model.MoveFeederBayInfos;
 
 /**
  * @author Etienne Lesot <etienne.lesot at rte-france.com>

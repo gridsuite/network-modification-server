@@ -6,16 +6,15 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.dto.CurrentLimitsInfos;
+import org.gridsuite.modification.model.CurrentLimitsInfos;
 
 import java.util.List;
 import java.util.UUID;
-
-import jakarta.persistence.*;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>

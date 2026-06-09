@@ -6,14 +6,14 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.dto.LoadScalingInfos;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 import java.util.stream.Collectors;
 
 /**

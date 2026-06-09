@@ -7,15 +7,15 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.dto.GeneratorScalingInfos;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor

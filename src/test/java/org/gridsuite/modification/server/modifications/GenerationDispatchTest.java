@@ -16,6 +16,9 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAt
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.GeneratorsFilterInfos;
+import org.gridsuite.modification.model.GeneratorsFrequencyReserveInfos;
+import org.gridsuite.modification.model.SubstationsGeneratorsOrderingInfos;
 import org.gridsuite.modification.modifications.GenerationDispatch;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -34,10 +37,9 @@ import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.utils.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>

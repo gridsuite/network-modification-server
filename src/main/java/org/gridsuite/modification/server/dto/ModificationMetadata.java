@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.ModificationType;
+
 import java.util.UUID;
 
 /**

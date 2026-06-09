@@ -13,11 +13,11 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.assignment.IntegerAssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.assignment.StringAssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.equipmentfield.LineField;
+import org.gridsuite.modification.model.byfilter.assignment.AssignmentInfos;
+import org.gridsuite.modification.model.byfilter.assignment.DoubleAssignmentInfos;
+import org.gridsuite.modification.model.byfilter.assignment.IntegerAssignmentInfos;
+import org.gridsuite.modification.model.byfilter.assignment.StringAssignmentInfos;
+import org.gridsuite.modification.model.byfilter.equipmentfield.LineField;
 
 import java.util.Date;
 import java.util.List;

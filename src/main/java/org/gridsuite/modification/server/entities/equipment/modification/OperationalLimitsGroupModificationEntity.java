@@ -11,11 +11,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.LimitsPropertyInfos;
-import org.gridsuite.modification.dto.OperationalLimitsGroupInfos;
-import org.gridsuite.modification.dto.OperationalLimitsGroupModificationInfos;
-import org.gridsuite.modification.dto.OperationalLimitsGroupModificationType;
-import org.gridsuite.modification.dto.TemporaryLimitModificationType;
+import org.gridsuite.modification.model.LimitsPropertyInfos;
+import org.gridsuite.modification.model.OperationalLimitsGroupInfos;
+import org.gridsuite.modification.model.OperationalLimitsGroupModificationInfos;
+import org.gridsuite.modification.model.OperationalLimitsGroupModificationType;
+import org.gridsuite.modification.model.TemporaryLimitModificationType;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;

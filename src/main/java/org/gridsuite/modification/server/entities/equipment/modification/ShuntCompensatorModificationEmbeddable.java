@@ -11,7 +11,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.LccShuntCompensatorModificationInfos;
+import org.gridsuite.modification.model.LccShuntCompensatorModificationInfos;
 
 import java.util.List;
 

@@ -6,15 +6,21 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.VoltageInitBusModificationInfos;
+import org.gridsuite.modification.model.VoltageInitGeneratorModificationInfos;
+import org.gridsuite.modification.model.VoltageInitShuntCompensatorModificationInfos;
+import org.gridsuite.modification.model.VoltageInitStaticVarCompensatorModificationInfos;
+import org.gridsuite.modification.model.VoltageInitTransformerModificationInfos;
+import org.gridsuite.modification.model.VoltageInitVscConverterStationModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.time.Instant;
 import java.util.List;

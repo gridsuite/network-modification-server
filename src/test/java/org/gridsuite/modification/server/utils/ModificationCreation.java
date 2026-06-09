@@ -11,6 +11,11 @@ import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.CouplingDeviceInfos;
+import org.gridsuite.modification.model.FreePropertyInfos;
+import org.gridsuite.modification.model.OperationType;
+import org.gridsuite.modification.model.ReactiveCapabilityCurvePointsInfos;
 
 import java.util.Arrays;
 

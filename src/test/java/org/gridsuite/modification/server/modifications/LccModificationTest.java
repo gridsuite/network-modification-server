@@ -5,12 +5,12 @@ import com.powsybl.iidm.network.HvdcLine;
 import com.powsybl.iidm.network.LccConverterStation;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.dto.AttributeModification;
-import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.LccConverterStationModificationInfos;
 import org.gridsuite.modification.dto.LccModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.OperationType;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.FreePropertyInfos;
+import org.gridsuite.modification.model.OperationType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.List;

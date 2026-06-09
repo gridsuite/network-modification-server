@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.dto.FreePropertyInfos;
+import org.gridsuite.modification.model.FreePropertyInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import java.util.UUID;

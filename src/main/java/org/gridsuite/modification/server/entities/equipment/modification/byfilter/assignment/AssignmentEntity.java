@@ -10,13 +10,21 @@ package org.gridsuite.modification.server.entities.equipment.modification.byfilt
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.dto.FilterInfos;
-import org.gridsuite.modification.dto.byfilter.DataType;
-import org.gridsuite.modification.dto.byfilter.assignment.*;
+import org.gridsuite.modification.model.byfilter.assignment.*;
+import org.gridsuite.modification.model.FilterInfos;
+import org.gridsuite.modification.model.byfilter.DataType;
+import org.gridsuite.modification.model.byfilter.assignment.AssignmentInfos;
+import org.gridsuite.modification.model.byfilter.assignment.BooleanAssignmentInfos;
+import org.gridsuite.modification.model.byfilter.assignment.DoubleAssignmentInfos;
+import org.gridsuite.modification.model.byfilter.assignment.EnumAssignmentInfos;
+import org.gridsuite.modification.model.byfilter.assignment.IntegerAssignmentInfos;
+import org.gridsuite.modification.model.byfilter.assignment.PropertyAssignmentInfos;
+import org.gridsuite.modification.model.byfilter.assignment.StringAssignmentInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
 
 import javax.annotation.Nullable;
+
 import java.util.List;
 
 /**

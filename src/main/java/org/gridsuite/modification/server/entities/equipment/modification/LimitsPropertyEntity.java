@@ -12,7 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.dto.LimitsPropertyInfos;
+import org.gridsuite.modification.model.LimitsPropertyInfos;
 
 import java.util.UUID;
 

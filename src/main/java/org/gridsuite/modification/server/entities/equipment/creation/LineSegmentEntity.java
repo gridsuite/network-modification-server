@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.modification.dto.LineSegmentInfos;
+import org.gridsuite.modification.model.LineSegmentInfos;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -7,15 +7,14 @@
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import com.powsybl.iidm.network.LoadType;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.OperationType;
-
-import jakarta.persistence.*;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.OperationType;
 import org.springframework.util.CollectionUtils;
 
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;

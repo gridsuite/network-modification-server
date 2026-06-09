@@ -8,8 +8,8 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.gridsuite.modification.dto.LimitsPropertyInfos;
-import org.gridsuite.modification.dto.OperationalLimitsGroupInfos;
+import org.gridsuite.modification.model.LimitsPropertyInfos;
+import org.gridsuite.modification.model.OperationalLimitsGroupInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.LimitsPropertyEntity;
 import org.springframework.util.CollectionUtils;
 

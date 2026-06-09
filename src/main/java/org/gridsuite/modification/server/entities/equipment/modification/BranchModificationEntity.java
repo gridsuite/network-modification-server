@@ -11,6 +11,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.OperationalLimitsGroupModificationInfos;
+import org.gridsuite.modification.model.OperationalLimitsGroupsModificationType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 
 import java.util.ArrayList;

@@ -7,13 +7,12 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.BranchCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-
-import jakarta.persistence.*;
-import org.gridsuite.modification.dto.OperationalLimitsGroupInfos;
+import org.gridsuite.modification.model.OperationalLimitsGroupInfos;
 
 import java.util.ArrayList;
 import java.util.List;

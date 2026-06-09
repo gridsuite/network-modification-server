@@ -12,9 +12,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.ShiftEquipmentType;
-import org.gridsuite.modification.dto.ShiftType;
-import org.gridsuite.modification.dto.BalancesAdjustmentAreaInfos;
+import org.gridsuite.modification.model.BalancesAdjustmentAreaInfos;
+import org.gridsuite.modification.model.ShiftEquipmentType;
+import org.gridsuite.modification.model.ShiftType;
 import org.gridsuite.modification.server.utils.CountriesUtils;
 
 import java.util.UUID;

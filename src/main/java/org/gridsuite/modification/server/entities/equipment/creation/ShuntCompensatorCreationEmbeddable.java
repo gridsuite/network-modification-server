@@ -10,7 +10,7 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import jakarta.persistence.Embeddable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.LccShuntCompensatorInfos;
+import org.gridsuite.modification.model.LccShuntCompensatorInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.AbstractShuntCompensatorEmbeddable;
 
 import java.util.List;

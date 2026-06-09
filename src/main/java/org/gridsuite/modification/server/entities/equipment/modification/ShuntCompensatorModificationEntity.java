@@ -7,27 +7,26 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import org.gridsuite.modification.dto.AttributeModification;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ShuntCompensatorModificationInfos;
-import org.gridsuite.modification.dto.ShuntCompensatorType;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerModificationEmbedded;
-
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ShuntCompensatorModificationInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.ShuntCompensatorType;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerModificationEmbedded;
 import org.springframework.util.CollectionUtils;
 
-import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
+import static org.gridsuite.modification.model.AttributeModification.toAttributeModification;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>

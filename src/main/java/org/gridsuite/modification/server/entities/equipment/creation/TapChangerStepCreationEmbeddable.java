@@ -6,13 +6,13 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.TapChangerType;
-import org.gridsuite.modification.dto.TapChangerStepCreationInfos;
+import org.gridsuite.modification.model.TapChangerStepCreationInfos;
 
-import jakarta.persistence.*;
 import java.util.List;
 import java.util.stream.Collectors;
 

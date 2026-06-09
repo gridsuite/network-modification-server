@@ -10,7 +10,6 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Transient;
-
 import org.springframework.data.domain.Persistable;
 
 /**

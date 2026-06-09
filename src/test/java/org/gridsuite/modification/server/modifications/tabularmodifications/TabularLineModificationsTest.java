@@ -11,7 +11,15 @@ import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
-import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.CurrentLimitsModificationInfos;
+import org.gridsuite.modification.model.CurrentTemporaryLimitModificationInfos;
+import org.gridsuite.modification.model.OperationType;
+import org.gridsuite.modification.model.OperationalLimitsGroupInfos;
+import org.gridsuite.modification.model.OperationalLimitsGroupModificationInfos;
+import org.gridsuite.modification.model.OperationalLimitsGroupModificationType;
+import org.gridsuite.modification.model.TemporaryLimitModificationType;
+import org.gridsuite.modification.model.tabular.TabularPropertyInfos;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ApiUtils;
@@ -28,9 +36,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
-import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
+import static org.gridsuite.modification.model.AttributeModification.toAttributeModification;
+import static org.gridsuite.modification.model.OperationalLimitsGroupInfos.Applicability.SIDE1;
+import static org.gridsuite.modification.model.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**

@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification.byfilt
 
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.byfilter.AbstractAssignmentInfos;
+import org.gridsuite.modification.model.byfilter.AbstractAssignmentInfos;
 
 import java.util.UUID;
 

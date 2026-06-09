@@ -7,12 +7,14 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.PhaseTapChanger;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.TapChangerType;
 import org.gridsuite.modification.dto.*;
-
-import jakarta.persistence.*;
+import org.gridsuite.modification.model.PhaseTapChangerCreationInfos;
+import org.gridsuite.modification.model.RatioTapChangerCreationInfos;
+import org.gridsuite.modification.model.TapChangerStepCreationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 

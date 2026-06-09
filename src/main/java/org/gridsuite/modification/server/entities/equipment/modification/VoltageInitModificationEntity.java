@@ -6,33 +6,31 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.Setter;
-import org.gridsuite.modification.dto.VoltageInitGeneratorModificationInfos;
-import org.gridsuite.modification.dto.VoltageInitModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.VoltageInitBusModificationInfos;
-import org.gridsuite.modification.dto.VoltageInitShuntCompensatorModificationInfos;
-import org.gridsuite.modification.dto.VoltageInitStaticVarCompensatorModificationInfos;
-import org.gridsuite.modification.dto.VoltageInitTransformerModificationInfos;
-import org.gridsuite.modification.dto.VoltageInitVscConverterStationModificationInfos;
-import org.gridsuite.modification.server.entities.ModificationEntity;
-
 import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-import jakarta.persistence.Column;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.Setter;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.VoltageInitModificationInfos;
+import org.gridsuite.modification.model.VoltageInitBusModificationInfos;
+import org.gridsuite.modification.model.VoltageInitGeneratorModificationInfos;
+import org.gridsuite.modification.model.VoltageInitShuntCompensatorModificationInfos;
+import org.gridsuite.modification.model.VoltageInitStaticVarCompensatorModificationInfos;
+import org.gridsuite.modification.model.VoltageInitTransformerModificationInfos;
+import org.gridsuite.modification.model.VoltageInitVscConverterStationModificationInfos;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
-
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>

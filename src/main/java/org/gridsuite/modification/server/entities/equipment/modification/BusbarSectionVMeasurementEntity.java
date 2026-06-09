@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.BusbarSectionVMeasurementInfos;
+import org.gridsuite.modification.model.BusbarSectionVMeasurementInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 

@@ -7,14 +7,13 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import org.gridsuite.modification.dto.AttributeModification;
-import org.gridsuite.modification.dto.OperationType;
-
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.OperationType;
 
 /**
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>

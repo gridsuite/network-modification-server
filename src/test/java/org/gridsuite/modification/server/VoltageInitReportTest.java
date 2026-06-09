@@ -15,6 +15,11 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ThreeSides;
 import lombok.extern.slf4j.Slf4j;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.VoltageInitGeneratorModificationInfos;
+import org.gridsuite.modification.model.VoltageInitShuntCompensatorModificationInfos;
+import org.gridsuite.modification.model.VoltageInitStaticVarCompensatorModificationInfos;
+import org.gridsuite.modification.model.VoltageInitTransformerModificationInfos;
+import org.gridsuite.modification.model.VoltageInitVscConverterStationModificationInfos;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -42,12 +47,12 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.verify;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
