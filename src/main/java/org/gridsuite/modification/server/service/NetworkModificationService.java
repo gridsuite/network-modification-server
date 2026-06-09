@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -382,14 +383,32 @@ public class NetworkModificationService {
         }
     }
 
-    public CompletableFuture<NetworkModificationsResult> moveModifications(@NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid, UUID beforeModificationUuid,
-                                                                       @NonNull List<UUID> modificationsToMoveUuids, @NonNull List<ModificationApplicationContext> applicationContexts,
-                                                                       boolean applyModifications) {
+    @Transactional
+    public CompletableFuture<NetworkModificationsResult> moveModifications(@NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid, UUID beforeModificationUuid, @NonNull List<UUID> modificationsToMoveUuids, @NonNull List<ModificationApplicationContext> applicationContexts, boolean applyModifications) {
         // update origin/destinations groups to cut and paste all modificationsToMove
         // FullDto needed for toModificationInfos() after the modifications have been applied
-        List<ModificationInfos> modifications = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
+        Set<UUID> originRootUuids = networkModificationRepository.getModifications(originGroupUuid, true, true).stream()
+                .map(ModificationInfos::getUuid)
+                .collect(Collectors.toSet());
 
-        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = applyModifications && !modifications.isEmpty() ? applyModifications(destinationGroupUuid, modifications, applicationContexts) : CompletableFuture.completedFuture(List.of());
+        Map<UUID, UUID> parentByChild = buildParentCompositeMap(originGroupUuid);
+        Set<UUID> selection = new HashSet<>(modificationsToMoveUuids);
+
+   List<UUID> subModificationUuids = modificationsToMoveUuids.stream()
+                .filter(uuid -> !originRootUuids.contains(uuid))
+                .filter(uuid -> !hasSelectedAncestor(uuid, selection, parentByChild))
+                .toList();
+        for (UUID uuid : subModificationUuids) {
+            UUID parentCompositeUuid = parentByChild.get(uuid);
+            if (parentCompositeUuid != null) {
+                networkModificationRepository.moveSubModification(originGroupUuid, parentCompositeUuid, null, uuid, null);
+            }
+        }
+        List<ModificationInfos> modifications = networkModificationRepository.moveModifications(
+                destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
+
+         boolean shouldApply = applyModifications && !modifications.isEmpty();
+        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = shouldApply ? applyModifications(destinationGroupUuid, modifications, applicationContexts) : CompletableFuture.completedFuture(List.of());
         return futureResult.thenApply(result -> new NetworkModificationsResult(modifications.stream().map(ModificationInfos::getUuid).toList(), result));
     }
 
@@ -632,5 +651,36 @@ public class NetworkModificationService {
             }
         }
         return bbsIds;
+    }
+
+
+    private Map<UUID, UUID> buildParentCompositeMap(UUID groupUuid) {
+        Map<UUID, UUID> parentByChild = new HashMap<>();
+        for (ModificationInfos root : networkModificationRepository.getModifications(groupUuid, false, true)) {
+            if (root instanceof CompositeModificationInfos composite) {
+                collectParentComposite(composite, parentByChild);
+            }
+        }
+        return parentByChild;
+    }
+
+    private void collectParentComposite(CompositeModificationInfos composite, Map<UUID, UUID> parentByChild) {
+        for (ModificationInfos child : composite.getModificationsInfos()) {
+            parentByChild.put(child.getUuid(), composite.getUuid());
+            if (child instanceof CompositeModificationInfos nested) {
+                collectParentComposite(nested, parentByChild);
+            }
+        }
+    }
+
+    private boolean hasSelectedAncestor(UUID uuid, Set<UUID> selection, Map<UUID, UUID> parentByChild) {
+        UUID parent = parentByChild.get(uuid);
+        while (parent != null) {
+            if (selection.contains(parent)) {
+                return true;
+            }
+            parent = parentByChild.get(parent);
+        }
+        return false;
     }
 }
