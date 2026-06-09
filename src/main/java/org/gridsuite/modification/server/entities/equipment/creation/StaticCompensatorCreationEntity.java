@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.StaticVarCompensatorCreationInfos;
-import org.gridsuite.modification.dto.VoltageRegulationType;
+import org.gridsuite.modification.model.constants.VoltageRegulationType;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -88,7 +88,7 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
     private Double highVoltageThreshold;
 
     public StaticCompensatorCreationEntity(StaticVarCompensatorCreationInfos creationInfos) {
-        super(creationInfos);
+        super((ModificationInfos) creationInfos);
         assignAttributes(creationInfos);
     }
 
@@ -168,7 +168,7 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
              // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

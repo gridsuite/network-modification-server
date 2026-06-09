@@ -8,8 +8,8 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.gridsuite.modification.dto.LimitsPropertyInfos;
-import org.gridsuite.modification.dto.OperationalLimitsGroupInfos;
+import org.gridsuite.modification.model.LimitsPropertyModel;
+import org.gridsuite.modification.model.OperationalLimitsGroupModel;
 import org.gridsuite.modification.server.entities.equipment.modification.LimitsPropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -39,7 +39,7 @@ public class OperationalLimitsGroupEntity {
 
     @Column(name = "applicability")
     @Enumerated(EnumType.STRING)
-    private OperationalLimitsGroupInfos.Applicability applicability;
+    private OperationalLimitsGroupModel.Applicability applicability;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "operational_limit_group_id", foreignKey = @ForeignKey(name = "operational_limit_group_id_fk"))
@@ -53,7 +53,7 @@ public class OperationalLimitsGroupEntity {
             ))
     private CurrentLimitsEntity currentLimits;
 
-    private static List<LimitsPropertyEntity> toLimitPropertyEntities(List<LimitsPropertyInfos> properties) {
+    private static List<LimitsPropertyEntity> toLimitPropertyEntities(List<LimitsPropertyModel> properties) {
         List<LimitsPropertyEntity> result = new ArrayList<>();
         if (!CollectionUtils.isEmpty(properties)) {
             result = properties.stream().map(LimitsPropertyEntity::fromLimitsPropertyInfos).toList();
@@ -61,7 +61,7 @@ public class OperationalLimitsGroupEntity {
         return result;
     }
 
-    public static List<OperationalLimitsGroupEntity> toOperationalLimitsGroupsEntities(@NonNull List<OperationalLimitsGroupInfos> limitsGroups) {
+    public static List<OperationalLimitsGroupEntity> toOperationalLimitsGroupsEntities(@NonNull List<OperationalLimitsGroupModel> limitsGroups) {
         return limitsGroups.stream()
                 .filter(Objects::nonNull)
                 .map(limitsGroup ->
@@ -76,11 +76,11 @@ public class OperationalLimitsGroupEntity {
                 .toList();
     }
 
-    public static List<OperationalLimitsGroupInfos> fromOperationalLimitsGroupsEntities(List<OperationalLimitsGroupEntity> limitsGroupsEntities) {
+    public static List<OperationalLimitsGroupModel> fromOperationalLimitsGroupsEntities(List<OperationalLimitsGroupEntity> limitsGroupsEntities) {
         return CollectionUtils.isEmpty(limitsGroupsEntities) ? null :
                 limitsGroupsEntities.stream()
                         .map(limitsGroupEntity ->
-                                OperationalLimitsGroupInfos.builder()
+                                OperationalLimitsGroupModel.builder()
                                         .id(limitsGroupEntity.getId())
                                         .applicability(limitsGroupEntity.getApplicability())
                                         .currentLimits(limitsGroupEntity.getCurrentLimits().toCurrentLimitsInfos())

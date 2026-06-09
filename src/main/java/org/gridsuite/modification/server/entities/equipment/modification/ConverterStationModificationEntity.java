@@ -11,9 +11,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.ConverterStationModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.ConverterStationModificationModel;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
@@ -75,8 +76,13 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     private BooleanModificationEmbedded reactiveCapabilityCurve;
 
     public ConverterStationModificationEntity(ConverterStationModificationInfos converterStationModificationInfos) {
-        super(converterStationModificationInfos);
+        super((ModificationInfos) converterStationModificationInfos);
         assignAttributes(converterStationModificationInfos);
+    }
+
+    public ConverterStationModificationEntity(ConverterStationModificationModel converterStationModificationModel) {
+        super(converterStationModificationModel);
+        assignAttributes(converterStationModificationModel);
     }
 
     @Override
@@ -85,7 +91,7 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
         assignAttributes((ConverterStationModificationInfos) modificationInfos);
     }
 
-    private void assignAttributes(ConverterStationModificationInfos converterStationModificationInfos) {
+    private void assignAttributes(ConverterStationModificationModel converterStationModificationInfos) {
         this.lossFactor = converterStationModificationInfos.getLossFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getLossFactor()) : null;
         this.minQ = converterStationModificationInfos.getMinQ() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMinQ()) : null;
         this.maxQ = converterStationModificationInfos.getMaxQ() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMaxQ()) : null;

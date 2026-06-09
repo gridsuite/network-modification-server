@@ -11,7 +11,7 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Switch;
 import com.powsybl.iidm.network.VoltageLevel;
-import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
+import org.gridsuite.modification.model.EquipmentAttributeModificationModel;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelTopologyModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -41,27 +41,27 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
 
     @Override
     protected ModificationInfos buildModification() {
-        List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfos = new ArrayList<>(
+        List<EquipmentAttributeModificationModel> equipmentAttributeModificationInfos = new ArrayList<>(
                 Arrays.asList(
-                        EquipmentAttributeModificationInfos.builder()
+                        EquipmentAttributeModificationModel.builder()
                                 .equipmentId("v1d1")
                                 .equipmentAttributeName("open")
                                 .equipmentAttributeValue(false)
                                 .equipmentType(IdentifiableType.SWITCH)
                                 .build(),
-                        EquipmentAttributeModificationInfos.builder()
+                        EquipmentAttributeModificationModel.builder()
                                 .equipmentId("v1b1")
                                 .equipmentAttributeName("open")
                                 .equipmentAttributeValue(false)
                                 .equipmentType(IdentifiableType.SWITCH)
                                 .build(),
-                        EquipmentAttributeModificationInfos.builder()
+                        EquipmentAttributeModificationModel.builder()
                                 .equipmentId("v1blcc")
                                 .equipmentAttributeName("open")
                                 .equipmentAttributeValue(false)
                                 .equipmentType(IdentifiableType.SWITCH)
                                 .build(),
-                        EquipmentAttributeModificationInfos.builder()
+                        EquipmentAttributeModificationModel.builder()
                                 .equipmentId("v1dlcc")
                                 .equipmentAttributeName("open")
                                 .equipmentAttributeValue(false)
@@ -79,15 +79,15 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfos = new ArrayList<>(
+        List<EquipmentAttributeModificationModel> equipmentAttributeModificationInfos = new ArrayList<>(
                 Arrays.asList(
-                        EquipmentAttributeModificationInfos.builder()
+                        EquipmentAttributeModificationModel.builder()
                                 .equipmentId("v1d1")
                                 .equipmentAttributeName("open")
                                 .equipmentAttributeValue(true)
                                 .equipmentType(IdentifiableType.SWITCH)
                                 .build(),
-                        EquipmentAttributeModificationInfos.builder()
+                        EquipmentAttributeModificationModel.builder()
                                 .equipmentId("v1b1")
                                 .equipmentAttributeName("open")
                                 .equipmentAttributeValue(true)
@@ -166,7 +166,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
 
     @Test
     void testEmptyModifications() throws Exception {
-        List<EquipmentAttributeModificationInfos> emptyModifications = new ArrayList<>();
+        List<EquipmentAttributeModificationModel> emptyModifications = new ArrayList<>();
 
         VoltageLevelTopologyModificationInfos infos = VoltageLevelTopologyModificationInfos.builder()
                 .stashed(false)
@@ -183,9 +183,9 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
 
     @Test
     void testNonExistentSwitch() throws Exception {
-        List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfos = new ArrayList<>(
+        List<EquipmentAttributeModificationModel> equipmentAttributeModificationInfos = new ArrayList<>(
                 Arrays.asList(
-                        EquipmentAttributeModificationInfos.builder()
+                        EquipmentAttributeModificationModel.builder()
                                 .equipmentId("nonexistent_switch")
                                 .equipmentAttributeName("open")
                                 .equipmentAttributeValue(false)

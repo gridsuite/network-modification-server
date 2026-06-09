@@ -15,6 +15,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ThreeSides;
 import lombok.extern.slf4j.Slf4j;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.*;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -114,38 +115,35 @@ class VoltageInitReportTest {
                 .date(Instant.EPOCH)
                 .stashed(false)
                 .generators(List.of(
-                    VoltageInitGeneratorModificationInfos.builder().generatorId("GTH2").targetV(0.1).build())) //added for test case
+                    VoltageInitGeneratorModificationModel.builder().generatorId("GTH2").targetV(0.1).build())) //added for test case
                 .transformers(List.of(
-                    VoltageInitTransformerModificationInfos.builder().transformerId("TWT2").ratioTapChangerPosition(2).build()))
+                    VoltageInitTransformerModificationModel.builder().transformerId("TWT2").ratioTapChangerPosition(2).build()))
                 .staticVarCompensators(List.of(
-                    VoltageInitStaticVarCompensatorModificationInfos.builder().staticVarCompensatorId("SVC").reactivePowerSetpoint(1346.7).build()))
+                    VoltageInitStaticVarCompensatorModificationModel.builder().staticVarCompensatorId("SVC").reactivePowerSetpoint(1346.7).build()))
                 .vscConverterStations(List.of(
-                    VoltageInitVscConverterStationModificationInfos.builder().vscConverterStationId("VSC2").reactivePowerSetpoint(326.6).build()))
+                    VoltageInitVscConverterStationModificationModel.builder().vscConverterStationId("VSC2").reactivePowerSetpoint(326.6).build()))
                 .shuntCompensators(List.of(
-                    VoltageInitShuntCompensatorModificationInfos.builder().shuntCompensatorId("SHUNT2").sectionCount(1).connect(true).build(),
-                    VoltageInitShuntCompensatorModificationInfos.builder().shuntCompensatorId("SHUNT3").sectionCount(0).connect(false).build())) //altered for test case
+                    VoltageInitShuntCompensatorModificationModel.builder().shuntCompensatorId("SHUNT2").sectionCount(1).connect(true).build(),
+                    VoltageInitShuntCompensatorModificationModel.builder().shuntCompensatorId("SHUNT3").sectionCount(0).connect(false).build())) //altered for test case
                 .buses(List.of())
                 .build()),
-            Arguments.of(ApplicationStatus.WITH_WARNINGS, "reports_voltage_init_modification_warnings.json", VoltageInitModificationInfos.builder()
-                .uuid(UUID.fromString("44444444-4444-4444-4444-444444444444"))
-                .date(Instant.EPOCH)
-                .stashed(false)
+            Arguments.of(ApplicationStatus.WITH_WARNINGS, "reports_voltage_init_modification_warnings.json", VoltageInitModificationModel.builder()
                 .generators(List.of(
-                    VoltageInitGeneratorModificationInfos.builder().generatorId("G1").targetQ(10.).build(),
-                    VoltageInitGeneratorModificationInfos.builder().generatorId("G2").targetV(226.).build()))
+                    VoltageInitGeneratorModificationModel.builder().generatorId("G1").targetQ(10.).build(),
+                    VoltageInitGeneratorModificationModel.builder().generatorId("G2").targetV(226.).build()))
                 .transformers(List.of(
-                    VoltageInitTransformerModificationInfos.builder().transformerId("2WT1").ratioTapChangerPosition(3).build(),
-                    VoltageInitTransformerModificationInfos.builder().transformerId("3WT1").ratioTapChangerPosition(1).legSide(ThreeSides.TWO).build()))
+                    VoltageInitTransformerModificationModel.builder().transformerId("2WT1").ratioTapChangerPosition(3).build(),
+                    VoltageInitTransformerModificationModel.builder().transformerId("3WT1").ratioTapChangerPosition(1).legSide(ThreeSides.TWO).build()))
                 .staticVarCompensators(List.of(
-                    VoltageInitStaticVarCompensatorModificationInfos.builder().staticVarCompensatorId("SVC1").reactivePowerSetpoint(50.).build(),
-                    VoltageInitStaticVarCompensatorModificationInfos.builder().staticVarCompensatorId("SVC2").voltageSetpoint(374.).build()))
+                    VoltageInitStaticVarCompensatorModificationModel.builder().staticVarCompensatorId("SVC1").reactivePowerSetpoint(50.).build(),
+                    VoltageInitStaticVarCompensatorModificationModel.builder().staticVarCompensatorId("SVC2").voltageSetpoint(374.).build()))
                 .vscConverterStations(List.of(
-                    VoltageInitVscConverterStationModificationInfos.builder().vscConverterStationId("VSC1").reactivePowerSetpoint(40.).build(),
-                    VoltageInitVscConverterStationModificationInfos.builder().vscConverterStationId("VSC2").voltageSetpoint(224.).build()))
+                    VoltageInitVscConverterStationModificationModel.builder().vscConverterStationId("VSC1").reactivePowerSetpoint(40.).build(),
+                    VoltageInitVscConverterStationModificationModel.builder().vscConverterStationId("VSC2").voltageSetpoint(224.).build()))
                 .shuntCompensators(List.of(
-                    VoltageInitShuntCompensatorModificationInfos.builder().shuntCompensatorId("v2shunt").sectionCount(1).connect(true).build(),
-                    VoltageInitShuntCompensatorModificationInfos.builder().shuntCompensatorId("v5shunt").sectionCount(0).connect(false).build(),
-                    VoltageInitShuntCompensatorModificationInfos.builder().shuntCompensatorId("v6shunt").sectionCount(1).connect(false).build()))
+                    VoltageInitShuntCompensatorModificationModel.builder().shuntCompensatorId("v2shunt").sectionCount(1).connect(true).build(),
+                    VoltageInitShuntCompensatorModificationModel.builder().shuntCompensatorId("v5shunt").sectionCount(0).connect(false).build(),
+                    VoltageInitShuntCompensatorModificationModel.builder().shuntCompensatorId("v6shunt").sectionCount(1).connect(false).build()))
                 .buses(List.of())
                 .rootNetworkName("rootNetwork")
                 .nodeName("node")

@@ -67,9 +67,9 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     @Column(name = "stepUpTransformerX")
     private Double stepUpTransformerX;
 
-    public BatteryCreationEntity(@NonNull BatteryCreationInfos batteryCreationInfos) {
+    public BatteryCreationEntity(@NonNull ModificationInfos batteryCreationInfos) {
         super(batteryCreationInfos);
-        assignAttributes(batteryCreationInfos);
+        assignAttributes((BatteryCreationInfos) batteryCreationInfos);
     }
 
     @Override
@@ -131,7 +131,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 

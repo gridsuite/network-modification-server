@@ -10,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
+import org.gridsuite.modification.model.EquipmentAttributeModificationModel;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -24,5 +25,9 @@ public class BooleanEquipmentAttributeModificationEntity extends EquipmentAttrib
 
     public BooleanEquipmentAttributeModificationEntity(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
         super(equipmentAttributeModificationInfos);
+    }
+
+    public BooleanEquipmentAttributeModificationEntity(EquipmentAttributeModificationModel equipmentAttributeModificationModel) {
+        super(equipmentAttributeModificationModel);
     }
 }

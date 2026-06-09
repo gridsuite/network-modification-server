@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.CreateVoltageLevelTopologyInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.CreateVoltageLevelTopologyModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import java.util.List;
@@ -42,10 +43,10 @@ public class CreateVoltageLevelTopologyEntity extends ModificationEntity {
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((CreateVoltageLevelTopologyInfos) modificationInfos);
+        assignAttributes((CreateVoltageLevelTopologyModel) modificationInfos);
     }
 
-    private void assignAttributes(CreateVoltageLevelTopologyInfos createVoltageLevelTopologyInfos) {
+    private void assignAttributes(CreateVoltageLevelTopologyModel createVoltageLevelTopologyInfos) {
         this.voltageLevelId = createVoltageLevelTopologyInfos.getVoltageLevelId();
         this.switchKinds = createVoltageLevelTopologyInfos.getSwitchKinds().stream().map(Enum::name).collect(Collectors.toList());
         this.sectionCount = createVoltageLevelTopologyInfos.getSectionCount();

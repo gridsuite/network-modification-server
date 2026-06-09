@@ -10,7 +10,7 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import jakarta.persistence.Embeddable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.LccShuntCompensatorInfos;
+import org.gridsuite.modification.model.LccShuntCompensatorModel;
 import org.gridsuite.modification.server.entities.equipment.modification.AbstractShuntCompensatorEmbeddable;
 
 import java.util.List;
@@ -28,7 +28,7 @@ public class ShuntCompensatorCreationEmbeddable extends AbstractShuntCompensator
         super(id, name, maxQAtNominalV, connectedToHvdc);
     }
 
-    public static List<ShuntCompensatorCreationEmbeddable> toEmbeddableShuntCompensatorCreation(List<LccShuntCompensatorInfos> compensatorCreationInfos) {
+    public static List<ShuntCompensatorCreationEmbeddable> toEmbeddableShuntCompensatorCreation(List<LccShuntCompensatorModel> compensatorCreationInfos) {
         return compensatorCreationInfos == null ? null :
                 compensatorCreationInfos.stream()
                         .map(compensatorCreationInfo -> new ShuntCompensatorCreationEmbeddable(compensatorCreationInfo.getId(),
@@ -38,11 +38,11 @@ public class ShuntCompensatorCreationEmbeddable extends AbstractShuntCompensator
                         .toList();
     }
 
-    public static List<LccShuntCompensatorInfos> fromEmbeddableShuntCompensatorCreation(List<ShuntCompensatorCreationEmbeddable> compensatorCreationEmbeddables) {
+    public static List<LccShuntCompensatorModel> fromEmbeddableShuntCompensatorCreation(List<ShuntCompensatorCreationEmbeddable> compensatorCreationEmbeddables) {
         return compensatorCreationEmbeddables == null ? null :
                 compensatorCreationEmbeddables.stream()
                         .map(compensatorCreationEmbeddable ->
-                            new LccShuntCompensatorInfos(compensatorCreationEmbeddable.getId(),
+                            new LccShuntCompensatorModel(compensatorCreationEmbeddable.getId(),
                                 compensatorCreationEmbeddable.getName(),
                                 compensatorCreationEmbeddable.getMaxQAtNominalV(),
                                 compensatorCreationEmbeddable.getConnectedToHvdc()))

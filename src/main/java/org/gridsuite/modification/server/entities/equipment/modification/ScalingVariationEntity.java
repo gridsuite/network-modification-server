@@ -15,6 +15,7 @@ import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.ScalingVariationInfos;
 
 import jakarta.persistence.*;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;

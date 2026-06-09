@@ -10,6 +10,8 @@ import com.powsybl.iidm.network.Country;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.constants.OperationType;
 import org.springframework.util.CollectionUtils;
 import org.gridsuite.modification.dto.*;
 
@@ -29,7 +31,7 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
     private OperationType countryOp;
 
     public SubstationModificationEntity(@NonNull SubstationModificationInfos substationModificationInfos) {
-        super(substationModificationInfos);
+        super((ModificationInfos) substationModificationInfos);
         assignAttributes(substationModificationInfos);
     }
 
@@ -62,7 +64,7 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
                 .country(AttributeModification.toAttributeModification(getCountry(), getCountryOp()))
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                     getProperties().stream()
-                        .map(FreePropertyEntity::toInfos)
+                        .map(FreePropertyEntity::toModel)
                         .toList());
     }
 }

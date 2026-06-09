@@ -42,7 +42,7 @@ public class VoltageLevelTopologyModificationEntity extends EquipmentModificatio
     private List<BooleanEquipmentAttributeModificationEntity> equipmentAttributeModification;
 
     public VoltageLevelTopologyModificationEntity(VoltageLevelTopologyModificationInfos voltageLevelTopologyModificationInfos) {
-        super(voltageLevelTopologyModificationInfos);
+        super((ModificationInfos) voltageLevelTopologyModificationInfos);
         assignAttributes(voltageLevelTopologyModificationInfos);
     }
 
@@ -87,7 +87,7 @@ public class VoltageLevelTopologyModificationEntity extends EquipmentModificatio
                 .description(getDescription())
                 .equipmentAttributeModificationList(Optional.ofNullable(attributeModificationEntities)
                         .map(list -> list.stream()
-                                .map(EquipmentAttributeModificationEntity::toModificationInfos)
+                                .map(EquipmentAttributeModificationEntity::toModificationModel)
                                 .toList())
                         .orElse(null));
     }

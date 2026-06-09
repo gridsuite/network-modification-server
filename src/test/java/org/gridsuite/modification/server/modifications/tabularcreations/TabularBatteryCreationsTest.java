@@ -12,9 +12,9 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.BatteryCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ReactiveCapabilityCurvePointsInfos;
 import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
-import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
+import org.gridsuite.modification.model.ReactiveCapabilityCurvePointsModel;
+import org.gridsuite.modification.model.tabular.TabularPropertyModel;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -50,8 +50,8 @@ class TabularBatteryCreationsTest extends AbstractNetworkModificationTest {
                 .minQ(20.0).maxQ(25.0).droop(5f).participate(true).reactiveCapabilityCurve(true)
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
-                .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurvePointsInfos(2.0, 3.0, 3.1),
-                    new ReactiveCapabilityCurvePointsInfos(5.6, 9.8, 10.8)))
+                .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurvePointsModel(2.0, 3.0, 3.1),
+                    new ReactiveCapabilityCurvePointsModel(5.6, 9.8, 10.8)))
                 .properties(List.of(
                     ModificationCreation.getFreeProperty("test", "value"),
                     ModificationCreation.getFreeProperty("test2", "value2")))
@@ -60,7 +60,7 @@ class TabularBatteryCreationsTest extends AbstractNetworkModificationTest {
         return TabularCreationInfos.builder()
             .modificationType(ModificationType.BATTERY_CREATION)
             .modifications(creations)
-            .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+            .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(false).build()))
             .stashed(false)
             .build();
     }
@@ -77,7 +77,7 @@ class TabularBatteryCreationsTest extends AbstractNetworkModificationTest {
         return TabularCreationInfos.builder()
                 .modificationType(ModificationType.BATTERY_CREATION)
                 .modifications(creations)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();
     }

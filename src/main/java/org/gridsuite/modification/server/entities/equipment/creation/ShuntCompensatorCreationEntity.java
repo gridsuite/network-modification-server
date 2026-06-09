@@ -11,9 +11,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ShuntCompensatorCreationInfos;
-import org.gridsuite.modification.dto.ShuntCompensatorType;
 
 import jakarta.persistence.*;
+import org.gridsuite.modification.model.constants.ShuntCompensatorType;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -42,7 +42,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
     private ShuntCompensatorType shuntCompensatorType;
 
     public ShuntCompensatorCreationEntity(ShuntCompensatorCreationInfos creationInfos) {
-        super(creationInfos);
+        super((ModificationInfos) creationInfos);
         maximumSectionCount = creationInfos.getMaximumSectionCount();
         sectionCount = creationInfos.getSectionCount();
         maxSusceptance = creationInfos.getMaxSusceptance();
@@ -92,7 +92,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
              // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

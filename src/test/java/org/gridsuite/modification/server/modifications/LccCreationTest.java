@@ -12,10 +12,10 @@ import com.powsybl.iidm.network.LccConverterStation;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.LccConverterStationCreationInfos;
 import org.gridsuite.modification.dto.LccCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.FreePropertyModel;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -57,7 +57,7 @@ class LccCreationTest extends AbstractNetworkModificationTest {
                 .convertersMode(HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER)
                 .converterStation1(buildLccConverterStation("lccStationId1", "lccStationName1", "v1", "1.1"))
                 .converterStation2(buildLccConverterStation("lccStationId2", "lccStationName2", "v2", "1B"))
-                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
+                .properties(List.of(FreePropertyModel.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 

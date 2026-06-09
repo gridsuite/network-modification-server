@@ -11,11 +11,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.LimitsPropertyInfos;
-import org.gridsuite.modification.dto.OperationalLimitsGroupInfos;
-import org.gridsuite.modification.dto.OperationalLimitsGroupModificationInfos;
-import org.gridsuite.modification.dto.OperationalLimitsGroupModificationType;
-import org.gridsuite.modification.dto.TemporaryLimitModificationType;
+import org.gridsuite.modification.model.LimitsPropertyModel;
+import org.gridsuite.modification.model.OperationalLimitsGroupModel;
+import org.gridsuite.modification.model.OperationalLimitsGroupModificationModel;
+import org.gridsuite.modification.model.constants.OperationalLimitsGroupModificationType;
+import org.gridsuite.modification.model.constants.TemporaryLimitModificationType;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -61,21 +61,21 @@ public class OperationalLimitsGroupModificationEntity {
 
     @Column(name = "applicability")
     @Enumerated(EnumType.STRING)
-    private OperationalLimitsGroupInfos.Applicability applicability;
+    private OperationalLimitsGroupModel.Applicability applicability;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "operational_limit_group_id", foreignKey = @ForeignKey(name = "operational_limit_group_modification_id_fk"))
     private List<LimitsPropertyModificationEntity> limitsProperties;
 
-    private static List<LimitsPropertyModificationEntity> toLimitPropertyEntities(List<LimitsPropertyInfos> properties) {
+    private static List<LimitsPropertyModificationEntity> toLimitPropertyEntities(List<LimitsPropertyModel> properties) {
         List<LimitsPropertyModificationEntity> result = new ArrayList<>();
         if (!CollectionUtils.isEmpty(properties)) {
-            result = properties.stream().map(LimitsPropertyModificationEntity::fromLimitsPropertyInfos).toList();
+            result = properties.stream().map(LimitsPropertyModificationEntity::fromLimitsPropertyModel).toList();
         }
         return result;
     }
 
-    public static List<OperationalLimitsGroupModificationEntity> toOperationalLimitsGroupsEntities(@NonNull List<OperationalLimitsGroupModificationInfos> limitsGroups) {
+    public static List<OperationalLimitsGroupModificationEntity> toOperationalLimitsGroupsEntities(@NonNull List<OperationalLimitsGroupModificationModel> limitsGroups) {
         return limitsGroups.stream()
                 .filter(Objects::nonNull)
                 .map(limitsGroup ->
@@ -90,18 +90,18 @@ public class OperationalLimitsGroupModificationEntity {
                 ).toList();
     }
 
-    public static List<OperationalLimitsGroupModificationInfos> fromOperationalLimitsGroupsEntities(List<OperationalLimitsGroupModificationEntity> limitsGroupsEntities) {
+    public static List<OperationalLimitsGroupModificationModel> fromOperationalLimitsGroupsEntities(List<OperationalLimitsGroupModificationEntity> limitsGroupsEntities) {
         return CollectionUtils.isEmpty(limitsGroupsEntities) ? null :
                 limitsGroupsEntities.stream()
                         .map(limitsGroupEntity ->
-                                OperationalLimitsGroupModificationInfos.builder()
+                                OperationalLimitsGroupModificationModel.builder()
                                         .id(limitsGroupEntity.getId())
-                                        .currentLimits(limitsGroupEntity.getCurrentLimits().toCurrentLimitsInfos())
+                                        .currentLimits(limitsGroupEntity.getCurrentLimits().toCurrentLimitsModel())
                                         .modificationType(limitsGroupEntity.getModificationType())
                                         .temporaryLimitsModificationType(limitsGroupEntity.getTemporaryLimitsModificationType())
                                         .applicability(limitsGroupEntity.getApplicability())
                                         .limitsProperties(limitsGroupEntity.getLimitsProperties().stream().map(
-                                        LimitsPropertyModificationEntity::toLimitsPropertyInfos).toList())
+                                        LimitsPropertyModificationEntity::toLimitsPropertyModel).toList())
                                         .build()
                         )
                         .collect(Collectors.toList());

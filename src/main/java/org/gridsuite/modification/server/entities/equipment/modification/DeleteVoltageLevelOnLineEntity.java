@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.DeleteVoltageLevelOnLineInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.DeleteVoltageLevelOnLineModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import jakarta.persistence.Column;
@@ -46,7 +47,7 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((DeleteVoltageLevelOnLineInfos) modificationInfos);
+        assignAttributes((DeleteVoltageLevelOnLineModel) modificationInfos);
     }
 
     @Override
@@ -68,7 +69,7 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
                 .replacingLine1Name(getReplacingLine1Name());
     }
 
-    private void assignAttributes(DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {
+    private void assignAttributes(DeleteVoltageLevelOnLineModel deleteVoltageLevelOnLineInfos) {
         lineToAttachTo1Id = deleteVoltageLevelOnLineInfos.getLineToAttachTo1Id();
         lineToAttachTo2Id = deleteVoltageLevelOnLineInfos.getLineToAttachTo2Id();
         replacingLine1Id = deleteVoltageLevelOnLineInfos.getReplacingLine1Id();

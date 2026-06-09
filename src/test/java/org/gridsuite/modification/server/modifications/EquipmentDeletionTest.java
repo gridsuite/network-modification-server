@@ -15,8 +15,8 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentDeletionInfos;
-import org.gridsuite.modification.dto.HvdcLccDeletionInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.AbstractEquipmentDeletionModel;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.equipment.deletion.HvdcLccDeletionEntity;
@@ -125,7 +125,7 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         HvdcLccDeletionEntity hvdcLccDeletionEntity = side == 1 ?
                 new HvdcLccDeletionEntity(shuntData, null) :
                 new HvdcLccDeletionEntity(null, shuntData);
-        HvdcLccDeletionInfos hvdcLccDeletionInfos = hvdcLccDeletionEntity.toDto();
+        AbstractEquipmentDeletionModel hvdcLccDeletionInfos = hvdcLccDeletionEntity.toDto();
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .stashed(false)
                 .equipmentType(IdentifiableType.HVDC_LINE)
@@ -169,15 +169,15 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
-        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("EQUIPMENT_DELETION", modificationInfos.getType().toString());
+        Map<String, String> createdValues = modificationInfos.getMapMessageValues();
         assertEquals("v1load", createdValues.get("equipmentId"));
     }
 
     @Override
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
-        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("EQUIPMENT_DELETION", modificationInfos.getType().toString());
+        Map<String, String> createdValues = modificationInfos.getMapMessageValues();
         assertEquals("idGenerator", createdValues.get("equipmentId"));
     }
 }

@@ -10,12 +10,12 @@ import com.powsybl.iidm.network.LoadType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.AttributeModification;
-import org.gridsuite.modification.dto.LoadModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.OperationType;
 
 import jakarta.persistence.*;
+import org.gridsuite.modification.dto.LoadModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.constants.OperationType;
 import org.springframework.util.CollectionUtils;
 
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
@@ -51,7 +51,7 @@ public class LoadModificationEntity extends InjectionModificationEntity {
     private OperationType q0Op;
 
     public LoadModificationEntity(@NonNull LoadModificationInfos loadModificationInfos) {
-        super(loadModificationInfos);
+        super((ModificationInfos) loadModificationInfos);
         assignAttributes(loadModificationInfos);
     }
 
@@ -101,7 +101,7 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                     getProperties().stream()
-                        .map(FreePropertyEntity::toInfos)
+                        .map(FreePropertyEntity::toModel)
                         .toList());
     }
 }

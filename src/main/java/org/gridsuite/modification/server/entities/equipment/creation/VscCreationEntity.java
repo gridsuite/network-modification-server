@@ -74,7 +74,7 @@ public class VscCreationEntity extends EquipmentCreationEntity {
     private ConverterStationCreationEntity converterStation2;
 
     public VscCreationEntity(@NonNull VscCreationInfos vscCreationInfos) {
-        super(vscCreationInfos);
+        super((ModificationInfos) vscCreationInfos);
         assignAttributes(vscCreationInfos);
     }
 
@@ -130,7 +130,7 @@ public class VscCreationEntity extends EquipmentCreationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

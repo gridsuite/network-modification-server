@@ -10,6 +10,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.CouplingDeviceModel;
+import org.gridsuite.modification.model.FreePropertyModel;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
@@ -45,7 +47,7 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
                 .busbarCount(2)
                 .sectionCount(2)
                 .switchKinds(List.of(SwitchKind.BREAKER))
-                .couplingDevices(Collections.singletonList(CouplingDeviceInfos.builder().busbarSectionId1("1A").busbarSectionId2("1B").build()))
+                .couplingDevices(Collections.singletonList(CouplingDeviceModel.builder().busbarSectionId1("1A").busbarSectionId2("1B").build()))
                 .build();
     }
 
@@ -58,7 +60,7 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
                         .equipmentId("attachmentPointSubstation")
                         .equipmentName("attachmentPointSubstationName")
                         .country(Country.FR)
-                        .properties(List.of(FreePropertyInfos.builder()
+                        .properties(List.of(FreePropertyModel.builder()
                                 .added(true)
                                 .name("substationProp")
                                 .value("valueSubstation")
@@ -70,7 +72,7 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
                 .ipMax(20.0)
                 .busbarCount(1)
                 .sectionCount(1)
-                .properties(List.of(FreePropertyInfos.builder()
+                .properties(List.of(FreePropertyModel.builder()
                         .added(true)
                         .name("voltageLevelProp")
                         .value("valueVoltageLevel")

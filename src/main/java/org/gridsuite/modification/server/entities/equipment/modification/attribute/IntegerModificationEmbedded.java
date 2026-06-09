@@ -8,12 +8,12 @@
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
 import lombok.Getter;
-import org.gridsuite.modification.dto.AttributeModification;
-import org.gridsuite.modification.dto.OperationType;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.constants.OperationType;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>

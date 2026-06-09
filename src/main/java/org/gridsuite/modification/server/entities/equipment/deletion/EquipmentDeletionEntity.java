@@ -37,7 +37,7 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
     private AbstractEquipmentDeletionEntity equipmentInfos;
 
     public EquipmentDeletionEntity(EquipmentDeletionInfos equipmentDeletionInfos) {
-        super(equipmentDeletionInfos);
+        super((ModificationInfos) equipmentDeletionInfos);
         assignAttributes(equipmentDeletionInfos);
     }
 

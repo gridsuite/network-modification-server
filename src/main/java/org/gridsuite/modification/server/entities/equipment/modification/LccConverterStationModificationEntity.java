@@ -11,8 +11,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.LccConverterStationModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.LccConverterStationModificationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
 
 import java.util.List;
@@ -45,11 +47,16 @@ public class LccConverterStationModificationEntity extends InjectionModification
     private List<ShuntCompensatorModificationEmbeddable> shuntCompensatorsOnSide;
 
     public LccConverterStationModificationEntity(LccConverterStationModificationInfos converterStationModificationInfos) {
-        super(converterStationModificationInfos);
+        super((ModificationInfos) converterStationModificationInfos);
         assignAttributes(converterStationModificationInfos);
     }
 
-    private void assignAttributes(LccConverterStationModificationInfos converterStationModificationInfos) {
+    public LccConverterStationModificationEntity(LccConverterStationModificationModel converterStationModificationInfos) {
+        super();
+        assignAttributes(converterStationModificationInfos);
+    }
+
+    private void assignAttributes(LccConverterStationModificationModel converterStationModificationInfos) {
         this.lossFactor = converterStationModificationInfos.getLossFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getLossFactor()) : null;
         this.powerFactor = converterStationModificationInfos.getPowerFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getPowerFactor()) : null;
         this.shuntCompensatorsOnSide = toEmbeddableShuntCompensatorModification(converterStationModificationInfos.getShuntCompensatorsOnSide());

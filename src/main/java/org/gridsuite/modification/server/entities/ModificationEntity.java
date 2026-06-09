@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
 
-import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -102,17 +101,7 @@ public class ModificationEntity {
     }
 
     public ModificationInfos toModificationInfos() {
-        ModificationInfos modificationInfos = ModificationInfos.builder()
-            .uuid(this.id)
-            .date(this.date)
-            .stashed(this.stashed)
-            .activated(this.activated)
-            .description(this.description)
-            .messageType(this.messageType)
-            .messageValues(this.messageValues)
-            .build();
-        modificationInfos.setType(ModificationType.valueOf(this.type));
-        return modificationInfos;
+        return null;
     }
 
     public void update(ModificationInfos modificationInfos) {
@@ -141,7 +130,7 @@ public class ModificationEntity {
         Class<? extends ModificationEntity> entityClass = EntityRegistry.getEntityClass(dto.getClass());
         if (entityClass != null) {
             try {
-                Constructor<? extends ModificationEntity> constructor = entityClass.getConstructor(dto.getClass());
+                Constructor<? extends ModificationEntity> constructor = findConstructor(entityClass, dto.getClass());
                 return constructor.newInstance(dto);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to map DTO to Entity", e);
@@ -149,5 +138,16 @@ public class ModificationEntity {
         } else {
             throw new IllegalArgumentException("No entity class registered for DTO class: " + dto.getClass());
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Constructor<? extends ModificationEntity> findConstructor(Class<? extends ModificationEntity> entityClass, Class<? extends ModificationInfos> dtoClass) throws NoSuchMethodException {
+        for (Constructor<?> constructor : entityClass.getConstructors()) {
+            Class<?>[] parameterTypes = constructor.getParameterTypes();
+            if (parameterTypes.length == 1 && parameterTypes[0].isAssignableFrom(dtoClass)) {
+                return (Constructor<? extends ModificationEntity>) constructor;
+            }
+        }
+        throw new NoSuchMethodException(entityClass.getName() + ".<init>(" + dtoClass.getName() + ")");
     }
 }

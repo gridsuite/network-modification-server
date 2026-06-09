@@ -9,10 +9,10 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.LineModificationInfos;
-import org.gridsuite.modification.dto.LineSegmentInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.LineSegmentModel;
 import org.gridsuite.modification.server.entities.equipment.creation.LineSegmentEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
@@ -93,7 +93,7 @@ public class LineModificationEntity extends BranchModificationEntity {
         applySegmentsLimits = lineModificationInfos.isApplySegmentsLimits();
     }
 
-    private List<LineSegmentEntity> assignLineSegments(List<LineSegmentInfos> lineSegmentInfos) {
+    private List<LineSegmentEntity> assignLineSegments(List<LineSegmentModel> lineSegmentInfos) {
         List<LineSegmentEntity> updatedLineSegments = lineSegments;
 
         if (updatedLineSegments == null) {
@@ -155,7 +155,7 @@ public class LineModificationEntity extends BranchModificationEntity {
              // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
         if (getOperationalLimitsGroups() != null) {
             builder.operationalLimitsGroups(OperationalLimitsGroupModificationEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));

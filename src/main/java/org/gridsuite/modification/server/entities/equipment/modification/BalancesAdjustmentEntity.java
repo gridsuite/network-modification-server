@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.BalancesAdjustmentModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.BalancesAdjustmentModificationModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.utils.CountriesUtils;
 
@@ -90,10 +91,10 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((BalancesAdjustmentModificationInfos) modificationInfos);
+        assignAttributes((BalancesAdjustmentModificationModel) modificationInfos);
     }
 
-    private void assignAttributes(BalancesAdjustmentModificationInfos balancesAdjustmentModificationInfos) {
+    private void assignAttributes(BalancesAdjustmentModificationModel balancesAdjustmentModificationInfos) {
         maxNumberIterations = balancesAdjustmentModificationInfos.getMaxNumberIterations();
         thresholdNetPosition = balancesAdjustmentModificationInfos.getThresholdNetPosition();
         countriesToBalance = CountriesUtils.stringify(balancesAdjustmentModificationInfos.getCountriesToBalance());

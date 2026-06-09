@@ -14,6 +14,7 @@ import java.lang.reflect.Constructor;
 
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.EquipmentAttributeModificationModel;
 import org.gridsuite.modification.server.entities.EntityRegistry;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
@@ -42,8 +43,13 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
     private IdentifiableType equipmentType;
 
     public EquipmentAttributeModificationEntity(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
-        super(equipmentAttributeModificationInfos);
+        super((ModificationInfos) equipmentAttributeModificationInfos);
         assignAttributes(equipmentAttributeModificationInfos);
+    }
+
+    public EquipmentAttributeModificationEntity(EquipmentAttributeModificationModel equipmentAttributeModificationModel) {
+        super((ModificationInfos) equipmentAttributeModificationModel);
+        assignAttributes(equipmentAttributeModificationModel);
     }
 
     @Override
@@ -52,10 +58,10 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
         assignAttributes((EquipmentAttributeModificationInfos) modificationInfos);
     }
 
-    private void assignAttributes(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
-        attributeName = equipmentAttributeModificationInfos.getEquipmentAttributeName();
-        attributeValue = convertAttributeValue(equipmentAttributeModificationInfos.getEquipmentAttributeValue());
-        equipmentType = equipmentAttributeModificationInfos.getEquipmentType();
+    private void assignAttributes(EquipmentAttributeModificationModel equipmentAttributeModificationModel) {
+        attributeName = equipmentAttributeModificationModel.getEquipmentAttributeName();
+        attributeValue = convertAttributeValue(equipmentAttributeModificationModel.getEquipmentAttributeValue());
+        equipmentType = equipmentAttributeModificationModel.getEquipmentType();
     }
 
     // Override it if you need a special behaviour
@@ -66,6 +72,16 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
     @Override
     public EquipmentAttributeModificationInfos toModificationInfos() {
         return toModificationInfosBuilder().build();
+    }
+
+    public EquipmentAttributeModificationModel toModificationModel() {
+        return EquipmentAttributeModificationModel
+            .builder()
+            .equipmentId(getEquipmentId())
+            .equipmentAttributeName(getAttributeName())
+            .equipmentAttributeValue(getAttributeValue())
+            .equipmentType(getEquipmentType())
+            .build();
     }
 
     private EquipmentAttributeModificationInfos.EquipmentAttributeModificationInfosBuilder<?, ?> toModificationInfosBuilder() {

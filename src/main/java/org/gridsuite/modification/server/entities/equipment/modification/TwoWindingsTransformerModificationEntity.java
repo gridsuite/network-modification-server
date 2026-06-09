@@ -11,7 +11,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import org.gridsuite.modification.TapChangerType;
-import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.TwoWindingsTransformerModificationInfos;
+import org.gridsuite.modification.model.*;
+import org.gridsuite.modification.model.constants.RegulationSide;
+import org.gridsuite.modification.model.constants.VoltageRegulationType;
 import org.gridsuite.modification.server.entities.equipment.creation.TapChangerStepCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 
@@ -299,19 +303,18 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private BooleanModificationEmbedded ratioTapChangerToBeEstimated;
 
-    public TwoWindingsTransformerModificationEntity(TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos) {
+    public TwoWindingsTransformerModificationEntity(ModificationInfos twoWindingsTransformerModificationInfos) {
         super(twoWindingsTransformerModificationInfos);
-        assignAttributes(twoWindingsTransformerModificationInfos);
+        assignAttributes((TwoWindingsTransformerModificationModel) twoWindingsTransformerModificationInfos);
     }
 
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = (TwoWindingsTransformerModificationInfos) modificationInfos;
-        assignAttributes(twoWindingsTransformerModificationInfos);
+        assignAttributes((TwoWindingsTransformerModificationModel) modificationInfos);
     }
 
-    private void assignAttributes(TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos) {
+    private void assignAttributes(TwoWindingsTransformerModificationModel twoWindingsTransformerModificationInfos) {
         this.g = twoWindingsTransformerModificationInfos.getG() != null ? new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getG()) : null;
         this.b = twoWindingsTransformerModificationInfos.getB() != null ? new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getB()) : null;
         this.ratedU1 = twoWindingsTransformerModificationInfos.getRatedU1() != null ? new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedU1()) : null;
@@ -323,12 +326,12 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         assignTapChangers(twoWindingsTransformerModificationInfos);
     }
 
-    private void assignTapChangers(TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos) {
+    private void assignTapChangers(TwoWindingsTransformerModificationModel twoWindingsTransformerModificationInfos) {
         Optional.ofNullable(twoWindingsTransformerModificationInfos.getRatioTapChanger()).ifPresent(this::assignRatioTapChanger);
         Optional.ofNullable(twoWindingsTransformerModificationInfos.getPhaseTapChanger()).ifPresent(this::assignPhaseTapChanger);
     }
 
-    private void assignRatioTapChanger(RatioTapChangerModificationInfos ratioTapChanger) {
+    private void assignRatioTapChanger(RatioTapChangerModificationModel ratioTapChanger) {
         this.ratioTapChangerEnabled = ratioTapChanger.getEnabled() != null ? new BooleanModificationEmbedded(ratioTapChanger.getEnabled()) : null;
         this.ratioTapChangerRegulationType = ratioTapChanger.getRegulationType() != null ? new EnumModificationEmbedded<>(ratioTapChanger.getRegulationType()) : null;
         this.ratioTapChangerRegulationSide = ratioTapChanger.getRegulationSide() != null ? new EnumModificationEmbedded<>(ratioTapChanger.getRegulationSide()) : null;
@@ -346,7 +349,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         }
     }
 
-    private void assignPhaseTapChanger(PhaseTapChangerModificationInfos phaseTapChanger) {
+    private void assignPhaseTapChanger(PhaseTapChangerModificationModel phaseTapChanger) {
         this.phaseTapChangerEnabled = phaseTapChanger.getEnabled() != null ? new BooleanModificationEmbedded(phaseTapChanger.getEnabled()) : null;
         this.phaseTapChangerRegulationType = phaseTapChanger.getRegulationType() != null ? new EnumModificationEmbedded<>(phaseTapChanger.getRegulationType()) : null;
         this.phaseTapChangerRegulationSide = phaseTapChanger.getRegulationSide() != null ? new EnumModificationEmbedded<>(phaseTapChanger.getRegulationSide()) : null;
@@ -426,18 +429,18 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
 
         if (getOperationalLimitsGroups() != null) {
             builder.operationalLimitsGroups(OperationalLimitsGroupModificationEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));
         }
 
-        List<TapChangerStepCreationInfos> ratioTapChangerStepCreationInfos = null;
+        List<TapChangerStepCreationModel> ratioTapChangerStepCreationInfos = null;
         if (ratioTapChangerStepsEmbeddable != null && !ratioTapChangerStepsEmbeddable.isEmpty()) {
             ratioTapChangerStepCreationInfos = ratioTapChangerStepsEmbeddable.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
         }
-        builder.ratioTapChanger(RatioTapChangerModificationInfos.builder()
+        builder.ratioTapChanger(RatioTapChangerModificationModel.builder()
                 .enabled(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerEnabled()))
                 .regulationType(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerRegulationType()))
                 .regulationSide(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerRegulationSide()))
@@ -453,11 +456,11 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 .steps(ratioTapChangerStepCreationInfos)
                 .build());
 
-        List<TapChangerStepCreationInfos> phaseTapChangerStepCreationInfos = null;
+        List<TapChangerStepCreationModel> phaseTapChangerStepCreationInfos = null;
         if (phaseTapChangerStepsEmbeddable != null && !phaseTapChangerStepsEmbeddable.isEmpty()) {
             phaseTapChangerStepCreationInfos = phaseTapChangerStepsEmbeddable.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).toList();
         }
-        builder.phaseTapChanger(PhaseTapChangerModificationInfos.builder()
+        builder.phaseTapChanger(PhaseTapChangerModificationModel.builder()
             .enabled(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerEnabled()))
             .regulationType(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulationType()))
             .regulationSide(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulationSide()))

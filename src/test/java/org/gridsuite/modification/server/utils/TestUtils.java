@@ -20,7 +20,6 @@ import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
 import mockwebserver3.MockWebServer;
 import org.apache.commons.text.StringSubstitutor;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.service.ReportService;
@@ -219,8 +218,8 @@ public final class TestUtils {
         return getObjectMapper().writeValueAsString(org.springframework.data.util.Pair.of(data, List.of(applicationContext)));
     }
 
-    public static String getJsonBody(ModificationInfos modificationInfos, UUID networkUuid, String variantId) throws JsonProcessingException {
-        return createJsonPayload(modificationInfos, networkUuid, variantId);
+    public static String getJsonBody(Object data, UUID networkUuid, String variantId) throws JsonProcessingException {
+        return createJsonPayload(data, networkUuid, variantId);
     }
 
     public static String getJsonBody(List<UUID> uuids, UUID networkUuid, String variantId) throws JsonProcessingException {

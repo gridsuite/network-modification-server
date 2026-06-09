@@ -16,7 +16,11 @@ import com.powsybl.iidm.network.ShuntCompensatorModelType;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
-import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.constants.OperationType;
+import org.gridsuite.modification.model.constants.ShuntCompensatorType;
+import org.gridsuite.modification.model.tabular.TabularModificationModel;
+import org.gridsuite.modification.model.tabular.TabularPropertyModel;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.modifications.tabular.TabularModification;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -58,7 +62,7 @@ import static org.mockito.Mockito.when;
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(modifications)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();
     }
@@ -72,7 +76,7 @@ import static org.mockito.Mockito.when;
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(modifications)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }
@@ -116,7 +120,7 @@ import static org.mockito.Mockito.when;
                 .maxSusceptance(AttributeModification.toAttributeModification(10.0, OperationType.SET))
                 .build();
 
-        var tabularModificationInfos = TabularModificationInfos
+        var tabularModificationInfos = TabularModificationModel
                 .builder()
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(Collections.singletonList(shuntModification))
@@ -151,7 +155,7 @@ import static org.mockito.Mockito.when;
                 .maxQAtNominalV(AttributeModification.toAttributeModification(1.0, OperationType.SET))
                 .build();
 
-        var tabularModificationInfos = TabularModificationInfos
+        var tabularModificationInfos = TabularModificationModel
                 .builder()
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(Collections.singletonList(shuntModification))
@@ -181,7 +185,7 @@ import static org.mockito.Mockito.when;
                 .maxQAtNominalV(AttributeModification.toAttributeModification(1.0, OperationType.SET))
                 .build();
 
-        var tabularModificationInfos = TabularModificationInfos
+        var tabularModificationInfos = TabularModificationModel
                 .builder()
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(Collections.singletonList(shuntModification))

@@ -305,8 +305,8 @@ public abstract class AbstractNetworkModificationTest {
         return URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
     }
 
-    protected String getJsonBody(ModificationInfos modificationInfos, String variantId) throws JsonProcessingException {
-        return TestUtils.getJsonBody(modificationInfos, AbstractNetworkModificationTest.TEST_NETWORK_ID, variantId);
+    protected String getJsonBody(Object data, String variantId) throws JsonProcessingException {
+        return TestUtils.getJsonBody(data, AbstractNetworkModificationTest.TEST_NETWORK_ID, variantId);
     }
 
     protected abstract Network createNetwork(UUID networkUuid);
@@ -321,12 +321,12 @@ public abstract class AbstractNetworkModificationTest {
 
     @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("{}", modificationInfos.getMessageValues());
+        assertEquals("{}", modificationInfos.getMapMessageValues().toString());
     }
 
     @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("{}", modificationInfos.getMessageValues());
+        assertEquals("{}", modificationInfos.getMapMessageValues().toString());
     }
 
     protected List<NetworkModificationResult.ApplicationStatus> extractApplicationStatus(NetworkModificationsResult networkModificationsResult) {
