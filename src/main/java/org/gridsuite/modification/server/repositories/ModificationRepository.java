@@ -83,7 +83,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     // return the uuid of the composite containing the modification sent as parameter
     @Query(value = """
-            SELECT CAST(containerId AS VARCHAR)
+            SELECT CAST(container_id AS VARCHAR)
             FROM modification m
             WHERE m.id = :uuid
             ORDER BY modifications_order
