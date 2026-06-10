@@ -81,6 +81,15 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<ModificationEntity> findAllByContainers(@Param("ids") Collection<UUID> containerIds,
                                                  @Param("type") ModificationContainerType type);
 
+    // return the uuid of the composite containing the modification sent as parameter
+    @Query(value = """
+            SELECT CAST(containerId AS VARCHAR)
+            FROM modification m
+            WHERE m.id = :uuid
+            ORDER BY modifications_order
+            """, nativeQuery = true)
+    UUID findCompositeIdByContainedModificationId(UUID uuid);
+
     @Query("""
               SELECT COUNT(m) FROM ModificationEntity m
               WHERE m.containerId = :id AND m.containerType = :type AND m.stashed = :stashed
