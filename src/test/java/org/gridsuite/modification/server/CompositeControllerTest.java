@@ -765,4 +765,30 @@ class CompositeControllerTest {
                         .queryParam("targetCompositeUuid", actualComposite1Uuid.toString()))
                 .andExpect(status().is5xxServerError());
     }
+
+    @Test
+    void testCreateCompositeFromSingleCompositeDoesNotWrap() throws Exception {
+        // Create a composite modification
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
+        List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Create a new composite from that single composite — must not wrap
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(List.of(compositeUuid))).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID resultUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // The result must be a composite (not wrapped in another composite)
+        ModificationInfos resultInfos = modificationRepository.getModificationInfo(resultUuid);
+        assertInstanceOf(CompositeModificationInfos.class, resultInfos);
+
+        // Its direct children must be the 2 leaf modifications, not another composite layer
+        List<ModificationInfos> children = ((CompositeModificationInfos) resultInfos).getModificationsInfos();
+        assertEquals(2, children.size());
+        children.forEach(child -> assertFalse(child instanceof CompositeModificationInfos));
+    }
 }
