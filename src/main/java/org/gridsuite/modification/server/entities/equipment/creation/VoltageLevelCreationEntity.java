@@ -15,6 +15,7 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.model.CouplingDeviceModel;
+import org.gridsuite.modification.model.VoltageLevelCreationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -72,9 +73,14 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
             ))
     private SubstationCreationEntity substationCreation;
 
-    public VoltageLevelCreationEntity(VoltageLevelCreationInfos voltageLevelCreationInfos) {
+    public VoltageLevelCreationEntity(ModificationInfos voltageLevelCreationInfos) {
         super(voltageLevelCreationInfos);
-        assignAttributes(voltageLevelCreationInfos);
+        assignAttributes((VoltageLevelCreationModel) voltageLevelCreationInfos.toModel());
+    }
+
+    public VoltageLevelCreationEntity(VoltageLevelCreationModel voltageLevelCreationModel) {
+        super(voltageLevelCreationModel);
+        assignAttributes(voltageLevelCreationModel);
     }
 
     public static List<CouplingDeviceCreationEmbeddable> toEmbeddableCouplingDevices(List<CouplingDeviceModel> couplingDevicesInfos) {
@@ -122,17 +128,17 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((VoltageLevelCreationInfos) modificationInfos);
+        assignAttributes((VoltageLevelCreationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(VoltageLevelCreationInfos voltageLevelCreationInfos) {
+    private void assignAttributes(VoltageLevelCreationModel voltageLevelCreationInfos) {
         this.setMessageType(voltageLevelCreationInfos.getSubstationCreation() != null ?
                 getType() + "_" + ModificationType.SUBSTATION_CREATION
                 : getMessageType());
@@ -151,4 +157,3 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .orElse(null);
     }
 }
-

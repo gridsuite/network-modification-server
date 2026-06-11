@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelModificationInfos;
+import org.gridsuite.modification.model.VoltageLevelModificationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
 import org.springframework.util.CollectionUtils;
@@ -72,18 +73,18 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
             foreignKey = @ForeignKey(name = "busbar_section_v_measurement_vl_id_fk"))
     private List<BusbarSectionVMeasurementEntity> busbarSectionVMeasurements;
 
-    public VoltageLevelModificationEntity(VoltageLevelModificationInfos voltageLevelModificationInfos) {
+    public VoltageLevelModificationEntity(ModificationInfos voltageLevelModificationInfos) {
         super(voltageLevelModificationInfos);
-        assignAttributes(voltageLevelModificationInfos);
+        assignAttributes((VoltageLevelModificationModel) voltageLevelModificationInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((VoltageLevelModificationInfos) modificationInfos);
+        assignAttributes((VoltageLevelModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(VoltageLevelModificationInfos voltageLevelModificationInfos) {
+    private void assignAttributes(VoltageLevelModificationModel voltageLevelModificationInfos) {
         this.nominalV = voltageLevelModificationInfos.getNominalV() != null ? new DoubleModificationEmbedded(voltageLevelModificationInfos.getNominalV()) : null;
         this.lowVoltageLimit = voltageLevelModificationInfos.getLowVoltageLimit() != null ? new DoubleModificationEmbedded(voltageLevelModificationInfos.getLowVoltageLimit()) : null;
         this.highVoltageLimit = voltageLevelModificationInfos.getHighVoltageLimit() != null ? new DoubleModificationEmbedded(voltageLevelModificationInfos.getHighVoltageLimit()) : null;
@@ -126,7 +127,7 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
 
     }

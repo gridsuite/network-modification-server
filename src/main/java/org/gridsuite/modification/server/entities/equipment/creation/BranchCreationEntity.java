@@ -10,8 +10,8 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.BranchCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.BranchCreationModel;
 import org.gridsuite.modification.model.OperationalLimitsGroupModel;
 
 import java.util.ArrayList;
@@ -80,36 +80,40 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     @Column(name = "selectedOperationalLimitsGroupId2")
     private String selectedOperationalLimitsGroupId2;
 
-    protected BranchCreationEntity(BranchCreationInfos branchCreationInfos) {
+    protected BranchCreationEntity(ModificationInfos branchCreationInfos) {
         super(branchCreationInfos);
-        assignAttributes(branchCreationInfos);
+        assignAttributes((BranchCreationModel) branchCreationInfos.toModel());
+    }
+
+    protected BranchCreationEntity(BranchCreationModel branchCreationModel) {
+        super(branchCreationModel);
+        assignAttributes(branchCreationModel);
     }
 
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        BranchCreationInfos branchCreationInfos = (BranchCreationInfos) modificationInfos;
-        assignAttributes(branchCreationInfos);
+        assignAttributes((BranchCreationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(BranchCreationInfos branchCreationInfos) {
-        x = branchCreationInfos.getX();
-        r = branchCreationInfos.getR();
-        voltageLevelId1 = branchCreationInfos.getVoltageLevelId1();
-        voltageLevelId2 = branchCreationInfos.getVoltageLevelId2();
-        busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();
-        busOrBusbarSectionId2 = branchCreationInfos.getBusOrBusbarSectionId2();
-        operationalLimitsGroups = assignOperationalLimitsGroups(branchCreationInfos.getOperationalLimitsGroups(), operationalLimitsGroups);
-        connectionDirection1 = branchCreationInfos.getConnectionDirection1();
-        connectionName1 = branchCreationInfos.getConnectionName1();
-        connectionDirection2 = branchCreationInfos.getConnectionDirection2();
-        connectionName2 = branchCreationInfos.getConnectionName2();
-        selectedOperationalLimitsGroupId1 = branchCreationInfos.getSelectedOperationalLimitsGroupId1();
-        selectedOperationalLimitsGroupId2 = branchCreationInfos.getSelectedOperationalLimitsGroupId2();
-        connectionPosition1 = branchCreationInfos.getConnectionPosition1();
-        connectionPosition2 = branchCreationInfos.getConnectionPosition2();
-        connected1 = branchCreationInfos.isConnected1();
-        connected2 = branchCreationInfos.isConnected2();
+    private void assignAttributes(BranchCreationModel branchCreationModel) {
+        x = branchCreationModel.getX();
+        r = branchCreationModel.getR();
+        voltageLevelId1 = branchCreationModel.getVoltageLevelId1();
+        voltageLevelId2 = branchCreationModel.getVoltageLevelId2();
+        busOrBusbarSectionId1 = branchCreationModel.getBusOrBusbarSectionId1();
+        busOrBusbarSectionId2 = branchCreationModel.getBusOrBusbarSectionId2();
+        operationalLimitsGroups = assignOperationalLimitsGroups(branchCreationModel.getOperationalLimitsGroups(), operationalLimitsGroups);
+        connectionDirection1 = branchCreationModel.getConnectionDirection1();
+        connectionName1 = branchCreationModel.getConnectionName1();
+        connectionDirection2 = branchCreationModel.getConnectionDirection2();
+        connectionName2 = branchCreationModel.getConnectionName2();
+        selectedOperationalLimitsGroupId1 = branchCreationModel.getSelectedOperationalLimitsGroupId1();
+        selectedOperationalLimitsGroupId2 = branchCreationModel.getSelectedOperationalLimitsGroupId2();
+        connectionPosition1 = branchCreationModel.getConnectionPosition1();
+        connectionPosition2 = branchCreationModel.getConnectionPosition2();
+        connected1 = branchCreationModel.isConnected1();
+        connected2 = branchCreationModel.isConnected2();
     }
 
     /**

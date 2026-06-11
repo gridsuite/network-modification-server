@@ -15,6 +15,7 @@ import lombok.NonNull;
 import org.gridsuite.modification.dto.ConverterStationCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VscCreationInfos;
+import org.gridsuite.modification.model.VscCreationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -73,18 +74,18 @@ public class VscCreationEntity extends EquipmentCreationEntity {
             ))
     private ConverterStationCreationEntity converterStation2;
 
-    public VscCreationEntity(@NonNull VscCreationInfos vscCreationInfos) {
+    public VscCreationEntity(@NonNull ModificationInfos vscCreationInfos) {
         super(vscCreationInfos);
-        assignAttributes(vscCreationInfos);
+        assignAttributes((VscCreationModel) vscCreationInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((VscCreationInfos) modificationInfos);
+        assignAttributes((VscCreationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(VscCreationInfos vscCreationInfos) {
+    private void assignAttributes(VscCreationModel vscCreationInfos) {
         this.activePowerSetpoint = vscCreationInfos.getActivePowerSetpoint();
         this.angleDroopActivePowerControl = vscCreationInfos.getAngleDroopActivePowerControl();
         this.droop = vscCreationInfos.getDroop();
@@ -130,7 +131,7 @@ public class VscCreationEntity extends EquipmentCreationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

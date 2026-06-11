@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.SubstationCreationInfos;
+import org.gridsuite.modification.model.SubstationCreationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -28,20 +29,24 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
     @Column(name = "country")
     private Country country;
 
-    private void assignAttributes(SubstationCreationInfos substationCreationInfos) {
+    private void assignAttributes(SubstationCreationModel substationCreationInfos) {
         country = substationCreationInfos.getCountry();
     }
 
-    public SubstationCreationEntity(SubstationCreationInfos substationCreationInfos) {
+    public SubstationCreationEntity(ModificationInfos substationCreationInfos) {
         super(substationCreationInfos);
-        assignAttributes(substationCreationInfos);
+        assignAttributes((SubstationCreationModel) substationCreationInfos.toModel());
+    }
+
+    public SubstationCreationEntity(SubstationCreationModel substationCreationModel) {
+        super(substationCreationModel);
+        assignAttributes(substationCreationModel);
     }
 
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) modificationInfos;
-        assignAttributes(substationCreationInfos);
+        assignAttributes((SubstationCreationModel) modificationInfos.toModel());
     }
 
     @Override
@@ -66,7 +71,7 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
                 .country(getCountry())
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                     getProperties().stream()
-                        .map(FreePropertyEntity::toInfos)
+                        .map(FreePropertyEntity::toModel)
                         .toList());
     }
 }

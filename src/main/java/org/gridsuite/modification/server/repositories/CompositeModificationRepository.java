@@ -24,6 +24,6 @@ public interface CompositeModificationRepository extends JpaRepository<Composite
     @SneakyThrows
     default void renameCompositeModifications(CompositeModificationEntity compositeEntity, CompositeModificationInfos compositeMetadata) {
         compositeEntity.setName(compositeMetadata.getName());
-        compositeEntity.setMessageValues(new ObjectMapper().writeValueAsString(compositeMetadata.getMapMessageValues()));
+        compositeEntity.setMessageValues(new ObjectMapper().writeValueAsString(compositeMetadata.toModel().getMapMessageValues()));
     }
 }

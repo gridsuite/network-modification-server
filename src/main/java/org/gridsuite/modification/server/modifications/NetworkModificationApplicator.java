@@ -19,6 +19,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.Getter;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.ModificationModel;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkInfos;
@@ -204,7 +205,7 @@ public class NetworkModificationApplicator {
                 .filter(ModificationInfos::getActivated)
                 .map(m -> {
                     listener.initModificationApplication(modificationGroupInfos.groupUuid(), m);
-                    return apply(m, listener.getNetwork(), reportNode);
+                    return apply(m.toModel(), listener.getNetwork(), reportNode);
                 })
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
@@ -218,10 +219,10 @@ public class NetworkModificationApplicator {
         return groupApplicationStatus;
     }
 
-    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode) {
-        ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
+    private ApplicationStatus apply(ModificationModel modificationModel, Network network, ReportNode reportNode) {
+        ReportNode subReportNode = modificationModel.createSubReportNode(reportNode);
         try {
-            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode));
+            networkModificationObserver.observeApply(modificationModel.getType(), () -> apply(modificationModel.toModification(), network, subReportNode));
         } catch (Exception e) {
             handleException(subReportNode, e);
         }

@@ -67,7 +67,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
-import static org.gridsuite.modification.ModificationType.LINE_MODIFICATION;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.SIDE1;
 import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.SIDE2;
@@ -433,9 +432,7 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         assertEquals(true, modifications.get(0).getActivated());
 
-        ModificationInfos metadata = new ModificationInfos();
-        metadata.setType(LINE_MODIFICATION);
-        metadata.setActivated(false);
+        ModificationInfos metadata = ModificationMetadataInfos.builder().activated(false).build();
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                 .queryParam("groupUuid", TEST_GROUP_ID.toString())
@@ -466,10 +463,7 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         assertEquals("old description", modifications.getFirst().getDescription());
 
-        ModificationInfos metadata = new ModificationInfos();
-        metadata.setDescription("new description");
-        metadata.setType(LINE_MODIFICATION);
-        metadata.setActivated(null);
+        ModificationInfos metadata = ModificationMetadataInfos.builder().activated(null).description("new description").build();
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
@@ -485,8 +479,7 @@ class ModificationControllerTest {
     void updateModificationMetadataDoesNotModifyFieldsNotProvided() {
         // create a composite modification and set all its metadata fields
         UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of());
-        modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder()
-                .name("composite name")
+        modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), ModificationMetadataInfos.builder()
                 .description("composite description")
                 .activated(false)
                 .build());
@@ -495,8 +488,7 @@ class ModificationControllerTest {
         modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder().build());
 
         // every field not provided must keep its previous value
-        CompositeModificationInfos result = (CompositeModificationInfos) modificationRepository.getModificationInfo(compositeUuid);
-        assertEquals("composite name", result.getName());
+        ModificationInfos result = modificationRepository.getModificationInfo(compositeUuid);
         assertEquals("composite description", result.getDescription());
         assertEquals(false, result.getActivated());
     }
@@ -992,10 +984,20 @@ class ModificationControllerTest {
                 .r(50.6)
                 .x(25.3)
                 .build();
-
-        LineAttachToVoltageLevelInfos lineAttachToVL = new LineAttachToVoltageLevelInfos("line3",
-                10.0, "AttPointId", "attPointName", null, null, "v4",
-                "1.A", attachmentLine, "nl1", "NewLine1", "nl2", "NewLine2");
+        LineAttachToVoltageLevelInfos lineAttachToVL = LineAttachToVoltageLevelInfos.builder()
+            .lineToAttachToId("line3")
+            .percent(10.0)
+            .attachmentPointId("AttPointId")
+            .attachmentPointName("attPointName")
+            .mayNewVoltageLevelInfos(null)
+            .existingVoltageLevelId("v4")
+            .bbsOrBusId("1.A")
+            .attachmentLine(attachmentLine)
+            .newLine1Id("nl1")
+            .newLine1Name("NewLine1")
+            .newLine2Id("nl2")
+            .newLine2Name("NewLine2")
+            .build();
         String bodyJson2 = TestUtils.getJsonBody(lineAttachToVL, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(bodyJson2).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
@@ -1003,8 +1005,17 @@ class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 3);
 
         //create a lineSplit
-        LineSplitWithVoltageLevelInfos lineSplitWoVL = new LineSplitWithVoltageLevelInfos("line1", 10.0, null, "v4", "1.A",
-                "nl11", "NewLine11", "nl12", "NewLine12");
+        LineSplitWithVoltageLevelInfos lineSplitWoVL = LineSplitWithVoltageLevelInfos.builder()
+            .lineToSplitId("line1")
+            .percent(10.0)
+            .mayNewVoltageLevelInfos(null)
+            .existingVoltageLevelId("v4")
+            .bbsOrBusId("1.A")
+            .newLine1Id("nl11")
+            .newLine1Name("NewLine11")
+            .newLine2Id("nl12")
+            .newLine2Name("NewLine12")
+            .build();
         bodyJson2 = TestUtils.getJsonBody(lineSplitWoVL, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(bodyJson2).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
@@ -1045,7 +1056,17 @@ class ModificationControllerTest {
 
     @Test
     void replaceTeePointByVoltageLevelOnLineDuplicateModificationGroupTest() throws Exception {
-        LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = new LinesAttachToSplitLinesInfos("l1", "l2", "l3", "v4", "bbs4", "nl1", "NewLine1", "nl2", "NewLine2");
+        LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = LinesAttachToSplitLinesInfos.builder()
+            .lineToAttachTo1Id("l1")
+            .lineToAttachTo2Id("l2")
+            .attachedLineId("l3")
+            .voltageLevelId("v4")
+            .bbsBusId("bbs4")
+            .replacingLine1Id("nl1")
+            .replacingLine1Name("NewLine1")
+            .replacingLine2Id("nl2")
+            .replacingLine2Name("NewLine2")
+            .build();
 
         String body = TestUtils.getJsonBody(linesAttachToSplitLinesInfos, TEST_NETWORK_WITH_TEE_POINT_ID, null);
         MvcResult mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(body).contentType(MediaType.APPLICATION_JSON), status().isOk());

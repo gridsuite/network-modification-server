@@ -15,6 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.dto.GeneratorScalingInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 
 import java.util.stream.Collectors;
 
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 @Table(name = "GeneratorScaling")
 public class GeneratorScalingEntity extends ScalingEntity {
 
-    public GeneratorScalingEntity(@NotNull GeneratorScalingInfos generatorScalingInfos) {
+    public GeneratorScalingEntity(@NotNull ModificationInfos generatorScalingInfos) {
         super(generatorScalingInfos);
     }
 

@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.BatteryCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.BatteryCreationModel;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
@@ -67,18 +68,18 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     @Column(name = "stepUpTransformerX")
     private Double stepUpTransformerX;
 
-    public BatteryCreationEntity(@NonNull BatteryCreationInfos batteryCreationInfos) {
+    public BatteryCreationEntity(@NonNull ModificationInfos batteryCreationInfos) {
         super(batteryCreationInfos);
-        assignAttributes(batteryCreationInfos);
+        assignAttributes((BatteryCreationModel) batteryCreationInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((BatteryCreationInfos) modificationInfos);
+        assignAttributes((BatteryCreationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(BatteryCreationInfos batteryCreationInfos) {
+    private void assignAttributes(BatteryCreationModel batteryCreationInfos) {
         this.minP = batteryCreationInfos.getMinP();
         this.maxP = batteryCreationInfos.getMaxP();
         this.reactiveCapabilityCurve = batteryCreationInfos.getReactiveCapabilityCurve();
@@ -121,7 +122,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .reactiveCapabilityCurve(this.getReactiveCapabilityCurve())
                 .minQ(this.getMinQ())
                 .maxQ(this.getMaxQ())
-                .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsCreationInfos(getReactiveCapabilityCurvePoints()))
+                .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsCreationModel(getReactiveCapabilityCurvePoints()))
                 .targetP(getTargetP())
                 .targetQ(getTargetQ())
                 .participate(getParticipate())
@@ -131,7 +132,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 

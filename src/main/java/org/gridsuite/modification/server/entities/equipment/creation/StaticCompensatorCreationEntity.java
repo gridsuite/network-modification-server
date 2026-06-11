@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.StaticVarCompensatorCreationInfos;
+import org.gridsuite.modification.model.StaticVarCompensatorCreationModel;
 import org.gridsuite.modification.model.VoltageRegulationType;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
@@ -87,19 +88,18 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
     @Column
     private Double highVoltageThreshold;
 
-    public StaticCompensatorCreationEntity(StaticVarCompensatorCreationInfos creationInfos) {
+    public StaticCompensatorCreationEntity(ModificationInfos creationInfos) {
         super(creationInfos);
-        assignAttributes(creationInfos);
+        assignAttributes((StaticVarCompensatorCreationModel) creationInfos.toModel());
     }
 
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos = (StaticVarCompensatorCreationInfos) modificationInfos;
-        assignAttributes(staticVarCompensatorCreationInfos);
+        assignAttributes((StaticVarCompensatorCreationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(StaticVarCompensatorCreationInfos creationInfos) {
+    private void assignAttributes(StaticVarCompensatorCreationModel creationInfos) {
         this.maxSusceptance = creationInfos.getMaxSusceptance();
         this.minSusceptance = creationInfos.getMinSusceptance();
         this.maxQAtNominalV = creationInfos.getMaxQAtNominalV();
@@ -168,7 +168,7 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
              // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

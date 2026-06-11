@@ -21,7 +21,7 @@ public final class DTOUtils {
     private DTOUtils() {
     }
 
-    public static List<ReactiveCapabilityCurvePointsModel> toReactiveCapabilityCurvePointsCreationInfos(List<ReactiveCapabilityCurveCreationEmbeddable> rCCpoints) {
+    public static List<ReactiveCapabilityCurvePointsModel> toReactiveCapabilityCurvePointsCreationModel(List<ReactiveCapabilityCurveCreationEmbeddable> rCCpoints) {
         return Objects.isNull(rCCpoints) || CollectionUtils.isEmpty(rCCpoints) ? null
                 : rCCpoints.stream().map(point -> new ReactiveCapabilityCurvePointsModel(point.getMinQ(),
                         point.getMaxQ(),
@@ -29,7 +29,7 @@ public final class DTOUtils {
                 .toList();
     }
 
-    public static List<ReactiveCapabilityCurvePointsModel> toReactiveCapabilityCurvePointsModificationInfos(List<ReactiveCapabilityCurveModificationEmbeddable> rCCpoints) {
+    public static List<ReactiveCapabilityCurvePointsModel> toReactiveCapabilityCurvePointsModificationModel(List<ReactiveCapabilityCurveModificationEmbeddable> rCCpoints) {
         return Objects.isNull(rCCpoints) || CollectionUtils.isEmpty(rCCpoints) ? null
                 : rCCpoints.stream().map(point -> new ReactiveCapabilityCurvePointsModel(point.getMinQ(),
                         point.getMaxQ(),

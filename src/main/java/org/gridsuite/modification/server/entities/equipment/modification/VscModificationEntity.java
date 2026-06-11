@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VscModificationInfos;
+import org.gridsuite.modification.model.VscModificationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
@@ -118,18 +119,18 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
             ))
     private ConverterStationModificationEntity converterStation2;
 
-    public VscModificationEntity(@NonNull VscModificationInfos vscModificationInfos) {
+    public VscModificationEntity(@NonNull ModificationInfos vscModificationInfos) {
         super(vscModificationInfos);
-        assignAttributes(vscModificationInfos);
+        assignAttributes((VscModificationModel) vscModificationInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((VscModificationInfos) modificationInfos);
+        assignAttributes((VscModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(@NonNull VscModificationInfos vscModificationInfos) {
+    private void assignAttributes(@NonNull VscModificationModel vscModificationInfos) {
         this.nominalV = new DoubleModificationEmbedded(vscModificationInfos.getNominalV());
         this.r = new DoubleModificationEmbedded(vscModificationInfos.getR());
         this.maxP = new DoubleModificationEmbedded(vscModificationInfos.getMaxP());
@@ -168,7 +169,7 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 

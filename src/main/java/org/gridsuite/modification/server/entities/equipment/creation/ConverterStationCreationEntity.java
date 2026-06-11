@@ -12,6 +12,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.ConverterStationCreationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.ConverterStationCreationModel;
 import org.gridsuite.modification.server.dto.DTOUtils;
 
 import java.util.List;
@@ -59,12 +61,17 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
     @Column
     private Boolean reactiveCapabilityCurve;
 
-    public ConverterStationCreationEntity(ConverterStationCreationInfos converterStationCreationInfos) {
+    public ConverterStationCreationEntity(ModificationInfos converterStationCreationInfos) {
         super(converterStationCreationInfos);
-        assignAttributes(converterStationCreationInfos);
+        assignAttributes((ConverterStationCreationModel) converterStationCreationInfos);
     }
 
-    private void assignAttributes(ConverterStationCreationInfos converterStationCreationInfos) {
+    public ConverterStationCreationEntity(ConverterStationCreationModel converterStationCreationModel) {
+        super(converterStationCreationModel);
+        assignAttributes(converterStationCreationModel);
+    }
+
+    private void assignAttributes(ConverterStationCreationModel converterStationCreationInfos) {
         this.lossFactor = converterStationCreationInfos.getLossFactor();
         this.minQ = converterStationCreationInfos.getMinQ();
         this.maxQ = converterStationCreationInfos.getMaxQ();
@@ -96,7 +103,7 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
                 .reactivePowerSetpoint(getReactivePowerSetpoint())
                 .voltageRegulationOn(getVoltageRegulationOn())
                 .voltageSetpoint(getVoltageSetpoint())
-                .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsCreationInfos(getReactiveCapabilityCurvePoints()))
+                .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsCreationModel(getReactiveCapabilityCurvePoints()))
                 .reactiveCapabilityCurve(getReactiveCapabilityCurve())
                 .build();
     }

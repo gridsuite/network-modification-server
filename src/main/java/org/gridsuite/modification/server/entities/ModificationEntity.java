@@ -13,9 +13,9 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationMetadataInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 
-import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -101,16 +101,19 @@ public class ModificationEntity {
     }
 
     public ModificationInfos toModificationInfos() {
-        ModificationInfos modificationInfos = ModificationInfos.builder()
-            .uuid(this.id)
-            .date(this.date)
-            .stashed(this.stashed)
-            .activated(this.activated)
-            .description(this.description)
-            .messageType(this.messageType)
-            .messageValues(this.messageValues)
-            .build();
+        return toModificationMetadataInfos();
+    }
+
+    public final ModificationInfos toModificationMetadataInfos() {
+        ModificationMetadataInfos modificationInfos = new ModificationMetadataInfos();
+        modificationInfos.setUuid(this.id);
         modificationInfos.setType(ModificationType.valueOf(this.type));
+        modificationInfos.setDate(this.date);
+        modificationInfos.setStashed(this.stashed);
+        modificationInfos.setActivated(this.activated);
+        modificationInfos.setDescription(this.description);
+        modificationInfos.setMessageType(this.messageType);
+        modificationInfos.setMessageValues(this.messageValues);
         return modificationInfos;
     }
 
@@ -129,7 +132,7 @@ public class ModificationEntity {
         if (modificationInfos.getDescription() != null) {
             this.setDescription(modificationInfos.getDescription());
         }
-        this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
+        this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.toModel().getMapMessageValues()));
     }
 
     public static ModificationEntity fromDTO(ModificationInfos dto) {
@@ -137,16 +140,6 @@ public class ModificationEntity {
             return EquipmentAttributeModificationEntity.createAttributeEntity(infos);
         }
 
-        Class<? extends ModificationEntity> entityClass = EntityRegistry.getEntityClass(dto.getClass());
-        if (entityClass != null) {
-            try {
-                Constructor<? extends ModificationEntity> constructor = entityClass.getConstructor(dto.getClass());
-                return constructor.newInstance(dto);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to map DTO to Entity", e);
-            }
-        } else {
-            throw new IllegalArgumentException("No entity class registered for DTO class: " + dto.getClass());
-        }
+        return EntityRegistry.createEntity(dto);
     }
 }

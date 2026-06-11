@@ -14,6 +14,7 @@ import lombok.NonNull;
 import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.LoadModificationModel;
 import org.gridsuite.modification.model.OperationType;
 import org.springframework.util.CollectionUtils;
 
@@ -49,18 +50,18 @@ public class LoadModificationEntity extends InjectionModificationEntity {
     @Enumerated(EnumType.STRING)
     private OperationType q0Op;
 
-    public LoadModificationEntity(@NonNull LoadModificationInfos loadModificationInfos) {
+    public LoadModificationEntity(@NonNull ModificationInfos loadModificationInfos) {
         super(loadModificationInfos);
-        assignAttributes(loadModificationInfos);
+        assignAttributes((LoadModificationModel) loadModificationInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((LoadModificationInfos) modificationInfos);
+        assignAttributes((LoadModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(LoadModificationInfos loadModificationInfos) {
+    private void assignAttributes(LoadModificationModel loadModificationInfos) {
         this.loadTypeValue = loadModificationInfos.getLoadType() != null ? loadModificationInfos.getLoadType().getValue() : null;
         this.loadTypeOp = loadModificationInfos.getLoadType() != null ? loadModificationInfos.getLoadType().getOp() : null;
         this.p0Value = loadModificationInfos.getP0() != null ? loadModificationInfos.getP0().getValue() : null;
@@ -100,7 +101,7 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                     getProperties().stream()
-                        .map(FreePropertyEntity::toInfos)
+                        .map(FreePropertyEntity::toModel)
                         .toList());
     }
 }

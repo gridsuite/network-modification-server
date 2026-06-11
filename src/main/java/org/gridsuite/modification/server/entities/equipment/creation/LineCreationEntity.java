@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.LineCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.LineCreationModel;
 import org.gridsuite.modification.model.LineSegmentModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
@@ -49,24 +50,28 @@ public class LineCreationEntity extends BranchCreationEntity {
     @OrderColumn(name = "pos_line_segments")
     private List<LineSegmentEntity> lineSegments;
 
-    public LineCreationEntity(LineCreationInfos lineCreationInfos) {
+    public LineCreationEntity(ModificationInfos lineCreationInfos) {
         super(lineCreationInfos);
-        assignAttributes(lineCreationInfos);
+        assignAttributes((LineCreationModel) lineCreationInfos.toModel());
+    }
+
+    public LineCreationEntity(LineCreationModel lineCreationModel) {
+        super(lineCreationModel);
+        assignAttributes(lineCreationModel);
     }
 
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        LineCreationInfos lineCreationInfos = (LineCreationInfos) modificationInfos;
-        assignAttributes(lineCreationInfos);
+        assignAttributes((LineCreationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(LineCreationInfos lineCreationInfos) {
-        g1 = lineCreationInfos.getG1();
-        b1 = lineCreationInfos.getB1();
-        g2 = lineCreationInfos.getG2();
-        b2 = lineCreationInfos.getB2();
-        lineSegments = assignLineSegments(lineCreationInfos.getLineSegments());
+    private void assignAttributes(LineCreationModel lineCreationModel) {
+        g1 = lineCreationModel.getG1();
+        b1 = lineCreationModel.getB1();
+        g2 = lineCreationModel.getG2();
+        b2 = lineCreationModel.getB2();
+        lineSegments = assignLineSegments(lineCreationModel.getLineSegments());
     }
 
     private List<LineSegmentEntity> assignLineSegments(List<LineSegmentModel> lineSegmentInfos) {
@@ -121,7 +126,7 @@ public class LineCreationEntity extends BranchCreationEntity {
              // properties
              .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList())
             .operationalLimitsGroups(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()))
             .lineSegments(LineSegmentEntity.fromLineSegmentsEntity(getLineSegments()));

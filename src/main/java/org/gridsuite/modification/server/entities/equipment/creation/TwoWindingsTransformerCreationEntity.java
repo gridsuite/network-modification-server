@@ -15,6 +15,7 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.model.PhaseTapChangerCreationModel;
 import org.gridsuite.modification.model.RatioTapChangerCreationModel;
 import org.gridsuite.modification.model.TapChangerStepCreationModel;
+import org.gridsuite.modification.model.TwoWindingsTransformerCreationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -111,19 +112,18 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
     )
     private List<TapChangerStepCreationEmbeddable> tapChangerSteps;
 
+    public TwoWindingsTransformerCreationEntity(ModificationInfos twoWindingsTransformerCreationInfos) {
+        super(twoWindingsTransformerCreationInfos);
+        assignAttributes((TwoWindingsTransformerCreationModel) twoWindingsTransformerCreationInfos.toModel());
+    }
+
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) modificationInfos;
-        assignAttributes(twoWindingsTransformerCreationInfos);
+        assignAttributes((TwoWindingsTransformerCreationModel) modificationInfos.toModel());
     }
 
-    public TwoWindingsTransformerCreationEntity(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        super(twoWindingsTransformerCreationInfos);
-        assignAttributes(twoWindingsTransformerCreationInfos);
-    }
-
-    private void assignAttributes(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+    private void assignAttributes(TwoWindingsTransformerCreationModel twoWindingsTransformerCreationInfos) {
         this.g = twoWindingsTransformerCreationInfos.getG();
         this.b = twoWindingsTransformerCreationInfos.getB();
         this.ratedU1 = twoWindingsTransformerCreationInfos.getRatedU1();
@@ -133,7 +133,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         assignTapChanger(twoWindingsTransformerCreationInfos);
     }
 
-    private void assignTapChanger(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+    private void assignTapChanger(TwoWindingsTransformerCreationModel twoWindingsTransformerCreationInfos) {
         Optional.ofNullable(twoWindingsTransformerCreationInfos.getPhaseTapChanger()).ifPresent(this::assignPhaseTapChanger);
         Optional.ofNullable(twoWindingsTransformerCreationInfos.getRatioTapChanger()).ifPresent(this::assignRatioTapChanger);
     }
@@ -212,7 +212,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList())
                 .operationalLimitsGroups(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));
 

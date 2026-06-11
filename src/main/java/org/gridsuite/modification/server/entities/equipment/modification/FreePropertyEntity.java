@@ -53,7 +53,7 @@ public class FreePropertyEntity {
     @JoinColumn(name = "equipment_modification_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "free_property_modification_id_fk_constraint"))
     private ModificationEntity modification;
 
-    public FreePropertyModel toInfos() {
+    public FreePropertyModel toModel() {
         return FreePropertyModel.builder()
             .name(name)
             .value(value)
@@ -63,8 +63,8 @@ public class FreePropertyEntity {
             .build();
     }
 
-    public FreePropertyEntity(FreePropertyModel freePropertyInfos) {
-        this(null, freePropertyInfos.getName(), freePropertyInfos.getValue(), freePropertyInfos.isDeletionMark(),
-                freePropertyInfos.isAdded(), freePropertyInfos.getPreviousValue(), null);
+    public FreePropertyEntity(FreePropertyModel freePropertyModel) {
+        this(null, freePropertyModel.getName(), freePropertyModel.getValue(), freePropertyModel.isDeletionMark(),
+                freePropertyModel.isAdded(), freePropertyModel.getPreviousValue(), null);
     }
 }

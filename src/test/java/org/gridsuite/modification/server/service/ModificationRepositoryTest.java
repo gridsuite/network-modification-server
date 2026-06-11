@@ -13,19 +13,7 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
-import org.gridsuite.modification.model.AttributeModification;
-import org.gridsuite.modification.model.CouplingDeviceModel;
-import org.gridsuite.modification.model.CurrentLimitsModel;
-import org.gridsuite.modification.model.FreePropertyModel;
-import org.gridsuite.modification.model.OperationType;
-import org.gridsuite.modification.model.OperationalLimitsGroupModel;
-import org.gridsuite.modification.model.ReactiveCapabilityCurvePointsModel;
-import org.gridsuite.modification.model.VoltageInitBusModificationModel;
-import org.gridsuite.modification.model.VoltageInitGeneratorModificationModel;
-import org.gridsuite.modification.model.VoltageInitShuntCompensatorModificationModel;
-import org.gridsuite.modification.model.VoltageInitStaticVarCompensatorModificationModel;
-import org.gridsuite.modification.model.VoltageInitTransformerModificationModel;
-import org.gridsuite.modification.model.VoltageInitVscConverterStationModificationModel;
+import org.gridsuite.modification.model.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
@@ -899,7 +887,7 @@ class ModificationRepositoryTest {
             .newLine2Id("line2Id")
             .newLine2Name("line2Name")
             .build());
-        VoltageLevelCreationEntity voltageLevelCreationEntity = new VoltageLevelCreationEntity(voltageLevelCreationInfos);
+        VoltageLevelCreationEntity voltageLevelCreationEntity = new VoltageLevelCreationEntity((ModificationInfos) voltageLevelCreationInfos);
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineSplitEntity1, voltageLevelCreationEntity, lineSplitEntity2));
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
@@ -1411,9 +1399,9 @@ class ModificationRepositoryTest {
 
     @Test
     void testVoltageLevelTopologyModification() {
-        List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfos = new ArrayList<>(
+        List<EquipmentAttributeModificationModel> equipmentAttributeModificationModels = new ArrayList<>(
                 Arrays.asList(
-                        EquipmentAttributeModificationInfos.builder()
+                        EquipmentAttributeModificationModel.builder()
                                 .equipmentId("sw1")
                                 .equipmentAttributeName("open")
                                 .equipmentAttributeValue(false)
@@ -1423,7 +1411,7 @@ class ModificationRepositoryTest {
         );
         var voltageLevelTopologyModificationEntity = ModificationEntity.fromDTO(VoltageLevelTopologyModificationInfos.builder()
                 .equipmentId("VL1")
-                .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
+                .equipmentAttributeModificationList(equipmentAttributeModificationModels)
                 .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageLevelTopologyModificationEntity));

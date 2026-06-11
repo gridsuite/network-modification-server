@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelTopologyModificationInfos;
+import org.gridsuite.modification.model.VoltageLevelTopologyModificationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 
@@ -41,18 +42,18 @@ public class VoltageLevelTopologyModificationEntity extends EquipmentModificatio
     @OrderBy
     private List<BooleanEquipmentAttributeModificationEntity> equipmentAttributeModification;
 
-    public VoltageLevelTopologyModificationEntity(VoltageLevelTopologyModificationInfos voltageLevelTopologyModificationInfos) {
+    public VoltageLevelTopologyModificationEntity(ModificationInfos voltageLevelTopologyModificationInfos) {
         super(voltageLevelTopologyModificationInfos);
-        assignAttributes(voltageLevelTopologyModificationInfos);
+        assignAttributes((VoltageLevelTopologyModificationModel) voltageLevelTopologyModificationInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((VoltageLevelTopologyModificationInfos) modificationInfos);
+        assignAttributes((VoltageLevelTopologyModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(VoltageLevelTopologyModificationInfos voltageLevelTopologyModificationInfos) {
+    private void assignAttributes(VoltageLevelTopologyModificationModel voltageLevelTopologyModificationInfos) {
         // Initialize the collection if it's null
         if (this.equipmentAttributeModification == null) {
             this.equipmentAttributeModification = new ArrayList<>();
@@ -87,7 +88,7 @@ public class VoltageLevelTopologyModificationEntity extends EquipmentModificatio
                 .description(getDescription())
                 .equipmentAttributeModificationList(Optional.ofNullable(attributeModificationEntities)
                         .map(list -> list.stream()
-                                .map(EquipmentAttributeModificationEntity::toModificationInfos)
+                                .map(EquipmentAttributeModificationEntity::toModel)
                                 .toList())
                         .orElse(null));
     }

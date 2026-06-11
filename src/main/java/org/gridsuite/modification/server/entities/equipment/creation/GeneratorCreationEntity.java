@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.GeneratorCreationModel;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
@@ -103,18 +104,18 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @CollectionTable
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
 
-    public GeneratorCreationEntity(@NonNull GeneratorCreationInfos generatorCreationInfos) {
+    public GeneratorCreationEntity(@NonNull ModificationInfos generatorCreationInfos) {
         super(generatorCreationInfos);
-        assignAttributes(generatorCreationInfos);
+        assignAttributes((GeneratorCreationModel) generatorCreationInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((GeneratorCreationInfos) modificationInfos);
+        assignAttributes((GeneratorCreationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(GeneratorCreationInfos generatorCreationInfos) {
+    private void assignAttributes(GeneratorCreationModel generatorCreationInfos) {
         this.energySource = generatorCreationInfos.getEnergySource();
         this.minP = generatorCreationInfos.getMinP();
         this.maxP = generatorCreationInfos.getMaxP();
@@ -180,7 +181,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .participate(getParticipate())
             .droop(getDroop())
             .maxQ(this.getMaxQ())
-            .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsCreationInfos(getReactiveCapabilityCurvePoints()))
+            .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsCreationModel(getReactiveCapabilityCurvePoints()))
             .regulatingTerminalId(getRegulatingTerminalId())
             .regulatingTerminalType(getRegulatingTerminalType())
             .regulatingTerminalVlId(getRegulatingTerminalVlId())
@@ -191,7 +192,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                    getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

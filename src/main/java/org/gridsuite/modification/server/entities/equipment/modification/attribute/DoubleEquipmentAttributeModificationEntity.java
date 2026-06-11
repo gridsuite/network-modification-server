@@ -12,7 +12,7 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -23,7 +23,7 @@ import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 @Table(name = "doubleEquipmentAttributeModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "double_equipment_attribute_modification_id_fk_constraint"))
 public class DoubleEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<Double> {
-    public DoubleEquipmentAttributeModificationEntity(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
+    public DoubleEquipmentAttributeModificationEntity(ModificationInfos equipmentAttributeModificationInfos) {
         super(equipmentAttributeModificationInfos);
     }
 }

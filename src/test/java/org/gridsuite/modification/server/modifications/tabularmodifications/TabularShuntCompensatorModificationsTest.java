@@ -125,7 +125,7 @@ import static org.mockito.Mockito.when;
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
 
-        var tabularModification = (TabularModification) tabularModificationInfos.toModification();
+        var tabularModification = (TabularModification) tabularModificationInfos.toModel().toModification();
 
         when(network.getShuntCompensator("id")).thenReturn(shuntCompensator);
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.LINEAR);
@@ -160,7 +160,7 @@ import static org.mockito.Mockito.when;
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
 
-        var tabularModification = (TabularModification) tabularModificationInfos.toModification();
+        var tabularModification = (TabularModification) tabularModificationInfos.toModel().toModification();
 
         when(network.getShuntCompensator("id")).thenReturn(shuntCompensator);
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.NON_LINEAR);
@@ -190,7 +190,7 @@ import static org.mockito.Mockito.when;
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
 
-        var tabularModification = (TabularModification) tabularModificationInfos.toModification();
+        var tabularModification = (TabularModification) tabularModificationInfos.toModel().toModification();
 
         when(network.getShuntCompensator("id")).thenReturn(shuntCompensator);
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.LINEAR);
