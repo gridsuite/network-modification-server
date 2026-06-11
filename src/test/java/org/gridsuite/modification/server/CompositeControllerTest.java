@@ -697,29 +697,33 @@ class CompositeControllerTest {
 
     @Test
     void testMoveSubModificationCycleDetection() throws Exception {
-        // Build a 4-level structure:
-        //   composite0 → [composite1 → [composite2 → [composite3 → [leaf]]]]
-
-        List<ModificationInfos> leafMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
-        UUID leafUuid = leafMods.getFirst().getUuid();
+        // Build a 4-level structure using multiple children to prevent unwrapping:
+        //   composite0 → [composite1 → [composite2 → [composite3 → [leaf]], leaf2], leaf3]
+        List<ModificationInfos> leafMods = createSomeSwitchModifications(TEST_GROUP_ID, 3);
+        UUID leaf1Uuid = leafMods.get(0).getUuid();
+        UUID leaf2Uuid = leafMods.get(1).getUuid();
+        UUID leaf3Uuid = leafMods.get(2).getUuid();
 
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
-                        .content(mapper.writeValueAsString(List.of(leafUuid))).contentType(MediaType.APPLICATION_JSON))
+                        .content(mapper.writeValueAsString(List.of(leaf1Uuid))).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID composite3Uuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
-                        .content(mapper.writeValueAsString(List.of(composite3Uuid))).contentType(MediaType.APPLICATION_JSON))
+                        .content(mapper.writeValueAsString(List.of(composite3Uuid, leaf2Uuid))).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID composite2Uuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
-                        .content(mapper.writeValueAsString(List.of(composite2Uuid))).contentType(MediaType.APPLICATION_JSON))
+                        .content(mapper.writeValueAsString(List.of(composite2Uuid, leaf3Uuid))).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID composite1Uuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
+        List<ModificationInfos> extraLeafs = createSomeSwitchModifications(TEST_GROUP2_ID, 1);
+        UUID leaf4Uuid = extraLeafs.get(0).getUuid();
+
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
-                        .content(mapper.writeValueAsString(List.of(composite1Uuid))).contentType(MediaType.APPLICATION_JSON))
+                        .content(mapper.writeValueAsString(List.of(composite1Uuid, leaf4Uuid))).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID composite0Uuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
