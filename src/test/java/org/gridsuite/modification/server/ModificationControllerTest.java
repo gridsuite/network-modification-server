@@ -1743,4 +1743,138 @@ class ModificationControllerTest {
         assertEquals("VL1_1_1", bbsIds.getFirst());
         assertEquals("VL1_2_3", bbsIds.getLast());
     }
+
+    /**
+     * Creates ONE switch modification at the root of the given group and returns its UUID.
+     */
+    private UUID createOneRootSwitchModification(UUID groupId) throws Exception {
+        EquipmentAttributeModificationInfos infos = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .build();
+        String body = TestUtils.getJsonBody(infos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        runRequestAsync(mockMvc,
+                post(URI_NETWORK_MODIF_BASE + "?groupUuid=" + groupId)
+                        .content(body).contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+        List<UUID> roots = groupRootUuids(groupId);
+        return roots.get(roots.size() - 1);
+    }
+
+    /** Standalone leaves (in a scratch group) to feed createComposite. */
+    private List<UUID> createSwitchModificationUuids(int number) throws Exception {
+        UUID scratch = UUID.randomUUID();
+        List<UUID> uuids = new ArrayList<>();
+        for (int i = 0; i < number; i++) {
+            uuids.add(createOneRootSwitchModification(scratch));
+        }
+        return uuids;
+    }
+
+    /** POSTs a standalone composite from the given leaf UUIDs, returns the composite UUID. */
+    private UUID createComposite(List<UUID> modificationUuids) throws Exception {
+        MvcResult result = mockMvc.perform(
+                        post("/v1/network-composite-modifications")
+                                .content(mapper.writeValueAsString(modificationUuids))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        return mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+    }
+
+    /** Inserts a COPY of a standalone composite at the end of the group's root list. */
+    private void insertCompositeIntoGroup(UUID groupId, UUID compositeUuid, String name) throws Exception {
+        String body = TestUtils.getJsonBodyModificationCompositeInfos(
+                List.of(org.springframework.data.util.Pair.of(compositeUuid, name)),
+                TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        runRequestAsync(mockMvc,
+                put("/v1/network-composite-modifications/groups/" + groupId + "?action=INSERT")
+                        .content(body).contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+    }
+
+    /** Ordered root-level modification UUIDs of a group. */
+    private List<UUID> groupRootUuids(UUID groupId) {
+        return modificationRepository.getModifications(groupId, true, true)
+                .stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+    }
+
+    /** Ordered sub-modification UUIDs stored inside a composite (its copied children). */
+    private List<UUID> fetchCompositeSubUuids(UUID compositeUuid) throws Exception {
+        MvcResult result = mockMvc.perform(
+                        get("/v1/network-composite-modifications/network-modifications?uuids={id}", compositeUuid))
+                .andExpect(status().isOk()).andReturn();
+        Map<UUID, List<ModificationInfos>> map =
+                mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        return map.get(compositeUuid).stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+    }
+
+    /** Builds [C(C1,C2), D, B, E(E1,E2,E3)] at the root of the group, in that order. */
+    private record Layout(UUID c, List<UUID> cSubs, UUID d, UUID b, UUID e, List<UUID> eSubs) { }
+
+    private Layout buildCDBE(UUID groupId) throws Exception {
+        insertCompositeIntoGroup(groupId, createComposite(createSwitchModificationUuids(2)), "C");
+        UUID c = groupRootUuids(groupId).getFirst();
+        List<UUID> cSubs = fetchCompositeSubUuids(c);              // [C1, C2]
+
+        UUID d = createOneRootSwitchModification(groupId);
+        UUID b = createOneRootSwitchModification(groupId);
+
+        insertCompositeIntoGroup(groupId, createComposite(createSwitchModificationUuids(3)), "E");
+        UUID e = groupRootUuids(groupId).get(3);
+        List<UUID> eSubs = fetchCompositeSubUuids(e);              // [E1, E2, E3]
+
+        assertEquals(List.of(c, d, b, e), groupRootUuids(groupId)); // sanity: initial order
+        return new Layout(c, cSubs, d, b, e, eSubs);
+    }
+
+    @Test
+    void testMoveCompositeAndSubModificationInSameGroup() throws Exception {
+        Layout l = buildCDBE(TEST_GROUP_ID);
+        UUID e1 = l.eSubs().get(0);
+        UUID e2 = l.eSubs().get(1);
+        UUID e3 = l.eSubs().get(2);
+
+        MvcResult res = runRequestAsync(mockMvc,
+                put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&originGroupUuid=" + TEST_GROUP_ID)
+                        .content(getJsonBody(List.of(l.d(), e1, l.c()), NetworkCreation.VARIANT_ID))
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+
+        NetworkModificationsResult result =
+                mapper.readValue(res.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<UUID> movedBlock = result.modificationUuids();
+
+        // root = untouched [B, E] followed by the moved block, whatever its internal order
+        List<UUID> expectedRoot = new ArrayList<>(List.of(l.b(), l.e()));
+        expectedRoot.addAll(movedBlock);
+        assertEquals(expectedRoot, groupRootUuids(TEST_GROUP_ID));
+
+        // the moved block must be exactly the three selected items (order-independent)
+        assertEquals(Set.of(l.c(), l.d(), e1), new HashSet<>(movedBlock));
+
+        assertEquals(l.cSubs(), fetchCompositeSubUuids(l.c()));        // C1, C2 intact
+        assertEquals(List.of(e2, e3), fetchCompositeSubUuids(l.e()));  // E lost only E1
+    }
+
+    @Test
+    void testMoveCompositeAndSubModificationInterGroup() throws Exception {
+        Layout l = buildCDBE(TEST_GROUP2_ID);
+        UUID e1 = l.eSubs().get(0);
+        UUID e2 = l.eSubs().get(1);
+        UUID e3 = l.eSubs().get(2);
+
+        runRequestAsync(mockMvc,
+                put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&originGroupUuid=" + TEST_GROUP2_ID)
+                        .content(getJsonBody(List.of(l.d(), e1, l.c()), NetworkCreation.VARIANT_ID))
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+
+        // origin keeps B and E(E2,E3)
+        assertEquals(List.of(l.b(), l.e()), groupRootUuids(TEST_GROUP2_ID));
+        assertEquals(List.of(e2, e3), fetchCompositeSubUuids(l.e()));
+        // destination receives C(intact), D, extracted E1
+        assertEquals(l.cSubs(), fetchCompositeSubUuids(l.c()));
+    }
 }
