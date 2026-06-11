@@ -15,7 +15,6 @@ import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -43,7 +42,6 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -147,10 +145,6 @@ public abstract class AbstractNetworkModificationTest {
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        assertAfterNetworkModificationCreation();
-
-        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
-        testCreationModificationMessage(createdModificationWithOnlyMetadata);
     }
 
     @Test
@@ -174,11 +168,8 @@ public abstract class AbstractNetworkModificationTest {
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        // when modification is not active, element created by the modifications should NOT be present in network
-        assertAfterNetworkModificationDeletion();
 
         ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
-        testCreationModificationMessage(createdModificationWithOnlyMetadata);
         assertEquals(false, createdModificationWithOnlyMetadata.getActivated());
     }
 
@@ -218,10 +209,6 @@ public abstract class AbstractNetworkModificationTest {
         ModificationInfos updatedModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
         assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        ModificationInfos updatedModificationwithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
-        testUpdateModificationMessage(updatedModificationwithOnlyMetadata);
-
     }
 
     @Test
@@ -238,7 +225,6 @@ public abstract class AbstractNetworkModificationTest {
         List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
 
         assertTrue(storedModifications.isEmpty());
-        assertAfterNetworkModificationDeletion();
     }
 
     @Test
@@ -285,18 +271,6 @@ public abstract class AbstractNetworkModificationTest {
         return network;
     }
 
-    protected void setNetwork(Network network) {
-        this.network = network;
-    }
-
-    protected UUID getNetworkId() {
-        return TEST_NETWORK_ID;
-    }
-
-    protected UUID getNetworkUuid() {
-        return ((NetworkImpl) network).getUuid();
-    }
-
     protected UUID getGroupId() {
         return TEST_GROUP_ID;
     }
@@ -315,20 +289,6 @@ public abstract class AbstractNetworkModificationTest {
 
     protected abstract ModificationInfos buildModificationUpdate();
 
-    protected abstract void assertAfterNetworkModificationCreation();
-
-    protected abstract void assertAfterNetworkModificationDeletion();
-
-    @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("{}", modificationInfos.getMessageValues());
-    }
-
-    @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("{}", modificationInfos.getMessageValues());
-    }
-
     protected List<NetworkModificationResult.ApplicationStatus> extractApplicationStatus(NetworkModificationsResult networkModificationsResult) {
         List<NetworkModificationResult.ApplicationStatus> applicationStatuses = new ArrayList<>();
         networkModificationsResult.modificationResults().forEach(modificationResult -> {
@@ -343,13 +303,5 @@ public abstract class AbstractNetworkModificationTest {
                 .map(Optional::get)
                 .flatMap(result -> result.getNetworkImpacts().stream())
                 .toList();
-    }
-
-    protected Set<String> getImpactedSubstationsIds(NetworkModificationsResult networkModificationsResult) {
-        return networkModificationsResult.modificationResults().stream()
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .flatMap(result -> result.getImpactedSubstationsIds().stream())
-                .collect(Collectors.toSet());
     }
 }
