@@ -18,14 +18,14 @@ import java.util.UUID;
  * @author Kevin Le Saulnier <kevin.lesaulnier at rte-france.com>
  */
 public interface ModificationApplicationRepository extends JpaRepository<ModificationApplicationEntity, UUID> {
-    void deleteAllByNetworkUuidAndModificationGroupIdIn(UUID networkUuid, List<UUID> groupUuid);
+    void deleteAllByNetworkUuidAndModificationContainerIdIn(UUID networkUuid, List<UUID> groupUuid);
 
-    void deleteAllByModificationGroupIdIn(List<UUID> groupUuid);
+    void deleteAllByModificationContainerIdIn(List<UUID> groupUuid);
 
     void deleteAllByModificationIdIn(List<UUID> modificationIds);
 
-    @EntityGraph(attributePaths = {"modification", "modification.group"}, type = EntityGraph.EntityGraphType.LOAD)
-    List<ModificationApplicationEntity> findWithModificationAndGroupByNetworkUuid(UUID networkUuid);
+    @EntityGraph(attributePaths = {"modification"}, type = EntityGraph.EntityGraphType.LOAD)
+    List<ModificationApplicationEntity> findWithModificationByNetworkUuid(UUID networkUuid);
 
     @Query("SELECT distinct ma.networkUuid from ModificationApplicationEntity ma")
     List<UUID> findDistinctNetworkUuids();

@@ -15,7 +15,6 @@ import org.gridsuite.modification.dto.ConverterStationCreationInfos;
 import org.gridsuite.modification.server.dto.DTOUtils;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable.toEmbeddablePoints;
 
@@ -29,10 +28,6 @@ import static org.gridsuite.modification.server.entities.equipment.creation.Reac
 @Entity
 @Table(name = "converterStationCreation")
 public class ConverterStationCreationEntity extends InjectionCreationEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
-    private UUID id;
 
     @Column
     private Float lossFactor;

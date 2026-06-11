@@ -30,6 +30,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
+import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -53,7 +54,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.apache.commons.collections4.SetUtils.emptyIfNull;
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
+import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
+import static org.gridsuite.modification.NetworkModificationException.Type.NETWORK_NOT_FOUND;
+import static org.gridsuite.modification.NetworkModificationException.Type.VARIANT_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
 
@@ -383,25 +387,34 @@ public class NetworkModificationService {
         }
     }
 
-    public CompletableFuture<NetworkModificationsResult> moveModifications(@NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid, UUID beforeModificationUuid,
-                                                                       @NonNull List<UUID> modificationsToMoveUuids, @NonNull List<ModificationApplicationContext> applicationContexts,
-                                                                       boolean applyModifications) {
-        // update origin/destinations groups to cut and paste all modificationsToMove
-        // FullDto needed for toModificationInfos() after the modifications have been applied
-        List<ModificationInfos> modifications = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
+    public CompletableFuture<NetworkModificationsResult> moveModifications(
+            @NonNull UUID sourceContainerId,
+            @NonNull UUID targetContainerId,
+            UUID beforeModificationUuid,
+            @NonNull List<UUID> modificationUuids,
+            @NonNull List<ModificationApplicationContext> applicationContexts,
+            boolean canApply) {
+        ModificationContainerType sourceType = networkModificationRepository.getContainerType(sourceContainerId);
+        ModificationContainerType targetType = networkModificationRepository.getContainerType(targetContainerId);
 
-        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = applyModifications && !modifications.isEmpty() ? applyModifications(destinationGroupUuid, modifications, applicationContexts) : CompletableFuture.completedFuture(List.of());
-        return futureResult.thenApply(result -> new NetworkModificationsResult(modifications.stream().map(ModificationInfos::getUuid).toList(), result));
-    }
+        List<ModificationInfos> modifications = networkModificationRepository.moveModifications(
+                sourceType, sourceContainerId,
+                targetType, targetContainerId,
+                modificationUuids, beforeModificationUuid);
 
-    public void moveSubModification(
-            @NonNull UUID groupUuid,
-            UUID sourceCompositeUuid,
-            UUID targetCompositeUuid,
-            @NonNull UUID modificationUuid,
-            UUID beforeUuid) {
-        networkModificationRepository.moveSubModification(
-                groupUuid, sourceCompositeUuid, targetCompositeUuid, modificationUuid, beforeUuid);
+        boolean shouldApply = canApply
+                && !sourceContainerId.equals(targetContainerId)
+                && targetType == ModificationContainerType.GROUP
+                && !modifications.isEmpty();
+
+        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = shouldApply
+                ? applyModifications(targetContainerId, modifications, applicationContexts)
+                : CompletableFuture.completedFuture(List.of());
+
+        return futureResult.thenApply(result ->
+                new NetworkModificationsResult(
+                        modifications.stream().map(ModificationInfos::getUuid).toList(),
+                        result));
     }
 
     public Map<UUID, UUID> duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {

@@ -31,11 +31,18 @@ import static org.gridsuite.modification.NetworkModificationException.Type.MISSI
 @Setter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "modification")
-public class ModificationEntity {
+@Table(
+        name = "modification",
+        indexes = {
+            @Index(name = "modification_container_idx", columnList = "container_type, container_id")
+        }
+)
+public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> {
 
+    // Application-assigned id: set at construction (see the DTO constructor)
+    // so that children can be pointed at their container BEFORE the insert
+    // No @GeneratedValue; insert-vs-merge is driven by Persistable#isNew() from the superclass.
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
     private UUID id;
 
@@ -44,11 +51,6 @@ public class ModificationEntity {
 
     @Column(name = "date", columnDefinition = "timestamptz")
     private Instant date;
-
-    @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"))
-    @ManyToOne(fetch = FetchType.LAZY)
-    @Setter
-    private ModificationGroupEntity group;
 
     @Column(name = "stashed", columnDefinition = "boolean default false")
     private Boolean stashed = false;
@@ -69,6 +71,15 @@ public class ModificationEntity {
     @Column(name = "description", columnDefinition = "CLOB")
     private String description;
 
+    // Written by the child itself (see attachToContainer). The owning collections map this column
+    // read-only (insertable=false, updatable=false), so there is a single writer and no UPDATE pass.
+    @Column(name = "container_id")
+    private UUID containerId;
+
+    @Column(name = "container_type")
+    @Enumerated(EnumType.STRING)
+    private ModificationContainerType containerType;
+
     public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues, String description) {
         this.id = id;
         this.type = type;
@@ -78,17 +89,23 @@ public class ModificationEntity {
         this.messageType = messageType;
         this.messageValues = messageValues;
         this.description = description;
+        markNotNew();
     }
 
     public ModificationEntity(UUID id, String type) {
         this.id = id;
         this.type = type;
+        markNotNew();
     }
 
     protected ModificationEntity(ModificationInfos modificationInfos) {
         if (modificationInfos == null) {
             throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
         }
+        // Always mint a fresh id here. We deliberately ignore modificationInfos.getUuid(): fromDTO is also
+        // used to clone/duplicate existing modifications, and reusing the source uuid would collide. This
+        // preserves the previous @GeneratedValue behaviour (a new id on every fromDTO). isNew stays true.
+        this.id = UUID.randomUUID();
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         this.date = Instant.now().truncatedTo(ChronoUnit.MICROS);
         // Do not put this stashed status in assignAttributes, it's not part of a network modification as such.
@@ -131,6 +148,16 @@ public class ModificationEntity {
             this.setDescription(modificationInfos.getDescription());
         }
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
+    }
+
+    public void attachToContainer(@NonNull ModificationContainer container) {
+        this.containerId = container.getId();
+        this.containerType = container.getContainerType();
+    }
+
+    public void detachFromContainer() {
+        this.containerId = null;
+        this.containerType = null;
     }
 
     public static ModificationEntity fromDTO(ModificationInfos dto) {
