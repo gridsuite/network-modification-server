@@ -685,6 +685,26 @@ public class NetworkModificationRepository {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
+
+            // If the modification is a child of a composite, detach it from the composite
+            // and assign it directly to the composite's parent group, so it can be stashed
+            // as a standalone modification (like any root-level modification) and restored
+            // to the end of the node's modification list without remembering the composite.
+            //
+            // IMPORTANT: we use a native DB update to unlink the sub-modification from the
+            // composite_modification_sub_modifications join table directly, instead of calling
+            // parentComposite.setModifications(...) on the JPA collection. If the composite
+            // entity has orphanRemoval=true, removing from the collection would immediately
+            // delete the sub-modification before we can set it as stashed.
+            UUID parentCompositeId = modificationRepository.findCompositeIdByContainedModificationId(modificationUuid);
+            if (parentCompositeId != null) {
+                compositeModificationRepository.removeSubModification(parentCompositeId, modificationUuid);
+                ModificationGroupEntity parentGroup = compositeModificationRepository.findById(parentCompositeId)
+                        .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND))
+                        .getGroup();
+                modificationEntity.setGroup(parentGroup);
+                modificationEntity.setStashed(false);
+            }
             modificationEntity.setStashed(true);
             modificationEntity.setModificationsOrder(stashModificationOrder);
             modificationEntities.add(modificationEntity);
