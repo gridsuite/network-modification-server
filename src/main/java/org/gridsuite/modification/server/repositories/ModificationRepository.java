@@ -74,6 +74,16 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         """, nativeQuery = true)
     List<UUID> findModificationIdsByCompositeModificationId(UUID uuid);
 
+    // return the uuid of the composite containing the modification sent as parameter
+    @Query(value = """
+        SELECT CAST(sm.id AS VARCHAR)
+        FROM composite_modification_sub_modifications sm
+        INNER JOIN modification m ON sm.modification_id = m.id
+        WHERE sm.modification_id = :uuid
+        ORDER BY m.modifications_order
+        """, nativeQuery = true)
+    UUID findCompositeIdByContainedModificationId(UUID uuid);
+
     @Query(value = """
         SELECT CAST(sm.modification_id AS VARCHAR)
         FROM composite_modification_sub_modifications sm

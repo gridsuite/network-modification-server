@@ -920,6 +920,76 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
+    public CompositeModificationEntity assembleNetworkModificationsIntoNewComposite(List<UUID> assembledModificationsUuids) {
+        // get the target (groupUuid or composite Uuid of the first assembled modification + its index in this target)
+        final UUID firstModifUuid = assembledModificationsUuids.getFirst();
+        final ModificationEntity firstModificationEntity = getModificationEntity(firstModifUuid);
+        final int targetIndex = firstModificationEntity.getModificationsOrder();
+        ModificationGroupEntity targetGroup = firstModificationEntity.getGroup();
+        CompositeModificationEntity targetComposite = null;
+        if (targetGroup == null) {
+            // the first modification is inside a composite
+            UUID targetCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(firstModifUuid);
+            targetComposite = compositeModificationRepository.findById(targetCompositeUuid).orElse(null);
+        }
+
+        // get all the modifications to be assembled, remove previous assignment
+        List<ModificationEntity> assembledModifications = assembledModificationsUuids.stream()
+                .map(modificationRepository::findById).filter(Optional::isPresent).map(Optional::get).toList();
+        // 1. cleans and reorders the origin group if there is one :
+        ModificationGroupEntity originGroup = assembledModifications.stream()
+                .map(ModificationEntity::getGroup)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+        if (originGroup != null) {
+            List<ModificationEntity> originGroupModifications = originGroup.getModifications();
+            originGroupModifications.removeIf(mod -> assembledModificationsUuids.contains(mod.getId()));
+            originGroup.setModifications(originGroupModifications);
+            assembledModifications.forEach(modificationEntity -> modificationEntity.setGroup(null));
+        }
+        // 2. cleans the composites whose submodifications are assembled into a new one
+        for (ModificationEntity assembledModification : assembledModifications.stream().filter(mod -> mod.getGroup() == null).toList()) {
+            UUID compositeUuid = modificationRepository.findCompositeIdByContainedModificationId(assembledModification.getId());
+            if (compositeUuid != null) {
+                CompositeModificationEntity previousOwner = compositeModificationRepository.findById(compositeUuid).orElse(null);
+                if (previousOwner != null) {
+                    List<ModificationEntity> modificationsLeft = previousOwner.getModifications()
+                            .stream()
+                            .filter(mod -> !assembledModificationsUuids.contains(mod.getId()))
+                            .toList();
+                    previousOwner.setModifications(modificationsLeft);
+                }
+            }
+        }
+
+        // create the new composite
+        CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder()
+                .modificationsInfos(List.of())
+                .name("Composite modification")
+                .build();
+        CompositeModificationEntity newCompositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(newCompositeInfos);
+        newCompositeEntity.setModificationsOrder(targetIndex);
+
+        // assign modifications
+        newCompositeEntity.setModifications(assembledModifications);
+        // put the new composite in the target group or composite
+        if (targetGroup != null) {
+            List<ModificationEntity> modifications = targetGroup.getModifications();
+            modifications.add(targetIndex, newCompositeEntity);
+            targetGroup.setModifications(modifications);
+        } else if (targetComposite != null) {
+            List<ModificationEntity> modifications = targetComposite.getModifications();
+            modifications.add(targetIndex, newCompositeEntity);
+            for (int i = 0; i < targetComposite.getModifications().size(); i++) {
+                targetComposite.getModifications().get(i).setModificationsOrder(i);
+            }
+        }
+
+        return modificationRepository.save(newCompositeEntity);
+    }
+
+    @Transactional
     public void moveSubModification(@NonNull UUID groupUuid, UUID sourceCompositeUuid, UUID targetCompositeUuid,
                                     @NonNull UUID modificationUuid, UUID beforeUuid) {
 
@@ -968,10 +1038,6 @@ public class NetworkModificationRepository {
             }
             group.setModifications(notMovedMods);
             movedMods.forEach(entity -> entity.setGroup(null));
-        }
-        // reordering the composite modifications left (not moved)
-        for (int i = 0; i < notMovedMods.size(); i++) {
-            notMovedMods.get(i).setModificationsOrder(i);
         }
 
         if (targetCompositeUuid != null) {
