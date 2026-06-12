@@ -800,7 +800,7 @@ class ModificationControllerTest {
         ModificationInfos loadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
         loadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(loadModificationInfo))).getFirst();
         ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
-            .referenceType(ModificationReferenceInfos.Type.SAMPLE)
+            .referenceType(ModificationReferenceInfos.Type.BASIC)
             .referenceId(loadModificationInfo.getUuid())
             .referenceInfos(loadModificationInfo)
             .stashed(false)
