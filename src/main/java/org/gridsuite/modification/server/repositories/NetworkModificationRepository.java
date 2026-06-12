@@ -476,10 +476,8 @@ public class NetworkModificationRepository {
     }
 
     private ModificationReferenceInfos loadModificationReference(ModificationReferenceEntity modificationEntity) {
-        ModificationEntity referencedEntity = modificationRepository.getReferenceById(modificationEntity.getReferenceId());
-        if (referencedEntity == null) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getReferenceId()));
-        }
+        ModificationEntity referencedEntity = modificationRepository.findAllByIdIn(List.of(modificationEntity.getReferenceId())).stream().findFirst()
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getReferenceId())));
         return ModificationReferenceInfos.builder()
             .uuid(modificationEntity.getId())
             .messageType(modificationEntity.getMessageType())

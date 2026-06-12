@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -39,16 +40,16 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModification() {
-        ModificationInfos loadInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
-        ModificationEntity loadEntity = modificationRepository.save(ModificationEntity.fromDTO(loadInfo));
-        ModificationInfos loadMetadataInfo = modificationRepository.findBaseDataByIdIn(List.of(loadEntity.getId())).getFirst().toModificationInfos();
+        ModificationInfos compositeInfo = buildCompositeModification();
+        ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
+        ModificationInfos compositeMetadataInfo = modificationRepository.findBaseDataByIdIn(List.of(compositeEntity.getId())).getFirst().toModificationInfos();
 
         return ModificationReferenceInfos.builder()
-            .messageType(loadMetadataInfo.getMessageType())
-            .messageValues(loadMetadataInfo.getMessageValues())
+            .messageType(compositeMetadataInfo.getMessageType())
+            .messageValues(compositeMetadataInfo.getMessageValues())
             .referenceType(ModificationReferenceInfos.Type.BASIC)
-            .referenceId(loadMetadataInfo.getUuid())
-            .referenceInfos(loadInfo)
+            .referenceId(compositeMetadataInfo.getUuid())
+            .referenceInfos(compositeInfo)
             .stashed(false)
             .build();
     }
@@ -70,11 +71,22 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals(ModificationType.LOAD_CREATION.name(), modificationInfos.getMessageType());
+        assertEquals(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
     }
 
     @Override
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals(ModificationType.LOAD_CREATION.name(), modificationInfos.getMessageType());
+        assertEquals(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
+    }
+
+    protected ModificationInfos buildCompositeModification() {
+        List<ModificationInfos> modifications = List.of(
+            ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED)
+        );
+        return CompositeModificationInfos.builder()
+            .name("composite")
+            .modificationsInfos(modifications)
+            .stashed(false)
+            .build();
     }
 }
