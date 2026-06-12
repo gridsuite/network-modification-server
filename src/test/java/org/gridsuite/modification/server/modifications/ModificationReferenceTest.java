@@ -46,7 +46,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
         return ModificationReferenceInfos.builder()
             .messageType(loadMetadataInfo.getMessageType())
             .messageValues(loadMetadataInfo.getMessageValues())
-            .referenceType(ModificationReferenceInfos.Type.SAMPLE)
+            .referenceType(ModificationReferenceInfos.Type.BASIC)
             .referenceId(loadMetadataInfo.getUuid())
             .referenceInfos(loadInfo)
             .stashed(false)
