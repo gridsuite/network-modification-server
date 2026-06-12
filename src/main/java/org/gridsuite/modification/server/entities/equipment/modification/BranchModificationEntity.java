@@ -11,6 +11,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.BranchModificationModel;
+import org.gridsuite.modification.model.OperationalLimitsGroupModificationModel;
+import org.gridsuite.modification.model.OperationalLimitsGroupsModificationType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 
 import java.util.ArrayList;
@@ -206,19 +209,18 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     })
     private BooleanModificationEmbedded q2MeasurementValidity;
 
-    protected BranchModificationEntity(BranchModificationInfos branchModificationInfos) {
+    protected BranchModificationEntity(ModificationInfos branchModificationInfos) {
         super(branchModificationInfos);
-        assignAttributes(branchModificationInfos);
+        assignAttributes((BranchModificationModel) branchModificationInfos.toModel());
     }
 
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        BranchModificationInfos branchModificationInfos = (BranchModificationInfos) modificationInfos;
-        assignAttributes(branchModificationInfos);
+        assignAttributes((BranchModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(BranchModificationInfos branchModificationInfos) {
+    private void assignAttributes(BranchModificationModel branchModificationInfos) {
         x = new DoubleModificationEmbedded(branchModificationInfos.getX());
         r = new DoubleModificationEmbedded(branchModificationInfos.getR());
         this.operationalLimitsGroups = assignOperationalLimitsGroups(branchModificationInfos.getOperationalLimitsGroups(), operationalLimitsGroups);
@@ -253,7 +255,7 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
      * in order to prevent Hibernate from losing the reference during cascade cleaning
      */
     private List<OperationalLimitsGroupModificationEntity> assignOperationalLimitsGroups(
-            List<OperationalLimitsGroupModificationInfos> operationalLimitsGroupInfos,
+            List<OperationalLimitsGroupModificationModel> operationalLimitsGroupInfos,
             List<OperationalLimitsGroupModificationEntity> operationalLimitsGroups
     ) {
         List<OperationalLimitsGroupModificationEntity> updatedLimitsGroups = operationalLimitsGroups;

@@ -9,7 +9,8 @@ package org.gridsuite.modification.server.entities.equipment.modification.attrib
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.EquipmentAttributeModificationModel;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -22,7 +23,11 @@ import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "boolean_equipment_attribute_modification_id_fk_constraint"))
 public class BooleanEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<Boolean> {
 
-    public BooleanEquipmentAttributeModificationEntity(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
+    public BooleanEquipmentAttributeModificationEntity(ModificationInfos equipmentAttributeModificationInfos) {
+        super(equipmentAttributeModificationInfos);
+    }
+
+    public BooleanEquipmentAttributeModificationEntity(EquipmentAttributeModificationModel equipmentAttributeModificationInfos) {
         super(equipmentAttributeModificationInfos);
     }
 }

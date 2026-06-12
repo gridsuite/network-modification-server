@@ -16,6 +16,10 @@ import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRangeAdder;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.FreePropertyModel;
+import org.gridsuite.modification.model.OperationType;
+import org.gridsuite.modification.model.ReactiveCapabilityCurvePointsModel;
 import org.gridsuite.modification.modifications.VscModification;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -61,7 +65,7 @@ class VscModificationTest extends AbstractNetworkModificationTest {
                 .angleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET))
                 .converterStation1(buildConverterStationWithReactiveCapabilityCurve())
                 .converterStation2(buildConverterStationWithMinMaxReactiveLimits())
-                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
+                .properties(List.of(FreePropertyModel.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -76,8 +80,8 @@ class VscModificationTest extends AbstractNetworkModificationTest {
                 .voltageSetpoint(new AttributeModification<>(0.3, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
-                        new ReactiveCapabilityCurvePointsInfos(0.4, 11., 0.7),
-                        new ReactiveCapabilityCurvePointsInfos(0.6, 12., 0.8)))
+                        new ReactiveCapabilityCurvePointsModel(0.4, 11., 0.7),
+                        new ReactiveCapabilityCurvePointsModel(0.6, 12., 0.8)))
                 .build();
     }
 
@@ -167,7 +171,7 @@ class VscModificationTest extends AbstractNetworkModificationTest {
             assertEquals(2, reactiveLimits1.getPointCount());
             Collection<ReactiveCapabilityCurve.Point> points = vscConverterStation1.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
             List<ReactiveCapabilityCurve.Point> vscPoints = new ArrayList<>(points);
-            List<ReactiveCapabilityCurvePointsInfos> modificationPoints = vscModificationInfos.getConverterStation1().getReactiveCapabilityCurvePoints();
+            List<ReactiveCapabilityCurvePointsModel> modificationPoints = vscModificationInfos.getConverterStation1().getReactiveCapabilityCurvePoints();
             if (!CollectionUtils.isEmpty(points)) {
                 IntStream.range(0, vscPoints.size())
                         .forEach(i -> {

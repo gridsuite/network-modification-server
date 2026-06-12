@@ -7,27 +7,28 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import org.gridsuite.modification.dto.AttributeModification;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ShuntCompensatorModificationInfos;
-import org.gridsuite.modification.dto.ShuntCompensatorType;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerModificationEmbedded;
-
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ShuntCompensatorModificationInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.ShuntCompensatorModificationModel;
+import org.gridsuite.modification.model.ShuntCompensatorType;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerModificationEmbedded;
+
 import org.springframework.util.CollectionUtils;
 
-import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
+import static org.gridsuite.modification.model.AttributeModification.toAttributeModification;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -74,18 +75,18 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
     })
     private EnumModificationEmbedded<ShuntCompensatorType> shuntCompensatorType;
 
-    public ShuntCompensatorModificationEntity(ShuntCompensatorModificationInfos shuntCompensatorModificationInfos) {
+    public ShuntCompensatorModificationEntity(ModificationInfos shuntCompensatorModificationInfos) {
         super(shuntCompensatorModificationInfos);
-        assignAttributes(shuntCompensatorModificationInfos);
+        assignAttributes((ShuntCompensatorModificationModel) shuntCompensatorModificationInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((ShuntCompensatorModificationInfos) modificationInfos);
+        assignAttributes((ShuntCompensatorModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(ShuntCompensatorModificationInfos shuntCompensatorModificationInfos) {
+    private void assignAttributes(ShuntCompensatorModificationModel shuntCompensatorModificationInfos) {
         this.maximumSectionCount = shuntCompensatorModificationInfos.getMaximumSectionCount() != null ? new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getMaximumSectionCount()) : null;
         this.sectionCount = shuntCompensatorModificationInfos.getSectionCount() != null ? new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getSectionCount()) : null;
         this.maxQAtNominalV = shuntCompensatorModificationInfos.getMaxQAtNominalV() != null ? new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getMaxQAtNominalV()) : null;
@@ -124,7 +125,7 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

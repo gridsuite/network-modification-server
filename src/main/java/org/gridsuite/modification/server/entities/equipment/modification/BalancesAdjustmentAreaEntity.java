@@ -12,9 +12,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.ShiftEquipmentType;
-import org.gridsuite.modification.dto.ShiftType;
-import org.gridsuite.modification.dto.BalancesAdjustmentAreaInfos;
+import org.gridsuite.modification.model.BalancesAdjustmentAreaModel;
+import org.gridsuite.modification.model.ShiftEquipmentType;
+import org.gridsuite.modification.model.ShiftType;
 import org.gridsuite.modification.server.utils.CountriesUtils;
 
 import java.util.UUID;
@@ -55,8 +55,8 @@ public class BalancesAdjustmentAreaEntity {
     @Enumerated(EnumType.STRING)
     private ShiftType shiftType;
 
-    public static BalancesAdjustmentAreaInfos getAreaInfos(BalancesAdjustmentAreaEntity area) {
-        return BalancesAdjustmentAreaInfos.builder()
+    public static BalancesAdjustmentAreaModel getAreaInfos(BalancesAdjustmentAreaEntity area) {
+        return BalancesAdjustmentAreaModel.builder()
             .name(area.getName())
             .countries(CountriesUtils.toList(area.getCountries()))
             .netPosition(area.getNetPosition())
@@ -65,7 +65,7 @@ public class BalancesAdjustmentAreaEntity {
             .build();
     }
 
-    public static BalancesAdjustmentAreaEntity from(BalancesAdjustmentAreaInfos area) {
+    public static BalancesAdjustmentAreaEntity from(BalancesAdjustmentAreaModel area) {
         return BalancesAdjustmentAreaEntity.builder()
             .name(area.getName())
             .countries(CountriesUtils.stringify(area.getCountries()))

@@ -6,14 +6,14 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.EquipmentCreationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.EquipmentCreationModel;
+import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -25,7 +25,12 @@ public class EquipmentCreationEntity extends EquipmentModificationEntity {
     @Column(name = "equipmentName")
     private String equipmentName;
 
-    protected EquipmentCreationEntity(EquipmentCreationInfos equipmentCreationInfos) {
+    protected EquipmentCreationEntity(ModificationInfos equipmentCreationInfos) {
+        super(equipmentCreationInfos);
+        assignAttributes((EquipmentCreationModel) equipmentCreationInfos.toModel());
+    }
+
+    protected EquipmentCreationEntity(EquipmentCreationModel equipmentCreationInfos) {
         super(equipmentCreationInfos);
         assignAttributes(equipmentCreationInfos);
     }
@@ -33,10 +38,10 @@ public class EquipmentCreationEntity extends EquipmentModificationEntity {
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((EquipmentCreationInfos) modificationInfos);
+        assignAttributes((EquipmentCreationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(EquipmentCreationInfos equipmentCreationInfos) {
+    private void assignAttributes(EquipmentCreationModel equipmentCreationInfos) {
         this.equipmentName = equipmentCreationInfos.getEquipmentName();
     }
 }

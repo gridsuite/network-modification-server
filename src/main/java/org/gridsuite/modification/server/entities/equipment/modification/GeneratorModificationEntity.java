@@ -11,10 +11,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.GeneratorModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.VoltageRegulationType;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.GeneratorModificationModel;
+import org.gridsuite.modification.model.VoltageRegulationType;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.springframework.util.CollectionUtils;
@@ -206,18 +207,18 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
     @CollectionTable
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
 
-    public GeneratorModificationEntity(@NonNull GeneratorModificationInfos generatorModificationInfos) {
+    public GeneratorModificationEntity(@NonNull ModificationInfos generatorModificationInfos) {
         super(generatorModificationInfos);
-        assignAttributes(generatorModificationInfos);
+        assignAttributes((GeneratorModificationModel) generatorModificationInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((GeneratorModificationInfos) modificationInfos);
+        assignAttributes((GeneratorModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(GeneratorModificationInfos generatorModificationInfos) {
+    private void assignAttributes(GeneratorModificationModel generatorModificationInfos) {
         this.energySource = generatorModificationInfos.getEnergySource() != null ? new EnumModificationEmbedded<>(generatorModificationInfos.getEnergySource()) : null;
         this.minP = generatorModificationInfos.getMinP() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMinP()) : null;
         this.maxP = generatorModificationInfos.getMaxP() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMaxP()) : null;
@@ -290,7 +291,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .regulatingTerminalVlId(toAttributeModification(getRegulatingTerminalVlId()))
                 .qPercent(toAttributeModification(getQPercent()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
-                .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationInfos(getReactiveCapabilityCurvePoints()))
+                .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationModel(getReactiveCapabilityCurvePoints()))
                 .pMeasurementValue(toAttributeModification(getPMeasurementValue()))
                 .pMeasurementValidity(toAttributeModification(getPMeasurementValidity()))
                 .qMeasurementValue(toAttributeModification(getQMeasurementValue()))
@@ -298,7 +299,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

@@ -11,7 +11,9 @@ import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
-import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.OperationType;
+import org.gridsuite.modification.model.tabular.TabularPropertyModel;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ApiUtils;
@@ -51,7 +53,7 @@ class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModi
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION)
                 .modifications(modifications)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();
     }
@@ -65,7 +67,7 @@ class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModi
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION)
                 .modifications(modifications)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }
@@ -138,7 +140,7 @@ class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModi
         ModificationInfos tabularModification = TabularModificationInfos.builder()
                 .modificationType(ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION)
                 .modifications(createTwtModificationList(qty))
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(false).build()))
                 .build();
         UUID uuid = saveModification(tabularModification);
         tabularModification.setUuid(uuid);

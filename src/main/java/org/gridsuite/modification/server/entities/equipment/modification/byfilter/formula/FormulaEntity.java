@@ -9,10 +9,10 @@ package org.gridsuite.modification.server.entities.equipment.modification.byfilt
 
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.FilterInfos;
-import org.gridsuite.modification.dto.byfilter.formula.FormulaInfos;
-import org.gridsuite.modification.dto.byfilter.formula.Operator;
-import org.gridsuite.modification.dto.byfilter.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.model.FilterModel;
+import org.gridsuite.modification.model.byfilter.formula.FormulaModel;
+import org.gridsuite.modification.model.byfilter.formula.Operator;
+import org.gridsuite.modification.model.byfilter.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
 
@@ -46,7 +46,7 @@ public class FormulaEntity extends AbstractAssignmentEntity {
     @Column
     private Operator operator;
 
-    public FormulaEntity(FormulaInfos formulaInfos) {
+    public FormulaEntity(FormulaModel formulaInfos) {
         super(formulaInfos);
         this.equipmentField1 = formulaInfos.getFieldOrValue1().getEquipmentField();
         this.equipmentField2 = formulaInfos.getFieldOrValue2().getEquipmentField();
@@ -58,10 +58,10 @@ public class FormulaEntity extends AbstractAssignmentEntity {
                 .toList();
     }
 
-    public FormulaInfos toFormulaInfos() {
-        FormulaInfos formulaInfos = FormulaInfos.builder()
+    public FormulaModel toFormulaInfos() {
+        FormulaModel formulaInfos = FormulaModel.builder()
                 .filters(filters.stream()
-                        .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName()))
+                        .map(filterEntity -> new FilterModel(filterEntity.getFilterId(), filterEntity.getName()))
                         .toList())
                 .fieldOrValue1(ReferenceFieldOrValue.builder()
                         .equipmentField(equipmentField1)

@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.EquipmentDeletionModel;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
 /**
@@ -36,18 +37,18 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
             ), nullable = true)
     private AbstractEquipmentDeletionEntity equipmentInfos;
 
-    public EquipmentDeletionEntity(EquipmentDeletionInfos equipmentDeletionInfos) {
+    public EquipmentDeletionEntity(ModificationInfos equipmentDeletionInfos) {
         super(equipmentDeletionInfos);
-        assignAttributes(equipmentDeletionInfos);
+        assignAttributes((EquipmentDeletionModel) equipmentDeletionInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((EquipmentDeletionInfos) modificationInfos);
+        assignAttributes((EquipmentDeletionModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(EquipmentDeletionInfos equipmentDeletionInfos) {
+    private void assignAttributes(EquipmentDeletionModel equipmentDeletionInfos) {
         this.equipmentType = equipmentDeletionInfos.getEquipmentType();
         equipmentInfos = equipmentDeletionInfos.getEquipmentInfos() != null ?
             new HvdcLccDeletionEntity(equipmentDeletionInfos.getEquipmentInfos()) : null;

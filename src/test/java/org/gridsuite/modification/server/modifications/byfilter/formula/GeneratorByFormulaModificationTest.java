@@ -13,11 +13,11 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.dto.FilterInfos;
-import org.gridsuite.modification.dto.byfilter.equipmentfield.GeneratorField;
-import org.gridsuite.modification.dto.byfilter.formula.FormulaInfos;
-import org.gridsuite.modification.dto.byfilter.formula.Operator;
-import org.gridsuite.modification.dto.byfilter.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.model.FilterModel;
+import org.gridsuite.modification.model.byfilter.equipmentfield.GeneratorField;
+import org.gridsuite.modification.model.byfilter.formula.FormulaModel;
+import org.gridsuite.modification.model.byfilter.formula.Operator;
+import org.gridsuite.modification.model.byfilter.formula.ReferenceFieldOrValue;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -49,7 +49,7 @@ class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTe
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
         IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 
-        FormulaInfos formulaInfos = FormulaInfos.builder()
+        FormulaModel formulaInfos = FormulaModel.builder()
                 .filters(List.of(filterWithOneWrongId))
                 .editedField(GeneratorField.ACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
@@ -66,8 +66,8 @@ class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTe
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
         AbstractFilter filterEquipments = getFilterEquipments(FILTER_ID_1, List.of(identifiableAttributes));
 
-        FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(new FilterInfos(FILTER_ID_1, "filter1")))
+        FormulaModel formulaInfos = FormulaModel.builder()
+                .filters(List.of(new FilterModel(FILTER_ID_1, "filter1")))
                 .editedField(GeneratorField.ACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
                 .operator(Operator.ADDITION)
@@ -168,80 +168,80 @@ class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTe
     }
 
     @Override
-    protected List<FormulaInfos> getFormulaInfos() {
-        FormulaInfos formulaInfos1 = getFormulaInfo(GeneratorField.ACTIVE_POWER_SET_POINT.name(),
+    protected List<FormulaModel> getFormulaInfos() {
+        FormulaModel formulaInfos1 = getFormulaInfo(GeneratorField.ACTIVE_POWER_SET_POINT.name(),
                 List.of(filter1, filter2),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.MINIMUM_ACTIVE_POWER.name()).build(),
                 ReferenceFieldOrValue.builder().value(50.).build());
 
-        FormulaInfos formulaInfos2 = getFormulaInfo(GeneratorField.DROOP.name(),
+        FormulaModel formulaInfos2 = getFormulaInfo(GeneratorField.DROOP.name(),
                 List.of(filter3),
                 Operator.MULTIPLICATION,
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.DROOP.name()).build(),
                 ReferenceFieldOrValue.builder().value(2.).build());
 
-        FormulaInfos formulaInfos3 = getFormulaInfo(GeneratorField.RATED_NOMINAL_POWER.name(),
+        FormulaModel formulaInfos3 = getFormulaInfo(GeneratorField.RATED_NOMINAL_POWER.name(),
                 List.of(filter5),
                 Operator.DIVISION,
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.MAXIMUM_ACTIVE_POWER.name()).build(),
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.MINIMUM_ACTIVE_POWER.name()).build());
 
-        FormulaInfos formulaInfos4 = getFormulaInfo(GeneratorField.MARGINAL_COST.name(),
+        FormulaModel formulaInfos4 = getFormulaInfo(GeneratorField.MARGINAL_COST.name(),
                 List.of(filter1),
                 Operator.DIVISION,
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.MARGINAL_COST.name()).build(),
                 ReferenceFieldOrValue.builder().value(2.).build());
 
-        FormulaInfos formulaInfos5 = getFormulaInfo(GeneratorField.VOLTAGE_SET_POINT.name(),
+        FormulaModel formulaInfos5 = getFormulaInfo(GeneratorField.VOLTAGE_SET_POINT.name(),
                 List.of(filter4),
                 Operator.MULTIPLICATION,
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.VOLTAGE_SET_POINT.name()).build(),
                 ReferenceFieldOrValue.builder().value(2.).build());
 
-        FormulaInfos formulaInfos6 = getFormulaInfo(GeneratorField.PLANNED_ACTIVE_POWER_SET_POINT.name(),
+        FormulaModel formulaInfos6 = getFormulaInfo(GeneratorField.PLANNED_ACTIVE_POWER_SET_POINT.name(),
                 List.of(filter1),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.PLANNED_ACTIVE_POWER_SET_POINT.name()).build(),
                 ReferenceFieldOrValue.builder().value(10.).build());
 
-        FormulaInfos formulaInfos7 = getFormulaInfo(GeneratorField.MINIMUM_ACTIVE_POWER.name(),
+        FormulaModel formulaInfos7 = getFormulaInfo(GeneratorField.MINIMUM_ACTIVE_POWER.name(),
                 List.of(filter1, filter2),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.MINIMUM_ACTIVE_POWER.name()).build(),
                 ReferenceFieldOrValue.builder().value(50.).build());
 
-        FormulaInfos formulaInfos8 = getFormulaInfo(GeneratorField.PLANNED_OUTAGE_RATE.name(),
+        FormulaModel formulaInfos8 = getFormulaInfo(GeneratorField.PLANNED_OUTAGE_RATE.name(),
                 List.of(filter1),
                 Operator.MULTIPLICATION,
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.PLANNED_OUTAGE_RATE.name()).build(),
                 ReferenceFieldOrValue.builder().value(0.1).build());
 
-        FormulaInfos formulaInfos9 = getFormulaInfo(GeneratorField.FORCED_OUTAGE_RATE.name(),
+        FormulaModel formulaInfos9 = getFormulaInfo(GeneratorField.FORCED_OUTAGE_RATE.name(),
                 List.of(filter1),
                 Operator.DIVISION,
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.FORCED_OUTAGE_RATE.name()).build(),
                 ReferenceFieldOrValue.builder().value(10.).build());
 
-        FormulaInfos formulaInfos10 = getFormulaInfo(GeneratorField.MAXIMUM_ACTIVE_POWER.name(),
+        FormulaModel formulaInfos10 = getFormulaInfo(GeneratorField.MAXIMUM_ACTIVE_POWER.name(),
                 List.of(filter1, filter2, filter3, filter4, filter5),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.MAXIMUM_ACTIVE_POWER.name()).build(),
                 ReferenceFieldOrValue.builder().value(2.).build());
 
-        FormulaInfos formulaInfos11 = getFormulaInfo(GeneratorField.TRANSIENT_REACTANCE.name(),
+        FormulaModel formulaInfos11 = getFormulaInfo(GeneratorField.TRANSIENT_REACTANCE.name(),
                 List.of(filter2),
                 Operator.SUBTRACTION,
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.TRANSIENT_REACTANCE.name()).build(),
                 ReferenceFieldOrValue.builder().value(0.2).build());
 
-        FormulaInfos formulaInfos12 = getFormulaInfo(GeneratorField.STEP_UP_TRANSFORMER_REACTANCE.name(),
+        FormulaModel formulaInfos12 = getFormulaInfo(GeneratorField.STEP_UP_TRANSFORMER_REACTANCE.name(),
                 List.of(filter2),
                 Operator.MULTIPLICATION,
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.STEP_UP_TRANSFORMER_REACTANCE.name()).build(),
                 ReferenceFieldOrValue.builder().value(0.3).build());
 
-        FormulaInfos formulaInfos13 = getFormulaInfo(GeneratorField.Q_PERCENT.name(),
+        FormulaModel formulaInfos13 = getFormulaInfo(GeneratorField.Q_PERCENT.name(),
                 List.of(filter4),
                 Operator.DIVISION,
                 ReferenceFieldOrValue.builder().equipmentField(GeneratorField.Q_PERCENT.name()).build(),
@@ -263,8 +263,8 @@ class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTe
     }
 
     @Override
-    protected List<FormulaInfos> getUpdatedFormulaInfos() {
-        FormulaInfos formulaInfos1 = FormulaInfos.builder()
+    protected List<FormulaModel> getUpdatedFormulaInfos() {
+        FormulaModel formulaInfos1 = FormulaModel.builder()
                 .editedField(GeneratorField.REACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(2.).build())
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(50.).build())
@@ -272,7 +272,7 @@ class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTe
                 .filters(List.of(filter1, filter2))
                 .build();
 
-        FormulaInfos formulaInfos2 = FormulaInfos.builder()
+        FormulaModel formulaInfos2 = FormulaModel.builder()
                 .editedField(GeneratorField.MINIMUM_ACTIVE_POWER.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().equipmentField(GeneratorField.MINIMUM_ACTIVE_POWER.name()).build())
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(0.5).build())

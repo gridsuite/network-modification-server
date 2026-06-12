@@ -6,21 +6,22 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.LineModificationInfos;
-import org.gridsuite.modification.dto.LineSegmentInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.LineModificationModel;
+import org.gridsuite.modification.model.LineSegmentModel;
 import org.gridsuite.modification.server.entities.equipment.creation.LineSegmentEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
-import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
-import jakarta.persistence.*;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -72,19 +73,18 @@ public class LineModificationEntity extends BranchModificationEntity {
     @Column(name = "apply_segments_limits")
     private boolean applySegmentsLimits;
 
-    public LineModificationEntity(LineModificationInfos lineModificationInfos) {
+    public LineModificationEntity(ModificationInfos lineModificationInfos) {
         super(lineModificationInfos);
-        assignAttributes(lineModificationInfos);
+        assignAttributes((LineModificationModel) lineModificationInfos.toModel());
     }
 
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        LineModificationInfos lineModificationInfos = (LineModificationInfos) modificationInfos;
-        assignAttributes(lineModificationInfos);
+        assignAttributes((LineModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(LineModificationInfos lineModificationInfos) {
+    private void assignAttributes(LineModificationModel lineModificationInfos) {
         g1 = new DoubleModificationEmbedded(lineModificationInfos.getG1());
         b1 = new DoubleModificationEmbedded(lineModificationInfos.getB1());
         g2 = new DoubleModificationEmbedded(lineModificationInfos.getG2());
@@ -93,7 +93,7 @@ public class LineModificationEntity extends BranchModificationEntity {
         applySegmentsLimits = lineModificationInfos.isApplySegmentsLimits();
     }
 
-    private List<LineSegmentEntity> assignLineSegments(List<LineSegmentInfos> lineSegmentInfos) {
+    private List<LineSegmentEntity> assignLineSegments(List<LineSegmentModel> lineSegmentInfos) {
         List<LineSegmentEntity> updatedLineSegments = lineSegments;
 
         if (updatedLineSegments == null) {
@@ -155,7 +155,7 @@ public class LineModificationEntity extends BranchModificationEntity {
              // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
         if (getOperationalLimitsGroups() != null) {
             builder.operationalLimitsGroups(OperationalLimitsGroupModificationEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));

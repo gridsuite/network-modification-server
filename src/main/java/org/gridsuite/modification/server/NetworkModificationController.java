@@ -145,7 +145,7 @@ public class NetworkModificationController {
     public CompletableFuture<ResponseEntity<NetworkModificationsResult>> createNetworkModification(
         @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid") UUID groupUuid,
         @RequestBody Pair<ModificationInfos, List<ModificationApplicationContext>> modificationContextInfos) {
-        modificationContextInfos.getFirst().check();
+        modificationContextInfos.getFirst().toModel().check();
         return networkModificationService.createNetworkModification(groupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
     }
 

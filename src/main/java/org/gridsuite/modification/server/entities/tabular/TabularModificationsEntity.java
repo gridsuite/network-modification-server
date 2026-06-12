@@ -62,11 +62,11 @@ public class TabularModificationsEntity extends ModificationEntity {
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((TabularBaseInfos) modificationInfos);
+        assignAttributes((AbstractTabularBaseInfos) modificationInfos);
     }
 
     @Override
-    public TabularBaseInfos toModificationInfos() {
+    public AbstractTabularBaseInfos toModificationInfos() {
         var builder = switch (ModificationType.valueOf(getType())) {
             case ModificationType.TABULAR_CREATION -> TabularCreationInfos.builder();
             case ModificationType.LIMIT_SETS_TABULAR_MODIFICATION -> LimitSetsTabularModificationInfos.builder();
@@ -88,7 +88,7 @@ public class TabularModificationsEntity extends ModificationEntity {
                 .build();
     }
 
-    private void assignAttributes(TabularBaseInfos tabularBaseInfos) {
+    private void assignAttributes(AbstractTabularBaseInfos tabularBaseInfos) {
         this.csvFilename = tabularBaseInfos.getCsvFilename();
         modificationType = tabularBaseInfos.getModificationType();
         // properties list

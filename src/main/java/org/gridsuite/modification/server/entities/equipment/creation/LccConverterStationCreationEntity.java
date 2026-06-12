@@ -12,6 +12,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.LccConverterStationCreationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.LccConverterStationCreationModel;
 
 import java.util.List;
 import java.util.UUID;
@@ -46,12 +48,17 @@ public class LccConverterStationCreationEntity extends InjectionCreationEntity {
             foreignKey = @ForeignKey(name = "lcc_converter_station_creation_shunt_compensators_on_side_fk"))
     private List<ShuntCompensatorCreationEmbeddable> shuntCompensatorsOnSide;
 
-    public LccConverterStationCreationEntity(LccConverterStationCreationInfos converterStationCreationInfos) {
+    public LccConverterStationCreationEntity(ModificationInfos converterStationCreationInfos) {
+        super(converterStationCreationInfos);
+        assignAttributes((LccConverterStationCreationModel) converterStationCreationInfos);
+    }
+
+    public LccConverterStationCreationEntity(LccConverterStationCreationModel converterStationCreationInfos) {
         super(converterStationCreationInfos);
         assignAttributes(converterStationCreationInfos);
     }
 
-    private void assignAttributes(LccConverterStationCreationInfos converterStationCreationInfos) {
+    private void assignAttributes(LccConverterStationCreationModel converterStationCreationInfos) {
         this.lossFactor = converterStationCreationInfos.getLossFactor();
         this.powerFactor = converterStationCreationInfos.getPowerFactor();
         this.shuntCompensatorsOnSide = toEmbeddableShuntCompensatorCreation(converterStationCreationInfos.getShuntCompensatorsOnSide());

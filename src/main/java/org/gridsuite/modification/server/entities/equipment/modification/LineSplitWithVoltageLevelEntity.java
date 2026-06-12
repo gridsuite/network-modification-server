@@ -7,6 +7,8 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -14,8 +16,6 @@ import org.gridsuite.modification.dto.LineSplitWithVoltageLevelInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-
-import jakarta.persistence.*;
 
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>

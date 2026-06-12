@@ -7,20 +7,18 @@
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
 import com.powsybl.iidm.network.IdentifiableType;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-import java.lang.reflect.Constructor;
-
-import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.entities.EntityRegistry;
-import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.EquipmentAttributeModificationModel;
+import org.gridsuite.modification.server.entities.EntityRegistry;
+import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
 
 /**
@@ -41,7 +39,12 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
     @Enumerated(EnumType.STRING)
     private IdentifiableType equipmentType;
 
-    public EquipmentAttributeModificationEntity(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
+    public EquipmentAttributeModificationEntity(ModificationInfos equipmentAttributeModificationInfos) {
+        super(equipmentAttributeModificationInfos);
+        assignAttributes((EquipmentAttributeModificationModel) equipmentAttributeModificationInfos.toModel());
+    }
+
+    public EquipmentAttributeModificationEntity(EquipmentAttributeModificationModel equipmentAttributeModificationInfos) {
         super(equipmentAttributeModificationInfos);
         assignAttributes(equipmentAttributeModificationInfos);
     }
@@ -49,10 +52,10 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((EquipmentAttributeModificationInfos) modificationInfos);
+        assignAttributes((EquipmentAttributeModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
+    private void assignAttributes(EquipmentAttributeModificationModel equipmentAttributeModificationInfos) {
         attributeName = equipmentAttributeModificationInfos.getEquipmentAttributeName();
         attributeValue = convertAttributeValue(equipmentAttributeModificationInfos.getEquipmentAttributeValue());
         equipmentType = equipmentAttributeModificationInfos.getEquipmentType();
@@ -65,10 +68,6 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
 
     @Override
     public EquipmentAttributeModificationInfos toModificationInfos() {
-        return toModificationInfosBuilder().build();
-    }
-
-    private EquipmentAttributeModificationInfos.EquipmentAttributeModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
         return EquipmentAttributeModificationInfos
             .builder()
             .uuid(getId())
@@ -79,7 +78,17 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
             .equipmentId(getEquipmentId())
             .equipmentAttributeName(getAttributeName())
             .equipmentAttributeValue(getAttributeValue())
-            .equipmentType(getEquipmentType());
+            .equipmentType(getEquipmentType())
+            .build();
+    }
+
+    public EquipmentAttributeModificationModel toModel() {
+        return EquipmentAttributeModificationModel.builder()
+            .equipmentId(getEquipmentId())
+            .equipmentAttributeName(getAttributeName())
+            .equipmentAttributeValue(getAttributeValue())
+            .equipmentType(getEquipmentType())
+            .build();
     }
 
     public static EquipmentAttributeModificationEntity<?> createAttributeEntity(EquipmentAttributeModificationInfos dto) {
@@ -88,17 +97,6 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
         if (equipmentAttributeValue != null && !equipmentAttributeValue.getClass().isEnum()) {
             attributeValueClass = equipmentAttributeValue.getClass();
         }
-        Class<? extends EquipmentAttributeModificationEntity<?>> entityClass = EntityRegistry.getAttributeEntityClass(attributeValueClass);
-
-        if (entityClass != null) {
-            try {
-                Constructor<? extends EquipmentAttributeModificationEntity<?>> constructor = entityClass.getConstructor(EquipmentAttributeModificationInfos.class);
-                return constructor.newInstance(dto);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to map DTO to Entity", e);
-            }
-        } else {
-            throw new IllegalArgumentException("No entity class registered for attribute value class: " + attributeValueClass);
-        }
+        return EntityRegistry.createAttributeEntity(attributeValueClass, dto);
     }
 }

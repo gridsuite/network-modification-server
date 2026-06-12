@@ -7,13 +7,14 @@
 
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ShuntCompensatorCreationInfos;
-import org.gridsuite.modification.dto.ShuntCompensatorType;
-
-import jakarta.persistence.*;
+import org.gridsuite.modification.model.ShuntCompensatorCreationModel;
+import org.gridsuite.modification.model.ShuntCompensatorType;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -41,29 +42,28 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
     @Column
     private ShuntCompensatorType shuntCompensatorType;
 
-    public ShuntCompensatorCreationEntity(ShuntCompensatorCreationInfos creationInfos) {
-        super(creationInfos);
-        maximumSectionCount = creationInfos.getMaximumSectionCount();
-        sectionCount = creationInfos.getSectionCount();
-        maxSusceptance = creationInfos.getMaxSusceptance();
-        maxQAtNominalV = creationInfos.getMaxQAtNominalV();
-        shuntCompensatorType = creationInfos.getShuntCompensatorType();
+    public ShuntCompensatorCreationEntity(ModificationInfos shuntCompensatorCreationInfos) {
+        super(shuntCompensatorCreationInfos);
+        assignAttributes((ShuntCompensatorCreationModel) shuntCompensatorCreationInfos.toModel());
     }
 
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        ShuntCompensatorCreationInfos shuntCompensatorCreationInfos = (ShuntCompensatorCreationInfos) modificationInfos;
-        maximumSectionCount = shuntCompensatorCreationInfos.getMaximumSectionCount();
-        sectionCount = shuntCompensatorCreationInfos.getSectionCount();
-        maxSusceptance = shuntCompensatorCreationInfos.getMaxSusceptance();
-        maxQAtNominalV = shuntCompensatorCreationInfos.getMaxQAtNominalV();
-        shuntCompensatorType = shuntCompensatorCreationInfos.getShuntCompensatorType();
+        assignAttributes((ShuntCompensatorCreationModel) modificationInfos.toModel());
     }
 
     @Override
     public ShuntCompensatorCreationInfos toModificationInfos() {
         return toShuntCompensatorCreationInfosBuilder().build();
+    }
+
+    private void assignAttributes(ShuntCompensatorCreationModel shuntCompensatorCreationInfos) {
+        maximumSectionCount = shuntCompensatorCreationInfos.getMaximumSectionCount();
+        sectionCount = shuntCompensatorCreationInfos.getSectionCount();
+        maxSusceptance = shuntCompensatorCreationInfos.getMaxSusceptance();
+        maxQAtNominalV = shuntCompensatorCreationInfos.getMaxQAtNominalV();
+        shuntCompensatorType = shuntCompensatorCreationInfos.getShuntCompensatorType();
     }
 
     private ShuntCompensatorCreationInfos.ShuntCompensatorCreationInfosBuilder<?, ?> toShuntCompensatorCreationInfosBuilder() {
@@ -92,7 +92,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
              // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

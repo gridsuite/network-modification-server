@@ -10,9 +10,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.BatteryModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.BatteryModificationModel;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
@@ -92,18 +93,18 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     @CollectionTable
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
 
-    public BatteryModificationEntity(@NonNull BatteryModificationInfos batteryModificationInfos) {
+    public BatteryModificationEntity(@NonNull ModificationInfos batteryModificationInfos) {
         super(batteryModificationInfos);
-        assignAttributes(batteryModificationInfos);
+        assignAttributes((BatteryModificationModel) batteryModificationInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((BatteryModificationInfos) modificationInfos);
+        assignAttributes((BatteryModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(BatteryModificationInfos batteryModificationInfos) {
+    private void assignAttributes(BatteryModificationModel batteryModificationInfos) {
         this.minP = batteryModificationInfos.getMinP() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMinP()) : null;
         this.maxP = batteryModificationInfos.getMaxP() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMaxP()) : null;
         this.targetP = batteryModificationInfos.getTargetP() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getTargetP()) : null;
@@ -150,7 +151,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .directTransX(toAttributeModification(getDirectTransX()))
                 .stepUpTransformerX(toAttributeModification(getStepUpTransformerX()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
-                .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationInfos(getReactiveCapabilityCurvePoints()))
+                .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationModel(getReactiveCapabilityCurvePoints()))
                 .pMeasurementValue(toAttributeModification(getPMeasurementValue()))
                 .pMeasurementValidity(toAttributeModification(getPMeasurementValidity()))
                 .qMeasurementValue(toAttributeModification(getQMeasurementValue()))
@@ -158,7 +159,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

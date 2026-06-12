@@ -305,7 +305,7 @@ public abstract class AbstractNetworkModificationTest {
         return URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
     }
 
-    protected String getJsonBody(ModificationInfos modificationInfos, String variantId) throws JsonProcessingException {
+    protected String getJsonBody(Object modificationInfos, String variantId) throws JsonProcessingException {
         return TestUtils.getJsonBody(modificationInfos, AbstractNetworkModificationTest.TEST_NETWORK_ID, variantId);
     }
 

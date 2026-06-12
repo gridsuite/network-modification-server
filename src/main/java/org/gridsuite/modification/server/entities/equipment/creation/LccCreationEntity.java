@@ -15,6 +15,7 @@ import lombok.NonNull;
 import org.gridsuite.modification.dto.LccConverterStationCreationInfos;
 import org.gridsuite.modification.dto.LccCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.LccCreationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -62,18 +63,18 @@ public class LccCreationEntity extends EquipmentCreationEntity {
             ))
     private LccConverterStationCreationEntity converterStation2;
 
-    public LccCreationEntity(@NonNull LccCreationInfos lccCreationInfos) {
+    public LccCreationEntity(@NonNull ModificationInfos lccCreationInfos) {
         super(lccCreationInfos);
-        assignAttributes(lccCreationInfos);
+        assignAttributes((LccCreationModel) lccCreationInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((LccCreationInfos) modificationInfos);
+        assignAttributes((LccCreationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(LccCreationInfos lccCreationInfos) {
+    private void assignAttributes(LccCreationModel lccCreationInfos) {
         this.nominalV = lccCreationInfos.getNominalV();
         this.r = lccCreationInfos.getR();
         this.maxP = lccCreationInfos.getMaxP();
@@ -109,7 +110,7 @@ public class LccCreationEntity extends EquipmentCreationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 }

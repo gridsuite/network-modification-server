@@ -16,9 +16,12 @@ import com.powsybl.iidm.network.ShuntCompensatorModelType;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
-import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
-import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.OperationType;
+import org.gridsuite.modification.model.ShuntCompensatorType;
+import org.gridsuite.modification.model.tabular.TabularPropertyModel;
 import org.gridsuite.modification.modifications.tabular.TabularModification;
+import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -58,7 +61,7 @@ import static org.mockito.Mockito.when;
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(modifications)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();
     }
@@ -72,7 +75,7 @@ import static org.mockito.Mockito.when;
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(modifications)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }
@@ -122,7 +125,7 @@ import static org.mockito.Mockito.when;
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
 
-        var tabularModification = (TabularModification) tabularModificationInfos.toModification();
+        var tabularModification = (TabularModification) tabularModificationInfos.toModel().toModification();
 
         when(network.getShuntCompensator("id")).thenReturn(shuntCompensator);
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.LINEAR);
@@ -157,7 +160,7 @@ import static org.mockito.Mockito.when;
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
 
-        var tabularModification = (TabularModification) tabularModificationInfos.toModification();
+        var tabularModification = (TabularModification) tabularModificationInfos.toModel().toModification();
 
         when(network.getShuntCompensator("id")).thenReturn(shuntCompensator);
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.NON_LINEAR);
@@ -187,7 +190,7 @@ import static org.mockito.Mockito.when;
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
 
-        var tabularModification = (TabularModification) tabularModificationInfos.toModification();
+        var tabularModification = (TabularModification) tabularModificationInfos.toModel().toModification();
 
         when(network.getShuntCompensator("id")).thenReturn(shuntCompensator);
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.LINEAR);

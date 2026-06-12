@@ -11,9 +11,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.ConverterStationModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.ConverterStationModificationModel;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
@@ -74,7 +75,12 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     })
     private BooleanModificationEmbedded reactiveCapabilityCurve;
 
-    public ConverterStationModificationEntity(ConverterStationModificationInfos converterStationModificationInfos) {
+    public ConverterStationModificationEntity(ModificationInfos converterStationModificationInfos) {
+        super(converterStationModificationInfos);
+        assignAttributes((ConverterStationModificationModel) converterStationModificationInfos.toModel());
+    }
+
+    public ConverterStationModificationEntity(ConverterStationModificationModel converterStationModificationInfos) {
         super(converterStationModificationInfos);
         assignAttributes(converterStationModificationInfos);
     }
@@ -82,10 +88,10 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((ConverterStationModificationInfos) modificationInfos);
+        assignAttributes((ConverterStationModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(ConverterStationModificationInfos converterStationModificationInfos) {
+    private void assignAttributes(ConverterStationModificationModel converterStationModificationInfos) {
         this.lossFactor = converterStationModificationInfos.getLossFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getLossFactor()) : null;
         this.minQ = converterStationModificationInfos.getMinQ() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMinQ()) : null;
         this.maxQ = converterStationModificationInfos.getMaxQ() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMaxQ()) : null;
@@ -119,6 +125,6 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
             .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
             .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
             .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
-            .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationInfos(getReactiveCapabilityCurvePoints()));
+            .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationModel(getReactiveCapabilityCurvePoints()));
     }
 }

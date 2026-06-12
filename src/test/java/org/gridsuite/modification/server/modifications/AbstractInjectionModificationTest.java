@@ -7,9 +7,9 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Injection;
-import org.gridsuite.modification.dto.AttributeModification;
-import org.gridsuite.modification.dto.InjectionModificationInfos;
-import org.gridsuite.modification.dto.OperationType;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.InjectionModificationModel;
+import org.gridsuite.modification.model.OperationType;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
@@ -26,10 +26,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Tag("IntegrationTest")
 abstract class AbstractInjectionModificationTest extends AbstractNetworkModificationTest {
     protected void assertChangeConnectionState(Injection<?> existingEquipment, boolean expectedState) throws Exception {
-        assertChangeConnectionState(existingEquipment, (InjectionModificationInfos) buildModification(), expectedState);
+        assertChangeConnectionState(existingEquipment, (InjectionModificationModel) buildModification().toModel(), expectedState);
     }
 
-    protected void assertChangeConnectionState(Injection<?> existingEquipment, InjectionModificationInfos modificationInfos, boolean expectedState) throws Exception {
+    protected void assertChangeConnectionState(Injection<?> existingEquipment, InjectionModificationModel modificationInfos, boolean expectedState) throws Exception {
         modificationInfos.setTerminalConnected(new AttributeModification<>(expectedState, OperationType.SET));
 
         if (expectedState) {

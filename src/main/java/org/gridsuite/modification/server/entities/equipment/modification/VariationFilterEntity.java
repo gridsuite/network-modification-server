@@ -6,19 +6,18 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import jakarta.persistence.Index;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.gridsuite.modification.dto.FilterInfos;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.gridsuite.modification.model.FilterModel;
 
 import java.util.UUID;
 
@@ -46,7 +45,7 @@ public class VariationFilterEntity {
     @Column(name = "name")
     private String name;
 
-    public VariationFilterEntity(@NotNull FilterInfos filterInfos) {
+    public VariationFilterEntity(@NotNull FilterModel filterInfos) {
         this.filterId = filterInfos.getId();
         this.id = null;
         this.name = filterInfos.getName();

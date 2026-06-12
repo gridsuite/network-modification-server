@@ -24,6 +24,16 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.CurrentLimitsModel;
+import org.gridsuite.modification.model.OperationType;
+import org.gridsuite.modification.model.OperationalLimitsGroupModel;
+import org.gridsuite.modification.model.VoltageInitBusModificationModel;
+import org.gridsuite.modification.model.VoltageInitGeneratorModificationModel;
+import org.gridsuite.modification.model.VoltageInitShuntCompensatorModificationModel;
+import org.gridsuite.modification.model.VoltageInitStaticVarCompensatorModificationModel;
+import org.gridsuite.modification.model.VoltageInitTransformerModificationModel;
+import org.gridsuite.modification.model.VoltageInitVscConverterStationModificationModel;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -57,10 +67,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
-import static org.gridsuite.modification.ModificationType.LINE_MODIFICATION;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
+import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.SIDE1;
+import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.SIDE2;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
@@ -423,9 +432,7 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         assertEquals(true, modifications.get(0).getActivated());
 
-        ModificationInfos metadata = new ModificationInfos();
-        metadata.setType(LINE_MODIFICATION);
-        metadata.setActivated(false);
+        ModificationInfos metadata = ModificationMetadataInfos.builder().activated(false).build();
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                 .queryParam("groupUuid", TEST_GROUP_ID.toString())
@@ -456,10 +463,7 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         assertEquals("old description", modifications.getFirst().getDescription());
 
-        ModificationInfos metadata = new ModificationInfos();
-        metadata.setDescription("new description");
-        metadata.setType(LINE_MODIFICATION);
-        metadata.setActivated(null);
+        ModificationInfos metadata = ModificationMetadataInfos.builder().activated(null).description("new description").build();
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
@@ -475,8 +479,7 @@ class ModificationControllerTest {
     void updateModificationMetadataDoesNotModifyFieldsNotProvided() {
         // create a composite modification and set all its metadata fields
         UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of());
-        modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder()
-                .name("composite name")
+        modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), ModificationMetadataInfos.builder()
                 .description("composite description")
                 .activated(false)
                 .build());
@@ -485,8 +488,7 @@ class ModificationControllerTest {
         modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder().build());
 
         // every field not provided must keep its previous value
-        CompositeModificationInfos result = (CompositeModificationInfos) modificationRepository.getModificationInfo(compositeUuid);
-        assertEquals("composite name", result.getName());
+        ModificationInfos result = modificationRepository.getModificationInfo(compositeUuid);
         assertEquals("composite description", result.getDescription());
         assertEquals(false, result.getActivated());
     }
@@ -943,9 +945,9 @@ class ModificationControllerTest {
         // create new line in voltage levels with node/breaker topology
         // between voltage level "v1" and busbar section "bus1" and
         //         voltage level "v2" and busbar section "bus2"
-        CurrentLimitsInfos c1 = new CurrentLimitsInfos();
+        CurrentLimitsModel c1 = new CurrentLimitsModel();
         c1.setPermanentLimit(100.0);
-        CurrentLimitsInfos c2 = new CurrentLimitsInfos();
+        CurrentLimitsModel c2 = new CurrentLimitsModel();
         c2.setPermanentLimit(200.0);
         LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
                 .equipmentId("idLine1")
@@ -962,8 +964,8 @@ class ModificationControllerTest {
                 .busOrBusbarSectionId2("bus2")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(c1).applicability(SIDE1).build(),
-                        OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(c2).applicability(SIDE2).build()
+                        OperationalLimitsGroupModel.builder().id("olg1").currentLimits(c1).applicability(SIDE1).build(),
+                        OperationalLimitsGroupModel.builder().id("olg1").currentLimits(c2).applicability(SIDE2).build()
                     )
                 )
                 .build();
@@ -983,9 +985,20 @@ class ModificationControllerTest {
                 .x(25.3)
                 .build();
 
-        LineAttachToVoltageLevelInfos lineAttachToVL = new LineAttachToVoltageLevelInfos("line3",
-                10.0, "AttPointId", "attPointName", null, null, "v4",
-                "1.A", attachmentLine, "nl1", "NewLine1", "nl2", "NewLine2");
+        LineAttachToVoltageLevelInfos lineAttachToVL = LineAttachToVoltageLevelInfos.builder()
+            .lineToAttachToId("line3")
+            .percent(10.0)
+            .attachmentPointId("AttPointId")
+            .attachmentPointName("attPointName")
+            .mayNewVoltageLevelInfos(null)
+            .existingVoltageLevelId("v4")
+            .bbsOrBusId("1.A")
+            .attachmentLine(attachmentLine)
+            .newLine1Id("nl1")
+            .newLine1Name("NewLine1")
+            .newLine2Id("nl2")
+            .newLine2Name("NewLine2")
+            .build();
         String bodyJson2 = TestUtils.getJsonBody(lineAttachToVL, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(bodyJson2).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
@@ -993,8 +1006,17 @@ class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 3);
 
         //create a lineSplit
-        LineSplitWithVoltageLevelInfos lineSplitWoVL = new LineSplitWithVoltageLevelInfos("line1", 10.0, null, "v4", "1.A",
-                "nl11", "NewLine11", "nl12", "NewLine12");
+        LineSplitWithVoltageLevelInfos lineSplitWoVL = LineSplitWithVoltageLevelInfos.builder()
+            .lineToSplitId("line1")
+            .percent(10.0)
+            .mayNewVoltageLevelInfos(null)
+            .existingVoltageLevelId("v4")
+            .bbsOrBusId("1.A")
+            .newLine1Id("nl11")
+            .newLine1Name("NewLine11")
+            .newLine2Id("nl12")
+            .newLine2Name("NewLine12")
+            .build();
         bodyJson2 = TestUtils.getJsonBody(lineSplitWoVL, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(bodyJson2).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
@@ -1035,7 +1057,17 @@ class ModificationControllerTest {
 
     @Test
     void replaceTeePointByVoltageLevelOnLineDuplicateModificationGroupTest() throws Exception {
-        LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = new LinesAttachToSplitLinesInfos("l1", "l2", "l3", "v4", "bbs4", "nl1", "NewLine1", "nl2", "NewLine2");
+        LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = LinesAttachToSplitLinesInfos.builder()
+            .lineToAttachTo1Id("l1")
+            .lineToAttachTo2Id("l2")
+            .attachedLineId("l3")
+            .voltageLevelId("v4")
+            .bbsBusId("bbs4")
+            .replacingLine1Id("nl1")
+            .replacingLine1Name("NewLine1")
+            .replacingLine2Id("nl2")
+            .replacingLine2Name("NewLine2")
+            .build();
 
         String body = TestUtils.getJsonBody(linesAttachToSplitLinesInfos, TEST_NETWORK_WITH_TEE_POINT_ID, null);
         MvcResult mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(body).contentType(MediaType.APPLICATION_JSON), status().isOk());
@@ -1422,69 +1454,69 @@ class ModificationControllerTest {
         VoltageInitModificationInfos modificationsInfos1 = VoltageInitModificationInfos.builder()
             .stashed(false)
             .generators(List.of(
-                VoltageInitGeneratorModificationInfos.builder()
+                VoltageInitGeneratorModificationModel.builder()
                     .generatorId("G1")
                     .targetQ(10.)
                     .build(),
-                VoltageInitGeneratorModificationInfos.builder()
+                VoltageInitGeneratorModificationModel.builder()
                     .generatorId("G2")
                     .targetV(226.)
                     .build()))
             .transformers(List.of(
-                VoltageInitTransformerModificationInfos.builder()
+                VoltageInitTransformerModificationModel.builder()
                     .transformerId("2WT1")
                     .ratioTapChangerPosition(3)
                     .build(),
-                VoltageInitTransformerModificationInfos.builder()
+                VoltageInitTransformerModificationModel.builder()
                     .transformerId("3WT1")
                     .ratioTapChangerPosition(1)
                     .ratioTapChangerTargetV(225.)
                     .legSide(ThreeSides.TWO)
                     .build()))
             .staticVarCompensators(List.of(
-                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                VoltageInitStaticVarCompensatorModificationModel.builder()
                     .staticVarCompensatorId("SVC1")
                     .reactivePowerSetpoint(50.)
                     .build(),
-                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                VoltageInitStaticVarCompensatorModificationModel.builder()
                     .staticVarCompensatorId("SVC2")
                     .voltageSetpoint(374.)
                     .build()))
             .vscConverterStations(List.of(
-                VoltageInitVscConverterStationModificationInfos.builder()
+                VoltageInitVscConverterStationModificationModel.builder()
                     .vscConverterStationId("VSC1")
                     .reactivePowerSetpoint(40.)
                     .build(),
-                VoltageInitVscConverterStationModificationInfos.builder()
+                VoltageInitVscConverterStationModificationModel.builder()
                     .vscConverterStationId("VSC2")
                     .voltageSetpoint(224.)
                     .build()))
             .shuntCompensators(List.of(
-                VoltageInitShuntCompensatorModificationInfos.builder()
+                VoltageInitShuntCompensatorModificationModel.builder()
                     .shuntCompensatorId("v2shunt")
                     .sectionCount(1)
                     .connect(true)
                     .targetV(225.)
                     .build(),
-                VoltageInitShuntCompensatorModificationInfos.builder()
+                VoltageInitShuntCompensatorModificationModel.builder()
                     .shuntCompensatorId("v5shunt")
                     .sectionCount(0)
                     .connect(false)
                     .build(),
-                VoltageInitShuntCompensatorModificationInfos.builder()
+                VoltageInitShuntCompensatorModificationModel.builder()
                     .shuntCompensatorId("v6shunt")
                     .sectionCount(1)
                     .connect(false)
                     .targetV(380.)
                     .build()))
             .buses(List.of(
-                VoltageInitBusModificationInfos.builder()
+                VoltageInitBusModificationModel.builder()
                     .voltageLevelId("v1")
                     .busId("1.1")
                     .v(225.)
                     .angle(0.)
                     .build(),
-                VoltageInitBusModificationInfos.builder()
+                VoltageInitBusModificationModel.builder()
                     .voltageLevelId("v1")
                     .busId("1.2")
                     .v(226.)

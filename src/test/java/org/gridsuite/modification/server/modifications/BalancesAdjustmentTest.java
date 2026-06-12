@@ -10,10 +10,14 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.loadflow.LoadFlowParameters;
-import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.server.service.LoadFlowService;
+import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.BalancesAdjustmentAreaModel;
+import org.gridsuite.modification.model.LoadFlowParametersModel;
+import org.gridsuite.modification.model.ShiftEquipmentType;
+import org.gridsuite.modification.model.ShiftType;
 import org.gridsuite.modification.server.NetworkModificationServerException;
+import org.gridsuite.modification.server.service.LoadFlowService;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +50,7 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
     @BeforeEach
     void setupLoadFlowServiceMock() {
         when(loadFlowService.getLoadFlowParametersInfos(LOADFLOW_PARAMETERS_UUID))
-                .thenReturn(LoadFlowParametersInfos.builder()
+                .thenReturn(LoadFlowParametersModel.builder()
                         .provider("OpenLoadFlow")
                         .commonParameters(LoadFlowParameters.load())
                         .specificParametersPerProvider(Map.of("OpenLoadFlow", Map.of(
@@ -79,28 +83,28 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return BalancesAdjustmentModificationInfos.builder()
                 .areas(List.of(
-                        BalancesAdjustmentAreaInfos.builder()
+                        BalancesAdjustmentAreaModel.builder()
                                 .name("FR")
                                 .countries(List.of(Country.FR))
                                 .netPosition(-45d)
                                 .shiftType(ShiftType.PROPORTIONAL)
                                 .shiftEquipmentType(ShiftEquipmentType.GENERATOR)
                                 .build(),
-                        BalancesAdjustmentAreaInfos.builder()
+                        BalancesAdjustmentAreaModel.builder()
                                 .name("NE")
                                 .countries(List.of(Country.NE))
                                 .netPosition(-54d)
                                 .shiftType(ShiftType.BALANCED)
                                 .shiftEquipmentType(ShiftEquipmentType.GENERATOR)
                                 .build(),
-                        BalancesAdjustmentAreaInfos.builder()
+                        BalancesAdjustmentAreaModel.builder()
                                 .name("GE")
                                 .countries(List.of(Country.GE))
                                 .netPosition(0d)
                                 .shiftType(ShiftType.PROPORTIONAL)
                                 .shiftEquipmentType(ShiftEquipmentType.LOAD)
                                 .build(),
-                        BalancesAdjustmentAreaInfos.builder()
+                        BalancesAdjustmentAreaModel.builder()
                                 .name("AU")
                                 .countries(List.of(Country.AU))
                                 .netPosition(100d)
@@ -118,7 +122,7 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
      */
     @Test
     void testGetLoadFlowParametersInfosSuccess() {
-        LoadFlowParametersInfos result = loadFlowService.getLoadFlowParametersInfos(LOADFLOW_PARAMETERS_UUID);
+        LoadFlowParametersModel result = loadFlowService.getLoadFlowParametersInfos(LOADFLOW_PARAMETERS_UUID);
 
         assertNotNull(result);
         assertEquals("OpenLoadFlow", result.getProvider());
@@ -132,7 +136,7 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
      */
     @Test
     void testGetLoadFlowParametersInfosNotFound() {
-        LoadFlowParametersInfos result = loadFlowService.getLoadFlowParametersInfos(NON_EXISTENT_LOADFLOW_PARAMETERS_UUID);
+        LoadFlowParametersModel result = loadFlowService.getLoadFlowParametersInfos(NON_EXISTENT_LOADFLOW_PARAMETERS_UUID);
 
         assertNull(result);
     }
@@ -265,7 +269,7 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return BalancesAdjustmentModificationInfos.builder()
                 .areas(List.of(
-                        BalancesAdjustmentAreaInfos.builder()
+                        BalancesAdjustmentAreaModel.builder()
                                 .name("FR")
                                 .countries(List.of(Country.FR))
                                 .netPosition(-45d)

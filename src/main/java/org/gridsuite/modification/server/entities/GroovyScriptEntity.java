@@ -6,13 +6,13 @@
  */
 package org.gridsuite.modification.server.entities;
 
+import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.GroovyScriptInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-
-import jakarta.persistence.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>

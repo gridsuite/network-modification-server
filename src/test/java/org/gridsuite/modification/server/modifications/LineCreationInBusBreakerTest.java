@@ -10,6 +10,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.CurrentLimitsModel;
+import org.gridsuite.modification.model.FreePropertyModel;
+import org.gridsuite.modification.model.LimitsPropertyModel;
+import org.gridsuite.modification.model.LineSegmentModel;
+import org.gridsuite.modification.model.OperationalLimitsGroupModel;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -21,7 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.BUS_NOT_FOUND;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
+import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -113,9 +118,9 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId2("bus2")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder()
+                        OperationalLimitsGroupModel.builder()
                             .currentLimits(
-                                CurrentLimitsInfos.builder().permanentLimit(1.0).temporaryLimits(Collections.emptyList()).build()
+                                CurrentLimitsModel.builder().permanentLimit(1.0).temporaryLimits(Collections.emptyList()).build()
                             )
                             .id("limitSet1").applicability(SIDE2).limitsProperties(Collections.emptyList())
                             .build()
@@ -147,9 +152,9 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId2("bus2")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
-                            CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()
-                        ).applicability(SIDE1).limitsProperties(List.of(new LimitsPropertyInfos(PROPERTY_NAME, PROPERTY_VALUE))).build()
+                        OperationalLimitsGroupModel.builder().currentLimits(
+                            CurrentLimitsModel.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()
+                        ).applicability(SIDE1).limitsProperties(List.of(new LimitsPropertyModel(PROPERTY_NAME, PROPERTY_VALUE))).build()
                     )
                 )
                 .build();
@@ -178,10 +183,10 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId2("bus2")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder()
+                        OperationalLimitsGroupModel.builder()
                             .id("limitSet1")
                             .currentLimits(
-                                CurrentLimitsInfos.builder().permanentLimit(-1.0).build())
+                                CurrentLimitsModel.builder().permanentLimit(-1.0).build())
                             .applicability(SIDE1).build()
                     )
                 )
@@ -206,8 +211,8 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId2("bus2")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
-                            CurrentLimitsInfos.builder().permanentLimit(1.0).build())
+                        OperationalLimitsGroupModel.builder().currentLimits(
+                            CurrentLimitsModel.builder().permanentLimit(1.0).build())
                             .applicability(SIDE2).build()
                     )
                 )
@@ -242,19 +247,19 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
             .busOrBusbarSectionId1("bus1")
             .operationalLimitsGroups(
                 List.of(
-                    OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(
-                        CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
+                    OperationalLimitsGroupModel.builder().id("olg1").currentLimits(
+                        CurrentLimitsModel.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
                         .applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
-                    OperationalLimitsGroupInfos.builder().id("olg2").currentLimits(
-                            CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
+                    OperationalLimitsGroupModel.builder().id("olg2").currentLimits(
+                            CurrentLimitsModel.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
                         .applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                 )
             )
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("bus2")
-            .lineSegments(List.of(new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", "50", null),
-                new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", null, 0.95)))
-            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
+            .lineSegments(List.of(new LineSegmentModel(UUID.randomUUID().toString(), 1, "1", "50", null),
+                new LineSegmentModel(UUID.randomUUID().toString(), 1, "1", null, 0.95)))
+            .properties(List.of(FreePropertyModel.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
 

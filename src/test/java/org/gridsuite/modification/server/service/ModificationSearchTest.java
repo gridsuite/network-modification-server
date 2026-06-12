@@ -16,6 +16,8 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.apache.commons.collections4.IterableUtils;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.OperationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosRepository;

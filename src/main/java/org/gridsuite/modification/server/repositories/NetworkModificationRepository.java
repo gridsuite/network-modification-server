@@ -321,7 +321,7 @@ public class NetworkModificationRepository {
         Map<UUID, Integer> depths = batchCompositeDepths(base);
         return base.stream()
                 .filter(m -> !onlyStashed || m.getStashed())
-                .map(m -> toModificationsInfosOptimized(m, Set.of(), depths))
+                .map(m -> toModificationMetadataInfosOptimized(m, depths))
                 .toList();
     }
 
@@ -408,14 +408,14 @@ public class NetworkModificationRepository {
         return modifications;
     }
 
-    private TabularBaseInfos loadTabularModification(TabularModificationsEntity tabularEntity) {
+    private AbstractTabularBaseInfos loadTabularModification(TabularModificationsEntity tabularEntity) {
         // fetch embedded modifications uuids only
         List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(tabularEntity.getId());
         // optimized entities full loading, per type
         List<? extends EquipmentModificationEntity> modifications = loadTabularModificationSubEntities(subModificationsUuids, tabularEntity.getModificationType());
         // re-order the list of entities based on the ordered list of IDs
         List<EquipmentModificationEntity> orderedModifications = reorderModifications(modifications, subModificationsUuids);
-        var builder = switch (ModificationType.valueOf(tabularEntity.getType())) {
+        AbstractTabularBaseInfos.AbstractTabularBaseInfosBuilder<?, ?> builder = switch (ModificationType.valueOf(tabularEntity.getType())) {
             case ModificationType.TABULAR_CREATION -> TabularCreationInfos.builder();
             case ModificationType.LIMIT_SETS_TABULAR_MODIFICATION -> LimitSetsTabularModificationInfos.builder();
             default -> TabularModificationInfos.builder();
@@ -456,8 +456,8 @@ public class NetworkModificationRepository {
             .build();
     }
 
-    private CompositeModificationInfos loadCompositeModificationMetadata(ModificationEntity compositeEntity, Integer maxDepth) {
-        return CompositeModificationInfos.builder()
+    private ModificationMetadataInfos loadCompositeModificationMetadata(ModificationEntity compositeEntity, Integer maxDepth) {
+        return ModificationMetadataInfos.builder()
                 .activated(compositeEntity.getActivated())
                 .description(compositeEntity.getDescription())
                 .date(compositeEntity.getDate())
@@ -467,6 +467,14 @@ public class NetworkModificationRepository {
                 .messageValues(compositeEntity.getMessageValues())
                 .maxDepth(maxDepth)
                 .build();
+    }
+
+    private ModificationInfos toModificationMetadataInfosOptimized(ModificationEntity modificationEntity,
+                                                                    Map<UUID, Integer> precomputedDepths) {
+        if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
+            return loadCompositeModificationMetadata(modificationEntity, precomputedDepths.get(modificationEntity.getId()));
+        }
+        return modificationEntity.toModificationMetadataInfos();
     }
 
     private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity) {
@@ -619,7 +627,7 @@ public class NetworkModificationRepository {
         return new ArrayList<>(networkModificationsUuids.stream()
                 .map(entitiesById::get)
                 .filter(Objects::nonNull)
-                .map(m -> toModificationsInfosOptimized(m, Set.of(), depths))
+                .map(m -> toModificationMetadataInfosOptimized(m, depths))
                 .toList());
     }
 

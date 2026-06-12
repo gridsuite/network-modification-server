@@ -11,8 +11,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.LccConverterStationModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.LccConverterStationModificationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
 
 import java.util.List;
@@ -44,12 +46,17 @@ public class LccConverterStationModificationEntity extends InjectionModification
             joinColumns = @JoinColumn(name = "lcc_converter_station_modification_id"), foreignKey = @ForeignKey(name = "lcc_converter_station_modification_on_side_fk"))
     private List<ShuntCompensatorModificationEmbeddable> shuntCompensatorsOnSide;
 
-    public LccConverterStationModificationEntity(LccConverterStationModificationInfos converterStationModificationInfos) {
+    public LccConverterStationModificationEntity(ModificationInfos converterStationModificationInfos) {
         super(converterStationModificationInfos);
-        assignAttributes(converterStationModificationInfos);
+        assignAttributes((LccConverterStationModificationModel) converterStationModificationInfos.toModel());
     }
 
-    private void assignAttributes(LccConverterStationModificationInfos converterStationModificationInfos) {
+    public LccConverterStationModificationEntity(LccConverterStationModificationModel lccConverterStationModificationModel) {
+        super(lccConverterStationModificationModel);
+        assignAttributes(lccConverterStationModificationModel);
+    }
+
+    private void assignAttributes(LccConverterStationModificationModel converterStationModificationInfos) {
         this.lossFactor = converterStationModificationInfos.getLossFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getLossFactor()) : null;
         this.powerFactor = converterStationModificationInfos.getPowerFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getPowerFactor()) : null;
         this.shuntCompensatorsOnSide = toEmbeddableShuntCompensatorModification(converterStationModificationInfos.getShuntCompensatorsOnSide());

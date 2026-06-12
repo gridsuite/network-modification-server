@@ -6,16 +6,16 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import jakarta.persistence.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.dto.CurrentLimitsInfos;
+import org.gridsuite.modification.model.CurrentLimitsModel;
 
 import java.util.List;
 import java.util.UUID;
-
-import jakarta.persistence.*;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -43,15 +43,15 @@ public class CurrentLimitsEntity {
     )
     private List<CurrentTemporaryLimitCreationEmbeddable> temporaryLimits;
 
-    public CurrentLimitsInfos toCurrentLimitsInfos() {
-        return CurrentLimitsInfos
+    public CurrentLimitsModel toCurrentLimitsInfos() {
+        return CurrentLimitsModel
                 .builder()
                 .permanentLimit(getPermanentLimit())
                 .temporaryLimits(CurrentTemporaryLimitCreationEmbeddable.fromEmbeddableCurrentTemporaryLimits(getTemporaryLimits()))
                 .build();
     }
 
-    public CurrentLimitsEntity(CurrentLimitsInfos currentLimitsInfos) {
+    public CurrentLimitsEntity(CurrentLimitsModel currentLimitsInfos) {
         this(null, currentLimitsInfos.getPermanentLimit(), CurrentTemporaryLimitCreationEmbeddable.toEmbeddableCurrentTemporaryLimits(currentLimitsInfos.getTemporaryLimits()));
     }
 }

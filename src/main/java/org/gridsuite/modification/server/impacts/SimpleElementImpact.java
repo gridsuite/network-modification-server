@@ -6,12 +6,12 @@
  */
 package org.gridsuite.modification.server.impacts;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.util.Set;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * This class describes an element type network impact

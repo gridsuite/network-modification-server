@@ -6,14 +6,13 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.gridsuite.modification.dto.ModificationInfos;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -24,7 +23,7 @@ import jakarta.persistence.Table;
 @Table(name = "floatEquipmentAttributeModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "float_equipment_attribute_modification_id_fk_constraint"))
 public class FloatEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<Float> {
-    public FloatEquipmentAttributeModificationEntity(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
+    public FloatEquipmentAttributeModificationEntity(ModificationInfos equipmentAttributeModificationInfos) {
         super(equipmentAttributeModificationInfos);
     }
 }

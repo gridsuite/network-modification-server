@@ -10,9 +10,16 @@ package org.gridsuite.modification.server.entities.equipment.modification.byfilt
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.dto.FilterInfos;
-import org.gridsuite.modification.dto.byfilter.DataType;
-import org.gridsuite.modification.dto.byfilter.assignment.*;
+import org.gridsuite.modification.model.FilterModel;
+import org.gridsuite.modification.model.byfilter.DataType;
+import org.gridsuite.modification.model.byfilter.assignment.*;
+import org.gridsuite.modification.model.byfilter.assignment.AssignmentModel;
+import org.gridsuite.modification.model.byfilter.assignment.BooleanAssignmentModel;
+import org.gridsuite.modification.model.byfilter.assignment.DoubleAssignmentModel;
+import org.gridsuite.modification.model.byfilter.assignment.EnumAssignmentModel;
+import org.gridsuite.modification.model.byfilter.assignment.IntegerAssignmentModel;
+import org.gridsuite.modification.model.byfilter.assignment.PropertyAssignmentModel;
+import org.gridsuite.modification.model.byfilter.assignment.StringAssignmentModel;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
 
@@ -43,44 +50,44 @@ public class AssignmentEntity extends AbstractAssignmentEntity {
             foreignKey = @ForeignKey(name = "assignment_id_fk"))
     private List<VariationFilterEntity> filters;
 
-    public AssignmentEntity(AssignmentInfos<?> assignmentInfos) {
+    public AssignmentEntity(AssignmentModel<?> assignmentInfos) {
         super(assignmentInfos);
         this.dataType = assignmentInfos.getDataType();
         this.value = assignmentInfos.getValue() == null ? null : assignmentInfos.getValue().toString();
         this.filters = assignmentInfos.getFilters().stream()
             .map(VariationFilterEntity::new)
             .toList();
-        if (assignmentInfos instanceof PropertyAssignmentInfos propertyAssignmentInfos) {
+        if (assignmentInfos instanceof PropertyAssignmentModel propertyAssignmentInfos) {
             this.propertyName = propertyAssignmentInfos.getPropertyName();
         }
     }
 
-    public AssignmentInfos<?> toAssignmentInfos() {
-        AssignmentInfos<?> assignmentInfos = switch (dataType) {
-            case BOOLEAN -> BooleanAssignmentInfos.builder()
+    public AssignmentModel<?> toAssignmentInfos() {
+        AssignmentModel<?> assignmentInfos = switch (dataType) {
+            case BOOLEAN -> BooleanAssignmentModel.builder()
                 .value(Boolean.valueOf(value))
                 .build();
-            case INTEGER -> IntegerAssignmentInfos.builder()
+            case INTEGER -> IntegerAssignmentModel.builder()
                 .value(value != null ? Integer.valueOf(value) : null)
                 .build();
-            case DOUBLE -> DoubleAssignmentInfos.builder()
+            case DOUBLE -> DoubleAssignmentModel.builder()
                 .value(value != null ? Double.valueOf(value) : null)
                 .build();
-            case ENUM -> EnumAssignmentInfos.builder()
+            case ENUM -> EnumAssignmentModel.builder()
                 .value(value)
                 .build();
-            case PROPERTY -> PropertyAssignmentInfos.builder()
+            case PROPERTY -> PropertyAssignmentModel.builder()
                 .value(value)
                 .propertyName(propertyName)
                 .build();
-            case STRING -> StringAssignmentInfos.builder()
+            case STRING -> StringAssignmentModel.builder()
                 .value(value)
                 .build();
         };
 
         assignAttributes(assignmentInfos);
         assignmentInfos.setFilters(filters.stream()
-                .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName()))
+                .map(filterEntity -> new FilterModel(filterEntity.getFilterId(), filterEntity.getName()))
                 .toList());
         return assignmentInfos;
     }

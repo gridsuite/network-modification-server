@@ -12,9 +12,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelCreationInfos;
+import org.gridsuite.modification.model.CouplingDeviceModel;
+import org.gridsuite.modification.model.VoltageLevelCreationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -72,12 +73,17 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
             ))
     private SubstationCreationEntity substationCreation;
 
-    public VoltageLevelCreationEntity(VoltageLevelCreationInfos voltageLevelCreationInfos) {
+    public VoltageLevelCreationEntity(ModificationInfos voltageLevelCreationInfos) {
+        super(voltageLevelCreationInfos);
+        assignAttributes((VoltageLevelCreationModel) voltageLevelCreationInfos.toModel());
+    }
+
+    public VoltageLevelCreationEntity(VoltageLevelCreationModel voltageLevelCreationInfos) {
         super(voltageLevelCreationInfos);
         assignAttributes(voltageLevelCreationInfos);
     }
 
-    public static List<CouplingDeviceCreationEmbeddable> toEmbeddableCouplingDevices(List<CouplingDeviceInfos> couplingDevicesInfos) {
+    public static List<CouplingDeviceCreationEmbeddable> toEmbeddableCouplingDevices(List<CouplingDeviceModel> couplingDevicesInfos) {
         return couplingDevicesInfos.stream()
                 .map(couplingDevice -> new CouplingDeviceCreationEmbeddable(couplingDevice.getBusbarSectionId1(),
                         couplingDevice.getBusbarSectionId2()))
@@ -96,8 +102,8 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
 
     private VoltageLevelCreationInfos.VoltageLevelCreationInfosBuilder<?, ?> toVoltageLevelCreationInfosBuilder() {
         SubstationCreationEntity substationCreationEntity = getSubstationCreation();
-        List<CouplingDeviceInfos> couplingDeviceInfos = couplingDevices.stream()
-                .map(cde -> new CouplingDeviceInfos(cde.getBusbarSectionId1(), cde.getBusbarSectionId2()))
+        List<CouplingDeviceModel> couplingDeviceInfos = couplingDevices.stream()
+                .map(cde -> new CouplingDeviceModel(cde.getBusbarSectionId1(), cde.getBusbarSectionId2()))
                 .collect(Collectors.toList());
         return VoltageLevelCreationInfos
                 .builder()
@@ -122,17 +128,17 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((VoltageLevelCreationInfos) modificationInfos);
+        assignAttributes((VoltageLevelCreationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(VoltageLevelCreationInfos voltageLevelCreationInfos) {
+    private void assignAttributes(VoltageLevelCreationModel voltageLevelCreationInfos) {
         this.setMessageType(voltageLevelCreationInfos.getSubstationCreation() != null ?
                 getType() + "_" + ModificationType.SUBSTATION_CREATION
                 : getMessageType());
@@ -151,4 +157,3 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .orElse(null);
     }
 }
-

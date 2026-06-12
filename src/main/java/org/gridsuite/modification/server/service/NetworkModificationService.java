@@ -22,9 +22,9 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
-import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.EquipmentModificationModel;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
@@ -126,7 +126,7 @@ public class NetworkModificationService {
         List<ModificationInfos> exportable = new ArrayList<>();
         List<NetworkModificationExportInfos.UnexportedModification> unexported = new ArrayList<>();
         for (ModificationInfos modification : allModifications) {
-            if (modification instanceof EquipmentModificationInfos) {
+            if (modification.toModel() instanceof EquipmentModificationModel) {
                 exportable.add(modification);
             } else {
                 unexported.add(

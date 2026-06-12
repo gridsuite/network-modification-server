@@ -13,7 +13,12 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
-import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.FreePropertyModel;
+import org.gridsuite.modification.model.OperationType;
+import org.gridsuite.modification.model.ReactiveCapabilityCurvePointsModel;
+import org.gridsuite.modification.model.VoltageRegulationType;
+import org.gridsuite.modification.model.tabular.TabularPropertyModel;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
@@ -77,7 +82,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
                 .modifications(modifications)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();
     }
@@ -92,7 +97,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
                 .modifications(modifications)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }
@@ -592,7 +597,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                         .reactivePowerSetpoint(300.0)
                         .voltageRegulationType(VoltageRegulationType.LOCAL)
                         .standbyAutomatonOn(false)
-                        .properties(List.of(FreePropertyInfos.builder().name("PROPERTY_NAME").value("PROPERTY_VALUE").build()))
+                        .properties(List.of(FreePropertyModel.builder().name("PROPERTY_NAME").value("PROPERTY_VALUE").build()))
                         .build()
         );
         ModificationInfos tabularInfos = TabularModificationInfos.builder()
@@ -677,7 +682,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         ModificationInfos tabularModification = TabularModificationInfos.builder()
             .modificationType(ModificationType.GENERATOR_MODIFICATION)
             .modifications(createGeneratorModificationList(qty))
-            .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+            .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(false).build()))
             .build();
         UUID uuid = saveModification(tabularModification);
         tabularModification.setUuid(uuid);
@@ -694,9 +699,9 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                         ModificationCreation.getFreeProperty(),
                         ModificationCreation.getFreeProperty("test", "value")))
                     .reactiveCapabilityCurvePoints(List.of(
-                        ReactiveCapabilityCurvePointsInfos.builder().p(10.).build(),
-                            ReactiveCapabilityCurvePointsInfos.builder().maxQ(17.).build(),
-                        ReactiveCapabilityCurvePointsInfos.builder().minQ(5.).maxQ(5.).p(5.).build()))
+                        ReactiveCapabilityCurvePointsModel.builder().p(10.).build(),
+                            ReactiveCapabilityCurvePointsModel.builder().maxQ(17.).build(),
+                        ReactiveCapabilityCurvePointsModel.builder().minQ(5.).maxQ(5.).p(5.).build()))
                     .build())
             .toList();
     }

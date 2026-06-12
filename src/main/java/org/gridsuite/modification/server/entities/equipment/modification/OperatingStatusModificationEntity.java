@@ -6,13 +6,15 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.OperatingStatusModificationInfos;
 
-import jakarta.persistence.*;
+import org.gridsuite.modification.model.OperatingStatusModificationModel;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -31,18 +33,18 @@ public class OperatingStatusModificationEntity extends EquipmentModificationEnti
     @Column
     private String energizedVoltageLevelId;
 
-    public OperatingStatusModificationEntity(@NonNull OperatingStatusModificationInfos operatingStatusModificationInfos) {
+    public OperatingStatusModificationEntity(@NonNull ModificationInfos operatingStatusModificationInfos) {
         super(operatingStatusModificationInfos);
-        assignAttributes(operatingStatusModificationInfos);
+        assignAttributes((OperatingStatusModificationModel) operatingStatusModificationInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((OperatingStatusModificationInfos) modificationInfos);
+        assignAttributes((OperatingStatusModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(OperatingStatusModificationInfos operatingStatusModificationInfos) {
+    private void assignAttributes(OperatingStatusModificationModel operatingStatusModificationInfos) {
         action = operatingStatusModificationInfos.getAction();
         energizedVoltageLevelId = operatingStatusModificationInfos.getEnergizedVoltageLevelId();
     }

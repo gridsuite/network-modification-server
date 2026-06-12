@@ -10,10 +10,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.dto.tabular.*;
+import org.gridsuite.modification.model.FreePropertyModel;
+import org.gridsuite.modification.model.tabular.TabularPropertyModel;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -55,13 +56,13 @@ class TabularShuntCompensatorCreationsTest extends AbstractNetworkModificationTe
                         .connectionName("cn")
                         .connectionPosition(99)
                         .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
-                        .properties(List.of(FreePropertyInfos.builder().name("PROPERTY_NAME").value("PROPERTY_VALUE").build()))
+                        .properties(List.of(FreePropertyModel.builder().name("PROPERTY_NAME").value("PROPERTY_VALUE").build()))
                         .build()
         );
         return TabularCreationInfos.builder()
             .modificationType(ModificationType.SHUNT_COMPENSATOR_CREATION)
             .modifications(creations)
-            .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
+            .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(true).build()))
             .stashed(false)
             .build();
     }
@@ -82,7 +83,7 @@ class TabularShuntCompensatorCreationsTest extends AbstractNetworkModificationTe
         return TabularCreationInfos.builder()
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_CREATION)
                 .modifications(creations)
-                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+                .properties(List.of(TabularPropertyModel.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }

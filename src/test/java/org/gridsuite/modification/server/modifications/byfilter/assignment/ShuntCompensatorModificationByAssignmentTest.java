@@ -14,10 +14,10 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.assignment.IntegerAssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.equipmentfield.ShuntCompensatorField;
+import org.gridsuite.modification.model.byfilter.assignment.AssignmentModel;
+import org.gridsuite.modification.model.byfilter.assignment.DoubleAssignmentModel;
+import org.gridsuite.modification.model.byfilter.assignment.IntegerAssignmentModel;
+import org.gridsuite.modification.model.byfilter.equipmentfield.ShuntCompensatorField;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
@@ -41,7 +41,7 @@ class ShuntCompensatorModificationByAssignmentTest extends AbstractModificationB
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_1, 1.0);
         IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 
-        IntegerAssignmentInfos assignmentInfos = IntegerAssignmentInfos.builder()
+        IntegerAssignmentModel assignmentInfos = IntegerAssignmentModel.builder()
                 .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
                 .value(2)
                 .filters(List.of(filterWithOneWrongId))
@@ -80,46 +80,46 @@ class ShuntCompensatorModificationByAssignmentTest extends AbstractModificationB
     }
 
     @Override
-    protected List<AssignmentInfos<?>> getAssignmentInfos() {
-        IntegerAssignmentInfos assignmentInfos1 = IntegerAssignmentInfos.builder()
+    protected List<AssignmentModel<?>> getAssignmentInfos() {
+        IntegerAssignmentModel assignmentInfos1 = IntegerAssignmentModel.builder()
                 .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
                 .value(8)
                 .filters(List.of(filter1, filter2))
                 .build();
 
-        IntegerAssignmentInfos assignmentInfos2 = IntegerAssignmentInfos.builder()
+        IntegerAssignmentModel assignmentInfos2 = IntegerAssignmentModel.builder()
                 .editedField(ShuntCompensatorField.SECTION_COUNT.name())
                 .value(2)
                 .filters(List.of(filter3))
                 .build();
 
-        DoubleAssignmentInfos assignmentInfos3 = DoubleAssignmentInfos.builder()
+        DoubleAssignmentModel assignmentInfos3 = DoubleAssignmentModel.builder()
                 .editedField(ShuntCompensatorField.MAX_SUSCEPTANCE.name())
                 .value(5.)
                 .filters(List.of(filter4))
                 .build();
 
-        DoubleAssignmentInfos assignmentInfos4 = DoubleAssignmentInfos.builder()
+        DoubleAssignmentModel assignmentInfos4 = DoubleAssignmentModel.builder()
                 .editedField(ShuntCompensatorField.MAX_Q_AT_NOMINAL_V.name())
                 .value(10.)
                 .filters(List.of(filter5))
                 .build();
 
-        List<AssignmentInfos<?>> infosList = super.getAssignmentInfos();
+        List<AssignmentModel<?>> infosList = super.getAssignmentInfos();
         infosList.addAll(List.of(assignmentInfos1, assignmentInfos2, assignmentInfos3, assignmentInfos4));
 
         return infosList;
     }
 
     @Override
-    protected List<AssignmentInfos<?>> getUpdatedAssignmentInfos() {
-        IntegerAssignmentInfos assignmentInfos1 = IntegerAssignmentInfos.builder()
+    protected List<AssignmentModel<?>> getUpdatedAssignmentInfos() {
+        IntegerAssignmentModel assignmentInfos1 = IntegerAssignmentModel.builder()
                 .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
                 .value(150)
                 .filters(List.of(filter1, filter2))
                 .build();
 
-        IntegerAssignmentInfos assignmentInfos2 = IntegerAssignmentInfos.builder()
+        IntegerAssignmentModel assignmentInfos2 = IntegerAssignmentModel.builder()
                 .editedField(ShuntCompensatorField.SECTION_COUNT.name())
                 .value(2)
                 .filters(List.of(filter3))

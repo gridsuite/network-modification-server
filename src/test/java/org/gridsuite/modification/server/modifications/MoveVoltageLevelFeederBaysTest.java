@@ -10,9 +10,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.dto.MoveFeederBayInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.MoveVoltageLevelFeederBaysInfos;
+import org.gridsuite.modification.model.MoveFeederBayModel;
 import org.gridsuite.modification.modifications.MoveVoltageLevelFeederBays;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.utils.ModificationUtils;
@@ -42,8 +42,8 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModification() {
-        List<MoveFeederBayInfos> moveFeederBayInfos = new ArrayList<>();
-        moveFeederBayInfos.add(MoveFeederBayInfos.builder()
+        List<MoveFeederBayModel> moveFeederBayInfos = new ArrayList<>();
+        moveFeederBayInfos.add(MoveFeederBayModel.builder()
             .equipmentId("v3load")
             .busbarSectionId("3A")
             .connectionSide(null)
@@ -51,7 +51,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
             .connectionPosition(4)
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build());
-        moveFeederBayInfos.add(MoveFeederBayInfos.builder()
+        moveFeederBayInfos.add(MoveFeederBayModel.builder()
             .equipmentId("line2")
             .busbarSectionId("3C")
             .connectionSide(ThreeSides.TWO.toString())
@@ -67,8 +67,8 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        List<MoveFeederBayInfos> moveFeederBayInfos = new ArrayList<>();
-        moveFeederBayInfos.add(MoveFeederBayInfos.builder()
+        List<MoveFeederBayModel> moveFeederBayInfos = new ArrayList<>();
+        moveFeederBayInfos.add(MoveFeederBayModel.builder()
             .equipmentId("v3load")
             .busbarSectionId("3A")
             .connectionSide(null)
@@ -76,7 +76,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
             .connectionPosition(6)
             .connectionDirection(ConnectablePosition.Direction.BOTTOM)
             .build());
-        moveFeederBayInfos.add(MoveFeederBayInfos.builder()
+        moveFeederBayInfos.add(MoveFeederBayModel.builder()
             .equipmentId("line2")
             .busbarSectionId("3B")
             .connectionSide(ThreeSides.ONE.toString())
@@ -168,7 +168,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
     void testGetTerminal() {
         Network network = getNetwork();
         // is not an injection or a branch
-        MoveFeederBayInfos connectablePositionModification = MoveFeederBayInfos.builder()
+        MoveFeederBayModel connectablePositionModification = MoveFeederBayModel.builder()
             .equipmentId("trf6")
             .busbarSectionId("1A")
             .connectionSide("ONE")
@@ -185,7 +185,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
         String message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification)).getMessage();
         assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS_ERROR : MoveVoltageLevelFeederBays is not implemented for class com.powsybl.network.store.iidm.impl.ThreeWindingsTransformerImpl", message);
         // busbar not found on a branch
-        MoveFeederBayInfos connectablePositionModification2 = MoveFeederBayInfos.builder()
+        MoveFeederBayModel connectablePositionModification2 = MoveFeederBayModel.builder()
             .equipmentId("line1")
             .busbarSectionId("random")
             .connectionSide("THREE")
@@ -196,7 +196,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
         message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification2)).getMessage();
         assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS_ERROR : Invalid connection side: THREE for branch line1", message);
         // injection with no error
-        MoveFeederBayInfos connectablePositionModification3 = MoveFeederBayInfos.builder()
+        MoveFeederBayModel connectablePositionModification3 = MoveFeederBayModel.builder()
             .equipmentId("v3Battery")
             .busbarSectionId("3B")
             .connectionSide(null)
@@ -208,7 +208,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
         assertEquals("v3", terminal.getVoltageLevel().getId());
         assertEquals("v3Battery", terminal.getConnectable().getId());
         // branch side 2 with no error
-        MoveFeederBayInfos connectablePositionModification4 = MoveFeederBayInfos.builder()
+        MoveFeederBayModel connectablePositionModification4 = MoveFeederBayModel.builder()
             .equipmentId("line1")
             .busbarSectionId("1.B")
             .connectionSide("TWO")

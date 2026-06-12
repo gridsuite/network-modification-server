@@ -8,11 +8,11 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.ByFormulaModificationInfos;
+import org.gridsuite.modification.model.byfilter.equipmentfield.TwoWindingsTransformerField;
+import org.gridsuite.modification.model.byfilter.formula.FormulaModel;
+import org.gridsuite.modification.model.byfilter.formula.Operator;
+import org.gridsuite.modification.model.byfilter.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
-import org.gridsuite.modification.dto.byfilter.formula.FormulaInfos;
-import org.gridsuite.modification.dto.byfilter.formula.Operator;
-import org.gridsuite.modification.dto.byfilter.formula.ReferenceFieldOrValue;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -38,7 +38,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
         IdentifierListFilterEquipmentAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
         IdentifierListFilterEquipmentAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
         AbstractFilter filter = getFilterEquipments(FILTER_ID_4, List.of(identifiableAttributes1, identifiableAttributes2));
-        FormulaInfos formulaInfos = FormulaInfos.builder()
+        FormulaModel formulaInfos = FormulaModel.builder()
                 .filters(List.of(filter4))
                 .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name()).build())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(1.).build())
@@ -55,7 +55,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
         IdentifierListFilterEquipmentAttributes identifiableAttributes3 = getIdentifiableAttributes(TWT_ID_1, 1.);
         IdentifierListFilterEquipmentAttributes identifiableAttributes4 = getIdentifiableAttributes(TWT_ID_2, 1.);
         AbstractFilter filter2 = getFilterEquipments(FILTER_ID_1, List.of(identifiableAttributes3, identifiableAttributes4));
-        FormulaInfos formulaInfos2 = FormulaInfos.builder()
+        FormulaModel formulaInfos2 = FormulaModel.builder()
                 .filters(List.of(filter1))
                 .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name()).build())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(1.).build())
@@ -81,7 +81,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         // Test division by 0
-        FormulaInfos formulaInfos2 = FormulaInfos.builder()
+        FormulaModel formulaInfos2 = FormulaModel.builder()
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(50.).build())
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(0.).build())
                 .operator(Operator.DIVISION)
@@ -109,7 +109,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
                         .withBody(mapper.writeValueAsString(List.of(filterTwt1, filterTwt2)))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
-        FormulaInfos formulaInfos = FormulaInfos.builder()
+        FormulaModel formulaInfos = FormulaModel.builder()
                 .filters(List.of(filter1, filter4))
                 .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name()).build())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(1.).build())
@@ -209,92 +209,92 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
     }
 
     @Override
-    protected List<FormulaInfos> getFormulaInfos() {
-        FormulaInfos formulaInfos1 = getFormulaInfo(TwoWindingsTransformerField.TARGET_V.name(),
+    protected List<FormulaModel> getFormulaInfos() {
+        FormulaModel formulaInfos1 = getFormulaInfo(TwoWindingsTransformerField.TARGET_V.name(),
                 List.of(filter1),
                 Operator.PERCENTAGE,
                 ReferenceFieldOrValue.builder().value(200.).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.TARGET_V.name()).build());
 
-        FormulaInfos formulaInfos2 = getFormulaInfo(TwoWindingsTransformerField.RATIO_TAP_POSITION.name(),
+        FormulaModel formulaInfos2 = getFormulaInfo(TwoWindingsTransformerField.RATIO_TAP_POSITION.name(),
                 List.of(filter2),
                 Operator.MULTIPLICATION,
                 ReferenceFieldOrValue.builder().value(4.).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name()).build());
 
-        FormulaInfos formulaInfos3 = getFormulaInfo(TwoWindingsTransformerField.RATIO_LOW_TAP_POSITION.name(),
+        FormulaModel formulaInfos3 = getFormulaInfo(TwoWindingsTransformerField.RATIO_LOW_TAP_POSITION.name(),
                 List.of(filter2),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().value(1.).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_LOW_TAP_POSITION.name()).build());
 
-        FormulaInfos formulaInfos4 = getFormulaInfo(TwoWindingsTransformerField.RATIO_TARGET_DEADBAND.name(),
+        FormulaModel formulaInfos4 = getFormulaInfo(TwoWindingsTransformerField.RATIO_TARGET_DEADBAND.name(),
                 List.of(filter1),
                 Operator.DIVISION,
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TARGET_DEADBAND.name()).build(),
                 ReferenceFieldOrValue.builder().value(5.).build());
 
-        FormulaInfos formulaInfos5 = getFormulaInfo(TwoWindingsTransformerField.REGULATION_VALUE.name(),
+        FormulaModel formulaInfos5 = getFormulaInfo(TwoWindingsTransformerField.REGULATION_VALUE.name(),
                 List.of(filter4),
                 Operator.PERCENTAGE,
                 ReferenceFieldOrValue.builder().value(200.).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.REGULATION_VALUE.name()).build());
 
-        FormulaInfos formulaInfos6 = getFormulaInfo(TwoWindingsTransformerField.PHASE_TAP_POSITION.name(),
+        FormulaModel formulaInfos6 = getFormulaInfo(TwoWindingsTransformerField.PHASE_TAP_POSITION.name(),
                 List.of(filter3),
                 Operator.MULTIPLICATION,
                 ReferenceFieldOrValue.builder().value(2.).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name()).build());
 
-        FormulaInfos formulaInfos7 = getFormulaInfo(TwoWindingsTransformerField.PHASE_LOW_TAP_POSITION.name(),
+        FormulaModel formulaInfos7 = getFormulaInfo(TwoWindingsTransformerField.PHASE_LOW_TAP_POSITION.name(),
                 List.of(filter3),
                 Operator.MULTIPLICATION,
                 ReferenceFieldOrValue.builder().value(2.).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.PHASE_LOW_TAP_POSITION.name()).build());
 
-        FormulaInfos formulaInfos8 = getFormulaInfo(TwoWindingsTransformerField.PHASE_TARGET_DEADBAND.name(),
+        FormulaModel formulaInfos8 = getFormulaInfo(TwoWindingsTransformerField.PHASE_TARGET_DEADBAND.name(),
                 List.of(filter4),
                 Operator.SUBTRACTION,
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.PHASE_TARGET_DEADBAND.name()).build(),
                 ReferenceFieldOrValue.builder().value(10.).build());
 
-        FormulaInfos formulaInfos9 = getFormulaInfo(TwoWindingsTransformerField.X.name(),
+        FormulaModel formulaInfos9 = getFormulaInfo(TwoWindingsTransformerField.X.name(),
                 List.of(filter1, filter4),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().value(20.).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.X.name()).build());
 
-        FormulaInfos formulaInfos10 = getFormulaInfo(TwoWindingsTransformerField.R.name(),
+        FormulaModel formulaInfos10 = getFormulaInfo(TwoWindingsTransformerField.R.name(),
                 List.of(filter2, filter3),
                 Operator.PERCENTAGE,
                 ReferenceFieldOrValue.builder().value(200.).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.R.name()).build());
 
-        FormulaInfos formulaInfos11 = getFormulaInfo(TwoWindingsTransformerField.G.name(),
+        FormulaModel formulaInfos11 = getFormulaInfo(TwoWindingsTransformerField.G.name(),
                 List.of(filter4, filter2),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().value(25.).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.G.name()).build());
 
-        FormulaInfos formulaInfos12 = getFormulaInfo(TwoWindingsTransformerField.B.name(),
+        FormulaModel formulaInfos12 = getFormulaInfo(TwoWindingsTransformerField.B.name(),
                 List.of(filter1, filter3),
                 Operator.MULTIPLICATION,
                 ReferenceFieldOrValue.builder().value(2.5).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.B.name()).build());
 
-        FormulaInfos formulaInfos13 = getFormulaInfo(TwoWindingsTransformerField.RATED_U1.name(),
+        FormulaModel formulaInfos13 = getFormulaInfo(TwoWindingsTransformerField.RATED_U1.name(),
                 List.of(filter2),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().value(15.).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATED_U1.name()).build());
 
-        FormulaInfos formulaInfos14 = getFormulaInfo(TwoWindingsTransformerField.RATED_U2.name(),
+        FormulaModel formulaInfos14 = getFormulaInfo(TwoWindingsTransformerField.RATED_U2.name(),
                 List.of(filter3, filter2),
                 Operator.PERCENTAGE,
                 ReferenceFieldOrValue.builder().value(50.).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATED_U2.name()).build());
 
-        FormulaInfos formulaInfos15 = getFormulaInfo(TwoWindingsTransformerField.RATED_S.name(),
+        FormulaModel formulaInfos15 = getFormulaInfo(TwoWindingsTransformerField.RATED_S.name(),
                 List.of(filter1, filter2),
                 Operator.PERCENTAGE,
                 ReferenceFieldOrValue.builder().value(200.).build(),
@@ -318,20 +318,20 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
     }
 
     @Override
-    protected List<FormulaInfos> getUpdatedFormulaInfos() {
-        FormulaInfos formulaInfos1 = getFormulaInfo(TwoWindingsTransformerField.TARGET_V.name(),
+    protected List<FormulaModel> getUpdatedFormulaInfos() {
+        FormulaModel formulaInfos1 = getFormulaInfo(TwoWindingsTransformerField.TARGET_V.name(),
                 List.of(filter3),
                 Operator.PERCENTAGE,
                 ReferenceFieldOrValue.builder().value(200.).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.TARGET_V.name()).build());
 
-        FormulaInfos formulaInfos2 = getFormulaInfo(TwoWindingsTransformerField.RATIO_TAP_POSITION.name(),
+        FormulaModel formulaInfos2 = getFormulaInfo(TwoWindingsTransformerField.RATIO_TAP_POSITION.name(),
                 List.of(filter2),
                 Operator.MULTIPLICATION,
                 ReferenceFieldOrValue.builder().value(3.5).build(),
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name()).build());
 
-        FormulaInfos formulaInfos3 = getFormulaInfo(TwoWindingsTransformerField.RATIO_LOW_TAP_POSITION.name(),
+        FormulaModel formulaInfos3 = getFormulaInfo(TwoWindingsTransformerField.RATIO_LOW_TAP_POSITION.name(),
                 List.of(filter1),
                 Operator.MULTIPLICATION,
                 ReferenceFieldOrValue.builder().value(3.).build(),

@@ -18,10 +18,10 @@ import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.ReactiveVariationMode;
 import org.gridsuite.modification.VariationMode;
 import org.gridsuite.modification.VariationType;
-import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.LoadScalingInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ScalingVariationInfos;
+import org.gridsuite.modification.model.FilterModel;
+import org.gridsuite.modification.model.ScalingVariationModel;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -165,12 +165,12 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(noDistributionKeyFilter)))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
-        FilterInfos filter = FilterInfos.builder()
+        FilterModel filter = FilterModel.builder()
             .id(FILTER_NO_DK)
             .name("filter")
             .build();
 
-        ScalingVariationInfos variation1 = ScalingVariationInfos.builder()
+        ScalingVariationModel variation1 = ScalingVariationModel.builder()
             .variationValue(100D)
             .variationMode(VariationMode.VENTILATION)
             .reactiveVariationMode(ReactiveVariationMode.TAN_PHI_FIXED)
@@ -203,12 +203,12 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
             .filterEquipmentsAttributes(List.of())
             .build();
 
-        FilterInfos filter = FilterInfos.builder()
+        FilterModel filter = FilterModel.builder()
             .name("filter")
             .id(FILTER_WRONG_ID_1)
             .build();
 
-        ScalingVariationInfos variation = ScalingVariationInfos.builder()
+        ScalingVariationModel variation = ScalingVariationModel.builder()
             .variationMode(VariationMode.PROPORTIONAL)
             .reactiveVariationMode(ReactiveVariationMode.TAN_PHI_FIXED)
             .variationValue(100D)
@@ -247,17 +247,17 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
             .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_WRONG_ID_1, 2.0)))
             .build();
 
-        FilterInfos filter = FilterInfos.builder()
+        FilterModel filter = FilterModel.builder()
             .name("filter")
             .id(FILTER_WRONG_ID_2)
             .build();
 
-        FilterInfos filter2 = FilterInfos.builder()
+        FilterModel filter2 = FilterModel.builder()
             .name("filter2")
             .id(FILTER_ID_5)
             .build();
 
-        ScalingVariationInfos variation = ScalingVariationInfos.builder()
+        ScalingVariationModel variation = ScalingVariationModel.builder()
             .variationMode(VariationMode.PROPORTIONAL)
             .reactiveVariationMode(ReactiveVariationMode.TAN_PHI_FIXED)
             .variationValue(900D)
@@ -297,60 +297,60 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModification() {
-        FilterInfos filter1 = FilterInfos.builder()
+        FilterModel filter1 = FilterModel.builder()
             .id(FILTER_ID_1)
             .name("filter1")
             .build();
 
-        FilterInfos filter2 = FilterInfos.builder()
+        FilterModel filter2 = FilterModel.builder()
             .id(FILTER_ID_2)
             .name("filter2")
             .build();
 
-        FilterInfos filter3 = FilterInfos.builder()
+        FilterModel filter3 = FilterModel.builder()
             .id(FILTER_ID_3)
             .name("filter3")
             .build();
 
-        FilterInfos filter4 = FilterInfos.builder()
+        FilterModel filter4 = FilterModel.builder()
             .id(FILTER_ID_4)
             .name("filter4")
             .build();
 
-        FilterInfos filter5 = FilterInfos.builder()
+        FilterModel filter5 = FilterModel.builder()
             .id(FILTER_ID_5)
             .name("filter5")
             .build();
 
-        ScalingVariationInfos variation1 = ScalingVariationInfos.builder()
+        ScalingVariationModel variation1 = ScalingVariationModel.builder()
             .variationMode(VariationMode.REGULAR_DISTRIBUTION)
             .reactiveVariationMode(ReactiveVariationMode.CONSTANT_Q)
             .variationValue(50D)
             .filters(List.of(filter2))
             .build();
 
-        ScalingVariationInfos variation2 = ScalingVariationInfos.builder()
+        ScalingVariationModel variation2 = ScalingVariationModel.builder()
             .variationMode(VariationMode.VENTILATION)
             .reactiveVariationMode(ReactiveVariationMode.CONSTANT_Q)
             .variationValue(50D)
             .filters(List.of(filter4))
             .build();
 
-        ScalingVariationInfos variation3 = ScalingVariationInfos.builder()
+        ScalingVariationModel variation3 = ScalingVariationModel.builder()
             .variationMode(VariationMode.PROPORTIONAL)
             .reactiveVariationMode(ReactiveVariationMode.CONSTANT_Q)
             .variationValue(50D)
             .filters(List.of(filter1, filter5))
             .build();
 
-        ScalingVariationInfos variation4 = ScalingVariationInfos.builder()
+        ScalingVariationModel variation4 = ScalingVariationModel.builder()
             .variationMode(VariationMode.PROPORTIONAL)
             .reactiveVariationMode(ReactiveVariationMode.CONSTANT_Q)
             .variationValue(100D)
             .filters(List.of(filter3))
             .build();
 
-        ScalingVariationInfos variation5 = ScalingVariationInfos.builder()
+        ScalingVariationModel variation5 = ScalingVariationModel.builder()
             .variationMode(VariationMode.REGULAR_DISTRIBUTION)
             .reactiveVariationMode(ReactiveVariationMode.TAN_PHI_FIXED)
             .variationValue(50D)
@@ -367,12 +367,12 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        FilterInfos filter5 = FilterInfos.builder()
+        FilterModel filter5 = FilterModel.builder()
             .id(FILTER_ID_5)
             .name("filter 3")
             .build();
 
-        ScalingVariationInfos variation5 = ScalingVariationInfos.builder()
+        ScalingVariationModel variation5 = ScalingVariationModel.builder()
             .variationMode(VariationMode.PROPORTIONAL)
             .reactiveVariationMode(ReactiveVariationMode.TAN_PHI_FIXED)
             .variationValue(50D)
@@ -473,12 +473,12 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 .withBody(mapper.writeValueAsString(List.of(filter1)))
                 .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
-        FilterInfos filter = FilterInfos.builder()
+        FilterModel filter = FilterModel.builder()
                 .name("filter")
                 .id(FILTER_ID_ALL_LOADS)
                 .build();
         final double variationValue = 100D;
-        ScalingVariationInfos variation = ScalingVariationInfos.builder()
+        ScalingVariationModel variation = ScalingVariationModel.builder()
                 .variationMode(variationMode)
                 .reactiveVariationMode(ReactiveVariationMode.CONSTANT_Q)
                 .variationValue(variationValue)

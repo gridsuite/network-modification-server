@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import org.gridsuite.modification.dto.ReactiveCapabilityCurvePointsInfos;
+import org.gridsuite.modification.model.ReactiveCapabilityCurvePointsModel;
 import org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.ReactiveCapabilityCurveModificationEmbeddable;
 import org.springframework.util.CollectionUtils;
@@ -21,17 +21,17 @@ public final class DTOUtils {
     private DTOUtils() {
     }
 
-    public static List<ReactiveCapabilityCurvePointsInfos> toReactiveCapabilityCurvePointsCreationInfos(List<ReactiveCapabilityCurveCreationEmbeddable> rCCpoints) {
+    public static List<ReactiveCapabilityCurvePointsModel> toReactiveCapabilityCurvePointsCreationModel(List<ReactiveCapabilityCurveCreationEmbeddable> rCCpoints) {
         return Objects.isNull(rCCpoints) || CollectionUtils.isEmpty(rCCpoints) ? null
-                : rCCpoints.stream().map(point -> new ReactiveCapabilityCurvePointsInfos(point.getMinQ(),
+                : rCCpoints.stream().map(point -> new ReactiveCapabilityCurvePointsModel(point.getMinQ(),
                         point.getMaxQ(),
                         point.getP()))
                 .toList();
     }
 
-    public static List<ReactiveCapabilityCurvePointsInfos> toReactiveCapabilityCurvePointsModificationInfos(List<ReactiveCapabilityCurveModificationEmbeddable> rCCpoints) {
+    public static List<ReactiveCapabilityCurvePointsModel> toReactiveCapabilityCurvePointsModificationModel(List<ReactiveCapabilityCurveModificationEmbeddable> rCCpoints) {
         return Objects.isNull(rCCpoints) || CollectionUtils.isEmpty(rCCpoints) ? null
-                : rCCpoints.stream().map(point -> new ReactiveCapabilityCurvePointsInfos(point.getMinQ(),
+                : rCCpoints.stream().map(point -> new ReactiveCapabilityCurvePointsModel(point.getMinQ(),
                         point.getMaxQ(),
                         point.getP()))
                 .toList();

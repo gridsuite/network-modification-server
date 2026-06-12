@@ -7,12 +7,16 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.PhaseTapChanger;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.TapChangerType;
 import org.gridsuite.modification.dto.*;
 
-import jakarta.persistence.*;
+import org.gridsuite.modification.model.PhaseTapChangerCreationModel;
+import org.gridsuite.modification.model.RatioTapChangerCreationModel;
+import org.gridsuite.modification.model.TapChangerStepCreationModel;
+import org.gridsuite.modification.model.TwoWindingsTransformerCreationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -109,19 +113,18 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
     )
     private List<TapChangerStepCreationEmbeddable> tapChangerSteps;
 
+    public TwoWindingsTransformerCreationEntity(ModificationInfos twoWindingsTransformerCreationInfos) {
+        super(twoWindingsTransformerCreationInfos);
+        assignAttributes((TwoWindingsTransformerCreationModel) twoWindingsTransformerCreationInfos.toModel());
+    }
+
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) modificationInfos;
-        assignAttributes(twoWindingsTransformerCreationInfos);
+        assignAttributes((TwoWindingsTransformerCreationModel) modificationInfos.toModel());
     }
 
-    public TwoWindingsTransformerCreationEntity(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        super(twoWindingsTransformerCreationInfos);
-        assignAttributes(twoWindingsTransformerCreationInfos);
-    }
-
-    private void assignAttributes(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+    private void assignAttributes(TwoWindingsTransformerCreationModel twoWindingsTransformerCreationInfos) {
         this.g = twoWindingsTransformerCreationInfos.getG();
         this.b = twoWindingsTransformerCreationInfos.getB();
         this.ratedU1 = twoWindingsTransformerCreationInfos.getRatedU1();
@@ -131,12 +134,12 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         assignTapChanger(twoWindingsTransformerCreationInfos);
     }
 
-    private void assignTapChanger(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+    private void assignTapChanger(TwoWindingsTransformerCreationModel twoWindingsTransformerCreationInfos) {
         Optional.ofNullable(twoWindingsTransformerCreationInfos.getPhaseTapChanger()).ifPresent(this::assignPhaseTapChanger);
         Optional.ofNullable(twoWindingsTransformerCreationInfos.getRatioTapChanger()).ifPresent(this::assignRatioTapChanger);
     }
 
-    private void assignRatioTapChanger(RatioTapChangerCreationInfos ratioTapChanger) {
+    private void assignRatioTapChanger(RatioTapChangerCreationModel ratioTapChanger) {
         this.ratioTapChangerLowTapPosition = ratioTapChanger.getLowTapPosition();
         this.ratioTapChangerTapPosition = ratioTapChanger.getTapPosition();
         this.ratioTapChangerRegulating = ratioTapChanger.isRegulating();
@@ -149,7 +152,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(ratioTapChanger.getSteps()));
     }
 
-    private void assignPhaseTapChanger(PhaseTapChangerCreationInfos phaseTapChangerCreationInfos) {
+    private void assignPhaseTapChanger(PhaseTapChangerCreationModel phaseTapChangerCreationInfos) {
         this.phaseTapChangerLowTapPosition = phaseTapChangerCreationInfos.getLowTapPosition();
         this.phaseTapChangerTapPosition = phaseTapChangerCreationInfos.getTapPosition();
         this.phaseTapChangerRegulating = phaseTapChangerCreationInfos.isRegulating();
@@ -210,13 +213,13 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
-                                .map(FreePropertyEntity::toInfos)
+                                .map(FreePropertyEntity::toModel)
                                 .toList())
                 .operationalLimitsGroups(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));
 
         if (!ratioTapChangerSteps.isEmpty()) {
-            List<TapChangerStepCreationInfos> ratioTapChangerStepCreationInfos = ratioTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
-            builder.ratioTapChanger(RatioTapChangerCreationInfos.builder()
+            List<TapChangerStepCreationModel> ratioTapChangerStepCreationInfos = ratioTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
+            builder.ratioTapChanger(RatioTapChangerCreationModel.builder()
                     .lowTapPosition(getRatioTapChangerLowTapPosition())
                     .tapPosition(getRatioTapChangerTapPosition())
                     .targetDeadband(getRatioTapChangerTargetDeadband())
@@ -231,8 +234,8 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         }
 
         if (!phaseTapChangerSteps.isEmpty()) {
-            List<TapChangerStepCreationInfos> phaseTapChangerStepCreationInfos = phaseTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
-            builder.phaseTapChanger(PhaseTapChangerCreationInfos.builder()
+            List<TapChangerStepCreationModel> phaseTapChangerStepCreationInfos = phaseTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
+            builder.phaseTapChanger(PhaseTapChangerCreationModel.builder()
                     .lowTapPosition(getPhaseTapChangerLowTapPosition())
                     .tapPosition(getPhaseTapChangerTapPosition())
                     .targetDeadband(getPhaseTapChangerTargetDeadband())

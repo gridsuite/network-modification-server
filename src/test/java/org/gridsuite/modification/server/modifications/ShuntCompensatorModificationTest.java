@@ -15,6 +15,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.api.Assertions;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -286,7 +287,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .sectionCount(new AttributeModification<>(1, OperationType.SET))
                 .qMeasurementValue(new AttributeModification<>(MEASUREMENT_Q_VALUE, OperationType.SET))
                 .qMeasurementValidity(new AttributeModification<>(MEASUREMENT_Q_VALID, OperationType.SET))
-                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
+                .properties(List.of(FreePropertyModel.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
 
     }
@@ -334,9 +335,8 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
 
     @Test
     void testDisconnection() throws Exception {
-        ShuntCompensatorModificationInfos shuntModificationInfos =
-                ShuntCompensatorModificationInfos.builder()
-                        .stashed(false)
+        ShuntCompensatorModificationModel shuntModificationInfos =
+                ShuntCompensatorModificationModel.builder()
                         .equipmentId("v2shunt")
                         .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
                         .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))
@@ -346,9 +346,8 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
 
     @Test
     void testConnection() throws Exception {
-        ShuntCompensatorModificationInfos shuntModificationInfos =
-                ShuntCompensatorModificationInfos.builder()
-                        .stashed(false)
+        ShuntCompensatorModificationModel shuntModificationInfos =
+                ShuntCompensatorModificationModel.builder()
                         .equipmentId("v2shunt")
                         .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
                         .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))

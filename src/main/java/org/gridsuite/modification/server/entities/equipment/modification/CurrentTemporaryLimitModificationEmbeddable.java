@@ -10,8 +10,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.CurrentTemporaryLimitModificationInfos;
-import org.gridsuite.modification.dto.TemporaryLimitModificationType;
+import org.gridsuite.modification.model.CurrentTemporaryLimitModificationModel;
+import org.gridsuite.modification.model.TemporaryLimitModificationType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerModificationEmbedded;
@@ -57,7 +57,7 @@ public class CurrentTemporaryLimitModificationEmbeddable {
     @Enumerated(EnumType.STRING)
     private TemporaryLimitModificationType modificationType;
 
-    public static List<CurrentTemporaryLimitModificationEmbeddable> toEmbeddableCurrentTemporaryLimits(List<CurrentTemporaryLimitModificationInfos> limits) {
+    public static List<CurrentTemporaryLimitModificationEmbeddable> toEmbeddableCurrentTemporaryLimits(List<CurrentTemporaryLimitModificationModel> limits) {
         if (limits == null) {
             return Collections.emptyList();
         }
@@ -71,10 +71,10 @@ public class CurrentTemporaryLimitModificationEmbeddable {
                 }).toList();
     }
 
-    public static List<CurrentTemporaryLimitModificationInfos> fromEmbeddableCurrentTemporaryLimits(List<CurrentTemporaryLimitModificationEmbeddable> limits) {
+    public static List<CurrentTemporaryLimitModificationModel> fromEmbeddableCurrentTemporaryLimits(List<CurrentTemporaryLimitModificationEmbeddable> limits) {
         return limits == null ? null :
                 limits.stream()
-                        .map(limit -> new CurrentTemporaryLimitModificationInfos(
+                        .map(limit -> new CurrentTemporaryLimitModificationModel(
                                 IAttributeModificationEmbeddable.toAttributeModification(limit.getName()),
                                 IAttributeModificationEmbeddable.toAttributeModification(limit.getValue()),
                                 IAttributeModificationEmbeddable.toAttributeModification(limit.getAcceptableDuration()),

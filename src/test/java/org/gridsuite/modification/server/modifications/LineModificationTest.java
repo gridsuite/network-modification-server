@@ -19,6 +19,17 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.api.Assertions;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.model.AttributeModification;
+import org.gridsuite.modification.model.CurrentLimitsModificationModel;
+import org.gridsuite.modification.model.CurrentTemporaryLimitModificationModel;
+import org.gridsuite.modification.model.FreePropertyModel;
+import org.gridsuite.modification.model.LimitsPropertyModel;
+import org.gridsuite.modification.model.LineSegmentModel;
+import org.gridsuite.modification.model.OperationType;
+import org.gridsuite.modification.model.OperationalLimitsGroupModel;
+import org.gridsuite.modification.model.OperationalLimitsGroupModificationModel;
+import org.gridsuite.modification.model.OperationalLimitsGroupModificationType;
+import org.gridsuite.modification.model.TemporaryLimitModificationType;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
@@ -37,9 +48,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.LINE_NOT_FOUND;
-import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
+import static org.gridsuite.modification.model.AttributeModification.toAttributeModification;
+import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.SIDE1;
+import static org.gridsuite.modification.model.OperationalLimitsGroupModel.Applicability.SIDE2;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -97,16 +108,16 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .q2MeasurementValidity(new AttributeModification<>(MEASUREMENT_Q_VALID, OperationType.SET))
                 .enableOLGModification(true)
                 .operationalLimitsGroups(List.of(
-                        OperationalLimitsGroupModificationInfos.builder()
+                        OperationalLimitsGroupModificationModel.builder()
                                 .modificationType(OperationalLimitsGroupModificationType.ADD)
                                 .id("newOpLG1")
                                 .applicability(SIDE1)
-                                .limitsProperties(List.of(new LimitsPropertyInfos(PROPERTY_NAME, PROPERTY_VALUE)))
+                                .limitsProperties(List.of(new LimitsPropertyModel(PROPERTY_NAME, PROPERTY_VALUE)))
                                 .currentLimits(
-                                        CurrentLimitsModificationInfos.builder()
+                                        CurrentLimitsModificationModel.builder()
                                                 .permanentLimit(12.0)
                                                 .temporaryLimits(
-                                                        List.of(CurrentTemporaryLimitModificationInfos.builder()
+                                                        List.of(CurrentTemporaryLimitModificationModel.builder()
                                                                 .modificationType(TemporaryLimitModificationType.ADD)
                                                                 .acceptableDuration(toAttributeModification(Integer.MAX_VALUE, OperationType.SET))
                                                                 .name(toAttributeModification("name31", OperationType.SET))
@@ -114,16 +125,16 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                                                 .build())
                                                 ).build()
                                 ).build(),
-                        OperationalLimitsGroupModificationInfos.builder()
+                        OperationalLimitsGroupModificationModel.builder()
                                 .modificationType(OperationalLimitsGroupModificationType.ADD)
                                 .id("newOpLG2")
                                 .applicability(SIDE2)
                                 .limitsProperties(Collections.emptyList())
                                 .currentLimits(
-                                        CurrentLimitsModificationInfos.builder()
+                                        CurrentLimitsModificationModel.builder()
                                                 .permanentLimit(22.0)
                                                 .temporaryLimits(
-                                                        List.of(CurrentTemporaryLimitModificationInfos.builder()
+                                                        List.of(CurrentTemporaryLimitModificationModel.builder()
                                                                 .modificationType(TemporaryLimitModificationType.ADD)
                                                                 .acceptableDuration(toAttributeModification(32, OperationType.SET))
                                                                 .name(toAttributeModification("name32", OperationType.SET))
@@ -131,15 +142,15 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                                                 .build())
                                                 ).build()
                                 ).build(),
-                        OperationalLimitsGroupModificationInfos.builder()
+                        OperationalLimitsGroupModificationModel.builder()
                                 .id("DEFAULT")
-                                .applicability(OperationalLimitsGroupInfos.Applicability.SIDE1)
+                                .applicability(OperationalLimitsGroupModel.Applicability.SIDE1)
                                 .limitsProperties(Collections.emptyList())
                                 .modificationType(OperationalLimitsGroupModificationType.MODIFY)
                                 .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACE)
-                                .currentLimits(CurrentLimitsModificationInfos.builder()
+                                .currentLimits(CurrentLimitsModificationModel.builder()
                                         .temporaryLimits(List.of(
-                                                CurrentTemporaryLimitModificationInfos.builder()
+                                                CurrentTemporaryLimitModificationModel.builder()
                                                         .modificationType(TemporaryLimitModificationType.REPLACE)
                                                         .name(toAttributeModification("test1", OperationType.SET))
                                                         .acceptableDuration(toAttributeModification(2, OperationType.SET))
@@ -148,12 +159,12 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                         )).build())
                                 .build()
                 ))
-                .lineSegments(List.of(new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", "50", null),
-                    new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", null, 0.95)))
+                .lineSegments(List.of(new LineSegmentModel(UUID.randomUUID().toString(), 1, "1", "50", null),
+                    new LineSegmentModel(UUID.randomUUID().toString(), 1, "1", null, 0.95)))
                 .applySegmentsLimits(true)
                 .selectedOperationalLimitsGroupId1(new AttributeModification<>("newOpLG1", OperationType.SET))
                 .selectedOperationalLimitsGroupId2(new AttributeModification<>("newOpLG2", OperationType.SET))
-                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
+                .properties(List.of(FreePropertyModel.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -170,15 +181,15 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .g2(new AttributeModification<>(13.1, OperationType.SET))
                 .b2(new AttributeModification<>(14.1, OperationType.SET))
                 .enableOLGModification(true)
-                .operationalLimitsGroups(List.of(OperationalLimitsGroupModificationInfos.builder()
+                .operationalLimitsGroups(List.of(OperationalLimitsGroupModificationModel.builder()
                         .id("DEFAULT")
-                        .applicability(OperationalLimitsGroupInfos.Applicability.SIDE1)
+                        .applicability(OperationalLimitsGroupModel.Applicability.SIDE1)
                         .limitsProperties(Collections.emptyList())
                         .modificationType(OperationalLimitsGroupModificationType.MODIFY)
                         .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACE)
-                        .currentLimits(CurrentLimitsModificationInfos.builder()
+                        .currentLimits(CurrentLimitsModificationModel.builder()
                                 .temporaryLimits(List.of(
-                                        CurrentTemporaryLimitModificationInfos.builder()
+                                        CurrentTemporaryLimitModificationModel.builder()
                                                 .modificationType(TemporaryLimitModificationType.REPLACE)
                                                 .name(toAttributeModification("test2", OperationType.SET))
                                                 .acceptableDuration(toAttributeModification(2, OperationType.SET))

@@ -9,8 +9,8 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.model.EquipmentModificationModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import java.util.ArrayList;
@@ -30,18 +30,23 @@ public class EquipmentModificationEntity extends ModificationEntity {
     @OrderColumn(name = "insert_position")
     private List<FreePropertyEntity> properties = new ArrayList<>();
 
-    protected EquipmentModificationEntity(EquipmentModificationInfos equipmentModificationInfos) {
+    protected EquipmentModificationEntity(ModificationInfos equipmentModificationInfos) {
         super(equipmentModificationInfos);
-        assignAttributes(equipmentModificationInfos);
+        assignAttributes((EquipmentModificationModel) equipmentModificationInfos.toModel());
+    }
+
+    protected EquipmentModificationEntity(EquipmentModificationModel modificationModel) {
+        super();
+        assignAttributes(modificationModel);
     }
 
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((EquipmentModificationInfos) modificationInfos);
+        assignAttributes((EquipmentModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(EquipmentModificationInfos equipmentModificationInfos) {
+    private void assignAttributes(EquipmentModificationModel equipmentModificationInfos) {
         equipmentId = equipmentModificationInfos.getEquipmentId();
         List<FreePropertyEntity> newProperties = equipmentModificationInfos.getProperties() == null ? new ArrayList<>() :
             equipmentModificationInfos.getProperties().stream()

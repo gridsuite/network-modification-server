@@ -7,13 +7,14 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.LoadType;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.LoadCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 
-import jakarta.persistence.*;
+import org.gridsuite.modification.model.LoadCreationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -35,18 +36,18 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     @Column(name = "q0")
     private double q0;
 
-    public LoadCreationEntity(@NonNull LoadCreationInfos loadCreationInfos) {
+    public LoadCreationEntity(@NonNull ModificationInfos loadCreationInfos) {
         super(loadCreationInfos);
-        assignAttributes(loadCreationInfos);
+        assignAttributes((LoadCreationModel) loadCreationInfos.toModel());
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((LoadCreationInfos) modificationInfos);
+        assignAttributes((LoadCreationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(LoadCreationInfos loadCreationInfos) {
+    private void assignAttributes(LoadCreationModel loadCreationInfos) {
         loadType = loadCreationInfos.getLoadType();
         p0 = loadCreationInfos.getP0();
         q0 = loadCreationInfos.getQ0();
@@ -81,7 +82,7 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                 getProperties().stream()
-                    .map(FreePropertyEntity::toInfos)
+                    .map(FreePropertyEntity::toModel)
                     .toList());
     }
 }
