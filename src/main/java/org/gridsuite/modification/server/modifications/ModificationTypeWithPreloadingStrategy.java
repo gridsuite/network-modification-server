@@ -68,7 +68,8 @@ public enum ModificationTypeWithPreloadingStrategy {
     CREATE_VOLTAGE_LEVEL_TOPOLOGY(ModificationType.CREATE_VOLTAGE_LEVEL_TOPOLOGY, PreloadingStrategy.NONE),
     LIMIT_SETS_TABULAR_MODIFICATION(ModificationType.LIMIT_SETS_TABULAR_MODIFICATION, PreloadingStrategy.COLLECTION),
     CREATE_VOLTAGE_LEVEL_SECTION(ModificationType.CREATE_VOLTAGE_LEVEL_SECTION, PreloadingStrategy.NONE),
-    MOVE_VOLTAGE_LEVEL_FEEDER_BAYS(ModificationType.MOVE_VOLTAGE_LEVEL_FEEDER_BAYS, PreloadingStrategy.NONE);
+    MOVE_VOLTAGE_LEVEL_FEEDER_BAYS(ModificationType.MOVE_VOLTAGE_LEVEL_FEEDER_BAYS, PreloadingStrategy.NONE),
+    MODIFICATION_REFERENCE(ModificationType.MODIFICATION_REFERENCE, PreloadingStrategy.COLLECTION);
 
     private final ModificationType type;
     private final PreloadingStrategy strategy;
