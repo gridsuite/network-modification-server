@@ -152,7 +152,7 @@ public class LineModificationEntity extends BranchModificationEntity {
             .q2MeasurementValidity(toAttributeModification(getQ2MeasurementValidity()))
             .lineSegments(LineSegmentEntity.fromLineSegmentsEntity(getLineSegments()))
             .applySegmentsLimits(isApplySegmentsLimits())
-             // properties
+            // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toModel)

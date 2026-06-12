@@ -190,7 +190,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
-        TestUtils.assertRequestsCount(20, 9, 2, 0); // (95, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        // (95, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        TestUtils.assertRequestsCount(20, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -243,7 +244,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
-        TestUtils.assertRequestsCount(20, 9, 2, 0); // (107, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        // (107, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        TestUtils.assertRequestsCount(20, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -295,7 +297,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
-        TestUtils.assertRequestsCount(19, 9, 2, 0); // (26, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        // (26, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        TestUtils.assertRequestsCount(19, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 

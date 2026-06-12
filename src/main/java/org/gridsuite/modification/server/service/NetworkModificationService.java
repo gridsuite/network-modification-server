@@ -284,7 +284,8 @@ public class NetworkModificationService {
             networkModificationRepository.getModificationsCount(groupUuid, false));
     }
 
-    public CompletableFuture<NetworkModificationsResult> createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo, @NonNull List<ModificationApplicationContext> applicationContexts) {
+    public CompletableFuture<NetworkModificationsResult> createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo,
+            @NonNull List<ModificationApplicationContext> applicationContexts) {
         List<ModificationInfos> modifications = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(groupUuid, modifications, applicationContexts).thenApply(results ->
@@ -294,7 +295,8 @@ public class NetworkModificationService {
     /**
      * Apply modifications on several networks
      */
-    private CompletableFuture<List<Optional<NetworkModificationResult>>> applyModifications(UUID groupUuid, List<ModificationInfos> modifications, List<ModificationApplicationContext> applicationContexts) {
+    private CompletableFuture<List<Optional<NetworkModificationResult>>> applyModifications(UUID groupUuid, List<ModificationInfos> modifications,
+            List<ModificationApplicationContext> applicationContexts) {
         // Do we want to do these all in parallel (CompletableFuture.allOf) or sequentially (like in Flux.concatMap) or something in between ?
         // sequentially like before for now
         return scheduleApplyModifications(
@@ -389,7 +391,8 @@ public class NetworkModificationService {
         // FullDto needed for toModificationInfos() after the modifications have been applied
         List<ModificationInfos> modifications = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
 
-        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = applyModifications && !modifications.isEmpty() ? applyModifications(destinationGroupUuid, modifications, applicationContexts) : CompletableFuture.completedFuture(List.of());
+        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = applyModifications && !modifications.isEmpty() ? applyModifications(destinationGroupUuid, modifications,
+                applicationContexts) : CompletableFuture.completedFuture(List.of());
         return futureResult.thenApply(result -> new NetworkModificationsResult(modifications.stream().map(ModificationInfos::getUuid).toList(), result));
     }
 
@@ -441,7 +444,8 @@ public class NetworkModificationService {
         return CompletableFuture.completedFuture(Optional.empty());
     }
 
-    public CompletableFuture<NetworkModificationsResult> duplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
+    public CompletableFuture<NetworkModificationsResult> duplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids,
+            @NonNull List<ModificationApplicationContext> applicationContexts) {
         if (originGroupUuid != null && !modificationsUuids.isEmpty()) { // Duplicate modifications from a group or from a list only
             throw new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID);
         }
@@ -536,7 +540,8 @@ public class NetworkModificationService {
         return groupSearchResultsByGroupUuid(filteredSearchModificationsResult, rawSearchModificationInfos);
     }
 
-    private Map<UUID, List<ModificationsSearchResult>> groupSearchResultsByGroupUuid(List<ModificationsSearchResult> modificationsSearchResults, List<ModificationApplicationInfos> modificationApplicationInfos) {
+    private Map<UUID, List<ModificationsSearchResult>> groupSearchResultsByGroupUuid(List<ModificationsSearchResult> modificationsSearchResults,
+            List<ModificationApplicationInfos> modificationApplicationInfos) {
         Map<UUID, UUID> modificationToGroupMap = modificationApplicationInfos.stream()
                 .collect(Collectors.toMap(
                         ModificationApplicationInfos::getModificationUuid,

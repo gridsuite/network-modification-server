@@ -125,53 +125,62 @@ public class VoltageInitModificationEntity extends ModificationEntity {
 
     public static List<VoltageInitTransformerModificationEmbeddable> toEmbeddableVoltageInitTransformers(List<VoltageInitTransformerModificationModel> transformers) {
         return transformers == null ? null : transformers.stream()
-            .map(transformer -> new VoltageInitTransformerModificationEmbeddable(transformer.getTransformerId(), transformer.getRatioTapChangerPosition(), transformer.getRatioTapChangerTargetV(), transformer.getLegSide()))
+            .map(transformer -> new VoltageInitTransformerModificationEmbeddable(transformer.getTransformerId(), transformer.getRatioTapChangerPosition(),
+                    transformer.getRatioTapChangerTargetV(), transformer.getLegSide()))
             .collect(Collectors.toList());
     }
 
     private List<VoltageInitTransformerModificationModel> toTransformersModification(List<VoltageInitTransformerModificationEmbeddable> transformers) {
         return transformers != null ? transformers
             .stream()
-            .map(transformer -> new VoltageInitTransformerModificationModel(transformer.getTransformerId(), transformer.getRatioTapChangerPosition(), transformer.getRatioTapChangerTargetV(), transformer.getLegSide()))
+            .map(transformer -> new VoltageInitTransformerModificationModel(transformer.getTransformerId(), transformer.getRatioTapChangerPosition(),
+                    transformer.getRatioTapChangerTargetV(), transformer.getLegSide()))
             .collect(Collectors.toList()) : null;
     }
 
-    public static List<VoltageInitStaticVarCompensatorModificationEmbeddable> toEmbeddableVoltageInitStaticVarCompensators(List<VoltageInitStaticVarCompensatorModificationModel> staticVarCompensators) {
+    public static List<VoltageInitStaticVarCompensatorModificationEmbeddable> toEmbeddableVoltageInitStaticVarCompensators(
+            List<VoltageInitStaticVarCompensatorModificationModel> staticVarCompensators) {
         return staticVarCompensators == null ? null : staticVarCompensators.stream()
-            .map(staticVarCompensator -> new VoltageInitStaticVarCompensatorModificationEmbeddable(staticVarCompensator.getStaticVarCompensatorId(), staticVarCompensator.getVoltageSetpoint(), staticVarCompensator.getReactivePowerSetpoint()))
+            .map(staticVarCompensator -> new VoltageInitStaticVarCompensatorModificationEmbeddable(staticVarCompensator.getStaticVarCompensatorId(),
+                    staticVarCompensator.getVoltageSetpoint(), staticVarCompensator.getReactivePowerSetpoint()))
             .collect(Collectors.toList());
     }
 
     private List<VoltageInitStaticVarCompensatorModificationModel> toStaticVarCompensatorsModification(List<VoltageInitStaticVarCompensatorModificationEmbeddable> staticVarCompensators) {
         return staticVarCompensators != null ? staticVarCompensators
             .stream()
-            .map(staticVarCompensator -> new VoltageInitStaticVarCompensatorModificationModel(staticVarCompensator.getStaticVarCompensatorId(), staticVarCompensator.getVoltageSetpoint(), staticVarCompensator.getReactivePowerSetpoint()))
+            .map(staticVarCompensator -> new VoltageInitStaticVarCompensatorModificationModel(staticVarCompensator.getStaticVarCompensatorId(),
+                    staticVarCompensator.getVoltageSetpoint(), staticVarCompensator.getReactivePowerSetpoint()))
             .collect(Collectors.toList()) : null;
     }
 
     public static List<VoltageInitVscConverterStationModificationEmbeddable> toEmbeddableVoltageInitVscConverterStations(List<VoltageInitVscConverterStationModificationModel> vscConverterStations) {
         return vscConverterStations == null ? null : vscConverterStations.stream()
-            .map(vscConverterStation -> new VoltageInitVscConverterStationModificationEmbeddable(vscConverterStation.getVscConverterStationId(), vscConverterStation.getVoltageSetpoint(), vscConverterStation.getReactivePowerSetpoint()))
+            .map(vscConverterStation -> new VoltageInitVscConverterStationModificationEmbeddable(vscConverterStation.getVscConverterStationId(),
+                    vscConverterStation.getVoltageSetpoint(), vscConverterStation.getReactivePowerSetpoint()))
             .collect(Collectors.toList());
     }
 
     private List<VoltageInitVscConverterStationModificationModel> toVscConverterStationsModification(List<VoltageInitVscConverterStationModificationEmbeddable> vscConverterStations) {
         return vscConverterStations != null ? vscConverterStations
             .stream()
-            .map(vscConverterStation -> new VoltageInitVscConverterStationModificationModel(vscConverterStation.getVscConverterStationId(), vscConverterStation.getVoltageSetpoint(), vscConverterStation.getReactivePowerSetpoint()))
+            .map(vscConverterStation -> new VoltageInitVscConverterStationModificationModel(vscConverterStation.getVscConverterStationId(),
+                    vscConverterStation.getVoltageSetpoint(), vscConverterStation.getReactivePowerSetpoint()))
             .collect(Collectors.toList()) : null;
     }
 
     public static List<VoltageInitShuntCompensatorModificationEmbeddable> toEmbeddableVoltageInitShuntCompensators(List<VoltageInitShuntCompensatorModificationModel> shuntCompensators) {
         return shuntCompensators == null ? null : shuntCompensators.stream()
-            .map(shuntCompensator -> new VoltageInitShuntCompensatorModificationEmbeddable(shuntCompensator.getShuntCompensatorId(), shuntCompensator.getSectionCount(), shuntCompensator.getConnect(), shuntCompensator.getTargetV()))
+            .map(shuntCompensator -> new VoltageInitShuntCompensatorModificationEmbeddable(shuntCompensator.getShuntCompensatorId(),
+                    shuntCompensator.getSectionCount(), shuntCompensator.getConnect(), shuntCompensator.getTargetV()))
             .collect(Collectors.toList());
     }
 
     private List<VoltageInitShuntCompensatorModificationModel> toShuntCompensatorsModification(List<VoltageInitShuntCompensatorModificationEmbeddable> shuntCompensators) {
         return shuntCompensators != null ? shuntCompensators
             .stream()
-            .map(shuntCompensator -> new VoltageInitShuntCompensatorModificationModel(shuntCompensator.getShuntCompensatorId(), shuntCompensator.getSectionCount(), shuntCompensator.getConnect(), shuntCompensator.getTargetV()))
+            .map(shuntCompensator -> new VoltageInitShuntCompensatorModificationModel(shuntCompensator.getShuntCompensatorId(),
+                    shuntCompensator.getSectionCount(), shuntCompensator.getConnect(), shuntCompensator.getTargetV()))
             .collect(Collectors.toList()) : null;
     }
 

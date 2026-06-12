@@ -85,7 +85,8 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     private DoubleModificationEmbedded maxQ;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "reactiveCapabilityCurve")), @AttributeOverride(name = "opType", column = @Column(name = "reactiveCapabilityCurveOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "reactiveCapabilityCurve")), @AttributeOverride(name = "opType",
+            column = @Column(name = "reactiveCapabilityCurveOp"))
     })
     private BooleanModificationEmbedded reactiveCapabilityCurve;
 

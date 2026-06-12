@@ -51,6 +51,7 @@ public class CurrentLimitsModificationEntity {
     }
 
     public CurrentLimitsModificationEntity(CurrentLimitsModificationModel currentLimitsModificationInfos) {
-        this(null, currentLimitsModificationInfos.getPermanentLimit(), CurrentTemporaryLimitModificationEmbeddable.toEmbeddableCurrentTemporaryLimits(currentLimitsModificationInfos.getTemporaryLimits()));
+        this(null, currentLimitsModificationInfos.getPermanentLimit(),
+                CurrentTemporaryLimitModificationEmbeddable.toEmbeddableCurrentTemporaryLimits(currentLimitsModificationInfos.getTemporaryLimits()));
     }
 }

@@ -173,8 +173,10 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         List<TapChangerStepCreationEmbeddable> ratioTapChangerSteps = new ArrayList<>();
         List<TapChangerStepCreationEmbeddable> phaseTapChangerSteps = new ArrayList<>();
         if (getTapChangerSteps() != null && getTapChangerSteps().size() > 0) {
-            ratioTapChangerSteps = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.RATIO)).sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
-            phaseTapChangerSteps = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.PHASE)).sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
+            ratioTapChangerSteps = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.RATIO)).sorted(Comparator.comparing(
+                    TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
+            phaseTapChangerSteps = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.PHASE)).sorted(Comparator.comparing(
+                    TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
         }
 
         TwoWindingsTransformerCreationInfos.TwoWindingsTransformerCreationInfosBuilder<?, ?> builder = TwoWindingsTransformerCreationInfos

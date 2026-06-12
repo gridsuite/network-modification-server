@@ -26,6 +26,7 @@ import static org.gridsuite.modification.model.AttributeModification.toAttribute
 /**
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
  */
+
 @NoArgsConstructor
 @Getter
 @Entity

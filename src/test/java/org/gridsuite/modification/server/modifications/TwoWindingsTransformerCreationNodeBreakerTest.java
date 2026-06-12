@@ -83,7 +83,8 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
                             ).build()
                         ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
                         OperationalLimitsGroupModel.builder().id("olg2").currentLimits(
-                            CurrentLimitsModel.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationModel.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
+                            CurrentLimitsModel.builder().permanentLimit(2.).temporaryLimits(List.of(
+                                    CurrentTemporaryLimitCreationModel.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
                         ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )
                 )
@@ -198,10 +199,12 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
                 .operationalLimitsGroups(
                     List.of(
                         OperationalLimitsGroupModel.builder().currentLimits(
-                            CurrentLimitsModel.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationModel.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
+                            CurrentLimitsModel.builder().permanentLimit(3.).temporaryLimits(List.of(
+                                    CurrentTemporaryLimitCreationModel.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
                         ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
                         OperationalLimitsGroupModel.builder().currentLimits(
-                            CurrentLimitsModel.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationModel.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
+                            CurrentLimitsModel.builder().permanentLimit(2.).temporaryLimits(List.of(
+                                    CurrentTemporaryLimitCreationModel.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
                         ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )
                 )
@@ -376,7 +379,18 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos2, 2);
 
         assertEquals(
-            "TwoWindingsTransformerCreationInfos(super=TwoWindingsTransformerCreationModel(super=BranchCreationModel(super=EquipmentCreationModel(super=EquipmentModificationModel(super=ModificationModel(type=TWO_WINDINGS_TRANSFORMER_CREATION), equipmentId=id2wt1WithRatioTapChanger2, properties=null), equipmentName=2wtName), r=400.0, x=300.0, voltageLevelId1=v1, voltageLevelId2=v4, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1.A, operationalLimitsGroups=null, selectedOperationalLimitsGroupId1=null, selectedOperationalLimitsGroupId2=null, connectionName1=null, connectionDirection1=TOP, connectionName2=null, connectionDirection2=TOP, connectionPosition1=null, connectionPosition2=null, connected1=true, connected2=true), g=100.0, b=200.0, ratedU1=1000.0, ratedU2=1010.0, ratedS=null, ratioTapChanger=RatioTapChangerCreationModel(super=TapChangerCreationModel(lowTapPosition=0, tapPosition=1, regulating=true, targetDeadband=null, terminalRefConnectableId=v1load, terminalRefConnectableType=LOAD, terminalRefConnectableVlId=v1, steps=[TapChangerStepCreationModel(index=0, rho=1.0, r=39.78473, x=39.784725, g=0.0, b=0.0, alpha=0.0), TapChangerStepCreationModel(index=0, rho=1.0, r=39.78474, x=39.784726, g=0.0, b=0.0, alpha=0.0), TapChangerStepCreationModel(index=0, rho=1.0, r=39.78475, x=39.784727, g=0.0, b=0.0, alpha=0.0)], loadTapChangingCapabilities=true), targetV=220.0), phaseTapChanger=null), uuid=null, date=null, stashed=false, activated=null, description=a dummy description)",
+            "TwoWindingsTransformerCreationInfos(super=TwoWindingsTransformerCreationModel(super=BranchCreationModel" +
+                "(super=EquipmentCreationModel(super=EquipmentModificationModel(super=ModificationModel(type=TWO_WINDINGS_TRANSFORMER_CREATION), " +
+                "equipmentId=id2wt1WithRatioTapChanger2, properties=null), equipmentName=2wtName), r=400.0, x=300.0, voltageLevelId1=v1, " +
+                "voltageLevelId2=v4, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1.A, operationalLimitsGroups=null, " +
+                "selectedOperationalLimitsGroupId1=null, selectedOperationalLimitsGroupId2=null, connectionName1=null, connectionDirection1=TOP, " +
+                "connectionName2=null, connectionDirection2=TOP, connectionPosition1=null, connectionPosition2=null, connected1=true, connected2=true), " +
+                "g=100.0, b=200.0, ratedU1=1000.0, ratedU2=1010.0, ratedS=null, ratioTapChanger=RatioTapChangerCreationModel(super=TapChangerCreationModel(" +
+                "lowTapPosition=0, tapPosition=1, regulating=true, targetDeadband=null, terminalRefConnectableId=v1load, terminalRefConnectableType=LOAD, " +
+                "terminalRefConnectableVlId=v1, steps=[TapChangerStepCreationModel(index=0, rho=1.0, r=39.78473, x=39.784725, g=0.0, b=0.0, alpha=0.0), " +
+                "TapChangerStepCreationModel(index=0, rho=1.0, r=39.78474, x=39.784726, g=0.0, b=0.0, alpha=0.0), TapChangerStepCreationModel(index=0, " +
+                "rho=1.0, r=39.78475, x=39.784727, g=0.0, b=0.0, alpha=0.0)], loadTapChangingCapabilities=true), targetV=220.0), phaseTapChanger=null), " +
+                "uuid=null, date=null, stashed=false, activated=null, description=a dummy description)",
             twoWindingsTransformerCreationInfos2.toString()
         );
 

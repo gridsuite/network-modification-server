@@ -316,8 +316,10 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.ratedU1 = twoWindingsTransformerModificationInfos.getRatedU1() != null ? new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedU1()) : null;
         this.ratedU2 = twoWindingsTransformerModificationInfos.getRatedU2() != null ? new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedU2()) : null;
         this.ratedS = twoWindingsTransformerModificationInfos.getRatedS() != null ? new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedS()) : null;
-        this.phaseTapChangerToBeEstimated = twoWindingsTransformerModificationInfos.getPhaseTapChangerToBeEstimated() != null ? new BooleanModificationEmbedded(twoWindingsTransformerModificationInfos.getPhaseTapChangerToBeEstimated()) : null;
-        this.ratioTapChangerToBeEstimated = twoWindingsTransformerModificationInfos.getRatioTapChangerToBeEstimated() != null ? new BooleanModificationEmbedded(twoWindingsTransformerModificationInfos.getRatioTapChangerToBeEstimated()) : null;
+        this.phaseTapChangerToBeEstimated = twoWindingsTransformerModificationInfos.getPhaseTapChangerToBeEstimated() != null ? new BooleanModificationEmbedded(
+                twoWindingsTransformerModificationInfos.getPhaseTapChangerToBeEstimated()) : null;
+        this.ratioTapChangerToBeEstimated = twoWindingsTransformerModificationInfos.getRatioTapChangerToBeEstimated() != null ? new BooleanModificationEmbedded(
+                twoWindingsTransformerModificationInfos.getRatioTapChangerToBeEstimated()) : null;
         this.tapChangerSteps = new ArrayList<>();
         assignTapChangers(twoWindingsTransformerModificationInfos);
     }
@@ -336,9 +338,11 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.ratioTapChangerRegulating = ratioTapChanger.getRegulating() != null ? new BooleanModificationEmbedded(ratioTapChanger.getRegulating()) : null;
         this.ratioTapChangerTargetDeadband = ratioTapChanger.getTargetDeadband() != null ? new DoubleModificationEmbedded(ratioTapChanger.getTargetDeadband()) : null;
         this.ratioTapChangerTerminalRefConnectableId = ratioTapChanger.getTerminalRefConnectableId() != null ? new StringModificationEmbedded(ratioTapChanger.getTerminalRefConnectableId()) : null;
-        this.ratioTapChangerTerminalRefVoltageLevelId = ratioTapChanger.getTerminalRefConnectableVlId() != null ? new StringModificationEmbedded(ratioTapChanger.getTerminalRefConnectableVlId()) : null;
+        this.ratioTapChangerTerminalRefVoltageLevelId = ratioTapChanger.getTerminalRefConnectableVlId() != null ? new StringModificationEmbedded(ratioTapChanger.getTerminalRefConnectableVlId())
+                : null;
         this.ratioTapChangerTerminalRefType = ratioTapChanger.getTerminalRefConnectableType() != null ? new StringModificationEmbedded(ratioTapChanger.getTerminalRefConnectableType()) : null;
-        this.ratioTapChangerLoadTapChangingCapabilities = ratioTapChanger.getLoadTapChangingCapabilities() != null ? new BooleanModificationEmbedded(ratioTapChanger.getLoadTapChangingCapabilities()) : null;
+        this.ratioTapChangerLoadTapChangingCapabilities = ratioTapChanger.getLoadTapChangingCapabilities() != null ? new BooleanModificationEmbedded(ratioTapChanger.getLoadTapChangingCapabilities())
+                : null;
         this.ratioTapChangerTargetV = ratioTapChanger.getTargetV() != null ? new DoubleModificationEmbedded(ratioTapChanger.getTargetV()) : null;
         if (ratioTapChanger.getSteps() != null) {
             this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(ratioTapChanger.getSteps()));
@@ -355,10 +359,12 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.phaseTapChangerTapPosition = phaseTapChanger.getTapPosition() != null ? new IntegerModificationEmbedded(phaseTapChanger.getTapPosition()) : null;
         this.phaseTapChangerTargetDeadband = phaseTapChanger.getTargetDeadband() != null ? new DoubleModificationEmbedded(phaseTapChanger.getTargetDeadband()) : null;
         this.phaseTapChangerTerminalRefConnectableId = phaseTapChanger.getTerminalRefConnectableId() != null ? new StringModificationEmbedded(phaseTapChanger.getTerminalRefConnectableId()) : null;
-        this.phaseTapChangerTerminalRefVoltageLevelId = phaseTapChanger.getTerminalRefConnectableVlId() != null ? new StringModificationEmbedded(phaseTapChanger.getTerminalRefConnectableVlId()) : null;
+        this.phaseTapChangerTerminalRefVoltageLevelId = phaseTapChanger.getTerminalRefConnectableVlId() != null ? new StringModificationEmbedded(phaseTapChanger.getTerminalRefConnectableVlId())
+                : null;
         this.phaseTapChangerTerminalRefType = phaseTapChanger.getTerminalRefConnectableType() != null ? new StringModificationEmbedded(phaseTapChanger.getTerminalRefConnectableType()) : null;
         this.phaseTapChangerRegulating = phaseTapChanger.getRegulating() != null ? new BooleanModificationEmbedded(phaseTapChanger.getRegulating()) : null;
-        this.phaseTapChangerLoadTapChangingCapabilities = phaseTapChanger.getLoadTapChangingCapabilities() != null ? new BooleanModificationEmbedded(phaseTapChanger.getLoadTapChangingCapabilities()) : null;
+        this.phaseTapChangerLoadTapChangingCapabilities = phaseTapChanger.getLoadTapChangingCapabilities() != null ? new BooleanModificationEmbedded(phaseTapChanger.getLoadTapChangingCapabilities())
+                : null;
         if (phaseTapChanger.getSteps() != null) {
             this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddablePhaseTapChangerSteps(phaseTapChanger.getSteps()));
         }
@@ -374,7 +380,8 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         List<TapChangerStepCreationEmbeddable> ratioTapChangerStepsEmbeddable = null;
         List<TapChangerStepCreationEmbeddable> phaseTapChangerStepsEmbeddable = null;
         if (getTapChangerSteps() != null && getTapChangerSteps().size() > 0) {
-            Map<TapChangerType, List<TapChangerStepCreationEmbeddable>> tapChangerStepsMap = getTapChangerSteps().stream().sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.groupingBy(TapChangerStepCreationEmbeddable::getTapChangerType));
+            Map<TapChangerType, List<TapChangerStepCreationEmbeddable>> tapChangerStepsMap = getTapChangerSteps().stream().sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex))
+                    .collect(Collectors.groupingBy(TapChangerStepCreationEmbeddable::getTapChangerType));
             ratioTapChangerStepsEmbeddable = tapChangerStepsMap.get(TapChangerType.RATIO);
             phaseTapChangerStepsEmbeddable = tapChangerStepsMap.get(TapChangerType.PHASE);
 

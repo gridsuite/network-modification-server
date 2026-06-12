@@ -232,8 +232,10 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
         this.busOrBusbarSectionId2 = branchModificationInfos.getBusOrBusbarSectionId2() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId2()) : null;
         this.connectionName1 = branchModificationInfos.getConnectionName1() != null ? new StringModificationEmbedded(branchModificationInfos.getConnectionName1()) : null;
         this.connectionName2 = branchModificationInfos.getConnectionName2() != null ? new StringModificationEmbedded(branchModificationInfos.getConnectionName2()) : null;
-        this.selectedOperationalLimitsGroupId1 = branchModificationInfos.getSelectedOperationalLimitsGroupId1() != null ? new StringModificationEmbedded(branchModificationInfos.getSelectedOperationalLimitsGroupId1()) : null;
-        this.selectedOperationalLimitsGroupId2 = branchModificationInfos.getSelectedOperationalLimitsGroupId2() != null ? new StringModificationEmbedded(branchModificationInfos.getSelectedOperationalLimitsGroupId2()) : null;
+        this.selectedOperationalLimitsGroupId1 = branchModificationInfos.getSelectedOperationalLimitsGroupId1() != null ? new StringModificationEmbedded(
+                branchModificationInfos.getSelectedOperationalLimitsGroupId1()) : null;
+        this.selectedOperationalLimitsGroupId2 = branchModificationInfos.getSelectedOperationalLimitsGroupId2() != null ? new StringModificationEmbedded(
+                branchModificationInfos.getSelectedOperationalLimitsGroupId2()) : null;
         this.connectionDirection1 = branchModificationInfos.getConnectionDirection1() != null ? new EnumModificationEmbedded<>(branchModificationInfos.getConnectionDirection1()) : null;
         this.connectionDirection2 = branchModificationInfos.getConnectionDirection2() != null ? new EnumModificationEmbedded<>(branchModificationInfos.getConnectionDirection2()) : null;
         this.connectionPosition1 = branchModificationInfos.getConnectionPosition1() != null ? new IntegerModificationEmbedded(branchModificationInfos.getConnectionPosition1()) : null;

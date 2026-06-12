@@ -166,7 +166,8 @@ class ModificationSearchTest {
 
         // Load creation for equipment Id newLoadId
         LoadCreationInfos loadCreationInfos = createLoadCreationInfos("newLoadId");
-        List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationCreationInfos), ModificationEntity.fromDTO(substationModificationInfos), ModificationEntity.fromDTO(loadCreationInfos)));
+        List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationCreationInfos), ModificationEntity.fromDTO(
+                substationModificationInfos), ModificationEntity.fromDTO(loadCreationInfos)));
 
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator,
                 new ModificationApplicationGroup(groupUuid, modifications, reportInfos),

@@ -165,7 +165,7 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
             .highVoltageSetpoint(getHighVoltageSetpoint())
             .lowVoltageThreshold(getLowVoltageThreshold())
             .highVoltageThreshold(getHighVoltageThreshold())
-             // properties
+            // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toModel)

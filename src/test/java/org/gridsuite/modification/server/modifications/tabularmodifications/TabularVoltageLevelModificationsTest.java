@@ -25,7 +25,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * @author AJELLAL Ali <ali.ajellal@rte-france.com>
+ * @author AJELLAL Ali <ali.ajellal at rte-france.com>
  */
 @Tag("IntegrationTest")
 class TabularVoltageLevelModificationsTest extends AbstractNetworkModificationTest {
@@ -37,8 +37,10 @@ class TabularVoltageLevelModificationsTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                VoltageLevelModificationInfos.builder().equipmentId("v1").nominalV(new AttributeModification<>(300., OperationType.SET)).highVoltageLimit(new AttributeModification<>(400., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(299., OperationType.SET)).build(),
-                VoltageLevelModificationInfos.builder().equipmentId("v2").nominalV(new AttributeModification<>(300., OperationType.SET)).highVoltageLimit(new AttributeModification<>(400., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(299., OperationType.SET)).build()
+                VoltageLevelModificationInfos.builder().equipmentId("v1").nominalV(new AttributeModification<>(300., OperationType.SET)).highVoltageLimit(new AttributeModification<>(400.,
+                        OperationType.SET)).lowVoltageLimit(new AttributeModification<>(299., OperationType.SET)).build(),
+                VoltageLevelModificationInfos.builder().equipmentId("v2").nominalV(new AttributeModification<>(300., OperationType.SET)).highVoltageLimit(new AttributeModification<>(400.,
+                        OperationType.SET)).lowVoltageLimit(new AttributeModification<>(299., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.VOLTAGE_LEVEL_MODIFICATION)
@@ -51,8 +53,10 @@ class TabularVoltageLevelModificationsTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                VoltageLevelModificationInfos.builder().equipmentId("v1").nominalV(new AttributeModification<>(500., OperationType.SET)).highVoltageLimit(new AttributeModification<>(502., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(499., OperationType.SET)).build(),
-                VoltageLevelModificationInfos.builder().equipmentId("v2").nominalV(new AttributeModification<>(500., OperationType.SET)).highVoltageLimit(new AttributeModification<>(502., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(499., OperationType.SET)).build()
+                VoltageLevelModificationInfos.builder().equipmentId("v1").nominalV(new AttributeModification<>(500., OperationType.SET)).highVoltageLimit(new AttributeModification<>(502.,
+                        OperationType.SET)).lowVoltageLimit(new AttributeModification<>(499., OperationType.SET)).build(),
+                VoltageLevelModificationInfos.builder().equipmentId("v2").nominalV(new AttributeModification<>(500., OperationType.SET)).highVoltageLimit(new AttributeModification<>(502.,
+                        OperationType.SET)).lowVoltageLimit(new AttributeModification<>(499., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.VOLTAGE_LEVEL_MODIFICATION)
