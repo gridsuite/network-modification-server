@@ -44,6 +44,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.*;
 
 import static org.gridsuite.modification.ModificationType.COMPOSITE_MODIFICATION;
+import static org.gridsuite.modification.ModificationType.MODIFICATION_METADATA;
 import static org.gridsuite.modification.server.utils.NetworkCreation.VARIANT_ID;
 import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -508,7 +509,7 @@ class CompositeControllerTest {
         List<ModificationInfos> rootModificationsAfterAssemble = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(2, rootModificationsAfterAssemble.size());
         assertEquals(firstCompositeUuid, rootModificationsAfterAssemble.getFirst().getUuid());
-        assertEquals(COMPOSITE_MODIFICATION, rootModificationsAfterAssemble.getFirst().getType());
+        assertEquals(MODIFICATION_METADATA, rootModificationsAfterAssemble.getFirst().getType());
         assertEquals(originalRootModUuids.get(2), rootModificationsAfterAssemble.get(1).getUuid());
 
         // The new composite should contain the assembled modifications in the same order
