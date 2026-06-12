@@ -690,9 +690,14 @@ public class NetworkModificationRepository {
         return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(this::toModificationsInfosOptimized).toList();
     }
 
+    /**
+     * @return references to a shared modification that should be deleted from directory-server
+     */
     @Transactional
-    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids, int stashedModificationCount) {
+    public Map<UUID, UUID> stashNetworkModifications(@NonNull List<UUID> modificationUuids, int stashedModificationCount) {
         int stashModificationOrder = -stashedModificationCount - 1;
+        // elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the composite is at the root level
+        Map<UUID, UUID> referencesToBeDeleted = new HashMap<>();
         List<ModificationEntity> modificationEntities = new ArrayList<>();
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
@@ -702,8 +707,15 @@ public class NetworkModificationRepository {
             modificationEntity.setModificationsOrder(stashModificationOrder);
             modificationEntities.add(modificationEntity);
             stashModificationOrder--;
+
+            if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {
+                // TODO : fetch the composite uuid containing the modificationReference ? null (groupUuid) si je n'en trouve pas ?
+                // bof : montrer à Slimane et en discuter
+                referencesToBeDeleted.putIfAbsent(modificationReference.getReferenceId(), null);
+            }
         }
         this.modificationRepository.saveAll(modificationEntities);
+        return referencesToBeDeleted;
     }
 
     @Transactional
@@ -722,8 +734,9 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids, int unstashedSize) {
+    public Map<UUID, UUID> restoreNetworkModifications(@NonNull List<UUID> modificationUuids, int unstashedSize) {
         int modificationOrder = unstashedSize;
+        Map<UUID, UUID> referencesToBeRecreated = new HashMap<>();
         List<ModificationEntity> modifications = modificationRepository.findAllByIdInReverse(modificationUuids);
         if (modifications.size() != modificationUuids.size()) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
@@ -731,8 +744,15 @@ public class NetworkModificationRepository {
         for (ModificationEntity modification : modifications) {
             modification.setStashed(false);
             modification.setModificationsOrder(modificationOrder++);
+
+            if (modification instanceof ModificationReferenceEntity modificationReference) {
+                // TODO : fetch the composite uuid containing the modificationReference ? null (groupUuid) si je n'en trouve pas ?
+                // bof : montrer à Slimane et en discuter
+                referencesToBeRecreated.putIfAbsent(modificationReference.getReferenceId(), null);
+            }
         }
         this.modificationRepository.saveAll(modifications);
+        return referencesToBeRecreated;
     }
 
     @Transactional

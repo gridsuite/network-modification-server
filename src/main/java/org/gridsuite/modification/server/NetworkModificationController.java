@@ -221,21 +221,26 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(test);
     }
 
+    /**
+     * @return referencesToBeUpdated : in the case of stashing those references will be deleted, in case of unstashing, those references will be recreated
+     */
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE, params = "stashed")
     @Operation(summary = "stash or unstash network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were stashed")
-    public ResponseEntity<Void> stashNetworkModifications(
+    public ResponseEntity<Map<UUID, UUID>> stashNetworkModifications(
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
             @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "stashed", defaultValue = "true") Boolean stashed) {
+        Map<UUID, UUID> referencesToBeUpdated;
         if (Boolean.TRUE.equals(stashed)) {
-            networkModificationService.stashNetworkModifications(groupUuid, networkModificationUuids);
+            referencesToBeUpdated = networkModificationService.stashNetworkModifications(groupUuid, networkModificationUuids);
             networkModificationService.reorderNetworkModifications(groupUuid, Boolean.FALSE);
         } else {
-            networkModificationService.restoreNetworkModifications(groupUuid, networkModificationUuids);
+            referencesToBeUpdated = networkModificationService.restoreNetworkModifications(groupUuid, networkModificationUuids);
             networkModificationService.reorderNetworkModifications(groupUuid, Boolean.TRUE);
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(referencesToBeUpdated);
     }
 
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
