@@ -930,12 +930,10 @@ public class NetworkModificationRepository {
                     referencedCompositeModification.setName(compositeToBeInserted.name());
                     ModificationReferenceInfos newModificationReference = ModificationReferenceInfos.builder()
                             .referenceId(compositeToBeInserted.id())
-                            .referenceType(ModificationReferenceInfos.Type.SAMPLE)
+                            .referenceType(ModificationReferenceInfos.Type.BASIC)
                             .referenceInfos(referencedCompositeModification)
                             .build();
                     newCompositeModifications.add(newModificationReference);
-                    // TODO : ces partagées doivent être référencées dans directory-server
-                    // puis-je appeler directement les endpoints d Slimane d'ici ??
                 }
             } else {
                 // apply the new composite name to the corresponding composite modifications
