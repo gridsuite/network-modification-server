@@ -83,7 +83,6 @@ public final class NetworkCreation {
         return network;
     }
 
-    @SuppressWarnings("checkstyle:MethodLength")
     public static Network create(UUID uuid, boolean createHvdcLine, NetworkFactory networkFactory) {
         Network network = networkFactory.createNetwork(uuid.toString(), "test");
 
@@ -347,8 +346,7 @@ public final class NetworkCreation {
         createSwitch(v2Variant, "dsc21Variant", "disc21Variant", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
         createSwitch(v2Variant, "break21Variant", "break21Variant", SwitchKind.BREAKER, true, false, false, 3, 4);
 
-        createLine(network, "line1Variant", "line1Variant", "v1Variant", "v2Variant", 4, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5, "cn1line1Variant", 1, ConnectablePosition.Direction.TOP, "cn2line1Variant",
-                1, ConnectablePosition.Direction.TOP);
+        createLine(network, "line1Variant", "line1Variant", "v1Variant", "v2Variant", 4, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5, "cn1line1Variant", 1, ConnectablePosition.Direction.TOP, "cn2line1Variant", 1, ConnectablePosition.Direction.TOP);
 
         network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
 

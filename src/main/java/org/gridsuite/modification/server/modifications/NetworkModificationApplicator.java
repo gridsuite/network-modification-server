@@ -107,8 +107,7 @@ public class NetworkModificationApplicator {
             .map(ModificationTypeWithPreloadingStrategy::getStrategy)
             .orElse(PreloadingStrategy.NONE);
 
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService,
-                collectionThreshold);
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
             return largeNetworkModificationExecutionService
                 .supplyAsync(() -> applyAndFlush(modificationInfosGroup, listener));
@@ -158,8 +157,7 @@ public class NetworkModificationApplicator {
                 .map(ModificationTypeWithPreloadingStrategy::getStrategy)
                 .orElse(PreloadingStrategy.NONE);
 
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService,
-                collectionThreshold);
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
             return largeNetworkModificationExecutionService
                 .supplyAsync(() -> applyAndFlush(modificationInfosGroups, listener))
@@ -269,8 +267,7 @@ public class NetworkModificationApplicator {
         }
 
         TypedValue severity = reportNode.getValues().get(ReportConstants.SEVERITY_KEY);
-        if (severity == null || areSeveritiesEquals(severity, TypedValue.TRACE_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DEBUG_SEVERITY) || areSeveritiesEquals(severity,
-                TypedValue.INFO_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DETAIL_SEVERITY)) {
+        if (severity == null || areSeveritiesEquals(severity, TypedValue.TRACE_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DEBUG_SEVERITY) || areSeveritiesEquals(severity, TypedValue.INFO_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DETAIL_SEVERITY)) {
             return ApplicationStatus.ALL_OK;
         } else if (areSeveritiesEquals(severity, TypedValue.WARN_SEVERITY)) {
             return ApplicationStatus.WITH_WARNINGS;

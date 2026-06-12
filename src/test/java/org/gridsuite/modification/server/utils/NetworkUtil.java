@@ -170,8 +170,7 @@ public final class NetworkUtil {
     }
 
     @SuppressWarnings("SameParameterValue")
-    public static void createGenerator(VoltageLevel vl, String id, int node, double targetP, double targetQ, String feederName, int feederOrder, ConnectablePosition.Direction direction, double maxP,
-            double minP) {
+    public static void createGenerator(VoltageLevel vl, String id, int node, double targetP, double targetQ, String feederName, int feederOrder, ConnectablePosition.Direction direction, double maxP, double minP) {
         var g = vl.newGenerator()
             .setId(id)
             .setName(id)
@@ -303,8 +302,7 @@ public final class NetworkUtil {
 
     public static void createShuntCompensator(VoltageLevel vl, String id, String name,
                                                int node, double targetV, double targetDeadband, boolean voltageRegulatorOn,
-                                               int maximumSectionCount, double bPerSection, double gPerSection, int sectionCount, String feederName, int feederOrder,
-                                                       ConnectablePosition.Direction direction) {
+                                               int maximumSectionCount, double bPerSection, double gPerSection, int sectionCount, String feederName, int feederOrder, ConnectablePosition.Direction direction) {
         var sh = vl.newShuntCompensator()
             .setId(id)
             .setName(name)

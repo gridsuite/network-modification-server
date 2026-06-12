@@ -18,7 +18,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 /**
- * @author Seddik Yengui <seddik.yengui at rte-france.com>
+ * @author Seddik Yengui <seddik.yengui at rte-france.com
  */
 
 // Today we don't send notification inside @Transactional block. If this behavior change, we should use @PostCompletion to

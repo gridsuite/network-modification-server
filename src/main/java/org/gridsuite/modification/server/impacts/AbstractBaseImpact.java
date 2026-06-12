@@ -35,9 +35,9 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public abstract class AbstractBaseImpact {
 
+
     public enum ImpactType {
         SIMPLE,
-
         COLLECTION
     }
 

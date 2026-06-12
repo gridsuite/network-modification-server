@@ -88,7 +88,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .maxSusceptance(getMaxSusceptance())
             .maxQAtNominalV(getMaxQAtNominalV())
             .shuntCompensatorType(getShuntCompensatorType())
-            // properties
+             // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toModel)

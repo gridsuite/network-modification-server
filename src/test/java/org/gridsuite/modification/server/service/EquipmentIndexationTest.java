@@ -104,8 +104,7 @@ class EquipmentIndexationTest {
 
         mockMvc.perform(post(URI_NETWORK_MODIF).content(loadCreationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertEquals("v1load_name", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
-        assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals(
-                "v1")));
+        assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals("v1")));
 
         // load modification - assert name modification
         LoadModificationInfos loadModification = ModificationCreation.getModificationLoad("v1Load", null, "v1load_newname", null, null, null, null);
@@ -130,8 +129,7 @@ class EquipmentIndexationTest {
         String loadCreationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadCreationInfos, List.of(getNetworkModificationContext(INITIAL_VARIANT_ID))));
         mockMvc.perform(post(URI_NETWORK_MODIF).content(loadCreationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertEquals("v1load_name", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, INITIAL_VARIANT_ID).get(0).getName());
-        assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, INITIAL_VARIANT_ID).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName()
-                .equals("v1")));
+        assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, INITIAL_VARIANT_ID).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals("v1")));
 
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NEW_VARIANT);
         network.getVariantManager().setWorkingVariant(NEW_VARIANT);
@@ -154,10 +152,10 @@ class EquipmentIndexationTest {
 
     private static IdentifiableType getExtendedIdentifiableType(EquipmentInfos equipmentInfos) {
         String type = equipmentInfos.getType();
-        if ("HVDC_LINE_VSC".equals(type) || "HVDC_LINE_LCC".equals(type)) {
+        if (type.equals("HVDC_LINE_VSC") || type.equals("HVDC_LINE_LCC")) {
             return IdentifiableType.HVDC_LINE;
         }
-        if ("VSC_CONVERTER_STATION".equals(type) || "LCC_CONVERTER_STATION".equals(type)) {
+        if (type.equals("VSC_CONVERTER_STATION") || type.equals("LCC_CONVERTER_STATION")) {
             return IdentifiableType.HVDC_CONVERTER_STATION;
         }
         return IdentifiableType.valueOf(type);
@@ -189,8 +187,7 @@ class EquipmentIndexationTest {
 
         mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertEquals("modifiedGeneratorName", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("idGenerator"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
-        assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("idGenerator"), NETWORK_UUID, NEW_VARIANT).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName()
-                .equals("v2")));
+        assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("idGenerator"), NETWORK_UUID, NEW_VARIANT).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals("v2")));
 
         //then delete the voltage level containing the generator we just modified
         EquipmentDeletionInfos voltageLevelDeletionInfos = EquipmentDeletionInfos.builder().stashed(false).equipmentType(IdentifiableType.VOLTAGE_LEVEL).equipmentId("v2").build();
@@ -200,8 +197,7 @@ class EquipmentIndexationTest {
 
         //check that the generator is also deleted and that it's present in the tombstonedEquipment in elastic
         assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("idGenerator"), NETWORK_UUID, NEW_VARIANT).isEmpty());
-        assertTrue(tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT).stream().anyMatch(tombstonedEquipmentInfos -> tombstonedEquipmentInfos.getId()
-                .equals("idGenerator")));
+        assertTrue(tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT).stream().anyMatch(tombstonedEquipmentInfos -> tombstonedEquipmentInfos.getId().equals("idGenerator")));
 
     }
 
@@ -246,8 +242,7 @@ class EquipmentIndexationTest {
     }
 
     private boolean checkEquipmentHasVoltageLevelWithName(UUID networkUuid, String variantId, String equipmentId, String voltageLevelName) {
-        return equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of(equipmentId), networkUuid, variantId).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals(
-                voltageLevelName));
+        return equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of(equipmentId), networkUuid, variantId).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals(voltageLevelName));
     }
 
     private ModificationApplicationContext getNetworkModificationContext(String variantId) {

@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * @author REHILI Ghazwa <ghazwarhili at gmail.com>
+ * @author REHILI Ghazwa <ghazwarhili@gmail.com>
  */
 
 @NoArgsConstructor

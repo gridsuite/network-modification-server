@@ -86,12 +86,10 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
     }
 
     private void assignAttributes(ShuntCompensatorModificationModel shuntCompensatorModificationInfos) {
-        this.maximumSectionCount = shuntCompensatorModificationInfos.getMaximumSectionCount() != null
-                ? new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getMaximumSectionCount()) : null;
+        this.maximumSectionCount = shuntCompensatorModificationInfos.getMaximumSectionCount() != null ? new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getMaximumSectionCount()) : null;
         this.sectionCount = shuntCompensatorModificationInfos.getSectionCount() != null ? new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getSectionCount()) : null;
         this.maxQAtNominalV = shuntCompensatorModificationInfos.getMaxQAtNominalV() != null ? new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getMaxQAtNominalV()) : null;
-        this.shuntCompensatorType = shuntCompensatorModificationInfos.getShuntCompensatorType() != null
-                ? new EnumModificationEmbedded<>(shuntCompensatorModificationInfos.getShuntCompensatorType()) : null;
+        this.shuntCompensatorType = shuntCompensatorModificationInfos.getShuntCompensatorType() != null ? new EnumModificationEmbedded<>(shuntCompensatorModificationInfos.getShuntCompensatorType()) : null;
         this.maxSusceptance = shuntCompensatorModificationInfos.getMaxSusceptance() != null ? new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getMaxSusceptance()) : null;
     }
 

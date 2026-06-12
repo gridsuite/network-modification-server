@@ -75,12 +75,10 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                 .operationalLimitsGroups(
                     List.of(
                         OperationalLimitsGroupModel.builder().id("olg1").currentLimits(
-                            CurrentLimitsModel.builder().permanentLimit(3.).temporaryLimits(List.of(
-                                    CurrentTemporaryLimitCreationModel.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
+                            CurrentLimitsModel.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationModel.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
                         ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
                         OperationalLimitsGroupModel.builder().id("olg2").currentLimits(
-                            CurrentLimitsModel.builder().permanentLimit(2.).temporaryLimits(List.of(
-                                    CurrentTemporaryLimitCreationModel.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
+                            CurrentLimitsModel.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationModel.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
                         ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )
                 )
@@ -484,3 +482,4 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
         assertEquals("new2wtUpdate", updatedValues.get("equipmentId"));
     }
 }
+

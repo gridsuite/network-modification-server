@@ -512,37 +512,20 @@ class BuildTest {
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
     }
 
-    @SuppressWarnings("checkstyle:MethodLength")
     @Test
     void runBuildTest(final MockWebServer server) throws Exception {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
-        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder()
-                .equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
-        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder()
-                .equipmentId("line1").equipmentAttributeName("operatingStatus").equipmentAttributeValue(OperatingStatus.Status.PLANNED_OUTAGE)
-                .equipmentType(IdentifiableType.LINE).build()));
-        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder()
-                .equipmentId("idGenerator").equipmentAttributeName("targetP").equipmentAttributeValue(50.).equipmentType(IdentifiableType.GENERATOR).build()));
-        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder()
-                .equipmentId("trf1").equipmentAttributeName("ratioTapChanger.tapPosition").equipmentAttributeValue(2)
-                .equipmentType(IdentifiableType.TWO_WINDINGS_TRANSFORMER).build()));
-        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder()
-                .equipmentId("trf6").equipmentAttributeName("phaseTapChanger1.tapPosition").equipmentAttributeValue(0)
-                .equipmentType(IdentifiableType.THREE_WINDINGS_TRANSFORMER).build()));
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("operatingStatus").equipmentAttributeValue(OperatingStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build()));
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("idGenerator").equipmentAttributeName("targetP").equipmentAttributeValue(50.).equipmentType(IdentifiableType.GENERATOR).build()));
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("trf1").equipmentAttributeName("ratioTapChanger.tapPosition").equipmentAttributeValue(2).equipmentType(IdentifiableType.TWO_WINDINGS_TRANSFORMER).build()));
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("trf6").equipmentAttributeName("phaseTapChanger1.tapPosition").equipmentAttributeValue(0).equipmentType(IdentifiableType.THREE_WINDINGS_TRANSFORMER).build()));
 
-        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad").equipmentName("newLoad")
-                .loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("vn")
-                .connectionDirection(ConnectablePosition.Direction.TOP).terminalConnected(true).build()));
-        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad1").equipmentName("newLoad1")
-                .loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("cn1")
-                .connectionDirection(ConnectablePosition.Direction.BOTTOM).terminalConnected(true).build()));
-        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2")
-                .loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("cn2")
-                .connectionDirection(ConnectablePosition.Direction.UNDEFINED).terminalConnected(true).build()));
-        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad3").equipmentName("newLoad3")
-                .loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName(null)
-                .connectionDirection(ConnectablePosition.Direction.UNDEFINED).terminalConnected(true).build()));
+        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad").equipmentName("newLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).terminalConnected(true).build()));
+        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad1").equipmentName("newLoad1").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("cn1").connectionDirection(ConnectablePosition.Direction.BOTTOM).terminalConnected(true).build()));
+        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("cn2").connectionDirection(ConnectablePosition.Direction.UNDEFINED).terminalConnected(true).build()));
+        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad3").equipmentName("newLoad3").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName(null).connectionDirection(ConnectablePosition.Direction.UNDEFINED).terminalConnected(true).build()));
 
         List<FreePropertyModel> properties = List.of(FreePropertyModel.builder().name("DEMO").value("Demo1").build());
         entities1.add(ModificationEntity.fromDTO(SubstationCreationInfos.builder()
@@ -572,10 +555,7 @@ class BuildTest {
                 .connectionPosition(0)
                 .terminalConnected(true)
                 .build()));
-        entities2.add(ModificationEntity.fromDTO(
-                LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").r(1.0).x(2.0).g1(3.0).b1(4.0).g2(5.0).b2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1(
-                        "1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").operationalLimitsGroups(null).connectionName1("cn101").connectionDirection1(
-                                ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).connected1(true).connected2(true).build()));
+        entities2.add(ModificationEntity.fromDTO(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").r(1.0).x(2.0).g1(3.0).b1(4.0).g2(5.0).b2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").operationalLimitsGroups(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).connected1(true).connected2(true).build()));
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
@@ -761,8 +741,7 @@ class BuildTest {
         // (newSubstation is created but transformed to modification type (see NetworkStoreListener::reduceNetworkImpacts))
         // + 3 Equipment deletions ( 1 shunt compensator + 2 switch)
         // = 9
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 9, Set.of(IdentifiableType.LOAD, IdentifiableType.BUSBAR_SECTION, IdentifiableType.SWITCH), Set.of("newSubstation", "s1",
-                "s2"));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 9, Set.of(IdentifiableType.LOAD, IdentifiableType.BUSBAR_SECTION, IdentifiableType.SWITCH), Set.of("newSubstation", "s1", "s2"));
         Message<byte[]> buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
@@ -880,11 +859,8 @@ class BuildTest {
     void runBuildWithStashedModificationsTest(final MockWebServer server) {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
-        entities1.add(ModificationEntity.fromDTO(
-                EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
-        entities1.add(ModificationEntity.fromDTO(
-                LoadCreationInfos.builder().equipmentId("willBeStashedLoad").equipmentName("willBeStashedLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(
-                        10.).q0(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).terminalConnected(true).stashed(true).build()));
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
+        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("willBeStashedLoad").equipmentName("willBeStashedLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).terminalConnected(true).stashed(true).build()));
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
 
@@ -909,11 +885,8 @@ class BuildTest {
     void runBuildWithExcludedModificationsTest(final MockWebServer server) {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
-        entities1.add(ModificationEntity.fromDTO(
-                EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
-        entities1.add(ModificationEntity.fromDTO(
-                LoadCreationInfos.builder().equipmentId("willBeExcludedLoad").equipmentName("willBeExcludedLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(
-                        10.).q0(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).terminalConnected(true).build()));
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
+        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("willBeExcludedLoad").equipmentName("willBeExcludedLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).terminalConnected(true).build()));
 
         List<ModificationInfos> modifications = modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
 
@@ -939,11 +912,8 @@ class BuildTest {
     @Test
     void stopBuildTest() throws Exception {
         List<ModificationEntity> entities = List.of(
-            ModificationEntity.fromDTO(
-                    EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()),
-            ModificationEntity.fromDTO(
-                    EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("operatingStatus").equipmentAttributeValue(
-                            OperatingStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build())
+            ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()),
+            ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("operatingStatus").equipmentAttributeValue(OperatingStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build())
         );
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities);  // save all modification entities in group TEST_GROUP_ID
@@ -988,8 +958,7 @@ class BuildTest {
     @Test
     void runBuildWithReportErrorTest(final MockWebServer server) throws Exception {
         List<ModificationEntity> entities = new ArrayList<>();
-        entities.add(ModificationEntity.fromDTO(
-                EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
+        entities.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
         modificationRepository.saveModifications(TEST_GROUP_ID, entities);
 
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
@@ -1095,8 +1064,7 @@ class BuildTest {
 
         ArgumentCaptor<Message<String>> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
         verify(notificationService, times(1)).emitBuildMessage(messageArgumentCaptor.capture());
-        Assertions.assertThat(messageArgumentCaptor.getValue()).usingRecursiveComparison().ignoringFields("headers.timestamp", "headers.id").isEqualTo(new BuildExecContext(networkUuid, buildInfos,
-                receiver, workflowType, workflowInfos).toMessage(mapper));
+        Assertions.assertThat(messageArgumentCaptor.getValue()).usingRecursiveComparison().ignoringFields("headers.timestamp", "headers.id").isEqualTo(new BuildExecContext(networkUuid, buildInfos, receiver, workflowType, workflowInfos).toMessage(mapper));
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
