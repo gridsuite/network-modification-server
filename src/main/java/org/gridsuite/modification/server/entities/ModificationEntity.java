@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
-import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -105,16 +104,15 @@ public class ModificationEntity {
     }
 
     public final ModificationInfos toModificationMetadataInfos() {
-        ModificationMetadataInfos modificationInfos = new ModificationMetadataInfos();
-        modificationInfos.setUuid(this.id);
-        modificationInfos.setType(ModificationType.valueOf(this.type));
-        modificationInfos.setDate(this.date);
-        modificationInfos.setStashed(this.stashed);
-        modificationInfos.setActivated(this.activated);
-        modificationInfos.setDescription(this.description);
-        modificationInfos.setMessageType(this.messageType);
-        modificationInfos.setMessageValues(this.messageValues);
-        return modificationInfos;
+        return ModificationMetadataInfos.builder()
+            .uuid(this.id)
+            .date(this.date)
+            .stashed(this.stashed)
+            .messageType(this.messageType)
+            .messageValues(this.messageValues)
+            .activated(this.activated)
+            .description(this.description)
+            .build();
     }
 
     public void update(ModificationInfos modificationInfos) {
@@ -132,7 +130,7 @@ public class ModificationEntity {
         if (modificationInfos.getDescription() != null) {
             this.setDescription(modificationInfos.getDescription());
         }
-        this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.toModel().getMapMessageValues()));
+        this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
     }
 
     public static ModificationEntity fromDTO(ModificationInfos dto) {

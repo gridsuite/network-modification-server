@@ -18,6 +18,7 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationMetadataInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -126,16 +127,14 @@ class CompositeControllerTest {
         // get the composite modification (metadata only)
         mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", compositeModificationUuid))
                 .andExpect(status().isOk()).andReturn();
-        Map<UUID, List<ModificationInfos>> compositeModificationsMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        List<ModificationInfos> compositeModificationContent = compositeModificationsMap.get(compositeModificationUuid);
-        assertEquals(modificationsNumber, compositeModificationContent.size());
+        Map<UUID, List<ModificationMetadataInfos>> compositeModificationsMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<ModificationMetadataInfos> compositeMetadataModificationContent = compositeModificationsMap.get(compositeModificationUuid);
+        assertEquals(modificationsNumber, compositeMetadataModificationContent.size());
         for (int i = 0; i < modificationUuids.size(); i++) {
-            assertEquals(modificationInfosList.get(i).getMessageValues(), compositeModificationContent.get(i).getMessageValues());
+            assertEquals(modificationInfosList.get(i).getMessageValues(), compositeMetadataModificationContent.get(i).getMessageValues());
         }
-        assertNotNull(compositeModificationContent.getFirst().getMessageType());
-        assertNotNull(compositeModificationContent.getFirst().getMessageValues());
-        assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.getFirst()).getEquipmentAttributeName());
-        assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.getFirst()).getEquipmentAttributeValue());
+        assertNotNull(compositeMetadataModificationContent.getFirst().getMessageType());
+        assertNotNull(compositeMetadataModificationContent.getFirst().getMessageValues());
 
         // create another composite modification
         List<ModificationInfos> otherModificationList = createSomeSwitchModifications(TEST_GROUP2_ID, modificationsNumber);
@@ -161,7 +160,7 @@ class CompositeControllerTest {
         mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}&onlyMetadata=false", compositeModificationUuid))
                 .andExpect(status().isOk()).andReturn();
         Map<UUID, List<ModificationInfos>> completeMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        compositeModificationContent = completeMap.get(compositeModificationUuid);
+        List<ModificationInfos> compositeModificationContent = completeMap.get(compositeModificationUuid);
         checkCompositeModificationContent(compositeModificationContent);
 
         // Insert the composite modification in the group
@@ -520,11 +519,11 @@ class CompositeControllerTest {
 
         // Identify the inner composite copy and the leaf copy by their type
         UUID actualInnerCompositeUuid = outerSubMods.stream()
-                .filter(m -> COMPOSITE_MODIFICATION == m.getType())
+                .filter(m -> COMPOSITE_MODIFICATION.name().equals(m.getMessageType()))
                 .map(ModificationInfos::getUuid)
                 .findFirst().orElseThrow();
         UUID actualLeaf3Uuid = outerSubMods.stream()
-                .filter(m -> COMPOSITE_MODIFICATION != m.getType())
+                .filter(m -> !COMPOSITE_MODIFICATION.name().equals(m.getMessageType()))
                 .map(ModificationInfos::getUuid)
                 .findFirst().orElseThrow();
 
@@ -635,21 +634,21 @@ class CompositeControllerTest {
                                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                         new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
                 .get(composite0Uuid).stream()
-                .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
+                .filter(m -> COMPOSITE_MODIFICATION.name().equals(m.getMessageType())).map(ModificationInfos::getUuid).findFirst().orElseThrow();
 
         UUID actualComposite2Uuid = mapper.readValue(
                         mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", actualComposite1Uuid))
                                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                         new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
                 .get(actualComposite1Uuid).stream()
-                .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
+                .filter(m -> COMPOSITE_MODIFICATION.name().equals(m.getMessageType())).map(ModificationInfos::getUuid).findFirst().orElseThrow();
 
         UUID actualComposite3Uuid = mapper.readValue(
                         mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", actualComposite2Uuid))
                                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                         new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
                 .get(actualComposite2Uuid).stream()
-                .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
+                .filter(m -> COMPOSITE_MODIFICATION.name().equals(m.getMessageType())).map(ModificationInfos::getUuid).findFirst().orElseThrow();
 
         // Case 1: direct child — move composite1 into composite2 (direct child of composite1)
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",

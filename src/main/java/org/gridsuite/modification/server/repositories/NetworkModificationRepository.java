@@ -456,8 +456,8 @@ public class NetworkModificationRepository {
             .build();
     }
 
-    private CompositeModificationInfos loadCompositeModificationMetadata(ModificationEntity compositeEntity, Integer maxDepth) {
-        return CompositeModificationInfos.builder()
+    private ModificationMetadataInfos loadCompositeModificationMetadata(ModificationEntity compositeEntity, Integer maxDepth) {
+        return ModificationMetadataInfos.builder()
                 .activated(compositeEntity.getActivated())
                 .description(compositeEntity.getDescription())
                 .date(compositeEntity.getDate())
