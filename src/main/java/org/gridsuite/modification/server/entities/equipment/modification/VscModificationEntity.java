@@ -22,7 +22,6 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.springframework.util.CollectionUtils;
 
 import static org.gridsuite.modification.model.AttributeModification.toAttributeModification;
-
 /**
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
  */

@@ -984,6 +984,7 @@ class ModificationControllerTest {
                 .r(50.6)
                 .x(25.3)
                 .build();
+
         LineAttachToVoltageLevelInfos lineAttachToVL = LineAttachToVoltageLevelInfos.builder()
             .lineToAttachToId("line3")
             .percent(10.0)

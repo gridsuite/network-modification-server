@@ -336,7 +336,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
     @Test
     void testDisconnection() throws Exception {
         ShuntCompensatorModificationModel shuntModificationInfos =
-            ShuntCompensatorModificationModel.builder()
+                ShuntCompensatorModificationModel.builder()
                         .equipmentId("v2shunt")
                         .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
                         .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))
@@ -347,7 +347,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
     @Test
     void testConnection() throws Exception {
         ShuntCompensatorModificationModel shuntModificationInfos =
-            ShuntCompensatorModificationModel.builder()
+                ShuntCompensatorModificationModel.builder()
                         .equipmentId("v2shunt")
                         .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
                         .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))

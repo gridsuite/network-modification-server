@@ -24,7 +24,6 @@ import org.gridsuite.modification.server.entities.equipment.modification.Variati
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
 
 import javax.annotation.Nullable;
-
 import java.util.List;
 
 /**

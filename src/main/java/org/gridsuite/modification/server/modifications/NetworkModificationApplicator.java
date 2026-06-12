@@ -219,10 +219,10 @@ public class NetworkModificationApplicator {
         return groupApplicationStatus;
     }
 
-    private ApplicationStatus apply(ModificationModel modificationModel, Network network, ReportNode reportNode) {
-        ReportNode subReportNode = modificationModel.createSubReportNode(reportNode);
+    private ApplicationStatus apply(ModificationModel modificationInfos, Network network, ReportNode reportNode) {
+        ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
         try {
-            networkModificationObserver.observeApply(modificationModel.getType(), () -> apply(modificationModel.toModification(), network, subReportNode));
+            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode));
         } catch (Exception e) {
             handleException(subReportNode, e);
         }

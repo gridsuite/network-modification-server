@@ -78,9 +78,9 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
         assignAttributes((VoltageLevelCreationModel) voltageLevelCreationInfos.toModel());
     }
 
-    public VoltageLevelCreationEntity(VoltageLevelCreationModel voltageLevelCreationModel) {
-        super(voltageLevelCreationModel);
-        assignAttributes(voltageLevelCreationModel);
+    public VoltageLevelCreationEntity(VoltageLevelCreationModel voltageLevelCreationInfos) {
+        super(voltageLevelCreationInfos);
+        assignAttributes(voltageLevelCreationInfos);
     }
 
     public static List<CouplingDeviceCreationEmbeddable> toEmbeddableCouplingDevices(List<CouplingDeviceModel> couplingDevicesInfos) {

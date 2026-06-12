@@ -63,8 +63,8 @@ public class FreePropertyEntity {
             .build();
     }
 
-    public FreePropertyEntity(FreePropertyModel freePropertyModel) {
-        this(null, freePropertyModel.getName(), freePropertyModel.getValue(), freePropertyModel.isDeletionMark(),
-                freePropertyModel.isAdded(), freePropertyModel.getPreviousValue(), null);
+    public FreePropertyEntity(FreePropertyModel freePropertyInfos) {
+        this(null, freePropertyInfos.getName(), freePropertyInfos.getValue(), freePropertyInfos.isDeletionMark(),
+                freePropertyInfos.isAdded(), freePropertyInfos.getPreviousValue(), null);
     }
 }

@@ -25,6 +25,7 @@ import java.util.List;
 import static org.gridsuite.modification.server.entities.equipment.modification.ReactiveCapabilityCurveModificationEmbeddable.toEmbeddablePoints;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
+
 /**
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
  */

@@ -25,6 +25,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerModificationEmbedded;
+
 import org.springframework.util.CollectionUtils;
 
 import static org.gridsuite.modification.model.AttributeModification.toAttributeModification;

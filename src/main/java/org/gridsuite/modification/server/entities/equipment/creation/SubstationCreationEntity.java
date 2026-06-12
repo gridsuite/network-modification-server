@@ -38,9 +38,9 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
         assignAttributes((SubstationCreationModel) substationCreationInfos.toModel());
     }
 
-    public SubstationCreationEntity(SubstationCreationModel substationCreationModel) {
-        super(substationCreationModel);
-        assignAttributes(substationCreationModel);
+    public SubstationCreationEntity(SubstationCreationModel substationCreationInfos) {
+        super(substationCreationInfos);
+        assignAttributes(substationCreationInfos);
     }
 
     @Override

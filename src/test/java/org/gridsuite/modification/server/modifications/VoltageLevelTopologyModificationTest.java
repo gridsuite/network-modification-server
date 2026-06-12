@@ -41,7 +41,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
 
     @Override
     protected ModificationInfos buildModification() {
-        List<EquipmentAttributeModificationModel> equipmentAttributeModificationModels = new ArrayList<>(
+        List<EquipmentAttributeModificationModel> equipmentAttributeModificationInfos = new ArrayList<>(
                 Arrays.asList(
                         EquipmentAttributeModificationModel.builder()
                                 .equipmentId("v1d1")
@@ -73,13 +73,13 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .stashed(false)
                 .activated(true)
                 .equipmentId("v1")
-                .equipmentAttributeModificationList(equipmentAttributeModificationModels)
+                .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
                 .build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        List<EquipmentAttributeModificationModel> equipmentAttributeModificationModels = new ArrayList<>(
+        List<EquipmentAttributeModificationModel> equipmentAttributeModificationInfos = new ArrayList<>(
                 Arrays.asList(
                         EquipmentAttributeModificationModel.builder()
                                 .equipmentId("v1d1")
@@ -99,7 +99,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .stashed(false)
                 .activated(true)
                 .equipmentId("v1")
-                .equipmentAttributeModificationList(equipmentAttributeModificationModels)
+                .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
                 .build();
     }
 
@@ -183,7 +183,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
 
     @Test
     void testNonExistentSwitch() throws Exception {
-        List<EquipmentAttributeModificationModel> equipmentAttributeModificationModels = new ArrayList<>(
+        List<EquipmentAttributeModificationModel> equipmentAttributeModificationInfos = new ArrayList<>(
                 Arrays.asList(
                         EquipmentAttributeModificationModel.builder()
                                 .equipmentId("nonexistent_switch")
@@ -197,7 +197,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
         VoltageLevelTopologyModificationInfos infos = VoltageLevelTopologyModificationInfos.builder()
                 .stashed(false)
                 .equipmentId("v1")
-                .equipmentAttributeModificationList(equipmentAttributeModificationModels)
+                .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
                 .build();
 
         String body = getJsonBody(infos, null);

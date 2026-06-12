@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.ModificationInfos;

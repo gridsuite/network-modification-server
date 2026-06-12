@@ -53,9 +53,9 @@ public class LccConverterStationCreationEntity extends InjectionCreationEntity {
         assignAttributes((LccConverterStationCreationModel) converterStationCreationInfos);
     }
 
-    public LccConverterStationCreationEntity(LccConverterStationCreationModel converterStationCreationModel) {
-        super(converterStationCreationModel);
-        assignAttributes(converterStationCreationModel);
+    public LccConverterStationCreationEntity(LccConverterStationCreationModel converterStationCreationInfos) {
+        super(converterStationCreationInfos);
+        assignAttributes(converterStationCreationInfos);
     }
 
     private void assignAttributes(LccConverterStationCreationModel converterStationCreationInfos) {

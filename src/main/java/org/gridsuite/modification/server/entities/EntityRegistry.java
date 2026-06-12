@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.entities;
 
 import org.gridsuite.modification.ModificationType;
+
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.*;
 import org.gridsuite.modification.server.entities.equipment.creation.*;

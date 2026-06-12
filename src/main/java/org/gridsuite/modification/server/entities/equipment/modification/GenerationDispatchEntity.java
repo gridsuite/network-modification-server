@@ -26,7 +26,6 @@ import org.gridsuite.modification.model.GeneratorsFilterModel;
 import org.gridsuite.modification.model.GeneratorsFrequencyReserveModel;
 import org.gridsuite.modification.model.SubstationsGeneratorsOrderingModel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

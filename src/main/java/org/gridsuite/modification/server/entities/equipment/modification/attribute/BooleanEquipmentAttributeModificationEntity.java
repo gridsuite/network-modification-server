@@ -27,7 +27,7 @@ public class BooleanEquipmentAttributeModificationEntity extends EquipmentAttrib
         super(equipmentAttributeModificationInfos);
     }
 
-    public BooleanEquipmentAttributeModificationEntity(EquipmentAttributeModificationModel equipmentAttributeModificationModel) {
-        super(equipmentAttributeModificationModel);
+    public BooleanEquipmentAttributeModificationEntity(EquipmentAttributeModificationModel equipmentAttributeModificationInfos) {
+        super(equipmentAttributeModificationInfos);
     }
 }

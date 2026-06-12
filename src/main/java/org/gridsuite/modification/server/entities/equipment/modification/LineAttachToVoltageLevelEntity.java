@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;

@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.TapChangerType;
 import org.gridsuite.modification.dto.*;
+
 import org.gridsuite.modification.model.PhaseTapChangerCreationModel;
 import org.gridsuite.modification.model.RatioTapChangerCreationModel;
 import org.gridsuite.modification.model.TapChangerStepCreationModel;

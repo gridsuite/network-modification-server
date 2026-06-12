@@ -44,9 +44,9 @@ public class InjectionCreationEntity extends EquipmentCreationEntity {
         assignAttributes((InjectionCreationModel) injectionCreationInfos.toModel());
     }
 
-    protected InjectionCreationEntity(InjectionCreationModel injectionCreationModel) {
-        super(injectionCreationModel);
-        assignAttributes(injectionCreationModel);
+    protected InjectionCreationEntity(InjectionCreationModel injectionCreationInfos) {
+        super(injectionCreationInfos);
+        assignAttributes(injectionCreationInfos);
     }
 
     @Override

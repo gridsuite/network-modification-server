@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -29,9 +30,9 @@ public class EquipmentCreationEntity extends EquipmentModificationEntity {
         assignAttributes((EquipmentCreationModel) equipmentCreationInfos.toModel());
     }
 
-    protected EquipmentCreationEntity(EquipmentCreationModel equipmentCreationModel) {
-        super(equipmentCreationModel);
-        assignAttributes(equipmentCreationModel);
+    protected EquipmentCreationEntity(EquipmentCreationModel equipmentCreationInfos) {
+        super(equipmentCreationInfos);
+        assignAttributes(equipmentCreationInfos);
     }
 
     @Override

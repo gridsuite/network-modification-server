@@ -7,11 +7,13 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.LineCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.LineCreationModel;
+
 import org.gridsuite.modification.model.LineSegmentModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
@@ -55,9 +57,9 @@ public class LineCreationEntity extends BranchCreationEntity {
         assignAttributes((LineCreationModel) lineCreationInfos.toModel());
     }
 
-    public LineCreationEntity(LineCreationModel lineCreationModel) {
-        super(lineCreationModel);
-        assignAttributes(lineCreationModel);
+    public LineCreationEntity(LineCreationModel lineCreationInfos) {
+        super(lineCreationInfos);
+        assignAttributes(lineCreationInfos);
     }
 
     @Override
@@ -66,12 +68,12 @@ public class LineCreationEntity extends BranchCreationEntity {
         assignAttributes((LineCreationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(LineCreationModel lineCreationModel) {
-        g1 = lineCreationModel.getG1();
-        b1 = lineCreationModel.getB1();
-        g2 = lineCreationModel.getG2();
-        b2 = lineCreationModel.getB2();
-        lineSegments = assignLineSegments(lineCreationModel.getLineSegments());
+    private void assignAttributes(LineCreationModel lineCreationInfos) {
+        g1 = lineCreationInfos.getG1();
+        b1 = lineCreationInfos.getB1();
+        g2 = lineCreationInfos.getG2();
+        b2 = lineCreationInfos.getB2();
+        lineSegments = assignLineSegments(lineCreationInfos.getLineSegments());
     }
 
     private List<LineSegmentEntity> assignLineSegments(List<LineSegmentModel> lineSegmentInfos) {

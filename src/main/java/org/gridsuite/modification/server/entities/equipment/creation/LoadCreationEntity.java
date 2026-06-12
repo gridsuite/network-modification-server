@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.LoadCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+
 import org.gridsuite.modification.model.LoadCreationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;

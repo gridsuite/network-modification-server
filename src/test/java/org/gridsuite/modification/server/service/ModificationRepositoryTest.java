@@ -1399,7 +1399,7 @@ class ModificationRepositoryTest {
 
     @Test
     void testVoltageLevelTopologyModification() {
-        List<EquipmentAttributeModificationModel> equipmentAttributeModificationModels = new ArrayList<>(
+        List<EquipmentAttributeModificationModel> equipmentAttributeModificationInfos = new ArrayList<>(
                 Arrays.asList(
                         EquipmentAttributeModificationModel.builder()
                                 .equipmentId("sw1")
@@ -1411,7 +1411,7 @@ class ModificationRepositoryTest {
         );
         var voltageLevelTopologyModificationEntity = ModificationEntity.fromDTO(VoltageLevelTopologyModificationInfos.builder()
                 .equipmentId("VL1")
-                .equipmentAttributeModificationList(equipmentAttributeModificationModels)
+                .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
                 .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageLevelTopologyModificationEntity));

@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -16,6 +17,7 @@ import org.gridsuite.modification.dto.VoltageLevelModificationInfos;
 import org.gridsuite.modification.model.VoltageLevelModificationModel;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
+
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;

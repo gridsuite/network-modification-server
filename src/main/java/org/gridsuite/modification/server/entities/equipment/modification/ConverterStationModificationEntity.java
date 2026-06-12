@@ -80,9 +80,9 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
         assignAttributes((ConverterStationModificationModel) converterStationModificationInfos.toModel());
     }
 
-    public ConverterStationModificationEntity(ConverterStationModificationModel converterStationModificationModel) {
-        super(converterStationModificationModel);
-        assignAttributes(converterStationModificationModel);
+    public ConverterStationModificationEntity(ConverterStationModificationModel converterStationModificationInfos) {
+        super(converterStationModificationInfos);
+        assignAttributes(converterStationModificationInfos);
     }
 
     @Override
@@ -91,15 +91,15 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
         assignAttributes((ConverterStationModificationModel) modificationInfos.toModel());
     }
 
-    private void assignAttributes(ConverterStationModificationModel converterStationModificationModel) {
-        this.lossFactor = converterStationModificationModel.getLossFactor() != null ? new FloatModificationEmbedded(converterStationModificationModel.getLossFactor()) : null;
-        this.minQ = converterStationModificationModel.getMinQ() != null ? new DoubleModificationEmbedded(converterStationModificationModel.getMinQ()) : null;
-        this.maxQ = converterStationModificationModel.getMaxQ() != null ? new DoubleModificationEmbedded(converterStationModificationModel.getMaxQ()) : null;
-        this.reactivePowerSetpoint = converterStationModificationModel.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(converterStationModificationModel.getReactivePowerSetpoint()) : null;
-        this.voltageRegulationOn = converterStationModificationModel.getVoltageRegulationOn() != null ? new BooleanModificationEmbedded(converterStationModificationModel.getVoltageRegulationOn()) : null;
-        this.voltageSetpoint = converterStationModificationModel.getVoltageSetpoint() != null ? new DoubleModificationEmbedded(converterStationModificationModel.getVoltageSetpoint()) : null;
-        this.reactiveCapabilityCurve = converterStationModificationModel.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(converterStationModificationModel.getReactiveCapabilityCurve()) : null;
-        this.reactiveCapabilityCurvePoints = toEmbeddablePoints(converterStationModificationModel.getReactiveCapabilityCurvePoints());
+    private void assignAttributes(ConverterStationModificationModel converterStationModificationInfos) {
+        this.lossFactor = converterStationModificationInfos.getLossFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getLossFactor()) : null;
+        this.minQ = converterStationModificationInfos.getMinQ() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMinQ()) : null;
+        this.maxQ = converterStationModificationInfos.getMaxQ() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMaxQ()) : null;
+        this.reactivePowerSetpoint = converterStationModificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getReactivePowerSetpoint()) : null;
+        this.voltageRegulationOn = converterStationModificationInfos.getVoltageRegulationOn() != null ? new BooleanModificationEmbedded(converterStationModificationInfos.getVoltageRegulationOn()) : null;
+        this.voltageSetpoint = converterStationModificationInfos.getVoltageSetpoint() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getVoltageSetpoint()) : null;
+        this.reactiveCapabilityCurve = converterStationModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(converterStationModificationInfos.getReactiveCapabilityCurve()) : null;
+        this.reactiveCapabilityCurvePoints = toEmbeddablePoints(converterStationModificationInfos.getReactiveCapabilityCurvePoints());
 
     }
 

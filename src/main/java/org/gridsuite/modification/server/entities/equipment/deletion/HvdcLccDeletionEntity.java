@@ -10,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.model.AbstractEquipmentDeletionModel;
 import org.gridsuite.modification.model.HvdcLccDeletionModel;

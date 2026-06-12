@@ -66,9 +66,9 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
         assignAttributes((ConverterStationCreationModel) converterStationCreationInfos);
     }
 
-    public ConverterStationCreationEntity(ConverterStationCreationModel converterStationCreationModel) {
-        super(converterStationCreationModel);
-        assignAttributes(converterStationCreationModel);
+    public ConverterStationCreationEntity(ConverterStationCreationModel converterStationCreationInfos) {
+        super(converterStationCreationInfos);
+        assignAttributes(converterStationCreationInfos);
     }
 
     private void assignAttributes(ConverterStationCreationModel converterStationCreationInfos) {

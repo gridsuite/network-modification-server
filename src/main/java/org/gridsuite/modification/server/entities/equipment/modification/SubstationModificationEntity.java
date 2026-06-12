@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.*;
+
 import org.gridsuite.modification.model.AttributeModification;
 import org.gridsuite.modification.model.OperationType;
 import org.gridsuite.modification.model.SubstationModificationModel;

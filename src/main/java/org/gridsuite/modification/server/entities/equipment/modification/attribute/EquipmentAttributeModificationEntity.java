@@ -13,11 +13,13 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.model.EquipmentAttributeModificationModel;
 import org.gridsuite.modification.server.entities.EntityRegistry;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -42,9 +44,9 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
         assignAttributes((EquipmentAttributeModificationModel) equipmentAttributeModificationInfos.toModel());
     }
 
-    public EquipmentAttributeModificationEntity(EquipmentAttributeModificationModel equipmentAttributeModificationModel) {
-        super(equipmentAttributeModificationModel);
-        assignAttributes(equipmentAttributeModificationModel);
+    public EquipmentAttributeModificationEntity(EquipmentAttributeModificationModel equipmentAttributeModificationInfos) {
+        super(equipmentAttributeModificationInfos);
+        assignAttributes(equipmentAttributeModificationInfos);
     }
 
     @Override
@@ -66,7 +68,8 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
 
     @Override
     public EquipmentAttributeModificationInfos toModificationInfos() {
-        return EquipmentAttributeModificationInfos.builder()
+        return EquipmentAttributeModificationInfos
+            .builder()
             .uuid(getId())
             .date(getDate())
             .stashed(getStashed())

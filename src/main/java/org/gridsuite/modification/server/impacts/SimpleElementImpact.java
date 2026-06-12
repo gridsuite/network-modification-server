@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.impacts;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 

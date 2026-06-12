@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import jakarta.persistence.CollectionTable;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -31,6 +32,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
