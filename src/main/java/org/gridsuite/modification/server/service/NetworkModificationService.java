@@ -271,6 +271,12 @@ public class NetworkModificationService {
 
     @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
+        for (UUID modificationUuid : modificationUuids) {
+            UUID parentCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(modificationUuid);
+            if (parentCompositeUuid != null) {
+                networkModificationRepository.moveSubModification(groupUuid, parentCompositeUuid, null, modificationUuid, null);
+            }
+        }
         networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
     }
 
@@ -385,21 +391,21 @@ public class NetworkModificationService {
 
     @Transactional
     public CompletableFuture<NetworkModificationsResult> moveModifications(@NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid, UUID beforeModificationUuid, @NonNull List<UUID> modificationsToMoveUuids, @NonNull List<ModificationApplicationContext> applicationContexts, boolean applyModifications) {
-        // update origin/destinations groups to cut and paste all modificationsToMove
-        // FullDto needed for toModificationInfos() after the modifications have been applied
-        Set<UUID> originRootUuids = networkModificationRepository.getModifications(originGroupUuid, true, true).stream()
-                .map(ModificationInfos::getUuid)
-                .collect(Collectors.toSet());
+        // Find which selected UUIDs are composite modifications
+        Set<UUID> selectedCompositeUuids = modificationRepository.findExistingCompositeModificationIds(modificationsToMoveUuids);
 
-        Map<UUID, UUID> parentByChild = buildParentCompositeMap(originGroupUuid);
-        Set<UUID> selection = new HashSet<>(modificationsToMoveUuids);
+        // Get all children of selected composites (to skip sub-modifications that move with their ancestor)
+        Set<UUID> childrenOfSelectedComposites = selectedCompositeUuids.isEmpty()
+                ? Set.of()
+                : new HashSet<>(networkModificationRepository.findAllChildrenUuids(new ArrayList<>(selectedCompositeUuids)));
 
+        // Sub-modifications: selected UUIDs that are not composite roots and not already covered by a selected ancestor
         List<UUID> subModificationUuids = modificationsToMoveUuids.stream()
-                .filter(uuid -> !originRootUuids.contains(uuid))
-                .filter(uuid -> !hasSelectedAncestor(uuid, selection, parentByChild))
+                .filter(uuid -> !selectedCompositeUuids.contains(uuid))
+                .filter(uuid -> !childrenOfSelectedComposites.contains(uuid))
                 .toList();
         for (UUID uuid : subModificationUuids) {
-            UUID parentCompositeUuid = parentByChild.get(uuid);
+            UUID parentCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(uuid);
             if (parentCompositeUuid != null) {
                 networkModificationRepository.moveSubModification(originGroupUuid, parentCompositeUuid, null, uuid, null);
             }
