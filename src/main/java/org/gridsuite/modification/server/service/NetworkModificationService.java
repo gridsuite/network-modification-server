@@ -666,34 +666,4 @@ public class NetworkModificationService {
         }
         return bbsIds;
     }
-
-    private Map<UUID, UUID> buildParentCompositeMap(UUID groupUuid) {
-        Map<UUID, UUID> parentByChild = new HashMap<>();
-        for (ModificationInfos root : networkModificationRepository.getModifications(groupUuid, false, true)) {
-            if (root instanceof CompositeModificationInfos composite) {
-                collectParentComposite(composite, parentByChild);
-            }
-        }
-        return parentByChild;
-    }
-
-    private void collectParentComposite(CompositeModificationInfos composite, Map<UUID, UUID> parentByChild) {
-        for (ModificationInfos child : composite.getModificationsInfos()) {
-            parentByChild.put(child.getUuid(), composite.getUuid());
-            if (child instanceof CompositeModificationInfos nested) {
-                collectParentComposite(nested, parentByChild);
-            }
-        }
-    }
-
-    private boolean hasSelectedAncestor(UUID uuid, Set<UUID> selection, Map<UUID, UUID> parentByChild) {
-        UUID parent = parentByChild.get(uuid);
-        while (parent != null) {
-            if (selection.contains(parent)) {
-                return true;
-            }
-            parent = parentByChild.get(parent);
-        }
-        return false;
-    }
 }
