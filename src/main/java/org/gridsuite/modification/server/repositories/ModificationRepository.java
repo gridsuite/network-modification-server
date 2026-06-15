@@ -99,6 +99,10 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
                                    @Param("type") ModificationContainerType type,
                                    @Param("stashed") boolean stashed);
 
+    // return the referenced modification of a modification reference
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) from ModificationEntity m WHERE m.id = (select r.referenceId from ModificationReferenceEntity r WHERE r.id = ?1)")
+    ModificationEntity findReferencedModificationMetadataByReferenceId(UUID uuid);
+
     @Query(value = "SELECT cast(operational_limits_groups_id AS VARCHAR) FROM line_modification_operational_limits_groups WHERE branch_id IN ?1", nativeQuery = true)
     List<UUID> findLineModificationOpLimitsGroupsIdsByBranchIds(List<UUID> uuids);
 
