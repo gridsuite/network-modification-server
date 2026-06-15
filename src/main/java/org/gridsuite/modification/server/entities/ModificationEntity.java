@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -107,6 +108,7 @@ public class ModificationEntity {
         return ModificationMetadataInfos.builder()
             .uuid(this.id)
             .date(this.date)
+            .type(ModificationType.valueOf(this.type))
             .stashed(this.stashed)
             .messageType(this.messageType)
             .messageValues(this.messageValues)

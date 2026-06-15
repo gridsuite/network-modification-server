@@ -43,7 +43,6 @@ public final class EntityRegistry {
     private static final Map<Class<?>, Function<EquipmentAttributeModificationInfos, ? extends EquipmentAttributeModificationEntity<?>>> ATTRIBUTE_REGISTRY = new HashMap<>();
 
     static {
-        register(ModificationMetadataInfos.class, ModificationMetadataInfos::new, ModificationEntity::new);
         register(SubstationCreationInfos.class, SubstationCreationInfos::new, dto -> new SubstationCreationEntity((ModificationInfos) dto));
         register(VoltageLevelCreationInfos.class, VoltageLevelCreationInfos::new, dto -> new VoltageLevelCreationEntity((ModificationInfos) dto));
         register(LineCreationInfos.class, LineCreationInfos::new, dto -> new LineCreationEntity((ModificationInfos) dto));

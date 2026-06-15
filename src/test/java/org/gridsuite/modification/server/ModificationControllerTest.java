@@ -432,7 +432,7 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         assertEquals(true, modifications.get(0).getActivated());
 
-        ModificationInfos metadata = ModificationMetadataInfos.builder().activated(false).build();
+        ModificationInfos metadata = GroovyScriptInfos.builder().activated(false).build();
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                 .queryParam("groupUuid", TEST_GROUP_ID.toString())
@@ -463,7 +463,7 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         assertEquals("old description", modifications.getFirst().getDescription());
 
-        ModificationInfos metadata = ModificationMetadataInfos.builder().activated(null).description("new description").build();
+        ModificationInfos metadata = GroovyScriptInfos.builder().activated(null).description("new description").build();
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())

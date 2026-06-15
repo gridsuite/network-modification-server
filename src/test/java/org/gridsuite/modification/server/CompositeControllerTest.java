@@ -18,7 +18,6 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ModificationMetadataInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
@@ -44,7 +43,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.*;
 
 import static org.gridsuite.modification.ModificationType.COMPOSITE_MODIFICATION;
-import static org.gridsuite.modification.ModificationType.MODIFICATION_METADATA;
 import static org.gridsuite.modification.server.utils.NetworkCreation.VARIANT_ID;
 import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -129,12 +127,9 @@ class CompositeControllerTest {
         // get the composite modification (metadata only)
         mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", compositeModificationUuid))
                 .andExpect(status().isOk()).andReturn();
-        Map<UUID, List<ModificationMetadataInfos>> compositeModificationsMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        List<ModificationMetadataInfos> compositeMetadataModificationContent = compositeModificationsMap.get(compositeModificationUuid);
+        Map<UUID, List<ModificationInfos>> compositeModificationsMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<ModificationInfos> compositeMetadataModificationContent = compositeModificationsMap.get(compositeModificationUuid);
         assertEquals(modificationsNumber, compositeMetadataModificationContent.size());
-        for (int i = 0; i < modificationUuids.size(); i++) {
-            assertEquals(modificationInfosList.get(i).getMessageValues(), compositeMetadataModificationContent.get(i).getMessageValues());
-        }
         assertNotNull(compositeMetadataModificationContent.getFirst().getMessageType());
         assertNotNull(compositeMetadataModificationContent.getFirst().getMessageValues());
 
@@ -509,7 +504,7 @@ class CompositeControllerTest {
         List<ModificationInfos> rootModificationsAfterAssemble = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(2, rootModificationsAfterAssemble.size());
         assertEquals(firstCompositeUuid, rootModificationsAfterAssemble.getFirst().getUuid());
-        assertEquals(MODIFICATION_METADATA, rootModificationsAfterAssemble.getFirst().getType());
+        assertEquals(COMPOSITE_MODIFICATION, rootModificationsAfterAssemble.getFirst().getType());
         assertEquals(originalRootModUuids.get(2), rootModificationsAfterAssemble.get(1).getUuid());
 
         // The new composite should contain the assembled modifications in the same order

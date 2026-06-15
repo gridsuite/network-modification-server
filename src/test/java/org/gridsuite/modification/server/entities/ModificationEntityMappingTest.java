@@ -35,7 +35,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.ModificationType.LINE_MODIFICATION;
-import static org.gridsuite.modification.ModificationType.MODIFICATION_METADATA;
 
 class ModificationEntityMappingTest {
 
@@ -157,14 +156,14 @@ class ModificationEntityMappingTest {
         assertThat(metadata).isInstanceOf(ModificationMetadataInfos.class);
         assertThat(metadata.getUuid()).isEqualTo(id);
         assertThat(metadata.getDate()).isEqualTo(date);
-        assertThat(metadata.getType()).isEqualTo(MODIFICATION_METADATA);
+        assertThat(metadata.getType()).isEqualTo(LINE_MODIFICATION);
         assertThat(metadata.getDescription()).isEqualTo("description");
         assertThat(metadata.getMessageType()).isEqualTo(LINE_MODIFICATION.name());
         assertThat(metadata.getMessageValues()).isEqualTo("{}");
 
         String json = objectMapper.writeValueAsString(metadata);
         assertThat(json).doesNotContain("equipmentId", "applySegmentsLimits");
-        assertThat(objectMapper.readValue(json, ModificationInfos.class)).isInstanceOf(ModificationMetadataInfos.class);
+        assertThat(objectMapper.readValue(json, ModificationInfos.class)).isInstanceOf(LineModificationInfos.class);
     }
 
     @Test
