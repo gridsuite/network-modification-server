@@ -28,6 +28,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.TestImpactUtils;
@@ -791,6 +792,34 @@ class ModificationControllerTest {
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).toList();
         // we still have the same and only modification
         assertEquals(newModificationUuidList, modificationUuidList);
+    }
+
+    @Test
+    void testCopyModificationReference() throws Exception {
+        // Create 1 modification reference
+        ModificationInfos loadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+        loadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(loadModificationInfo))).getFirst();
+        ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
+            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referenceId(loadModificationInfo.getUuid())
+            .referenceInfos(loadModificationInfo)
+            .stashed(false)
+            .build();
+        modificationReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(modificationReferenceInfo))).getFirst();
+
+        // Duplicate
+        UUID otherGroupId = UUID.randomUUID();
+        String bodyJson = getJsonBody(List.of(modificationReferenceInfo.getUuid()), NetworkCreation.VARIANT_ID);
+        MvcResult mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + otherGroupId + "?action=COPY").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        // Check duplication
+        List<ModificationInfos> originalReference = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> duplicateReference = modificationRepository.getModifications(otherGroupId, true, true);
+        assertEquals(1, originalReference.size());
+        assertEquals(1, duplicateReference.size());
+
+        assertThat(originalReference.get(0)).recursivelyEquals(duplicateReference.get(0));
     }
 
     @Test

@@ -11,11 +11,19 @@ import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.dto.tabular.*;
+import org.gridsuite.modification.dto.CompositeModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.dto.tabular.LimitSetsTabularModificationInfos;
+import org.gridsuite.modification.dto.tabular.TabularBaseInfos;
+import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
+import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.entities.*;
+import org.gridsuite.modification.server.entities.CompositeModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationGroupEntity;
+import org.gridsuite.modification.server.entities.ModificationReferenceEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
@@ -129,16 +137,12 @@ public class NetworkModificationRepository {
         return entities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
-    private List<ModificationEntity> saveModificationInfosNonTransactional(@NonNull UUID groupUuid,
-            List<ModificationInfos> modifications) {
+    private List<ModificationEntity> saveModificationInfosNonTransactional(@NonNull UUID groupUuid, List<ModificationInfos> modifications) {
         List<ModificationEntity> entities = modifications.stream().map(ModificationEntity::fromDTO).toList();
-
         return saveModificationsNonTransactional(groupUuid, entities);
     }
 
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
-        CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
-        CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         // Fetch originals once, preserving order
         Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
                 .collect(Collectors.toMap(
@@ -150,6 +154,13 @@ public class NetworkModificationRepository {
                 .map(cloneByUuid::get)
                 .filter(Objects::nonNull)
                 .toList();
+
+        if (copyEntities.size() == 1 && copyEntities.getFirst() instanceof CompositeModificationEntity single) {
+            return modificationRepository.save(single).getId();
+        }
+
+        CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
+        CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         compositeEntity.setModifications(copyEntities);
         return modificationRepository.save(compositeEntity).getId();
     }
@@ -482,6 +493,25 @@ public class NetworkModificationRepository {
                 .build();
     }
 
+    private ModificationInfos loadModificationReference(ModificationEntity modificationEntity) {
+        if (modificationEntity instanceof ModificationReferenceEntity referenceEntity) {
+            ModificationEntity referencedEntity = modificationRepository.findAllByIdIn(List.of(referenceEntity.getReferenceId())).stream().findFirst()
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, referenceEntity.getReferenceId())));
+            ModificationReferenceInfos modificationReferenceInfos = referenceEntity.toModificationInfos();
+            modificationReferenceInfos.setReferenceInfos(toModificationsInfosOptimized(referencedEntity));
+            return modificationReferenceInfos;
+        } else {
+            ModificationEntity referencedEntity = modificationRepository.findReferencedModificationMetadataByReferenceId(modificationEntity.getId());
+            if (referencedEntity == null) {
+                throw new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()));
+            }
+            ModificationInfos modificationInfos = modificationEntity.toModificationInfos();
+            modificationInfos.setMessageType(referencedEntity.getMessageType());
+            modificationInfos.setMessageValues(referencedEntity.getMessageValues());
+            return modificationInfos;
+        }
+    }
+
     private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity) {
         return toModificationsInfosOptimized(modificationEntity, Set.of(), Map.of());
     }
@@ -503,6 +533,9 @@ public class NetworkModificationRepository {
         }
         if (modificationEntity instanceof TabularModificationsEntity tabularEntity) {
             return loadTabularModification(tabularEntity);
+        }
+        if (ModificationType.MODIFICATION_REFERENCE.name().equals(modificationEntity.getType())) {
+            return loadModificationReference(modificationEntity);
         }
         return modificationEntity.toModificationInfos();
     }
