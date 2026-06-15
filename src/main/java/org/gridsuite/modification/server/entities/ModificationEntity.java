@@ -150,6 +150,10 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
     }
 
+    public ModificationContainerType getParentContainerType() {
+        return containerType;
+    }
+
     public void attachToContainer(@NonNull ModificationContainer container) {
         this.containerId = container.getId();
         this.containerType = container.getContainerType();
