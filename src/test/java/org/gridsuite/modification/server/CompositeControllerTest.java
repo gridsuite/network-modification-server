@@ -21,6 +21,7 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.CompositeModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -531,17 +532,19 @@ class CompositeControllerTest {
         // The new composite must belong to TEST_GROUP_ID at root level
         CompositeModificationEntity firstComposite = compositeRepository.findById(firstCompositeUuid).orElseThrow();
         assertNotNull(firstComposite.getContainerId());
+        assertEquals(ModificationContainerType.GROUP, firstComposite.getParentContainerType());
         assertEquals(TEST_GROUP_ID, firstComposite.getContainerId());
 
         // The assembled modifications must no longer belong directly to the group
         ModificationEntity firstAssembledEntity = modificationRepository.getModificationEntity(originalRootModUuids.get(0));
         ModificationEntity secondAssembledEntity = modificationRepository.getModificationEntity(originalRootModUuids.get(1));
-        assertNull(firstAssembledEntity.getContainerId());
-        assertNull(secondAssembledEntity.getContainerId());
+        assertEquals(ModificationContainerType.COMPOSITE, firstAssembledEntity.getParentContainerType());
+        assertEquals(ModificationContainerType.COMPOSITE, secondAssembledEntity.getParentContainerType());
 
         // The non-assembled modification must still belong to TEST_GROUP_ID
         ModificationEntity remainingInGroupEntity = modificationRepository.getModificationEntity(originalRootModUuids.get(2));
         assertNotNull(remainingInGroupEntity.getContainerId());
+        assertEquals(ModificationContainerType.GROUP, remainingInGroupEntity.getParentContainerType());
         assertEquals(TEST_GROUP_ID, remainingInGroupEntity.getContainerId());
 
         // ---- 2. now assembles a modification which is inside a composite with something that is outside :
@@ -572,7 +575,7 @@ class CompositeControllerTest {
 
         // The new 2 depth composite must now belong to the first composite, not to a group
         CompositeModificationEntity twoDepthComposite = compositeRepository.findById(twodepthCompositeUuid).orElseThrow();
-        assertNull(twoDepthComposite.getContainerId());
+        assertEquals(ModificationContainerType.COMPOSITE, twoDepthComposite.getParentContainerType());
         compositeContentMap = mapper.readValue(
                 mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", firstCompositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
