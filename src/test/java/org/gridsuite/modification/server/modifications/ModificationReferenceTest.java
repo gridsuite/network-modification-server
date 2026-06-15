@@ -45,12 +45,11 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
         ModificationInfos compositeMetadataInfo = modificationRepository.findBaseDataByIdIn(List.of(compositeEntity.getId())).getFirst().toModificationInfos();
 
         return ModificationReferenceInfos.builder()
-            .messageType(compositeMetadataInfo.getMessageType())
-            .messageValues(compositeMetadataInfo.getMessageValues())
             .referenceType(ModificationReferenceInfos.Type.BASIC)
             .referenceId(compositeMetadataInfo.getUuid())
             .referenceInfos(compositeInfo)
             .stashed(false)
+            .activated(true)
             .build();
     }
 
@@ -79,7 +78,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
         assertEquals(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
     }
 
-    protected ModificationInfos buildCompositeModification() {
+    private ModificationInfos buildCompositeModification() {
         List<ModificationInfos> modifications = List.of(
             ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED)
         );

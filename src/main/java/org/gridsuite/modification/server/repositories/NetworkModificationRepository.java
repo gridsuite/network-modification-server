@@ -475,21 +475,23 @@ public class NetworkModificationRepository {
                 .build();
     }
 
-    private ModificationReferenceInfos loadModificationReference(ModificationReferenceEntity modificationEntity) {
-        ModificationEntity referencedEntity = modificationRepository.findAllByIdIn(List.of(modificationEntity.getReferenceId())).stream().findFirst()
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getReferenceId())));
-        return ModificationReferenceInfos.builder()
-            .uuid(modificationEntity.getId())
-            .messageType(modificationEntity.getMessageType())
-            .messageValues(modificationEntity.getMessageValues())
-            .activated(modificationEntity.getActivated())
-            .description(modificationEntity.getDescription())
-            .date(modificationEntity.getDate())
-            .stashed(modificationEntity.getStashed())
-            .referenceId(modificationEntity.getReferenceId())
-            .referenceType(ModificationReferenceInfos.Type.valueOf(modificationEntity.getReferenceType()))
-            .referenceInfos(toModificationsInfosOptimized(referencedEntity))
-            .build();
+    private ModificationInfos loadModificationReference(ModificationEntity modificationEntity) {
+        if (modificationEntity instanceof ModificationReferenceEntity referenceEntity) {
+            ModificationEntity referencedEntity = modificationRepository.findAllByIdIn(List.of(referenceEntity.getReferenceId())).stream().findFirst()
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, referenceEntity.getReferenceId())));
+            ModificationReferenceInfos modificationReferenceInfos = referenceEntity.toModificationInfos();
+            modificationReferenceInfos.setReferenceInfos(toModificationsInfosOptimized(referencedEntity));
+            return modificationReferenceInfos;
+        } else {
+            ModificationEntity referencedEntity = modificationRepository.findReferencedModificationMetadataByReferenceId(modificationEntity.getId());
+            if (referencedEntity == null) {
+                new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()));
+            }
+            ModificationInfos modificationInfos = modificationEntity.toModificationInfos();
+            modificationInfos.setMessageType(referencedEntity.getMessageType());
+            modificationInfos.setMessageValues(referencedEntity.getMessageValues());
+            return modificationInfos;
+        }
     }
 
     private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity) {
@@ -514,8 +516,8 @@ public class NetworkModificationRepository {
         if (modificationEntity instanceof TabularModificationsEntity tabularEntity) {
             return loadTabularModification(tabularEntity);
         }
-        if (modificationEntity instanceof ModificationReferenceEntity referenceEntity) {
-            return loadModificationReference(referenceEntity);
+        if (ModificationType.MODIFICATION_REFERENCE.name().equals(modificationEntity.getType())) {
+            return loadModificationReference(modificationEntity);
         }
         return modificationEntity.toModificationInfos();
     }
