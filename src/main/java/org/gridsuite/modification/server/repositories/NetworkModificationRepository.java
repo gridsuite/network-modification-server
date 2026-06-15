@@ -490,7 +490,7 @@ public class NetworkModificationRepository {
         } else {
             ModificationEntity referencedEntity = modificationRepository.findReferencedModificationMetadataByReferenceId(modificationEntity.getId());
             if (referencedEntity == null) {
-                new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()));
+                throw new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()));
             }
             ModificationInfos modificationInfos = modificationEntity.toModificationInfos();
             modificationInfos.setMessageType(referencedEntity.getMessageType());
