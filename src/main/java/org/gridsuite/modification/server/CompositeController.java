@@ -77,6 +77,16 @@ public class CompositeController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping(value = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Assemble some network modifications into a new composite modification")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})
+    public ResponseEntity<UUID> assembleNetworkModificationsIntoNewComposite(
+            @RequestBody List<UUID> assembledModificationsUuids) {
+        return ResponseEntity.ok().body(
+                networkModificationService.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids)
+        );
+    }
+
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})

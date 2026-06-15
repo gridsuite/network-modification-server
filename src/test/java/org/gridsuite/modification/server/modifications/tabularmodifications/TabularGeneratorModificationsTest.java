@@ -21,6 +21,7 @@ import org.gridsuite.modification.server.utils.ApiUtils;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
+import org.gridsuite.modification.server.utils.assertions.DTOAssert;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -718,14 +719,14 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
     private static void assertTabularModificationsEquals(List<ModificationInfos> expectedModifications, List<ModificationInfos> modificationInfos) {
         assertThat(expectedModifications)
-            .usingRecursiveComparison()
+            .usingRecursiveComparison(DTOAssert.getRecursiveConfiguration(false))
             .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
             .isEqualTo(modificationInfos);
     }
 
     private static void assertTabularModificationsEquals(ModificationInfos expectedModificationInfos, ModificationInfos modificationInfos) {
         assertThat(expectedModificationInfos)
-            .usingRecursiveComparison()
+            .usingRecursiveComparison(DTOAssert.getRecursiveConfiguration(false))
             .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
             .isEqualTo(modificationInfos);
     }

@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -474,6 +475,14 @@ public class NetworkModificationService {
     public List<UUID> saveInsertCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<Pair<UUID, String>> compositesInfos) {
         return networkModificationRepository.insertCompositeModifications(targetGroupUuid, compositesInfos)
             .stream().map(ModificationInfos::getUuid).toList();
+    }
+
+    @Transactional
+    public UUID assembleNetworkModificationsIntoNewComposite(@NonNull List<UUID> assembledModificationsUuids) {
+        CompositeModificationInfos newComposite =
+                networkModificationRepository.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids).toModificationInfos();
+
+        return newComposite.getUuid();
     }
 
     @Transactional

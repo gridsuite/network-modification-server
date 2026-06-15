@@ -101,7 +101,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                                 .temporaryLimits(
                                                         List.of(CurrentTemporaryLimitModificationInfos.builder()
                                                                 .modificationType(TemporaryLimitModificationType.ADD)
-                                                                .acceptableDuration(null)
+                                                                .acceptableDuration(toAttributeModification(Integer.MAX_VALUE, OperationType.SET))
                                                                 .name(toAttributeModification("name31", OperationType.SET))
                                                                 .value(null)
                                                                 .build())
