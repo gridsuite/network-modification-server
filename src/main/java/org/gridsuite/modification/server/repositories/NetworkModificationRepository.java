@@ -143,8 +143,6 @@ public class NetworkModificationRepository {
     }
 
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
-        CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
-        CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         // Fetch originals once, preserving order
         Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
                 .collect(Collectors.toMap(
@@ -156,6 +154,13 @@ public class NetworkModificationRepository {
                 .map(cloneByUuid::get)
                 .filter(Objects::nonNull)
                 .toList();
+
+        if (copyEntities.size() == 1 && copyEntities.getFirst() instanceof CompositeModificationEntity single) {
+            return modificationRepository.save(single).getId();
+        }
+
+        CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
+        CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         compositeEntity.setModifications(copyEntities);
         return modificationRepository.save(compositeEntity).getId();
     }
