@@ -114,6 +114,7 @@ public final class ModificationCreation {
     public static LoadCreationInfos getCreationLoad(String vlId, String loadId, String loadName, String busOrBusBarSectionId, LoadType loadType) {
         return LoadCreationInfos.builder()
             .stashed(false)
+            .activated(true)
             .equipmentId(loadId)
             .equipmentName(loadName)
             .voltageLevelId(vlId)
