@@ -17,6 +17,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -33,13 +34,15 @@ import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.Message;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.io.IOException;
 import java.util.*;
@@ -52,7 +55,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -66,6 +68,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @DisableElasticsearch
 @AutoConfigureMockMvc
+@ContextConfigurationWithTestChannel
 public abstract class AbstractNetworkModificationTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractNetworkModificationTest.class);
 
@@ -73,12 +76,24 @@ public abstract class AbstractNetworkModificationTest {
     private static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
     protected static final UUID TEST_GROUP_ID = UUID.randomUUID();
 
-    private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
+    private static final String RECEIVER = "me";
+    private static final int TIMEOUT = 1000;
+
+    protected static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
     private static final String URI_NETWORK_MODIF_COPY = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
 
+    @Value("${spring.cloud.stream.bindings.publishApplicationResult-out-0.destination}")
+    private String applicationResultDestination;
+
+    @Value("${spring.cloud.stream.bindings.publishApplication-out-0.destination}")
+    private String applicationDestination;
+
     @Autowired
     protected MockMvc mockMvc;
+
+    @Autowired
+    protected OutputDestination output;
 
     protected WireMockServer wireMockServer;
 
@@ -95,6 +110,8 @@ public abstract class AbstractNetworkModificationTest {
 
     @Autowired
     protected ObjectMapper mapper;
+
+    protected MvcResult mvcResult;
 
     private Network network;
 
@@ -115,6 +132,7 @@ public abstract class AbstractNetworkModificationTest {
     @AfterEach
     public void tearOff() {
         networkModificationRepository.deleteAll();
+        output.clear();
 
         try {
             TestUtils.assertWiremockServerRequestsEmptyThenShutdown(wireMockServer);
@@ -125,21 +143,38 @@ public abstract class AbstractNetworkModificationTest {
         }
     }
 
+    protected String lastResultJson;
+
+    protected NetworkModificationsResult saveAndApply(String bodyJson) throws Exception {
+        mockMvc.perform(post(getNetworkModificationUri())
+                .content(bodyJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        Message<byte[]> resultMsg = output.receive(TIMEOUT, applicationResultDestination);
+        assertNotNull(resultMsg, "No message received on " + applicationResultDestination);
+        output.receive(TIMEOUT, applicationDestination);
+        lastResultJson = new String(resultMsg.getPayload());
+        return mapper.readValue(lastResultJson, NetworkModificationsResult.class);
+    }
+
+    protected NetworkModificationsResult putAndApply(String uri, String bodyJson) throws Exception {
+        mockMvc.perform(put(uri + "&receiver=" + RECEIVER)
+                .content(bodyJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        Message<byte[]> resultMsg = output.receive(TIMEOUT, applicationResultDestination);
+        assertNotNull(resultMsg, "No message received on " + applicationResultDestination);
+        output.receive(TIMEOUT, applicationDestination);
+        return mapper.readValue(new String(resultMsg.getPayload()), NetworkModificationsResult.class);
+    }
+
     protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
     }
 
     @Test
     public void testCreate() throws Exception {
-        MvcResult mvcResult;
-        NetworkModificationsResult networkModificationsResult;
         ModificationInfos modificationToCreate = buildModification();
         String bodyJson = getJsonBody(modificationToCreate, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk()).andReturn();
-        networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        NetworkModificationsResult networkModificationsResult = saveAndApply(bodyJson);
         assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
         assertResultImpacts(getNetworkImpacts(networkModificationsResult));
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
@@ -155,17 +190,11 @@ public abstract class AbstractNetworkModificationTest {
 
     @Test
     public void testCreateDisabledModification() throws Exception {
-        MvcResult mvcResult;
-        NetworkModificationsResult networkModificationsResult;
         ModificationInfos modificationToCreate = buildModification();
         modificationToCreate.setActivated(false);
         String modificationToCreateJson = getJsonBody(modificationToCreate, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk()).andReturn();
-        networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        NetworkModificationsResult networkModificationsResult = saveAndApply(modificationToCreateJson);
         assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
 
         assertEquals(0, getNetworkImpacts(networkModificationsResult).size());
@@ -184,7 +213,6 @@ public abstract class AbstractNetworkModificationTest {
 
     @Test
     public void testRead() throws Exception {
-        MvcResult mvcResult;
         NetworkModificationResult networkModificationResult;
         ModificationInfos modificationToRead = buildModification();
 
@@ -248,12 +276,7 @@ public abstract class AbstractNetworkModificationTest {
         UUID modificationUuid = saveModification(modificationToCopy);
 
         String body = TestUtils.getJsonBody(List.of(modificationUuid), AbstractNetworkModificationTest.TEST_NETWORK_ID, null);
-        ResultActions mockMvcResultActions = mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
-                        .content(body)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+        putAndApply(URI_NETWORK_MODIF_COPY, body);
 
         List<ModificationInfos> modifications = networkModificationRepository
                 .getModifications(TEST_GROUP_ID, false, true);
@@ -264,7 +287,6 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     protected void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
-        MvcResult mvcResult;
         String resultAsString;
         // get all modifications for the given group of a network
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
@@ -302,7 +324,7 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     protected String getNetworkModificationUri() {
-        return URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
+        return URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID + "&receiver=" + RECEIVER;
     }
 
     protected String getJsonBody(ModificationInfos modificationInfos, String variantId) throws JsonProcessingException {

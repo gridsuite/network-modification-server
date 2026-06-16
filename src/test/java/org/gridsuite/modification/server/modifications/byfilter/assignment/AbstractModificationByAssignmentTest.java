@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
@@ -33,8 +32,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -42,12 +39,9 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -190,19 +184,11 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
             .equipmentType(getIdentifiableType())
             .assignmentInfosList(assignmentInfos)
             .build();
-        Optional<NetworkModificationsResult> networkModificationsResult;
 
         String bodyJson = getJsonBody(modificationByAssignmentInfos, null);
-
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk()).andReturn();
-
-        networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationsResult.isPresent());
-        assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
-        assertEquals(applicationStatus, extractApplicationStatus(networkModificationsResult.get()).getFirst());
+        NetworkModificationsResult networkModificationsResult = saveAndApply(bodyJson);
+        assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
+        assertEquals(applicationStatus, extractApplicationStatus(networkModificationsResult).getFirst());
     }
 
     @Override

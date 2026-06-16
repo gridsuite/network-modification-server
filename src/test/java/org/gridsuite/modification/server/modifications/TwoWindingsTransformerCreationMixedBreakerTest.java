@@ -15,7 +15,6 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,8 +25,6 @@ import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applica
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
 class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetworkModificationTest {
@@ -296,14 +293,12 @@ class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetworkModi
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) buildModification();
         twoWindingsTransformerCreationInfos.setEquipmentId("");
         String twoWindingsTransformerCreationInfosJson = getJsonBody(twoWindingsTransformerCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(twoWindingsTransformerCreationInfosJson);
         assertLogMessage("Invalid id ''", ERROR_MESSAGE_KEY, reportService);
 
         twoWindingsTransformerCreationInfos.setBusOrBusbarSectionId1("notFoundBus");
         twoWindingsTransformerCreationInfosJson = getJsonBody(twoWindingsTransformerCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(twoWindingsTransformerCreationInfosJson);
         assertLogMessage(new NetworkModificationException(NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND, "notFoundBus").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }

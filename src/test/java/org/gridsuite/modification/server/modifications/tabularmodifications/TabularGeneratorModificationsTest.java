@@ -14,7 +14,6 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
 import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
-import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.TabularPropertyRepository;
@@ -28,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -46,9 +44,7 @@ import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -564,11 +560,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                 .build();
         String modificationToCreateJson = getJsonBody(modificationInfos, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                        .andExpect(status().isOk()).andReturn();
+        saveAndApply(modificationToCreateJson);
         assertLogMessage("Tabular modification: No generators have been modified", "network.modification.tabular.modification.error", reportService);
     }
 
@@ -601,16 +593,13 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                 .build();
         String tabularModificationJson = getJsonBody(tabularInfos, null);
 
-        // creation
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularModificationJson)
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted());
-        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-            .andExpect(status().isOk()).andReturn();
-        NetworkModificationsResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertNotNull(result);
-        assertEquals(1, result.modificationUuids().size());
-        UUID modifId = result.modificationUuids().get(0);
+        MvcResult createResult = mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID)
+                .content(tabularModificationJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        List<UUID> modifUuids = mapper.readValue(createResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(modifUuids);
+        assertEquals(1, modifUuids.size());
+        UUID modifId = modifUuids.get(0);
 
         // try to get via the group
         UnsupportedOperationException exception = assertThrows(

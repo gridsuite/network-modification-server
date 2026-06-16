@@ -204,12 +204,10 @@ class ModificationIndexationTest {
         Duplicate this modification to group 2, variant 2
          */
         UUID groupUuid2 = UUID.randomUUID();
-        NetworkModificationsResult modificationsResult = networkModificationService.duplicateModifications(
-            groupUuid2,
-            null,
-            modifications.stream().map(ModificationInfos::getUuid).toList(),
-            List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
-        ).join();
+        List<ModificationApplicationContext> dupContexts = List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()));
+        List<UUID> dupUuids = networkModificationService.saveDuplicateModifications(groupUuid2, null, modifications.stream().map(ModificationInfos::getUuid).toList());
+        networkModificationService.applyModificationsByUuids(groupUuid2, dupUuids, dupContexts);
+        NetworkModificationsResult modificationsResult = new NetworkModificationsResult(dupUuids, List.of());
 
         /*
         check results in database and in elasticsearch
@@ -253,14 +251,10 @@ class ModificationIndexationTest {
         Move this modification to group 2, variant 2
          */
         UUID groupUuid2 = UUID.randomUUID();
-        NetworkModificationsResult modificationsResult = networkModificationService.moveModifications(
-            groupUuid2,
-            groupUuid1,
-            null,
-            modifications.stream().map(ModificationInfos::getUuid).toList(),
-            List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID())),
-            true
-        ).join();
+        List<ModificationApplicationContext> moveContexts = List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()));
+        List<UUID> moveUuids = networkModificationService.saveMoveModifications(groupUuid2, groupUuid1, null, modifications.stream().map(ModificationInfos::getUuid).toList());
+        networkModificationService.applyModificationsByUuids(groupUuid2, moveUuids, moveContexts);
+        NetworkModificationsResult modificationsResult = new NetworkModificationsResult(moveUuids, List.of());
 
         /*
         check results in database and in elasticsearch
@@ -308,14 +302,11 @@ class ModificationIndexationTest {
         Split this composite and insert the contained modifications to group 2, variant 2
          */
         UUID groupUuid2 = UUID.randomUUID();
-        Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos = Pair.of(
-                List.of(Pair.of(compositeUuid, "")),
-                List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
-        );
-        NetworkModificationsResult modificationsResult = networkModificationService.splitCompositeModifications(
-            groupUuid2,
-            modificationContextInfos
-        ).join();
+        List<ModificationApplicationContext> splitContexts = List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()));
+        List<Pair<UUID, String>> compositesInfos = List.of(Pair.of(compositeUuid, ""));
+        List<UUID> splitUuids = networkModificationService.saveSplitCompositeModifications(groupUuid2, compositesInfos);
+        networkModificationService.applyModificationsByUuids(groupUuid2, splitUuids, splitContexts);
+        NetworkModificationsResult modificationsResult = new NetworkModificationsResult(splitUuids, List.of());
 
         /*
         check results in database and in elasticsearch

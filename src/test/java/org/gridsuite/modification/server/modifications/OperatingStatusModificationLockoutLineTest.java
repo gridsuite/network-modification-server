@@ -21,7 +21,6 @@ import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Map;
 import java.util.UUID;
@@ -33,10 +32,8 @@ import static org.gridsuite.modification.server.report.NetworkModificationServer
 import static org.gridsuite.modification.server.utils.NetworkUtil.createSwitch;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
@@ -104,10 +101,7 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         String modificationJson = getJsonBody(modificationInfos, null);
         assertNull(getNetwork().getLine(lineID).getExtension(OperatingStatus.class));
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+        saveAndApply(modificationJson);
         TestUtils.assertOperatingStatus(getNetwork(), lineID, TARGET_BRANCH_STATUS);
     }
 
@@ -166,8 +160,7 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         modificationInfos.setEquipmentId("notFound");
         String modificationJson = getJsonBody(modificationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        saveAndApply(modificationJson);
         assertNull(getNetwork().getLine("notFound"));
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "notFound").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);

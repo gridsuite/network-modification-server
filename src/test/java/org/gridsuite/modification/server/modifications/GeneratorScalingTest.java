@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -42,11 +41,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -191,10 +185,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         String modificationToCreateJson = getJsonBody(modificationToCreate, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+        saveAndApply(modificationToCreateJson);
 
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0.01D);
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0.01D);
@@ -229,8 +220,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .build();
         String body = getJsonBody(generatorScalingInfo, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(body);
         assertLogMessage(generatorScalingInfo.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
                 "network.modification.invalidFilters", reportService);
         wireMockUtils.verifyGetRequest(subWrongId, PATH, handleQueryParams(FILTER_WRONG_ID_1), false);
@@ -276,15 +266,8 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         String modificationToCreateJson = getJsonBody(generatorScalingInfo, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri())
-                        .content(modificationToCreateJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        var response = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk())
-                .andReturn();
+        saveAndApply(modificationToCreateJson);
 
-        assertNotNull(response.getResponse().getContentAsString());
         assertEquals(600, getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 0.01D);
         assertEquals(300, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0.01D);
 
@@ -485,12 +468,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         String modificationToCreateJson = getJsonBody(generatorScalingInfo, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri())
-                        .content(modificationToCreateJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+        saveAndApply(modificationToCreateJson);
 
         // If we sum the targetP for all expected modified generators, we should have the requested variation value
         double connectedGeneratorsTargetP = modifiedGenerators

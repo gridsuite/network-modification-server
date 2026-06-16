@@ -18,8 +18,6 @@ import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,10 +28,6 @@ import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author walid Sahnoun <walid.sahnoun at rte-france.com>
@@ -103,8 +97,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.setSubstationId("absent_station");
 
         String vliJson = getJsonBody(vli, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vliJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vliJson);
         assertLogMessage(new NetworkModificationException(SUBSTATION_NOT_FOUND, "absent_station").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -113,8 +106,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.getCouplingDevices().get(0).setBusbarSectionId2("1.1");
         String vliJsonObject = getJsonBody(vli, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vliJsonObject);
         assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Coupling between same bus bar section is not allowed").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -122,8 +114,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.setIpMin(0.0);
         vli.setIpMax(null);
         vliJsonObject = getJsonBody(vli, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vliJsonObject);
         assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax is required").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -131,16 +122,14 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
 
         vli.setEquipmentId("");
         String vliJsonS2Object = getJsonBody(vli, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vliJsonS2Object);
         assertLogMessage("Invalid id ''", ERROR_MESSAGE_KEY, reportService);
 
         // try to create an existing VL
         vli = (VoltageLevelCreationInfos) buildModification();
         vli.setEquipmentId("v1");
         vliJsonObject = getJsonBody(vli, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vliJsonObject);
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v1").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }
@@ -152,16 +141,14 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.getCouplingDevices().get(0).setBusbarSectionId1("1.1");
         vli.getCouplingDevices().get(0).setBusbarSectionId2("bbs");
         String vliJsonObject = getJsonBody(vli, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vliJsonObject);
         assertNotNull(getNetwork().getVoltageLevel("vl_1"));
 
         vli.setEquipmentId("vl_2");
         vli.getCouplingDevices().get(0).setBusbarSectionId1("bbs");
         vli.getCouplingDevices().get(0).setBusbarSectionId2("1.1");
         String vliJsonObject2 = getJsonBody(vli, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject2).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vliJsonObject2);
         assertNotNull(getNetwork().getVoltageLevel("vl_2"));
     }
 
@@ -172,10 +159,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.setIpMin(25.0);
         vli.setIpMax(25.0);
         String vliJsonObject = getJsonBody(vli, null);
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+        saveAndApply(vliJsonObject);
         // VL is created
         assertNotNull(getNetwork().getVoltageLevel("vl_ok"));
     }
@@ -187,8 +171,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.setIpMin(null);
         vli.setIpMax(25.0);
         String vliJsonObject = getJsonBody(vli, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(vliJsonObject);
         // VL is created
         assertNotNull(getNetwork().getVoltageLevel("vl_ok"));
     }
@@ -200,10 +183,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.setIpMax(ipMax);
         String vliJsonObject = getJsonBody(vli, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+        saveAndApply(vliJsonObject);
         // VL could not have been created
         assertNull(getNetwork().getVoltageLevel("vl_ko"));
         assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, reportError).getMessage(), ERROR_MESSAGE_KEY, reportService);

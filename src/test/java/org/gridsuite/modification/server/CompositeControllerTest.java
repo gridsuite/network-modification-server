@@ -32,10 +32,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.Message;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -58,6 +61,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @AutoConfigureMockMvc
 @SpringBootTest
+@ContextConfigurationWithTestChannel
 class CompositeControllerTest {
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
@@ -66,10 +70,23 @@ class CompositeControllerTest {
     private static final String URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT = "/v1/network-composite-modifications/";
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
 
+    private static final long TIMEOUT = 1000;
+
+    @Value("${spring.cloud.stream.bindings.publishApplicationResult-out-0.destination}")
+    private String applicationResultDestination;
+
+    @Value("${spring.cloud.stream.bindings.publishApplication-out-0.destination}")
+    private String applicationDestination;
+
+    @Autowired
+    private OutputDestination output;
+
     @Autowired
     private MockMvc mockMvc;
 
     private ObjectWriter objectWriter;
+
+    private MvcResult mvcResult;
 
     @Autowired
     private NetworkModificationRepository modificationRepository;
@@ -100,6 +117,7 @@ class CompositeControllerTest {
     void tearOff() {
         // clean DB
         modificationRepository.deleteAll();
+        output.clear();
     }
 
     @Test
@@ -111,7 +129,6 @@ class CompositeControllerTest {
 
         // Create a composite modification with the switch modification
         List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
-        MvcResult mvcResult;
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
                         .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -170,12 +187,12 @@ class CompositeControllerTest {
                 List.of(Pair.of(compositeModificationUuid, "random name")));
         mvcResult = runRequestAsync(
                 mockMvc,
-                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP_ID + "?action=SPLIT")
+                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP_ID + "?action=SPLIT&receiver=me")
                         .content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON),
                 status().isOk());
 
-        assertApplicationStatusOK(mvcResult);
+        assertApplicationStatusOK();
 
         List<ModificationInfos> newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(modificationsNumber * 2, newModificationList.size());
@@ -192,7 +209,6 @@ class CompositeControllerTest {
 
         // Create a composite modification with the switch modification
         List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
-        MvcResult mvcResult;
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
                         .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -208,10 +224,10 @@ class CompositeControllerTest {
         // insert the same composite modification inside as a complete composite, not split into regular network modifications
         mvcResult = runRequestAsync(
                 mockMvc,
-                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP_ID + "?action=INSERT")
+                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP_ID + "?action=INSERT&receiver=me")
                         .content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk()
         );
-        assertApplicationStatusOK(mvcResult);
+        assertApplicationStatusOK();
         List<ModificationInfos> newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(modificationsNumber + 1, newModificationList.size());
         CompositeModificationInfos insertedComposite = (CompositeModificationInfos) newModificationList.stream().filter(modificationInfos ->
@@ -234,12 +250,11 @@ class CompositeControllerTest {
                 .equipmentAttributeName("open")
                 .equipmentId("v1b1")
                 .build();
-        MvcResult mvcResult;
         for (int i = 0; i < number; i++) {
             switchStatusModificationInfos.setEquipmentAttributeValue(openStates.get(i % 2));
             String bodyJson = TestUtils.getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, VARIANT_ID);
-            mvcResult = runRequestAsync(mockMvc, post(URI_NETWORK_MODIF_BASE + "?groupUuid=" + groupId).content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
-            assertApplicationStatusOK(mvcResult);
+            runRequestAsync(mockMvc, post(URI_NETWORK_MODIF_BASE + "?groupUuid=" + groupId + "&receiver=me").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+            assertApplicationStatusOK();
         }
         var modificationList = modificationRepository.getModifications(groupId, false, true);
         assertEquals(number, modificationList.size());
@@ -250,8 +265,11 @@ class CompositeControllerTest {
         return TestUtils.getJsonBodyModificationCompositeInfos(modifs, TEST_NETWORK_ID, VARIANT_ID);
     }
 
-    private void assertApplicationStatusOK(MvcResult mvcResult) throws Exception {
-        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+    private void assertApplicationStatusOK() throws Exception {
+        Message<byte[]> resultMsg = output.receive(TIMEOUT, applicationResultDestination);
+        assertNotNull(resultMsg);
+        output.receive(TIMEOUT, applicationDestination);
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(new String(resultMsg.getPayload()), new TypeReference<>() { });
         assertEquals(1, networkModificationsResult.modificationResults().size());
         assertTrue(networkModificationsResult.modificationResults().getFirst().isPresent());
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationsResult.modificationResults().getFirst().get().getApplicationStatus());
@@ -262,7 +280,6 @@ class CompositeControllerTest {
         // Create a composite modification with the modification
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).toList();
-        MvcResult mvcResult;
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
                         .content(mapper.writeValueAsString(modificationUuidList)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -317,7 +334,7 @@ class CompositeControllerTest {
 
         // Create a composite modification with the switch modifications
         List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
-        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
                         .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
@@ -358,7 +375,7 @@ class CompositeControllerTest {
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
         List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
 
-        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
                         .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
@@ -382,7 +399,7 @@ class CompositeControllerTest {
         // Create 3 switch modifications and a composite containing them
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
         List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
-        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
                         .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
@@ -438,7 +455,7 @@ class CompositeControllerTest {
         // Create a composite with 2 sub-modifications and add it to the group
         List<ModificationInfos> subMods = createSomeSwitchModifications(TEST_GROUP2_ID, 2);
         List<UUID> subModUuids = subMods.stream().map(ModificationInfos::getUuid).toList();
-        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
                         .content(mapper.writeValueAsString(subModUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
@@ -582,7 +599,7 @@ class CompositeControllerTest {
         // Build nested structure: outerComposite → [innerComposite → [leaf1, leaf2], leaf3]
         List<ModificationInfos> innerLeafs = createSomeSwitchModifications(TEST_GROUP_ID, 2);
         List<UUID> innerLeafUuids = innerLeafs.stream().map(ModificationInfos::getUuid).toList();
-        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
                         .content(mapper.writeValueAsString(innerLeafUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID innerCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
@@ -650,7 +667,7 @@ class CompositeControllerTest {
 
         List<ModificationInfos> subMods = createSomeSwitchModifications(TEST_GROUP2_ID, 1);
         List<UUID> subModUuids = subMods.stream().map(ModificationInfos::getUuid).toList();
-        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
                         .content(mapper.writeValueAsString(subModUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
@@ -704,7 +721,7 @@ class CompositeControllerTest {
         UUID leaf2Uuid = leafMods.get(1).getUuid();
         UUID leaf3Uuid = leafMods.get(2).getUuid();
 
-        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
                         .content(mapper.writeValueAsString(List.of(leaf1Uuid))).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID composite3Uuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });

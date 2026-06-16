@@ -16,7 +16,6 @@ import org.gridsuite.modification.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -28,8 +27,6 @@ import static org.gridsuite.modification.NetworkModificationException.Type.BUS_N
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
 class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkModificationTest {
@@ -42,8 +39,7 @@ class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkModificati
         shunt.setBusOrBusbarSectionId("notFoundBus");
         String shuntJson = getJsonBody(shunt, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(shuntJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(shuntJson);
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }

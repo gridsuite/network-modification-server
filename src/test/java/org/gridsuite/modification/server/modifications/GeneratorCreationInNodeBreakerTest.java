@@ -16,9 +16,6 @@ import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
 
@@ -26,10 +23,6 @@ import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
 class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
@@ -141,8 +134,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         generatorCreationInfos.setEquipmentId("");
         String generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(generatorCreationInfosJson);
         assertLogMessage("Invalid id ''", ERROR_MESSAGE_KEY, reportService);
 
         // not found voltage level
@@ -150,8 +142,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         generatorCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
         generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(generatorCreationInfosJson);
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -160,8 +151,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         generatorCreationInfos.setBusOrBusbarSectionId("notFoundBusbarSection");
         generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(generatorCreationInfosJson);
         assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -172,8 +162,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         generatorCreationInfos.setMinP(Double.NaN);
         generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(generatorCreationInfosJson);
         assertLogMessage("Generator 'idGenerator1': invalid value (NaN) for minimum P",
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -184,8 +173,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        saveAndApply(generatorCreationInfosJson);
         assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : minimum reactive power is not set").getMessage(),
             ERROR_MESSAGE_KEY, reportService);
 
@@ -195,8 +183,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        saveAndApply(generatorCreationInfosJson);
         assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : maximum reactive power is not set").getMessage(),
             ERROR_MESSAGE_KEY, reportService);
 
@@ -207,8 +194,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        saveAndApply(generatorCreationInfosJson);
         assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : maximum reactive power is expected to be greater than or equal to minimum reactive power").getMessage(),
             ERROR_MESSAGE_KEY, reportService);
 
@@ -218,8 +204,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        saveAndApply(generatorCreationInfosJson);
         assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : P is not set in a reactive capability curve limits point").getMessage(),
             ERROR_MESSAGE_KEY, reportService);
 
@@ -228,8 +213,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         generatorCreationInfos.setEquipmentId("v5generator");
         generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(generatorCreationInfosJson);
         assertLogMessage(new NetworkModificationException(GENERATOR_ALREADY_EXISTS, "v5generator").getMessage(),
                ERROR_MESSAGE_KEY, reportService);
 
@@ -241,11 +225,8 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         generatorCreationInfos.setBusOrBusbarSectionId("1B");
         generatorCreationInfosJson = getJsonBody(generatorCreationInfos, "variant_not_existing");
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted());
-        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-            .andExpect(status().isOk()).andReturn();
-        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        saveAndApply(generatorCreationInfosJson);
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(lastResultJson, new TypeReference<>() { });
         assertNotNull(networkModificationsResult);
         assertEquals(1, networkModificationsResult.modificationResults().size());
         assertTrue(networkModificationsResult.modificationResults().getFirst().isEmpty());  // no modifications returned
@@ -261,8 +242,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         String generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(generatorCreationInfosJson);
         assertLogMessage("cannot add short-circuit extension on generator with id=idGenerator1 : Undefined directTransX", "network.modification.ShortCircuitExtensionAddError", reportService);
     }
 

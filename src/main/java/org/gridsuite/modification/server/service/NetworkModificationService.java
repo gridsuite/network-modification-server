@@ -285,11 +285,10 @@ public class NetworkModificationService {
             networkModificationRepository.getModificationsCount(groupUuid, false));
     }
 
-    public CompletableFuture<NetworkModificationsResult> createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo, @NonNull List<ModificationApplicationContext> applicationContexts) {
-        List<ModificationInfos> modifications = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
-        List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
-        return applyModifications(groupUuid, modifications, applicationContexts).thenApply(results ->
-            new NetworkModificationsResult(ids, results));
+    @Transactional
+    public List<UUID> saveNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo) {
+        return networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo))
+            .stream().map(ModificationInfos::getUuid).toList();
     }
 
     /**
@@ -377,21 +376,32 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
+    public void applicationRequest(@NonNull UUID groupUuid, @NonNull List<UUID> modificationUuids,
+                                   @NonNull List<ModificationApplicationContext> contexts, @NonNull String receiver) {
+        notificationService.emitApplicationMessage(
+            new ApplicationExecutionContext(groupUuid, modificationUuids, contexts, receiver).toMessage(objectMapper));
+    }
+
+    public List<Optional<NetworkModificationResult>> applyModificationsByUuids(
+            @NonNull UUID groupUuid, @NonNull List<UUID> modificationUuids,
+            @NonNull List<ModificationApplicationContext> contexts) {
+        List<ModificationInfos> modifications = modificationUuids.stream()
+            .map(networkModificationRepository::getModificationInfo)
+            .toList();
+        return applyModifications(groupUuid, modifications, contexts).join();
+    }
+
     public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
         }
     }
 
-    public CompletableFuture<NetworkModificationsResult> moveModifications(@NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid, UUID beforeModificationUuid,
-                                                                       @NonNull List<UUID> modificationsToMoveUuids, @NonNull List<ModificationApplicationContext> applicationContexts,
-                                                                       boolean applyModifications) {
-        // update origin/destinations groups to cut and paste all modificationsToMove
-        // FullDto needed for toModificationInfos() after the modifications have been applied
-        List<ModificationInfos> modifications = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
-
-        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = applyModifications && !modifications.isEmpty() ? applyModifications(destinationGroupUuid, modifications, applicationContexts) : CompletableFuture.completedFuture(List.of());
-        return futureResult.thenApply(result -> new NetworkModificationsResult(modifications.stream().map(ModificationInfos::getUuid).toList(), result));
+    @Transactional
+    public List<UUID> saveMoveModifications(@NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid,
+                                            UUID beforeModificationUuid, @NonNull List<UUID> modificationsToMoveUuids) {
+        return networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid)
+            .stream().map(ModificationInfos::getUuid).toList();
     }
 
     public void moveSubModification(
@@ -442,37 +452,29 @@ public class NetworkModificationService {
         return CompletableFuture.completedFuture(Optional.empty());
     }
 
-    public CompletableFuture<NetworkModificationsResult> duplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
-        if (originGroupUuid != null && !modificationsUuids.isEmpty()) { // Duplicate modifications from a group or from a list only
+    @Transactional
+    public List<UUID> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
+        if (originGroupUuid != null && !modificationsUuids.isEmpty()) { // Duplicate from a group or from a list, not both
             throw new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID);
         }
-        List<ModificationInfos> duplicateModifications = networkModificationRepository.saveDuplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids);
-        List<UUID> ids = duplicateModifications.stream().map(ModificationInfos::getUuid).toList();
-        return applyModifications(targetGroupUuid, duplicateModifications, applicationContexts).thenApply(result ->
-            new NetworkModificationsResult(ids, result));
+        return networkModificationRepository.saveDuplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids)
+            .stream().map(ModificationInfos::getUuid).toList();
     }
 
     /**
-     * all their network modifications are extracted from the composite modifications and inserted into the group
+     * Extracts all network modifications from composite modifications and inserts them individually into the group
      */
-    public CompletableFuture<NetworkModificationsResult> splitCompositeModifications(
-            @NonNull UUID targetGroupUuid,
-            @NonNull Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
-        List<UUID> compositesUuids = modificationContextInfos.getFirst().stream().map(Pair::getFirst).toList();
-        List<ModificationInfos> modifications = networkModificationRepository.extractModificationsFromCompositesAndSave(targetGroupUuid, compositesUuids);
-        List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
-        return applyModifications(targetGroupUuid, modifications, modificationContextInfos.getSecond()).thenApply(result ->
-            new NetworkModificationsResult(ids, result));
+    @Transactional
+    public List<UUID> saveSplitCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<Pair<UUID, String>> compositesInfos) {
+        List<UUID> compositesUuids = compositesInfos.stream().map(Pair::getFirst).toList();
+        return networkModificationRepository.extractModificationsFromCompositesAndSave(targetGroupUuid, compositesUuids)
+            .stream().map(ModificationInfos::getUuid).toList();
     }
 
-    public CompletableFuture<NetworkModificationsResult> insertCompositeModifications(
-            @NonNull UUID targetGroupUuid,
-            @NonNull Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
-        List<ModificationInfos> modifications = networkModificationRepository.insertCompositeModifications(
-                targetGroupUuid, modificationContextInfos.getFirst());
-        List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
-        return applyModifications(targetGroupUuid, modifications, modificationContextInfos.getSecond()).thenApply(result ->
-            new NetworkModificationsResult(ids, result));
+    @Transactional
+    public List<UUID> saveInsertCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<Pair<UUID, String>> compositesInfos) {
+        return networkModificationRepository.insertCompositeModifications(targetGroupUuid, compositesInfos)
+            .stream().map(ModificationInfos::getUuid).toList();
     }
 
     @Transactional

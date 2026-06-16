@@ -25,13 +25,11 @@ import org.gridsuite.modification.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -44,11 +42,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -186,10 +179,7 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
             .build();
         String body = getJsonBody(modificationToCreate, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-            .andExpect(status().isOk());
+        saveAndApply(body);
 
         wireMockUtils.verifyGetRequest(stubNonDistributionKey, PATH, handleQueryParams(FILTER_NO_DK), false);
 
@@ -225,10 +215,7 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
         String body = getJsonBody(loadScalingInfo, null);
 
-        mockMvc.perform(post(getNetworkModificationUri())
-                .content(body)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(body);
         assertLogMessage(loadScalingInfo.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
                 "network.modification.invalidFilters", reportService);
         wireMockUtils.verifyGetRequest(stubWithWrongId, PATH, handleQueryParams(FILTER_WRONG_ID_1), false);
@@ -275,15 +262,7 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
         String body = getJsonBody(loadScalingInfo, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri())
-                .content(body)
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-            .andExpectAll(
-                status().isOk(),
-                content().string(IsNull.notNullValue())
-            );
+        saveAndApply(body);
 
         wireMockUtils.verifyGetRequest(stubMultipleWrongIds, PATH, Map.of("ids", WireMock.matching(".*")), false);
         assertEquals(600, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
@@ -494,12 +473,7 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
 
         String modificationToCreateJson = getJsonBody(loadScalingInfo, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri())
-                        .content(modificationToCreateJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+        saveAndApply(modificationToCreateJson);
 
         // If we sum the P0 for all expected modified loads, we should have the requested variation value
         double connectedLoadsConstantP = modifiedLoads

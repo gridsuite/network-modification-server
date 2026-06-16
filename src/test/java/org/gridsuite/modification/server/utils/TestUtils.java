@@ -41,8 +41,6 @@ import java.util.stream.IntStream;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -56,10 +54,7 @@ public final class TestUtils {
     }
 
     public static MvcResult runRequestAsync(MockMvc mockMvc, RequestBuilder requestBuilder, ResultMatcher... matchers) throws Exception {
-        ResultActions mockMvcResultActions = mockMvc.perform(requestBuilder).andExpect(request().asyncStarted());
-        return mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-            .andExpectAll(matchers)
-            .andReturn();
+        return mockMvc.perform(requestBuilder).andExpectAll(matchers).andReturn();
     }
 
     public static Set<String> getRequestsDone(int n, MockWebServer server) throws UncheckedInterruptedException {

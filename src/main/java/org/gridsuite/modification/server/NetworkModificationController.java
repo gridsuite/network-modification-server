@@ -23,7 +23,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -95,37 +94,24 @@ public class NetworkModificationController {
     @PutMapping(value = "/groups/{groupUuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list")
     @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated.")
-    public CompletableFuture<ResponseEntity<NetworkModificationsResult>> handleNetworkModifications(
+    public ResponseEntity<List<UUID>> handleNetworkModifications(
             @Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
             @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
             @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
             @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
-            @Parameter(description = "modifications can be applied (default is true)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
+            @Parameter(description = "Receiver for async apply notification") @RequestParam(value = "receiver", required = false) String receiver,
             @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
-        return switch (action) {
-            case COPY ->
-                networkModificationService.duplicateModifications(
-                        targetGroupUuid,
-                        originGroupUuid,
-                        modificationContextInfos.getFirst(),
-                        modificationContextInfos.getSecond()
-                ).thenApply(ResponseEntity.ok()::body);
-            case MOVE -> {
-                UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
-                boolean applyModifications = canApply;
-                if (sourceGroupUuid.equals(targetGroupUuid)) {
-                    applyModifications = false;
-                }
-                yield networkModificationService.moveModifications(
-                        targetGroupUuid,
-                        sourceGroupUuid,
-                        beforeModificationUuid,
-                        modificationContextInfos.getFirst(),
-                        modificationContextInfos.getSecond(),
-                        applyModifications
-                ).thenApply(ResponseEntity.ok()::body);
-            }
+        UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
+        List<UUID> savedUuids = switch (action) {
+            case COPY -> networkModificationService.saveDuplicateModifications(
+                    targetGroupUuid, originGroupUuid, modificationContextInfos.getFirst());
+            case MOVE -> networkModificationService.saveMoveModifications(
+                    targetGroupUuid, sourceGroupUuid, beforeModificationUuid, modificationContextInfos.getFirst());
         };
+        if (receiver != null) {
+            networkModificationService.applicationRequest(targetGroupUuid, savedUuids, modificationContextInfos.getSecond(), receiver);
+        }
+        return ResponseEntity.ok(savedUuids);
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}")
@@ -142,11 +128,16 @@ public class NetworkModificationController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "The network modification was created"),
         @ApiResponse(responseCode = "404", description = "The network or equipment was not found")})
-    public CompletableFuture<ResponseEntity<NetworkModificationsResult>> createNetworkModification(
+    public ResponseEntity<List<UUID>> createNetworkModification(
         @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid") UUID groupUuid,
+        @Parameter(description = "Receiver for async apply notification") @RequestParam(name = "receiver", required = false) String receiver,
         @RequestBody Pair<ModificationInfos, List<ModificationApplicationContext>> modificationContextInfos) {
         modificationContextInfos.getFirst().check();
-        return networkModificationService.createNetworkModification(groupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
+        List<UUID> savedUuids = networkModificationService.saveNetworkModification(groupUuid, modificationContextInfos.getFirst());
+        if (receiver != null) {
+            networkModificationService.applicationRequest(groupUuid, savedUuids, modificationContextInfos.getSecond(), receiver);
+        }
+        return ResponseEntity.ok(savedUuids);
     }
 
     @PutMapping(value = "/network-modifications/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

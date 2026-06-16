@@ -14,7 +14,6 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
 
 import java.util.Map;
 import java.util.UUID;
@@ -24,8 +23,6 @@ import static org.gridsuite.modification.NetworkModificationException.Type.LINE_
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
@@ -101,24 +98,21 @@ class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
         LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setLineToAttachTo1Id("absent_line_id");
         String lineAttachToAbsentLineJson = getJsonBody(linesAttachToSplitLinesInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(lineAttachToAbsentLineJson);
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
         // try to create an already existing line
         linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setReplacingLine1Id("l1");
         lineAttachToAbsentLineJson = getJsonBody(linesAttachToSplitLinesInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(lineAttachToAbsentLineJson);
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
         // same test on 'replacingLine2Id'
         linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setReplacingLine2Id("l1");
         lineAttachToAbsentLineJson = getJsonBody(linesAttachToSplitLinesInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        saveAndApply(lineAttachToAbsentLineJson);
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }

@@ -18,7 +18,7 @@ spring:
 
   cloud:
     function:
-      definition: consumeBuild1;consumeBuild2;consumeCancelBuild
+      definition: consumeBuild1;consumeBuild2;consumeCancelBuild;consumeApplication
     stream:
       bindings:
         consumeBuild1-in-0: &consumeBuildConfig
@@ -38,7 +38,16 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.cancel
         publishStoppedBuild-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.stopped
-      output-bindings: publishBuild-out-0;publishResultBuild-out-0;publishCancelBuild-out-0;publishStoppedBuild-out-0
+        consumeApplication-in-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}modification.run
+          group: modificationGroup
+          consumer:
+            max-attempts: 1
+        publishApplication-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}modification.run
+        publishApplicationResult-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}modification.result
+      output-bindings: publishBuild-out-0;publishResultBuild-out-0;publishCancelBuild-out-0;publishStoppedBuild-out-0;publishApplication-out-0;publishApplicationResult-out-0
       rabbit:
         bindings:
           consumeBuild1-in-0: &consumeBuildRabbitConfig
@@ -52,6 +61,15 @@ spring:
                 delivery-limit: 2
           consumeBuild2-in-0:
             <<: *consumeBuildRabbitConfig
+          consumeApplication-in-0:
+            consumer:
+              auto-bind-dlq: true
+              dead-letter-exchange: ${powsybl-ws.rabbitmq.destination.prefix:}modification.run.dlx
+              dead-letter-queue-name: ${powsybl-ws.rabbitmq.destination.prefix:}modification.run.dlx.dlq
+              dead-letter-exchange-type: topic
+              quorum:
+                enabled: true
+                delivery-limit: 2
 
 powsybl-ws:
   database:

@@ -31,8 +31,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,10 +39,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -201,12 +195,9 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
                                                   NetworkModificationResult.ApplicationStatus applicationStatus) throws Exception {
         String modificationToCreateJson = getJsonBody(byFormulaModificationInfos, null);
 
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk()).andReturn();
+        saveAndApply(modificationToCreateJson);
 
-        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(lastResultJson, new TypeReference<>() { });
         assertTrue(networkModificationsResult.isPresent());
         assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
         assertEquals(applicationStatus, extractApplicationStatus(networkModificationsResult.get()).getFirst());

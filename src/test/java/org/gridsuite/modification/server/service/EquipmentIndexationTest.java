@@ -8,6 +8,7 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
@@ -17,14 +18,18 @@ import org.gridsuite.modification.server.repositories.ModificationApplicationRep
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.Message;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -33,6 +38,7 @@ import java.util.UUID;
 
 import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
@@ -44,13 +50,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @Tag("IntegrationTest")
+@ContextConfigurationWithTestChannel
 class EquipmentIndexationTest {
     private static final UUID NETWORK_UUID = UUID.randomUUID();
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-    private static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + NETWORK_UUID + URI_NETWORK_MODIF_PARAMS;
+    private static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + NETWORK_UUID + URI_NETWORK_MODIF_PARAMS + "&receiver=me";
+    private static final long TIMEOUT = 1000;
 
     private static final String NEW_VARIANT = "NewVariant";
     private static final String NEW_VARIANT_2 = "NewVariant2";
@@ -60,6 +68,15 @@ class EquipmentIndexationTest {
 
     @Autowired
     private ObjectMapper mapper;
+
+    @Autowired
+    private OutputDestination output;
+
+    @Value("${spring.cloud.stream.bindings.publishApplicationResult-out-0.destination}")
+    private String applicationResultDestination;
+
+    @Value("${spring.cloud.stream.bindings.publishApplication-out-0.destination}")
+    private String applicationDestination;
 
     @Autowired
     private EquipmentInfosService equipmentInfosService;
@@ -94,6 +111,19 @@ class EquipmentIndexationTest {
         equipmentInfosService.deleteAll();
     }
 
+    @AfterEach
+    void tearOff() {
+        output.clear();
+    }
+
+    private void postAndApply(String bodyJson) throws Exception {
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        Message<byte[]> resultMsg = output.receive(TIMEOUT, applicationResultDestination);
+        assertNotNull(resultMsg, "No message received on " + applicationResultDestination);
+        output.receive(TIMEOUT, applicationDestination);
+    }
+
     @Test
     void testModificationsToImpactElasticsearch() throws Exception {
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NEW_VARIANT);
@@ -103,20 +133,20 @@ class EquipmentIndexationTest {
         LoadCreationInfos loadCreationInfos = ModificationCreation.getCreationLoad("v1", "v1Load", "v1load_name", "1.1", LoadType.UNDEFINED);
         String loadCreationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadCreationInfos, List.of(getNetworkModificationContext(NEW_VARIANT))));
 
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(loadCreationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        postAndApply(loadCreationJson);
         assertEquals("v1load_name", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
         assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals("v1")));
 
         // load modification - assert name modification
         LoadModificationInfos loadModification = ModificationCreation.getModificationLoad("v1Load", null, "v1load_newname", null, null, null, null);
         String loadModificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadModification, List.of(getNetworkModificationContext(NEW_VARIANT))));
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        postAndApply(loadModificationJson);
         assertEquals("v1load_newname", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
 
         // load modification - assert voltage level modification
         loadModification = ModificationCreation.getModificationLoad("v1Load", "v2", null, "1A", null, null, null);
         loadModificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadModification, List.of(getNetworkModificationContext(NEW_VARIANT))));
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        postAndApply(loadModificationJson);
         List<EquipmentInfos> equipmentInfos = equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT);
         assertEquals(1, equipmentInfos.size());
         assertEquals("v2", equipmentInfos.getFirst().getVoltageLevels().stream().findFirst().get().getId());
@@ -128,7 +158,7 @@ class EquipmentIndexationTest {
         // load creation in INITIAL_VARIANT_ID
         LoadCreationInfos loadCreationInfos = ModificationCreation.getCreationLoad("v1", "v1Load", "v1load_name", "1.1", LoadType.UNDEFINED);
         String loadCreationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadCreationInfos, List.of(getNetworkModificationContext(INITIAL_VARIANT_ID))));
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(loadCreationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        postAndApply(loadCreationJson);
         assertEquals("v1load_name", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, INITIAL_VARIANT_ID).get(0).getName());
         assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, INITIAL_VARIANT_ID).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals("v1")));
 
@@ -138,13 +168,13 @@ class EquipmentIndexationTest {
         // load modification that modify load type is not indexed
         LoadModificationInfos loadModification = ModificationCreation.getModificationLoad("v1Load", null, null, null, LoadType.FICTITIOUS, null, null);
         String loadModificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadModification, List.of(getNetworkModificationContext(NEW_VARIANT))));
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        postAndApply(loadModificationJson);
         assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT).isEmpty());
 
         // voltage level name modification modifies only equipments indexed contained in the voltage level (not switch, bbs, etc)
         VoltageLevelModificationInfos vlModification = ModificationCreation.getModificationVoltageLevel("v1", "newVlName");
         String vlModificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vlModification, List.of(getNetworkModificationContext(NEW_VARIANT))));
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(vlModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        postAndApply(vlModificationJson);
         List<EquipmentInfos> equipmentsIndexedAfterVlModif = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT);
         assertEquals(11, equipmentsIndexedAfterVlModif.size());
         assertTrue(equipmentsIndexedAfterVlModif.stream()
@@ -171,7 +201,7 @@ class EquipmentIndexationTest {
         VoltageLevelCreationInfos volageLevelCreationInfos = ModificationCreation.getCreationVoltageLevel("s1", "v1test", "v1test");
         String voltageLevelCreationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(volageLevelCreationInfos, List.of(getNetworkModificationContext(NEW_VARIANT))));
 
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(voltageLevelCreationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        postAndApply(voltageLevelCreationJson);
         List<EquipmentInfos> equipmentIndexedAfterVlCreation = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT);
         assertEquals(1, equipmentIndexedAfterVlCreation.size());
         assertEquals(IdentifiableType.VOLTAGE_LEVEL.name(), equipmentIndexedAfterVlCreation.getFirst().getType());
@@ -186,14 +216,14 @@ class EquipmentIndexationTest {
         GeneratorModificationInfos generatorModificationInfos = ModificationCreation.getModificationGenerator("idGenerator", "modifiedGeneratorName");
         String generatorModificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorModificationInfos, List.of(getNetworkModificationContext(NEW_VARIANT))));
 
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        postAndApply(generatorModificationJson);
         assertEquals("modifiedGeneratorName", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("idGenerator"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
         assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("idGenerator"), NETWORK_UUID, NEW_VARIANT).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals("v2")));
 
         //then delete the voltage level containing the generator we just modified
         EquipmentDeletionInfos voltageLevelDeletionInfos = EquipmentDeletionInfos.builder().stashed(false).equipmentType(IdentifiableType.VOLTAGE_LEVEL).equipmentId("v2").build();
         String substationDeletionJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(voltageLevelDeletionInfos, List.of(getNetworkModificationContext(NEW_VARIANT))));
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(substationDeletionJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        postAndApply(substationDeletionJson);
         assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v2"), NETWORK_UUID, NEW_VARIANT).isEmpty());
 
         //check that the generator is also deleted and that it's present in the tombstonedEquipment in elastic
@@ -211,7 +241,7 @@ class EquipmentIndexationTest {
         VoltageLevelModificationInfos vlModification = ModificationCreation.getModificationVoltageLevel("v1", "v1_newname");
         String vlModificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vlModification, List.of(getNetworkModificationContext(NEW_VARIANT))));
 
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(vlModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        postAndApply(vlModificationJson);
 
         checkSomeEquipmentsVoltageLevel(NETWORK_UUID, NEW_VARIANT, "v1_newname");
 
@@ -222,7 +252,7 @@ class EquipmentIndexationTest {
         VoltageLevelModificationInfos vlModification2 = ModificationCreation.getModificationVoltageLevel("v1", "v1_newname_2");
         String vlModification2Json = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vlModification2, List.of(getNetworkModificationContext(NEW_VARIANT_2))));
 
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(vlModification2Json).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        postAndApply(vlModification2Json);
 
         checkSomeEquipmentsVoltageLevel(NETWORK_UUID, NEW_VARIANT, "v1_newname");
         checkSomeEquipmentsVoltageLevel(NETWORK_UUID, NEW_VARIANT_2, "v1_newname_2");
