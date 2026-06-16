@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -25,10 +24,10 @@ import java.util.UUID;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "modification_reference_id_fk_constraint"))
 public class ModificationReferenceEntity extends ModificationEntity {
 
-    @Column(name = "referenceId")
+    @Column
     UUID referenceId;
 
-    @Column(name = "referenceType")
+    @Column
     String referenceType;
 
     // Transient just for optimization purpose
@@ -44,8 +43,6 @@ public class ModificationReferenceEntity extends ModificationEntity {
     public ModificationReferenceInfos toModificationInfos() {
         return ModificationReferenceInfos.builder()
             .uuid(getId())
-            .messageType(getMessageType())
-            .messageValues(getMessageValues())
             .activated(getActivated())
             .description(getDescription())
             .date(getDate())
@@ -70,12 +67,18 @@ public class ModificationReferenceEntity extends ModificationEntity {
         this.referenceType = modificationReferenceInfos.getReferenceType().name();
         this.referenceId = modificationReferenceInfos.getReferenceId();
 
-        // Appears as the referenced modification
-        this.setMessageType(modificationReferenceInfos.getReferenceInfos().getType().name());
-        this.setMessageValues(new ObjectMapper().writeValueAsString(modificationReferenceInfos.getReferenceInfos().getMapMessageValues()));
-
         // Transient just for optimization purpose
         // No need to load the referenced modification
         this.referenceInfos = modificationReferenceInfos.getReferenceInfos();
+    }
+
+    @Override
+    public String getMessageType() {
+        throw new UnsupportedOperationException("Value deduced from the referenced modification");
+    }
+
+    @Override
+    public String getMessageValues() {
+        throw new UnsupportedOperationException("Value deduced from the referenced modification");
     }
 }
