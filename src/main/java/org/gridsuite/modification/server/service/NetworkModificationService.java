@@ -271,8 +271,13 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public Map<UUID, UUID> stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
-        return networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
+    public Map<UUID, UUID> getReferencesData(@NonNull List<UUID> modificationUuids) {
+        return networkModificationRepository.getReferencesData(modificationUuids);
+    }
+
+    @Transactional
+    public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
+        networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
     }
 
     @Transactional

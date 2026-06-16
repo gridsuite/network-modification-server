@@ -698,13 +698,29 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return references to a shared modification that should be deleted from directory-server
+     * @return elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the composite is at the root level
      */
     @Transactional
-    public Map<UUID, UUID> stashNetworkModifications(@NonNull List<UUID> modificationUuids, int stashedModificationCount) {
-        int stashModificationOrder = -stashedModificationCount - 1;
-        // elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the composite is at the root level
+    public Map<UUID, UUID> getReferencesData(@NonNull List<UUID> modificationUuids) {
         Map<UUID, UUID> referencesToBeDeleted = new HashMap<>();
+        for (UUID modificationUuid : modificationUuids) {
+            ModificationEntity modificationEntity = this.modificationRepository
+                    .findById(modificationUuid)
+                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
+
+            if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {
+                // TODO : fetch the composite uuid containing the modificationReference ? null (groupUuid) si je n'en trouve pas ?
+                // TODO : et faire ça dans une requête spécifique ??
+                referencesToBeDeleted.putIfAbsent(modificationReference.getReferenceId(), null);
+            }
+        }
+
+        return referencesToBeDeleted;
+    }
+
+    @Transactional
+    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids, int stashedModificationCount) {
+        int stashModificationOrder = -stashedModificationCount - 1;
         List<ModificationEntity> modificationEntities = new ArrayList<>();
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
@@ -714,15 +730,8 @@ public class NetworkModificationRepository {
             modificationEntity.setModificationsOrder(stashModificationOrder);
             modificationEntities.add(modificationEntity);
             stashModificationOrder--;
-
-            if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {
-                // TODO : fetch the composite uuid containing the modificationReference ? null (groupUuid) si je n'en trouve pas ?
-                // bof : montrer à Slimane et en discuter
-                referencesToBeDeleted.putIfAbsent(modificationReference.getReferenceId(), null);
-            }
         }
         this.modificationRepository.saveAll(modificationEntities);
-        return referencesToBeDeleted;
     }
 
     @Transactional
