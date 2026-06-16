@@ -831,8 +831,8 @@ class ModificationControllerTest {
         // Duplicate
         UUID otherGroupId = UUID.randomUUID();
         String bodyJson = getJsonBody(List.of(modificationReferenceInfo.getUuid()), NetworkCreation.VARIANT_ID);
-        MvcResult mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + otherGroupId + "?action=COPY").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
-        assertApplicationStatusOK(mvcResult);
+        mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + otherGroupId + "?action=COPY" + "&receiver=me").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK();
 
         // Check duplication
         List<ModificationInfos> originalReference = modificationRepository.getModifications(TEST_GROUP_ID, true, true);

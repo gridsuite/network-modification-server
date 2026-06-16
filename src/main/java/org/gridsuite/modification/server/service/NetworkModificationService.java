@@ -379,7 +379,7 @@ public class NetworkModificationService {
     public void applicationRequest(@NonNull UUID groupUuid, @NonNull List<UUID> modificationUuids,
                                    @NonNull List<ModificationApplicationContext> contexts, @NonNull String receiver) {
         notificationService.emitApplicationMessage(
-            new ApplicationExecContext(groupUuid, modificationUuids, contexts, receiver).toMessage(objectMapper));
+            new ApplicationExecutionContext(groupUuid, modificationUuids, contexts, receiver).toMessage(objectMapper));
     }
 
     public List<Optional<NetworkModificationResult>> applyModificationsByUuids(

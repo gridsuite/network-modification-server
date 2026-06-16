@@ -30,7 +30,7 @@ public class ModificationApplicationWorkerService {
     @Bean
     public Consumer<Message<String>> consumeApplication() {
         return message -> {
-            ApplicationExecContext ctx = ApplicationExecContext.fromMessage(message, objectMapper);
+            ApplicationExecutionContext ctx = ApplicationExecutionContext.fromMessage(message, objectMapper);
             notificationService.emitApplicationResultMessage(
                 new NetworkModificationsResult(
                     ctx.getModificationUuids(),

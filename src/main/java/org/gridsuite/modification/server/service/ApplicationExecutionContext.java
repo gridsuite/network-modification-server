@@ -28,10 +28,10 @@ import static org.gridsuite.modification.server.service.NotificationService.RECE
  */
 @Getter
 @AllArgsConstructor
-public class ApplicationExecContext {
+public class ApplicationExecutionContext {
 
-    static final String GROUP_UUID_HEADER = "groupUuid";
-    static final String MODIFICATION_UUIDS_HEADER = "modificationUuids";
+    private static final String GROUP_UUID_HEADER = "groupUuid";
+    private static final String MODIFICATION_UUIDS_HEADER = "modificationUuids";
 
     private final UUID groupUuid;
     private final List<UUID> modificationUuids;
@@ -46,7 +46,7 @@ public class ApplicationExecContext {
         return header;
     }
 
-    public static ApplicationExecContext fromMessage(Message<String> message, ObjectMapper objectMapper) {
+    public static ApplicationExecutionContext fromMessage(Message<String> message, ObjectMapper objectMapper) {
         MessageHeaders headers = message.getHeaders();
         UUID groupUuid = UUID.fromString(getNonNullHeader(headers, GROUP_UUID_HEADER));
         String receiver = getNonNullHeader(headers, RECEIVER_HEADER);
@@ -57,7 +57,7 @@ public class ApplicationExecContext {
             List<ModificationApplicationContext> applicationContexts = objectMapper.readValue(
                 message.getPayload(),
                 new TypeReference<>() { });
-            return new ApplicationExecContext(groupUuid, modificationUuids, applicationContexts, receiver);
+            return new ApplicationExecutionContext(groupUuid, modificationUuids, applicationContexts, receiver);
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
