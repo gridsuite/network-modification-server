@@ -1815,7 +1815,7 @@ class ModificationControllerTest {
     /** Inserts a COPY of a standalone composite at the end of the group's root list. */
     private void insertCompositeIntoGroup(UUID groupId, UUID compositeUuid, String name) throws Exception {
         String body = TestUtils.getJsonBodyModificationCompositeInfos(
-                List.of(org.springframework.data.util.Pair.of(compositeUuid, name)),
+                List.of(new CompositesToBeInserted(compositeUuid, "composite", false)),
                 TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         runRequestAsync(mockMvc,
                 put("/v1/network-composite-modifications/groups/" + groupId + "?action=INSERT")
