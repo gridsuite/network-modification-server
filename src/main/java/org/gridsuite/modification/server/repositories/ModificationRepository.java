@@ -81,6 +81,10 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         """, nativeQuery = true)
     UUID findCompositeIdByContainedModificationId(UUID uuid);
 
+    // return the referenced modification of a modification reference
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) from ModificationEntity m WHERE m.id = (select r.referenceId from ModificationReferenceEntity r WHERE r.id = ?1)")
+    ModificationEntity findReferencedModificationMetadataByReferenceId(UUID uuid);
+
     @Query(value = """
         SELECT CAST(sm.modification_id AS VARCHAR)
         FROM composite_modification_sub_modifications sm
