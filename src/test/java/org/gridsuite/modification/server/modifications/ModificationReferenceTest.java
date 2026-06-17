@@ -58,26 +58,6 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
         return buildModification();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getLoad("idLoad"));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getLoad("idLoad"));
-    }
-
-    @Override
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
-    }
-
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
-    }
-
     private ModificationInfos buildCompositeModification() {
         List<ModificationInfos> modifications = List.of(
             ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED)

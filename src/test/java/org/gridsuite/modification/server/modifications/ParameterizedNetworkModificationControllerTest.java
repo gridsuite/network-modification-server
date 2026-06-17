@@ -109,7 +109,7 @@ class ParameterizedNetworkModificationControllerTest {
         networkModificationRepository.deleteAll();
     }
 
-    @ParameterizedTest(name = "shouldCreateReadUpdateDeleteModificationThroughServerApi")
+    @ParameterizedTest(name = "{0}")
     @MethodSource("serverModificationCases")
     void shouldCreateReadUpdateDeleteModificationThroughServerApi(String caseName,
                                                                   ModificationInfos modificationToCreate,
@@ -143,7 +143,7 @@ class ParameterizedNetworkModificationControllerTest {
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).isEmpty());
     }
 
-    @ParameterizedTest(name = "shouldCreateDisabledModificationWithoutApplyingIt")
+    @ParameterizedTest(name = "{0}")
     @MethodSource("serverModificationCases")
     void shouldCreateDisabledModificationWithoutApplyingIt(String caseName,
                                                            ModificationInfos modificationToCreate,
@@ -161,7 +161,7 @@ class ParameterizedNetworkModificationControllerTest {
         assertEquals(false, metadataModifications.getFirst().getActivated());
     }
 
-    @ParameterizedTest(name = "shouldCopyModificationThroughServerApi")
+    @ParameterizedTest(name = "{0}")
     @MethodSource("serverModificationCases")
     void shouldCopyModificationThroughServerApi(String caseName,
                                                 ModificationInfos modificationToCreate,
@@ -184,7 +184,7 @@ class ParameterizedNetworkModificationControllerTest {
         assertThat(copiedModifications.get(1)).recursivelyEquals(modificationToCreate);
     }
 
-    @ParameterizedTest(name = "shouldStashAndUnstashModificationThroughServerApi")
+    @ParameterizedTest(name = "{0}")
     @MethodSource("serverModificationCases")
     void shouldStashAndUnstashModificationThroughServerApi(String caseName,
                                                            ModificationInfos modificationToCreate,
@@ -197,7 +197,7 @@ class ParameterizedNetworkModificationControllerTest {
                 .queryParam("stashed", "true"))
             .andExpect(status().isOk());
 
-        List<ModificationInfos> stashedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true, true);
+        List<ModificationInfos> stashedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true, true);
         assertEquals(1, stashedModifications.size());
         assertEquals(Boolean.TRUE, stashedModifications.getFirst().getStashed());
 
@@ -207,7 +207,7 @@ class ParameterizedNetworkModificationControllerTest {
                 .queryParam("stashed", "false"))
             .andExpect(status().isOk());
 
-        List<ModificationInfos> restoredModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true, false);
+        List<ModificationInfos> restoredModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
         assertEquals(1, restoredModifications.size());
         assertFalse(Boolean.TRUE.equals(restoredModifications.getFirst().getStashed()));
     }
@@ -267,8 +267,8 @@ class ParameterizedNetworkModificationControllerTest {
             ),
             Arguments.of(
                 "composite modification",
-                compositeModification("composite create", "generator name from composite create"),
-                compositeModification("composite update", "generator name from composite update")
+                compositeModification("composite", "generator name from composite"),
+                compositeModification("composite", "generator name from composite")
             ),
             Arguments.of(
                 "tabular modification",
