@@ -220,6 +220,7 @@ class CompositeControllerTest {
         assertNotNull(insertedComposite);
         checkCompositeModificationContent(insertedComposite.getModificationsInfos());
     }
+
     @Test
     void testInsertSharedComposite() throws Exception {
         int modificationsNumber = 2;
