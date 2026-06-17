@@ -1,3 +1,9 @@
+/*
+  Copyright (c) 2026, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -103,7 +109,7 @@ class ParameterizedNetworkModificationControllerTest {
         networkModificationRepository.deleteAll();
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "shouldCreateReadUpdateDeleteModificationThroughServerApi")
     @MethodSource("serverModificationCases")
     void shouldCreateReadUpdateDeleteModificationThroughServerApi(String caseName,
                                                                   ModificationInfos modificationToCreate,
@@ -137,7 +143,7 @@ class ParameterizedNetworkModificationControllerTest {
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).isEmpty());
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "shouldCreateDisabledModificationWithoutApplyingIt")
     @MethodSource("serverModificationCases")
     void shouldCreateDisabledModificationWithoutApplyingIt(String caseName,
                                                            ModificationInfos modificationToCreate,
@@ -155,7 +161,7 @@ class ParameterizedNetworkModificationControllerTest {
         assertEquals(false, metadataModifications.getFirst().getActivated());
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "shouldCopyModificationThroughServerApi")
     @MethodSource("serverModificationCases")
     void shouldCopyModificationThroughServerApi(String caseName,
                                                 ModificationInfos modificationToCreate,
@@ -178,7 +184,7 @@ class ParameterizedNetworkModificationControllerTest {
         assertThat(copiedModifications.get(1)).recursivelyEquals(modificationToCreate);
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "shouldStashAndUnstashModificationThroughServerApi")
     @MethodSource("serverModificationCases")
     void shouldStashAndUnstashModificationThroughServerApi(String caseName,
                                                            ModificationInfos modificationToCreate,
