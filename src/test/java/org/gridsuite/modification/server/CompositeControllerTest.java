@@ -18,6 +18,7 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.dto.CompositesToBeInserted;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -218,6 +219,47 @@ class CompositeControllerTest {
                 modificationInfos.getType().equals(COMPOSITE_MODIFICATION)).findFirst().orElseThrow();
         assertNotNull(insertedComposite);
         checkCompositeModificationContent(insertedComposite.getModificationsInfos());
+    }
+    @Test
+    void testInsertSharedComposite() throws Exception {
+        int modificationsNumber = 2;
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, modificationsNumber);
+
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(modificationList.stream().map(ModificationInfos::getUuid).toList()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        String bodyJson = getJsonBodyModificationCompositeToBeInserted(
+                List.of(new CompositesToBeInserted(compositeModificationUuid, "shared composite", true)));
+
+        mvcResult = runRequestAsync(
+                mockMvc,
+                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP_ID + "?action=INSERT")
+                        .content(bodyJson)
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+
+        assertApplicationStatusOK(mvcResult);
+
+        List<ModificationInfos> newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(modificationsNumber + 1, newModificationList.size());
+
+        ModificationReferenceInfos insertedReference = assertInstanceOf(
+                ModificationReferenceInfos.class,
+                newModificationList.getLast()
+        );
+        assertEquals(compositeModificationUuid, insertedReference.getReferenceId());
+        assertEquals(ModificationReferenceInfos.Type.BASIC, insertedReference.getReferenceType());
+
+        CompositeModificationInfos referencedComposite = assertInstanceOf(
+                CompositeModificationInfos.class,
+                insertedReference.getReferenceInfos()
+        );
+        assertEquals(compositeModificationUuid, referencedComposite.getUuid());
+        checkCompositeModificationContent(referencedComposite.getModificationsInfos());
     }
 
     private static void checkCompositeModificationContent(List<ModificationInfos> compositeModificationContent) {
