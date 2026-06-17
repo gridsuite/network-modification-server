@@ -398,7 +398,7 @@ class CompositeControllerTest {
         // Move the first sub-modification to the end (no beforeUuid = append)
         // was [0,1,2] → [1,2,0]
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
-                        TEST_GROUP_ID, subUuids.get(0))
+                        TEST_GROUP_ID, subUuids.getFirst())
                         .queryParam("sourceCompositeUuid", compositeUuid.toString())
                         .queryParam("targetCompositeUuid", compositeUuid.toString()))
                 .andExpect(status().isOk());
@@ -461,7 +461,7 @@ class CompositeControllerTest {
         int rootSizeBefore = modificationRepository.getModifications(TEST_GROUP_ID, true, true).size();
 
         // Move first sub-modification from composite to root level (no targetCompositeUuid)
-        UUID movingUuid = actualSubUuids.get(0);
+        UUID movingUuid = actualSubUuids.getFirst();
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
                         TEST_GROUP_ID, movingUuid)
                         .queryParam("sourceCompositeUuid", compositeUuid.toString()))
@@ -473,7 +473,7 @@ class CompositeControllerTest {
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         assertEquals(1, resultMap.get(compositeUuid).size());
-        assertEquals(actualSubUuids.get(1), resultMap.get(compositeUuid).get(0).getUuid());
+        assertEquals(actualSubUuids.get(1), resultMap.get(compositeUuid).getFirst().getUuid());
 
         // Root group should have one more modification
         assertEquals(rootSizeBefore + 1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
@@ -597,7 +597,7 @@ class CompositeControllerTest {
         assertEquals(2, actualInnerSubUuids.size());
 
         List<ModificationInfos> outerLeafs = createSomeSwitchModifications(TEST_GROUP2_ID, 1);
-        UUID leaf3RootUuid = outerLeafs.get(0).getUuid();
+        UUID leaf3RootUuid = outerLeafs.getFirst().getUuid();
 
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
                         .content(mapper.writeValueAsString(List.of(innerCompositeUuid, leaf3RootUuid))).contentType(MediaType.APPLICATION_JSON))
@@ -721,7 +721,7 @@ class CompositeControllerTest {
         UUID composite1Uuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
         List<ModificationInfos> extraLeafs = createSomeSwitchModifications(TEST_GROUP2_ID, 1);
-        UUID leaf4Uuid = extraLeafs.get(0).getUuid();
+        UUID leaf4Uuid = extraLeafs.getFirst().getUuid();
 
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
                         .content(mapper.writeValueAsString(List.of(composite1Uuid, leaf4Uuid))).contentType(MediaType.APPLICATION_JSON))
