@@ -27,7 +27,6 @@ import org.gridsuite.modification.server.service.ReportService;
 import org.junit.platform.commons.util.StringUtils;
 import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
-import org.springframework.data.util.Pair;
 import org.springframework.test.web.servlet.*;
 
 import java.io.IOException;
