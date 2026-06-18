@@ -244,8 +244,10 @@ public class NetworkModificationRepository {
         }
 
         if (sourceType == ModificationContainerType.GROUP) {
-            modificationApplicationInfosService.deleteAllByModificationIds(
-                    moved.stream().map(ModificationEntity::getId).toList());
+            // Collect modifications (composite's children)
+            // before moving origin modifications between nodes, remove applications since they are not applicable anymore
+            List<UUID> allMovedUuids = collectAllModificationUuids(moved);
+            modificationApplicationInfosService.deleteAllByModificationIds(allMovedUuids);
         }
 
         List<ModificationEntity> targetChildren = new ArrayList<>(target.getModifications());
@@ -290,6 +292,17 @@ public class NetworkModificationRepository {
             }
         }
         return false;
+    }
+
+    private List<UUID> collectAllModificationUuids(List<ModificationEntity> entities) {
+        List<UUID> uuids = new ArrayList<>();
+        for (ModificationEntity entity : entities) {
+            uuids.add(entity.getId());
+            if (entity instanceof CompositeModificationEntity composite) {
+                uuids.addAll(collectAllModificationUuids(composite.getModifications()));
+            }
+        }
+        return uuids;
     }
 
     private void insertModifications(List<ModificationEntity> modificationsList, List<ModificationEntity> modificationsToAdd, UUID referenceModificationUuid) {
