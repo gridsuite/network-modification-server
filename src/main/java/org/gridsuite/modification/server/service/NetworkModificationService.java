@@ -418,8 +418,11 @@ public class NetworkModificationService {
                 .toList();
         for (UUID uuid : subModificationUuids) {
             UUID parentCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(uuid);
-            if (parentCompositeUuid != null) {
-                networkModificationRepository.moveModifications(ModificationContainerType.COMPOSITE, parentCompositeUuid, ModificationContainerType.GROUP, sourceContainerId, List.of(uuid), null);
+            if (parentCompositeUuid != null && !parentCompositeUuid.equals(sourceContainerId)) {
+                networkModificationRepository.moveModifications(
+                        ModificationContainerType.COMPOSITE, parentCompositeUuid,
+                        ModificationContainerType.GROUP, sourceContainerId,
+                        List.of(uuid), null);
             }
         }
 
