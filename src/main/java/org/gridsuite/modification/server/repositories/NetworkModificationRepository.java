@@ -1020,12 +1020,15 @@ public class NetworkModificationRepository {
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
-    public ModificationContainerType getContainerType(UUID containerUuid) {
-        if (modificationGroupRepository.existsById(containerUuid)) {
-            return ModificationContainerType.GROUP;
-        }
+    public ModificationContainerType getContainerType(UUID containerUuid, boolean createGroupIfMissing) {
         if (compositeModificationRepository.existsById(containerUuid)) {
             return ModificationContainerType.COMPOSITE;
+        }
+        if (modificationGroupRepository.existsById(containerUuid)) {
+            return ModificationContainerType.GROUP;
+        } else if (createGroupIfMissing) {
+            getOrCreateModificationGroup(containerUuid);
+            return ModificationContainerType.GROUP;
         }
         throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
                 String.format("No modification container found for id %s", containerUuid));
