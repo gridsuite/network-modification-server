@@ -721,7 +721,7 @@ public class NetworkModificationRepository {
                     .findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             if (Boolean.FALSE.equals(modificationEntity.getStashed()) && modificationEntity instanceof ModificationReferenceEntity modificationReference) {
-                // TODO : for now shared modification are only at the root level and can't be inside composites, so the composite uuid is set to null
+                // TODO GRD-4785 : for now shared modification are only at the root level and can't be inside composites, so the composite uuid is set to null
                 // but when it will be the case a specific function will have to be done in order to fetch the composite containing the modificationReference (if there is one)
                 referencesToBeDeleted.putIfAbsent(modificationReference.getReferenceId(), null);
             }
@@ -774,8 +774,8 @@ public class NetworkModificationRepository {
             modification.setModificationsOrder(modificationOrder++);
 
             if (modification instanceof ModificationReferenceEntity modificationReference) {
-                // TODO : fetch the composite uuid containing the modificationReference ? null (groupUuid) si je n'en trouve pas ?
-                // bof : montrer à Slimane et en discuter
+                // TODO GRD-4785 : fetch the composite uuid containing the modificationReference and add it as second value
+                //  null (groupUuid) if none is found
                 referencesToBeRecreated.putIfAbsent(modificationReference.getReferenceId(), null);
             }
         }

@@ -261,7 +261,7 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references data were returned")})
     public ResponseEntity<Map<UUID, UUID>> getAllReferencesDataFromGroup(
             @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        // TODO : for now shared modification are only at the root level and can't be inside composites,
+        // TODO GRD-4785 : for now shared modification are only at the root level and can't be inside composites,
         // but when it will be the case a specific function will have to be done in order to fetch recursively all the references inside the composites and only return uuids
         List<UUID> netModUuids = networkModificationService.getNetworkModifications(groupUuid, true, false, false)
                 .stream().map(ModificationInfos::getUuid)
