@@ -11,9 +11,7 @@ import com.powsybl.commons.report.ReportNode;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
 import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
-import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
-import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRangeAdder;
+import com.powsybl.iidm.network.extensions.*;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.modifications.VscModification;
@@ -36,6 +34,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class VscModificationTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
+    private static final Double CS_1_MEASUREMENT_P_VALUE = 400.0;
+    private static final Boolean CS_1_MEASUREMENT_P_VALID = true;
+    private static final Double CS_1_MEASUREMENT_Q_VALUE = 100.0;
+    private static final Boolean CS_1_MEASUREMENT_Q_VALID = false;
+    private static final Double CS_2_MEASUREMENT_P_VALUE = 225.0;
+    private static final Boolean CS_2_MEASUREMENT_P_VALID = false;
+    private static final Double CS_2_MEASUREMENT_Q_VALUE = 50.0;
+    private static final Boolean CS_2_MEASUREMENT_Q_VALID = true;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -78,6 +84,10 @@ class VscModificationTest extends AbstractNetworkModificationTest {
                 .reactiveCapabilityCurvePoints(List.of(
                         new ReactiveCapabilityCurvePointsInfos(0.4, 11., 0.7),
                         new ReactiveCapabilityCurvePointsInfos(0.6, 12., 0.8)))
+                .pMeasurementValue(new AttributeModification<>(CS_1_MEASUREMENT_P_VALUE, OperationType.SET))
+                .pMeasurementValidity(new AttributeModification<>(CS_1_MEASUREMENT_P_VALID, OperationType.SET))
+                .qMeasurementValue(new AttributeModification<>(CS_1_MEASUREMENT_Q_VALUE, OperationType.SET))
+                .qMeasurementValidity(new AttributeModification<>(CS_1_MEASUREMENT_Q_VALID, OperationType.SET))
                 .build();
     }
 
@@ -100,6 +110,10 @@ class VscModificationTest extends AbstractNetworkModificationTest {
                 .minQ(new AttributeModification<>(0.4, OperationType.SET))
                 .maxQ(new AttributeModification<>(0.5, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
+                .pMeasurementValue(new AttributeModification<>(CS_2_MEASUREMENT_P_VALUE, OperationType.SET))
+                .pMeasurementValidity(new AttributeModification<>(CS_2_MEASUREMENT_P_VALID, OperationType.SET))
+                .qMeasurementValue(new AttributeModification<>(CS_2_MEASUREMENT_Q_VALUE, OperationType.SET))
+                .qMeasurementValidity(new AttributeModification<>(CS_2_MEASUREMENT_Q_VALID, OperationType.SET))
                 .build();
     }
 
@@ -180,6 +194,8 @@ class VscModificationTest extends AbstractNetworkModificationTest {
             }
             assertEquals(0.3, vscConverterStation1.getVoltageSetpoint(), 0);
             assertEquals("v1", vscConverterStation1.getTerminal().getVoltageLevel().getId());
+            assertMeasurements(vscConverterStation1, Measurement.Type.ACTIVE_POWER, CS_1_MEASUREMENT_P_VALUE, CS_1_MEASUREMENT_P_VALID);
+            assertMeasurements(vscConverterStation1, Measurement.Type.REACTIVE_POWER, CS_1_MEASUREMENT_Q_VALUE, CS_1_MEASUREMENT_Q_VALID);
         }
         {
             VscConverterStation vscConverterStation2 = (VscConverterStation) hvdcLine.getConverterStation2();
@@ -193,6 +209,8 @@ class VscModificationTest extends AbstractNetworkModificationTest {
             assertEquals(0.4, reactiveLimits2.getMinQ(), 0);
             assertEquals(0.3, vscConverterStation2.getVoltageSetpoint(), 0);
             assertEquals("v2", vscConverterStation2.getTerminal().getVoltageLevel().getId());
+            assertMeasurements(vscConverterStation2, Measurement.Type.ACTIVE_POWER, CS_2_MEASUREMENT_P_VALUE, CS_2_MEASUREMENT_P_VALID);
+            assertMeasurements(vscConverterStation2, Measurement.Type.REACTIVE_POWER, CS_2_MEASUREMENT_Q_VALUE, CS_2_MEASUREMENT_Q_VALID);
         }
     }
 
@@ -402,5 +420,101 @@ class VscModificationTest extends AbstractNetworkModificationTest {
         assertDoesNotThrow(() -> vscModification.check(networkWithExt));
         vscModification.apply(networkWithExt, true, computationManager, subReporter);
         assertDoesNotThrow(() -> vscModification.apply(networkWithExt, true, computationManager, subReporter));
+    }
+
+    @Test
+    void testMeasurementsUpdatedWithNewMeasurements() {
+        Network network = getNetwork();
+        Double newCs1PMeasurementValue = 115.0D;
+        Boolean newCs1PMeasurementValidity = false;
+        Double newCs1QMeasurementValue = 25.0D;
+        Boolean newCs1QMeasurementValidity = true;
+        Double newCs2PMeasurementValue = 75.0D;
+        Boolean newCs2PMeasurementValidity = true;
+        Double newCs2QMeasurementValue = 15.0D;
+        Boolean newCs2QMeasurementValidity = false;
+        buildModification().toModification().apply(network);
+        HvdcLine hvdcLine = getNetwork().getHvdcLine("hvdcLine");
+        assertMeasurements((VscConverterStation) hvdcLine.getConverterStation1(), Measurement.Type.ACTIVE_POWER, CS_1_MEASUREMENT_P_VALUE, CS_1_MEASUREMENT_P_VALID);
+        assertMeasurements((VscConverterStation) hvdcLine.getConverterStation1(), Measurement.Type.REACTIVE_POWER, CS_1_MEASUREMENT_Q_VALUE, CS_1_MEASUREMENT_Q_VALID);
+        assertMeasurements((VscConverterStation) hvdcLine.getConverterStation2(), Measurement.Type.ACTIVE_POWER, CS_2_MEASUREMENT_P_VALUE, CS_2_MEASUREMENT_P_VALID);
+        assertMeasurements((VscConverterStation) hvdcLine.getConverterStation2(), Measurement.Type.REACTIVE_POWER, CS_2_MEASUREMENT_Q_VALUE, CS_2_MEASUREMENT_Q_VALID);
+
+        ConverterStationModificationInfos vsc1 = ConverterStationModificationInfos.builder()
+                .equipmentId("v1vsc")
+                .pMeasurementValue(new AttributeModification<>(newCs1PMeasurementValue, OperationType.SET))
+                .pMeasurementValidity(new AttributeModification<>(newCs1PMeasurementValidity, OperationType.SET))
+                .qMeasurementValue(new AttributeModification<>(newCs1QMeasurementValue, OperationType.SET))
+                .qMeasurementValidity(new AttributeModification<>(newCs1QMeasurementValidity, OperationType.SET))
+                .build();
+        ConverterStationModificationInfos vsc2 = ConverterStationModificationInfos.builder()
+                .equipmentId("v2vsc")
+                .pMeasurementValue(new AttributeModification<>(newCs2PMeasurementValue, OperationType.SET))
+                .pMeasurementValidity(new AttributeModification<>(newCs2PMeasurementValidity, OperationType.SET))
+                .qMeasurementValue(new AttributeModification<>(newCs2QMeasurementValue, OperationType.SET))
+                .qMeasurementValidity(new AttributeModification<>(newCs2QMeasurementValidity, OperationType.SET))
+                .build();
+
+        VscModificationInfos vscModificationInfos = VscModificationInfos.builder()
+                .equipmentId("hvdcLine")
+                .converterStation1(vsc1)
+                .converterStation2(vsc2)
+                .build();
+        ReportNode rootNode = ReportNode.newRootReportNode()
+                .withMessageTemplate("test")
+                .build();
+        vscModificationInfos.toModification().apply(network, rootNode);
+
+        hvdcLine = getNetwork().getHvdcLine("hvdcLine");
+        assertMeasurements((VscConverterStation) hvdcLine.getConverterStation1(), Measurement.Type.ACTIVE_POWER, newCs1PMeasurementValue, newCs1PMeasurementValidity);
+        assertMeasurements((VscConverterStation) hvdcLine.getConverterStation1(), Measurement.Type.REACTIVE_POWER, newCs1QMeasurementValue, newCs1QMeasurementValidity);
+        assertMeasurements((VscConverterStation) hvdcLine.getConverterStation2(), Measurement.Type.ACTIVE_POWER, newCs2PMeasurementValue, newCs2PMeasurementValidity);
+        assertMeasurements((VscConverterStation) hvdcLine.getConverterStation2(), Measurement.Type.REACTIVE_POWER, newCs2QMeasurementValue, newCs2QMeasurementValidity);
+        assertMeasurementsReportNodes(rootNode, vsc1.getEquipmentId(), CS_1_MEASUREMENT_P_VALUE, newCs1PMeasurementValue, CS_1_MEASUREMENT_P_VALID, newCs1PMeasurementValidity,
+                CS_1_MEASUREMENT_Q_VALUE, newCs1QMeasurementValue, CS_1_MEASUREMENT_Q_VALID, newCs1QMeasurementValidity);
+        assertMeasurementsReportNodes(rootNode, vsc2.getEquipmentId(), CS_2_MEASUREMENT_P_VALUE, newCs2PMeasurementValue, CS_2_MEASUREMENT_P_VALID, newCs2PMeasurementValidity,
+                CS_2_MEASUREMENT_Q_VALUE, newCs2QMeasurementValue, CS_2_MEASUREMENT_Q_VALID, newCs2QMeasurementValidity);
+    }
+
+    private void assertMeasurements(VscConverterStation vcs, Measurement.Type type, double expectedValue, boolean expectedValid) {
+        assertNotNull(vcs);
+        Measurements<?> measurements = (Measurements<?>) vcs.getExtension(Measurements.class);
+        assertNotNull(measurements);
+        Collection<Measurement> voltageMeasurements = measurements.getMeasurements(type).stream().toList();
+        assertThat(voltageMeasurements).isNotEmpty().allSatisfy(m -> {
+            assertThat(m.getValue()).isEqualTo(expectedValue);
+            assertThat(m.isValid()).isEqualTo(expectedValid);
+        });
+    }
+
+    private void assertMeasurementsReportNodes(ReportNode rootNode, String vscId, Double measurementPValue, Double newPMeasurementValue, Boolean measurementPValid, Boolean newPMeasurementValidity,
+                                               Double measurementQValue, Double newQMeasurementValue, Boolean measurementQValid, Boolean newQMeasurementValidity) {
+        Optional<ReportNode> vscConverterStationNode = rootNode.getChildren().stream()
+                .filter(node -> node.getMessageKey().equals("network.modification.vscConverterStationModified"))
+                .filter(node -> vscId.equals(node.getValues().get("id").toString()))
+                .findFirst();
+        assertThat(vscConverterStationNode).isPresent();
+        Optional<ReportNode> stateEstimationDataNode = vscConverterStationNode.get().getChildren().stream()
+                .filter(node -> node.getMessageKey().equals("network.modification.stateEstimationData"))
+                .findFirst();
+        assertThat(stateEstimationDataNode).isPresent();
+        Optional<ReportNode> expectedMeasurementsNodeOpt = stateEstimationDataNode.get().getChildren().stream()
+                .filter(node -> node.getMessageKey().equals("network.modification.measurements"))
+                .findFirst();
+        assertThat(expectedMeasurementsNodeOpt).isPresent();
+        ReportNode expectedMeasurementsNode = expectedMeasurementsNodeOpt.get();
+        assertThat(expectedMeasurementsNode.getChildren()).hasSize(4);
+        assertMeasurementReportNode(expectedMeasurementsNode, measurementPValue, newPMeasurementValue);
+        assertMeasurementReportNode(expectedMeasurementsNode, measurementQValue, newQMeasurementValue);
+        assertMeasurementReportNode(expectedMeasurementsNode, measurementPValid, newPMeasurementValidity);
+        assertMeasurementReportNode(expectedMeasurementsNode, measurementQValid, newQMeasurementValidity);
+    }
+
+    private void assertMeasurementReportNode(ReportNode rootNode, Object expectedOldValue, Object expectedNewValue) {
+        assertThat(rootNode.getChildren()).anySatisfy(node -> {
+            assertThat(node.getMessageKey()).isEqualTo("network.modification.fieldModification");
+            assertThat(node.getValues().get("oldValue")).hasToString(expectedOldValue.toString());
+            assertThat(node.getValues().get("newValue")).hasToString(expectedNewValue.toString());
+        });
     }
 }
