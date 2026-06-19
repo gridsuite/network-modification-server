@@ -762,9 +762,8 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public Map<UUID, UUID> restoreNetworkModifications(@NonNull List<UUID> modificationUuids, int unstashedSize) {
+    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids, int unstashedSize) {
         int modificationOrder = unstashedSize;
-        Map<UUID, UUID> referencesToBeRecreated = new HashMap<>();
         List<ModificationEntity> modifications = modificationRepository.findAllByIdInReverse(modificationUuids);
         if (modifications.size() != modificationUuids.size()) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
@@ -772,15 +771,8 @@ public class NetworkModificationRepository {
         for (ModificationEntity modification : modifications) {
             modification.setStashed(false);
             modification.setModificationsOrder(modificationOrder++);
-
-            if (modification instanceof ModificationReferenceEntity modificationReference) {
-                // TODO GRD-4785 : fetch the composite uuid containing the modificationReference and add it as second value
-                //  null (groupUuid) if none is found
-                referencesToBeRecreated.putIfAbsent(modificationReference.getReferenceId(), null);
-            }
         }
         this.modificationRepository.saveAll(modifications);
-        return referencesToBeRecreated;
     }
 
     @Transactional

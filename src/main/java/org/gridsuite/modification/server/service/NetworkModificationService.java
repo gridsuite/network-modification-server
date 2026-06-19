@@ -292,8 +292,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public Map<UUID, UUID> restoreNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
-        return networkModificationRepository.restoreNetworkModifications(modificationUuids,
+    public void restoreNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
+        networkModificationRepository.restoreNetworkModifications(modificationUuids,
             networkModificationRepository.getModificationsCount(groupUuid, false));
     }
 
