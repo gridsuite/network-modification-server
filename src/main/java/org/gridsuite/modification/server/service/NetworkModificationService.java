@@ -484,8 +484,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
-        return networkModificationRepository.createNetworkCompositeModification(modificationUuids);
+    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
+        return networkModificationRepository.createNetworkCompositeModification(modificationUuids, name);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {

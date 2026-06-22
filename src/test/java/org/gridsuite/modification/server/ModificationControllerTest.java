@@ -475,7 +475,7 @@ class ModificationControllerTest {
     @Test
     void updateModificationMetadataDoesNotModifyFieldsNotProvided() {
         // create a composite modification and set all its metadata fields
-        UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of());
+        UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of(), "");
         modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder()
                 .name("composite name")
                 .description("composite description")
