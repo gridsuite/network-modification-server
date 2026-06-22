@@ -91,7 +91,7 @@ public class CompositeController {
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})
-    public ResponseEntity<UUID> createNetworkCompositeModification(@Parameter(description = "Composite modifications name") @RequestParam("name") String name,
+    public ResponseEntity<UUID> createNetworkCompositeModification(@Parameter(description = "Composite modifications name", required = true) @RequestParam("name") String name,
                                                                    @RequestBody List<UUID> modificationUuids) {
         return ResponseEntity.ok().body(networkModificationService.createNetworkCompositeModification(modificationUuids, name == null ? "" : name));
     }
@@ -124,9 +124,11 @@ public class CompositeController {
     @PutMapping(value = "/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Update a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
-    public ResponseEntity<Void> updateNetworkCompositeModification(@PathVariable("uuid") UUID compositeModificationUuid,
-                                                                   @RequestBody List<UUID> modificationUuids) {
-        networkModificationService.updateCompositeModification(compositeModificationUuid, modificationUuids);
+    public ResponseEntity<Void> updateNetworkCompositeModification(
+            @PathVariable("uuid") UUID compositeModificationUuid,
+            @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name,
+            @Parameter(description = "New composite modifications") @RequestParam(value = "modifications_uuids", required = false) List<UUID> modificationUuids) {
+        networkModificationService.updateCompositeModification(compositeModificationUuid, name, modificationUuids);
         return ResponseEntity.ok().build();
     }
 }

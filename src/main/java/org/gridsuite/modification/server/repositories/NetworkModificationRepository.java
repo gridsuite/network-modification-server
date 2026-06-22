@@ -165,7 +165,7 @@ public class NetworkModificationRepository {
         return modificationRepository.save(compositeEntity).getId();
     }
 
-    public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
+    public void updateCompositeModification(@NonNull UUID compositeUuid, String name, List<UUID> modificationUuids) {
         ModificationEntity modificationEntity = modificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
 
@@ -174,18 +174,23 @@ public class NetworkModificationRepository {
                     String.format("Modification (%s) is not a composite modification", compositeUuid));
         }
 
-        // Fetch originals once, preserving order
-        Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .collect(Collectors.toMap(
-                        ModificationEntity::getId,
-                        e -> ModificationEntity.fromDTO(toModificationsInfosOptimized(e))
-                ));
-        // Reorder clones to match caller-specified order
-        List<ModificationEntity> copyEntities = modificationUuids.stream()
-                .map(cloneByUuid::get)
-                .filter(Objects::nonNull)
-                .toList();
-        compositeEntity.setModifications(copyEntities);
+        if (modificationUuids != null) {
+            // Fetch originals once, preserving order
+            Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
+                    .collect(Collectors.toMap(
+                            ModificationEntity::getId,
+                            e -> ModificationEntity.fromDTO(toModificationsInfosOptimized(e))
+                    ));
+            // Reorder clones to match caller-specified order
+            List<ModificationEntity> copyEntities = modificationUuids.stream()
+                    .map(cloneByUuid::get)
+                    .filter(Objects::nonNull)
+                    .toList();
+            compositeEntity.setModifications(copyEntities);
+        }
+        if (name != null) {
+            compositeEntity.setName(name);
+        }
         modificationRepository.save(compositeEntity);
     }
 
