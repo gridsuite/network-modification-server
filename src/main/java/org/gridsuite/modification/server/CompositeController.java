@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.gridsuite.modification.server.dto.CompositesToBeInserted;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -50,7 +51,7 @@ public class CompositeController {
     public CompletableFuture<ResponseEntity<NetworkModificationsResult>> insertCompositeModifications(
             @Parameter(description = "updated group UUID, where modifications are inserted") @PathVariable("groupUuid") UUID targetGroupUuid,
             @Parameter(description = "Insertion method", required = true) @RequestParam(value = "action") CompositeModificationAction action,
-            @RequestBody Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
+            @RequestBody Pair<List<CompositesToBeInserted>, List<ModificationApplicationContext>> modificationContextInfos) {
         return switch (action) {
             case SPLIT -> networkModificationService.splitCompositeModifications(
                             targetGroupUuid,

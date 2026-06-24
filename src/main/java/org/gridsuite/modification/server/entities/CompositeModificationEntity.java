@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server.entities;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,7 +49,10 @@ public class CompositeModificationEntity extends ModificationEntity {
 
     @Override
     public CompositeModificationInfos toModificationInfos() {
-        List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).toList();
+        List<ModificationInfos> modificationsInfos = modifications.stream()
+                .map(ModificationEntity::toModificationInfos)
+                .peek(this::fillDisplayMessage)
+                .toList();
         return CompositeModificationInfos.builder()
                 .name(getName())
                 .activated(getActivated())
@@ -57,6 +62,19 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .stashed(getStashed())
                 .modificationsInfos(modificationsInfos)
                 .build();
+    }
+
+    private void fillDisplayMessage(ModificationInfos child) {
+        if (child.getMessageType() == null) {
+            child.setMessageType(child.getType().name());
+        }
+        if (child.getMessageValues() == null) {
+            try {
+                child.setMessageValues(new ObjectMapper().writeValueAsString(child.getMapMessageValues()));
+            } catch (JsonProcessingException e) {
+                child.setMessageValues("{}");
+            }
+        }
     }
 
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
