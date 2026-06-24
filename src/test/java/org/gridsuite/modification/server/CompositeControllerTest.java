@@ -43,6 +43,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.*;
 
 import static org.gridsuite.modification.ModificationType.COMPOSITE_MODIFICATION;
+import static org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest.URI_NETWORK_MODIF_GET_PUT;
 import static org.gridsuite.modification.server.utils.NetworkCreation.VARIANT_ID;
 import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -309,6 +310,42 @@ class CompositeControllerTest {
         // duplicate has been deleted
         assertEquals("MODIFICATION_NOT_FOUND : " + returnedNewId, assertThrows(NetworkModificationException.class, ()
                 -> modificationRepository.getModificationInfo(returnedNewId)).getMessage());
+    }
+
+    @Test
+    void testUpdateNetworkCompositeModificationName() throws Exception {
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+
+        // Create a composite modification with the switch modification
+        List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "composite name")
+                        .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Update the composite modification name
+        String newCompositeName = "new composite name";
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeModificationUuid)
+                        .param("name", newCompositeName)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // verify that the composite has not been emptied (modifications_uuids is missing so modifications have been ignored)
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}&onlyMetadata=false", compositeModificationUuid))
+                .andExpect(status().isOk()).andReturn();
+        Map<UUID, List<ModificationInfos>> updatedMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<ModificationInfos> updatedCompositeContent = updatedMap.get(compositeModificationUuid);
+        assertEquals(updatedCompositeContent.size(), modificationList.size());
+
+        // but the name has been updated
+        mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + compositeModificationUuid))
+                .andExpect(status().isOk()).andReturn();
+        NetworkModificationResult networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.getApplicationStatus());
+        String resultAsString = mvcResult.getResponse().getContentAsString();
+        CompositeModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(newCompositeName, receivedModification.getName());
     }
 
     @Test
