@@ -1807,6 +1807,7 @@ class ModificationControllerTest {
         MvcResult result = mockMvc.perform(
                         post("/v1/network-composite-modifications")
                                 .content(mapper.writeValueAsString(modificationUuids))
+                                .param("name", "composite name")
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         return mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
