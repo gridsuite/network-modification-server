@@ -34,6 +34,7 @@ import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
+import org.gridsuite.modification.server.repositories.ModificationContainerRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.data.domain.PageRequest;
@@ -70,6 +71,7 @@ public class NetworkModificationService {
     private final NetworkStoreService networkStoreService;
 
     private final NetworkModificationRepository networkModificationRepository;
+    private final ModificationContainerRepository modificationContainerRepository;
 
     private final NetworkModificationApplicator modificationApplicator;
 
@@ -101,6 +103,7 @@ public class NetworkModificationService {
                                       ModificationApplicationInfosService applicationInfosService,
                                       ElasticsearchOperations elasticsearchOperations,
                                       ModificationRepository modificationRepository,
+                                      ModificationContainerRepository modificationContainerRepository,
                                       FilterService filterService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
@@ -111,6 +114,7 @@ public class NetworkModificationService {
         this.applicationInfosService = applicationInfosService;
         this.elasticsearchOperations = elasticsearchOperations;
         this.modificationRepository = modificationRepository;
+        this.modificationContainerRepository = modificationContainerRepository;
         this.filterService = filterService;
     }
 
@@ -234,6 +238,7 @@ public class NetworkModificationService {
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         deleteIndexedModificationGroup(List.of(groupUuid));
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
+        modificationContainerRepository.deleteById(groupUuid);
     }
 
     private void deleteIndexedModificationGroup(List<UUID> groupUuids) {

@@ -68,6 +68,7 @@ public class NetworkModificationRepository {
     private final CompositeModificationRepository compositeModificationRepository;
 
     private final TabularPropertyRepository tabularPropertyRepository;
+    private final ModificationContainerRepository modificationContainerRepository;
 
     private final ModificationApplicationInfosService modificationApplicationInfosService;
 
@@ -91,6 +92,7 @@ public class NetworkModificationRepository {
                                          VoltageLevelModificationRepository voltageLevelModificationRepository,
                                          TabularPropertyRepository tabularPropertyRepository,
                                          CompositeModificationRepository compositeModificationRepository,
+                                         ModificationContainerRepository modificationContainerRepository,
                                          ModificationApplicationInfosService modificationApplicationInfosService) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
@@ -108,7 +110,31 @@ public class NetworkModificationRepository {
         this.voltageLevelModificationRepository = voltageLevelModificationRepository;
         this.tabularPropertyRepository = tabularPropertyRepository;
         this.compositeModificationRepository = compositeModificationRepository;
+        this.modificationContainerRepository = modificationContainerRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
+    }
+
+    /**
+     * Inserts the container-identity row and flushes it immediately. The flush is required: the
+     * modification_container -> group/composite relationship is DB-only, so Hibernate won't order
+     * the parent insert before the dependent group/composite/child inserts on its own.
+     */
+
+    private void ensureContainerExists(UUID id, ModificationContainerType type) {
+        if (!modificationContainerRepository.existsById(id)) {
+            modificationContainerRepository.save(new ModificationContainerEntity(id, type));
+        }
+    }
+
+    /** Registers a container row for every composite in the subtree(s) about to be persisted.
+     *  Each composite node's insert needs its modification_container row to exist first. */
+    private void registerCompositeContainers(Collection<ModificationEntity> entities) {
+        for (ModificationEntity e : entities) {
+            if (e instanceof CompositeModificationEntity composite) {
+                ensureContainerExists(composite.getId(), ModificationContainerType.COMPOSITE);
+                registerCompositeContainers(composite.getModifications());
+            }
+        }
     }
 
     @Transactional // To have all the delete in the same transaction (atomic)
@@ -153,12 +179,14 @@ public class NetworkModificationRepository {
                 .toList();
 
         if (copyEntities.size() == 1 && copyEntities.getFirst() instanceof CompositeModificationEntity single) {
+            registerCompositeContainers(List.of(single));
             return modificationRepository.save(single).getId();
         }
 
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         compositeEntity.setModifications(copyEntities);
+        registerCompositeContainers(List.of(compositeEntity));
         return modificationRepository.save(compositeEntity).getId();
     }
 
@@ -184,14 +212,14 @@ public class NetworkModificationRepository {
                 .toList();
         deleteCompositeChildrenSubtree(List.of(compositeEntity));
         compositeEntity.setModifications(copyEntities);
+        registerCompositeContainers(List.of(compositeEntity));
         modificationRepository.save(compositeEntity);
     }
 
     private List<ModificationEntity> saveModificationsNonTransactional(@NonNull UUID groupUuid, List<ModificationEntity> modifications) {
         int order = modificationRepository.countByContainerAndStashed(groupUuid, ModificationContainerType.GROUP, false);
-        var modificationGroupEntity = this.modificationGroupRepository
-                .findById(groupUuid)
-                .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
+        var modificationGroupEntity = getOrCreateModificationGroup(groupUuid);
+        registerCompositeContainers(modifications);
         for (ModificationEntity m : modifications) {
             modificationGroupEntity.addModification(m, order++);
         }
@@ -354,6 +382,7 @@ public class NetworkModificationRepository {
                 .map(this::toModificationsInfosOptimized)
                 .map(ModificationEntity::fromDTO)
                 .toList();
+        registerCompositeContainers(copyEntities);
         List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
 
         // Iterate through sourceEntities and newEntities collections simultaneously to map sourceId -> newId
@@ -671,8 +700,10 @@ public class NetworkModificationRepository {
     private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid)
                 .orElseGet(
-                        () -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid))
-                );
+                        () -> {
+                            ensureContainerExists(groupUuid, ModificationContainerType.GROUP);
+                            return modificationGroupRepository.save(new ModificationGroupEntity(groupUuid));
+                        });
     }
 
     private Stream<ModificationEntity> getModificationEntityStream(UUID groupUuid) {
@@ -895,6 +926,7 @@ public class NetworkModificationRepository {
         if (!uuidsToDelete.isEmpty()) {
             modificationApplicationInfosService.deleteAllByModificationIds(uuidsToDelete);
             modificationRepository.deleteAllByIdIn(uuidsToDelete);
+            modificationContainerRepository.deleteAllById(compositesToDelete.stream().map(ModificationEntity::getId).toList());
         }
     }
 
@@ -1079,6 +1111,7 @@ public class NetworkModificationRepository {
                 .name("Composite modification")
                 .build();
         CompositeModificationEntity newCompositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(newCompositeInfos);
+        registerCompositeContainers(List.of(newCompositeEntity));
 
         // assign the assembled modifications to the new composite
         newCompositeEntity.setModifications(assembledModifications);

@@ -71,4 +71,52 @@
             <addForeignKeyConstraint baseColumnNames="group_id" baseTableName="modification" constraintName="group_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification_group" validate="true"/>
         </rollback>
     </changeSet>
+
+    <changeSet id="unify-modification-container-model-supertable" author="marcellinh">
+        <createTable tableName="modification_container">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="modification_containerPK"/>
+            </column>
+            <column name="container_type" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <sql>
+            INSERT INTO modification_container (id, container_type)
+            SELECT id, 'GROUP' FROM modification_group
+            UNION ALL
+            SELECT id, 'COMPOSITE' FROM composite_modification;
+        </sql>
+        <rollback>
+            <dropTable tableName="modification_container"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="unify-modification-container-model-fks" author="marcellinh">
+        <!-- (id) alone is the PK; this pair-unique is the target the composite FK below needs -->
+        <addUniqueConstraint tableName="modification_container"
+                             columnNames="id, container_type"
+                             constraintName="modification_container_id_type_uq"/>
+        <!-- The load-bearing safeguard: a modification can only point at a container that exists
+             AND is the type it claims. This is the invariant the @SQLRestriction routing relies on. -->
+        <addForeignKeyConstraint
+                baseTableName="modification" baseColumnNames="container_id, container_type"
+                referencedTableName="modification_container" referencedColumnNames="id, container_type"
+                constraintName="modification_container_fk"/>
+        <!-- Make ensureContainer non-skippable: a group/composite cannot exist without its container row -->
+        <addForeignKeyConstraint
+                baseTableName="modification_group" baseColumnNames="id"
+                referencedTableName="modification_container" referencedColumnNames="id"
+                constraintName="modification_group_container_fk"/>
+        <addForeignKeyConstraint
+                baseTableName="composite_modification" baseColumnNames="id"
+                referencedTableName="modification_container" referencedColumnNames="id"
+                constraintName="composite_modification_container_fk"/>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="composite_modification" constraintName="composite_modification_container_fk"/>
+            <dropForeignKeyConstraint baseTableName="modification_group" constraintName="modification_group_container_fk"/>
+            <dropForeignKeyConstraint baseTableName="modification" constraintName="modification_container_fk"/>
+            <dropUniqueConstraint tableName="modification_container" constraintName="modification_container_id_type_uq"/>
+        </rollback>
+    </changeSet>
 </databaseChangeLog>
