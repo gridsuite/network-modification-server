@@ -27,7 +27,6 @@ import org.gridsuite.modification.server.service.ReportService;
 import org.junit.platform.commons.util.StringUtils;
 import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
-import org.springframework.data.util.Pair;
 import org.springframework.test.web.servlet.*;
 
 import java.io.IOException;
@@ -227,7 +226,7 @@ public final class TestUtils {
         return createJsonPayload(uuids, networkUuid, variantId);
     }
 
-    public static String getJsonBodyModificationCompositeInfos(List<Pair<UUID, String>> modifs, UUID networkUuid, String variantId) throws JsonProcessingException {
+    public static String getJsonBodyModificationCompositeInfos(List<CompositesToBeInserted> modifs, UUID networkUuid, String variantId) throws JsonProcessingException {
         return createJsonPayload(modifs, networkUuid, variantId);
     }
 

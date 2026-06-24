@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.server.dto.CompositesToBeInserted;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
@@ -270,6 +271,11 @@ public class NetworkModificationService {
     }
 
     @Transactional
+    public Map<UUID, UUID> getReferencesData(@NonNull List<UUID> modificationUuids) {
+        return networkModificationRepository.getReferencesData(modificationUuids);
+    }
+
+    @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         for (UUID modificationUuid : modificationUuids) {
             UUID parentCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(modificationUuid);
@@ -481,8 +487,8 @@ public class NetworkModificationService {
      */
     public CompletableFuture<NetworkModificationsResult> splitCompositeModifications(
             @NonNull UUID targetGroupUuid,
-            @NonNull Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
-        List<UUID> compositesUuids = modificationContextInfos.getFirst().stream().map(Pair::getFirst).toList();
+            @NonNull Pair<List<CompositesToBeInserted>, List<ModificationApplicationContext>> modificationContextInfos) {
+        List<UUID> compositesUuids = modificationContextInfos.getFirst().stream().map(CompositesToBeInserted::id).toList();
         List<ModificationInfos> modifications = networkModificationRepository.extractModificationsFromCompositesAndSave(targetGroupUuid, compositesUuids);
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, modifications, modificationContextInfos.getSecond()).thenApply(result ->
@@ -491,7 +497,7 @@ public class NetworkModificationService {
 
     public CompletableFuture<NetworkModificationsResult> insertCompositeModifications(
             @NonNull UUID targetGroupUuid,
-            @NonNull Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
+            @NonNull Pair<List<CompositesToBeInserted>, List<ModificationApplicationContext>> modificationContextInfos) {
         List<ModificationInfos> modifications = networkModificationRepository.insertCompositeModifications(
                 targetGroupUuid, modificationContextInfos.getFirst());
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
