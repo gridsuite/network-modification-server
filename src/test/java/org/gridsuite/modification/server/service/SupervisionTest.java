@@ -4,7 +4,6 @@ import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicati
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosRepository;
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.AfterEach;
@@ -68,7 +67,6 @@ class SupervisionTest {
         UUID networkUuid = UUID.randomUUID();
         UUID groupUuid = UUID.randomUUID();
         ModificationEntity modificationMock = Mockito.mock(ModificationEntity.class);
-        ModificationGroupEntity groupMock = Mockito.mock(ModificationGroupEntity.class);
 
         ModificationApplicationEntity modificationApplicationEntity = ModificationApplicationEntity.builder()
             .networkUuid(networkUuid)
@@ -86,20 +84,20 @@ class SupervisionTest {
         modificationApplicationEntity = Mockito.spy(modificationApplicationEntity);
         modificationApplicationEntity2 = Mockito.spy(modificationApplicationEntity2);
         Mockito.when(modificationMock.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(groupMock.getId()).thenReturn(groupUuid);
-        Mockito.when(modificationMock.getGroup()).thenReturn(groupMock);
+        Mockito.when(modificationMock.getContainerId()).thenReturn(groupUuid);
         Mockito.when(modificationApplicationEntity.getModification()).thenReturn(modificationMock);
         Mockito.when(modificationApplicationEntity2.getModification()).thenReturn(modificationMock);
 
         List<ModificationApplicationEntity> allModifications = List.of(modificationApplicationEntity, modificationApplicationEntity2);
-        when(modificationApplicationRepository.findWithModificationAndGroupByNetworkUuid(networkUuid)).thenReturn(allModifications);
+        when(modificationApplicationRepository.findWithModificationByNetworkUuid(networkUuid)).thenReturn(allModifications);
 
         supervisionService.reindexByNetworkUuid(networkUuid);
 
         verify(modificationApplicationInfosRepository, times(1)).deleteAllByNetworkUuid(networkUuid);
-        verify(modificationApplicationRepository, times(1)).findWithModificationAndGroupByNetworkUuid(networkUuid);
+        verify(modificationApplicationRepository, times(1)).findWithModificationByNetworkUuid(networkUuid);
         verify(modificationApplicationInfosRepository, times(1)).saveAll(modificationListCaptor.capture());
         assertThat(modificationListCaptor.getValue()).usingRecursiveComparison().isEqualTo(allModifications.stream().map(ModificationApplicationEntity::toModificationApplicationInfos).toList());
+        assertThat(modificationListCaptor.getValue()).allSatisfy(infos -> assertEquals(groupUuid, infos.getGroupUuid()));
     }
 
     @Test

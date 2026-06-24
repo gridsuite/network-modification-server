@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -22,16 +23,16 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @Table(name = "modificationGroup")
-public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> {
+public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> implements ModificationContainer {
     @Id
     @Column(name = "id")
     private UUID id;
 
-    @OneToMany(
-            mappedBy = "group",
-            //Remove is not here because we handle the deletion manually
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}
-    )
+    // Purely used for read purpose, the relationship is driven by container_id to avoid write conflicts in between entities having a @JoinColumn on container_id
+    // SQLRestriction ensure we always go through (container_type, container_id) index
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @JoinColumn(name = "container_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), insertable = false, updatable = false)
+    @SQLRestriction("container_type = 'GROUP'")
     @OrderBy("modificationsOrder asc")
     private List<ModificationEntity> modifications = new ArrayList<>();
 
@@ -39,22 +40,31 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
         this.id = uuid;
     }
 
-    public void addModification(ModificationEntity modification) {
-        if (modifications.isEmpty()) {
-            // when we go back to an empty list, dont use add() on the list because JPA could start @OrderColumn to 1 instead of 0
-            List<ModificationEntity> newList = new ArrayList<>();
-            newList.add(modification);
-            setModifications(newList);
-        } else {
-            modifications.add(modification);
-            modification.setGroup(this);
-        }
+    @Override
+    public ModificationContainerType getContainerType() {
+        return ModificationContainerType.GROUP;
     }
 
-    public void setModifications(List<ModificationEntity> modifications) {
-        this.modifications = modifications;
-        modifications.forEach(modification ->
-            modification.setGroup(this)
-        );
+    @Override
+    public void addModification(ModificationEntity child, int position) {
+        ContainerOps.insert(this, this.modifications, child, position);
+    }
+
+    /**
+     * Replace the whole list (used during initial load / re-ordering operations).
+     * Re-numbers {@code modificationsOrder} and re-points each child at this group.
+     */
+    public void setModifications(List<ModificationEntity> newChildren) {
+        this.modifications.forEach(ModificationEntity::detachFromContainer);
+        this.modifications.clear();
+        if (newChildren == null || newChildren.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < newChildren.size(); i++) {
+            ModificationEntity child = newChildren.get(i);
+            child.attachToContainer(this);
+            child.setModificationsOrder(i);
+            this.modifications.add(child);
+        }
     }
 }

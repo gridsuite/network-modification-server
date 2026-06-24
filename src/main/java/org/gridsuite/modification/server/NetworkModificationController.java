@@ -92,39 +92,31 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid));
     }
 
-    @PutMapping(value = "/groups/{groupUuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list")
-    @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated.")
+    @PutMapping(value = "/groups/{groupUuid}", consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Move or copy modifications between containers (groups or composites)")
+    @ApiResponse(responseCode = "200", description = "The container has been updated.")
     public CompletableFuture<ResponseEntity<NetworkModificationsResult>> handleNetworkModifications(
-            @Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
+            @Parameter(description = "target container UUID") @PathVariable("groupUuid") UUID targetContainerId,
             @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
-            @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
-            @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
-            @Parameter(description = "modifications can be applied (default is true)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
+            @Parameter(description = "insert before this modification (MOVE only, empty = at end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
+            @Parameter(description = "source container UUID (defaults to target for same-container moves)") @RequestParam(value = "originGroupUuid", required = false) UUID sourceContainerId,
+            @Parameter(description = "modifications can be applied (default true; ignored for COMPOSITE targets)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
             @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
         return switch (action) {
-            case COPY ->
-                networkModificationService.duplicateModifications(
-                        targetGroupUuid,
-                        originGroupUuid,
-                        modificationContextInfos.getFirst(),
-                        modificationContextInfos.getSecond()
-                ).thenApply(ResponseEntity.ok()::body);
-            case MOVE -> {
-                UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
-                boolean applyModifications = canApply;
-                if (sourceGroupUuid.equals(targetGroupUuid)) {
-                    applyModifications = false;
-                }
-                yield networkModificationService.moveModifications(
-                        targetGroupUuid,
-                        sourceGroupUuid,
+            case COPY -> networkModificationService.duplicateModifications(
+                    targetContainerId, sourceContainerId,
+                    modificationContextInfos.getFirst(),
+                    modificationContextInfos.getSecond()
+            ).thenApply(ResponseEntity.ok()::body);
+            case MOVE -> networkModificationService.moveModifications(
+                        sourceContainerId == null ? targetContainerId : sourceContainerId,
+                        targetContainerId,
                         beforeModificationUuid,
                         modificationContextInfos.getFirst(),
                         modificationContextInfos.getSecond(),
-                        applyModifications
-                ).thenApply(ResponseEntity.ok()::body);
-            }
+                        canApply
+            ).thenApply(ResponseEntity.ok()::body);
         };
     }
 

@@ -12,7 +12,10 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.server.entities.ModificationContainerEntity;
+import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.repositories.ModificationContainerRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -33,6 +36,9 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
     @Autowired
     protected ModificationRepository modificationRepository;
 
+    @Autowired
+    protected ModificationContainerRepository modificationContainerRepository;
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, false);
@@ -41,7 +47,9 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         ModificationInfos compositeInfo = buildCompositeModification();
-        ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
+        ModificationEntity compositeEntity = ModificationEntity.fromDTO(compositeInfo);
+        modificationContainerRepository.save(new ModificationContainerEntity(compositeEntity.getId(), ModificationContainerType.COMPOSITE));
+        modificationRepository.save(compositeEntity);
         ModificationInfos compositeMetadataInfo = modificationRepository.findBaseDataByIdIn(List.of(compositeEntity.getId())).getFirst().toModificationInfos();
 
         return ModificationReferenceInfos.builder()
