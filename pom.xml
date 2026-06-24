@@ -53,7 +53,8 @@
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
         <!-- TODO network-modification.version remove when included in gridsuite-dependencies -->
-        <network-modification.version>0.87.0</network-modification.version>
+        <network-modification.version>0.88.0</network-modification.version>
+        <gridsuite-filter.version>1.25.0</gridsuite-filter.version>
     </properties>
 
     <build>
@@ -88,6 +89,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- FIXME: to be removed at next release of gridsuite-dependencies or gridsuite-dependencies -->
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-filter</artifactId>
+                <version>${gridsuite-filter.version}</version>
+            </dependency>
             <!-- overrides of imports -->
             <dependency><!-- To remove when integrate in next release of gridsuite-dependencies or powsybl-ws-dependencies -->
                 <groupId>com.squareup.okhttp3</groupId>

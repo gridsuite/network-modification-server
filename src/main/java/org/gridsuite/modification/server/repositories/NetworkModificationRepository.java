@@ -234,8 +234,10 @@ public class NetworkModificationRepository {
             // insert into origin list
             insertModifications(originModificationEntities, modificationsToMove, referenceModificationUuid);
         } else { // 2-group case
+             // Collect modifications (composite's children)
             // before moving origin modifications between nodes, remove applications since they are not applicable anymore
-            modificationApplicationInfosService.deleteAllByModificationIds(modificationsToMove.stream().map(ModificationEntity::getId).collect(Collectors.toList()));
+            List<UUID> allMovedUuids = collectAllModificationUuids(modificationsToMove);
+            modificationApplicationInfosService.deleteAllByModificationIds(allMovedUuids);
             // read destination group and modifications (group must be created if missing)
             ModificationGroupEntity destinationModificationGroupEntity = getOrCreateModificationGroup(destinationGroupUuid);
             List<ModificationEntity> destinationModificationEntities = destinationModificationGroupEntity.getModifications();
@@ -250,6 +252,17 @@ public class NetworkModificationRepository {
         originModificationGroupEntity.setModifications(originModificationEntities);
 
         return modificationsToMove;
+    }
+
+    private List<UUID> collectAllModificationUuids(List<ModificationEntity> entities) {
+        List<UUID> uuids = new ArrayList<>();
+        for (ModificationEntity entity : entities) {
+            uuids.add(entity.getId());
+            if (entity instanceof CompositeModificationEntity composite) {
+                uuids.addAll(collectAllModificationUuids(composite.getModifications()));
+            }
+        }
+        return uuids;
     }
 
     private void insertModifications(List<ModificationEntity> modificationsList, List<ModificationEntity> modificationsToAdd, UUID referenceModificationUuid) {
