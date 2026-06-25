@@ -166,13 +166,8 @@ public class NetworkModificationRepository {
     }
 
     public void replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<UUID> modificationUuids) {
-        ModificationEntity modificationEntity = modificationRepository.findById(compositeUuid)
+        CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
-
-        if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
-            throw new NetworkModificationException(MODIFICATION_ERROR,
-                    String.format("Modification (%s) is not a composite modification", compositeUuid));
-        }
 
         // Fetch originals once, preserving order
         Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
@@ -187,21 +182,14 @@ public class NetworkModificationRepository {
                 .toList();
         compositeEntity.setModifications(copyEntities);
         compositeEntity.setName(name);
-        modificationRepository.save(compositeEntity);
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
-        ModificationEntity modificationEntity = modificationRepository.findById(compositeUuid)
+        CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
-
-        if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
-            throw new NetworkModificationException(MODIFICATION_ERROR,
-                    String.format("Modification (%s) is not a composite modification", compositeUuid));
-        }
         if (name != null) {
             compositeEntity.setName(name);
         }
-        modificationRepository.save(compositeEntity);
     }
 
     private List<ModificationEntity> saveModificationsNonTransactional(@NonNull UUID groupUuid, List<ModificationEntity> modifications) {

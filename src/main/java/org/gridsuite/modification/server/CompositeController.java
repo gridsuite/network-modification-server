@@ -93,7 +93,7 @@ public class CompositeController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})
     public ResponseEntity<UUID> createNetworkCompositeModification(@Parameter(description = "Composite modifications name", required = true) @RequestParam("name") String name,
                                                                    @RequestBody List<UUID> modificationUuids) {
-        return ResponseEntity.ok().body(networkModificationService.createNetworkCompositeModification(modificationUuids, name == null ? "" : name));
+        return ResponseEntity.ok().body(networkModificationService.createNetworkCompositeModification(modificationUuids, name));
     }
 
     @GetMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -124,7 +124,7 @@ public class CompositeController {
     @PutMapping(value = "/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Update a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
-    public ResponseEntity<Void> replaceNetworkCompositeModification(
+    public ResponseEntity<Void> updateNetworkCompositeModification(
             @PathVariable("uuid") UUID compositeModificationUuid,
             @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name) {
         networkModificationService.updateCompositeModification(compositeModificationUuid, name);
