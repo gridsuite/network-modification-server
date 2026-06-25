@@ -475,7 +475,7 @@ class ModificationControllerTest {
     @Test
     void updateModificationMetadataDoesNotModifyFieldsNotProvided() {
         // create a composite modification and set all its metadata fields
-        UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of());
+        UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of(), "");
         modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder()
                 .name("composite name")
                 .description("composite description")
@@ -1807,6 +1807,7 @@ class ModificationControllerTest {
         MvcResult result = mockMvc.perform(
                         post("/v1/network-composite-modifications")
                                 .content(mapper.writeValueAsString(modificationUuids))
+                                .param("name", "composite name")
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         return mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
