@@ -583,12 +583,10 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         final Network network = Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm"));
         setNetwork(network);
 
-        GenerationDispatchInfos modification = GenerationDispatchInfos.builder().lossCoefficient(150.).defaultOutageRate(0.).build();
-        final GenerationDispatch generationDispatch1 = new GenerationDispatch(modification);
+        final GenerationDispatch generationDispatch1 = GenerationDispatch.builder().lossCoefficient(150.).defaultOutageRate(0.).build();
         assertThrows(NetworkModificationException.class, () -> generationDispatch1.check(network), "GENERATION_DISPATCH_ERROR : The loss coefficient must be between 0 and 100");
 
-        modification = GenerationDispatchInfos.builder().lossCoefficient(20.).defaultOutageRate(140.).build();
-        final GenerationDispatch generationDispatch2 = new GenerationDispatch(modification);
+        final GenerationDispatch generationDispatch2 = GenerationDispatch.builder().lossCoefficient(20.).defaultOutageRate(140.).build();
         assertThrows(NetworkModificationException.class, () -> generationDispatch2.check(network), "GENERATION_DISPATCH_ERROR : The default outage rate must be between 0 and 100");
     }
 
