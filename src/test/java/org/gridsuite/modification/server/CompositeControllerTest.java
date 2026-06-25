@@ -368,9 +368,9 @@ class CompositeControllerTest {
         List<UUID> newModificationUuids = newModificationList.stream().map(ModificationInfos::getUuid).toList();
 
         // Update the composite modification with the new modifications
-        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeModificationUuid)
-                        .param("modifications_uuids", newModificationUuids.stream().map(Objects::toString).toList().toArray(new String[0]))
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeModificationUuid + "/replace")
+                        .param("name", "new name")
+                        .content(mapper.writeValueAsString(newModificationUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         // Get the composite modification content and verify it has been updated
@@ -388,7 +388,8 @@ class CompositeControllerTest {
         UUID nonExistentUuid = UUID.randomUUID();
         List<UUID> modificationUuids = List.of(UUID.randomUUID());
 
-        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + nonExistentUuid)
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + nonExistentUuid + "/replace")
+                        .param("name", "new name")
                         .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -405,8 +406,9 @@ class CompositeControllerTest {
         UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
         // Update the composite with an empty list of modifications
-        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeModificationUuid + "?modifications_uuids=")
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeModificationUuid + "/replace")
+                        .param("name", "new name")
+                        .content(mapper.writeValueAsString(Collections.emptyList())).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         // Verify that the composite now contains no modifications

@@ -517,8 +517,13 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateCompositeModification(@NonNull UUID compositeUuid, String name, List<UUID> modificationUuids) {
-        networkModificationRepository.updateCompositeModification(compositeUuid, name, modificationUuids);
+    public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
+        networkModificationRepository.updateCompositeModification(compositeUuid, name);
+    }
+
+    @Transactional
+    public void replaceCompositeModification(@NonNull UUID compositeUuid, String name, List<UUID> modificationUuids) {
+        networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
     }
 
     public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {

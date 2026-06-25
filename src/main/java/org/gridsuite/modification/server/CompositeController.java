@@ -124,11 +124,20 @@ public class CompositeController {
     @PutMapping(value = "/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Update a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
-    public ResponseEntity<Void> updateNetworkCompositeModification(
+    public ResponseEntity<Void> replaceNetworkCompositeModification(
             @PathVariable("uuid") UUID compositeModificationUuid,
-            @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name,
-            @Parameter(description = "New composite modifications") @RequestParam(value = "modifications_uuids", required = false) List<UUID> modificationUuids) {
-        networkModificationService.updateCompositeModification(compositeModificationUuid, name, modificationUuids);
+            @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name) {
+        networkModificationService.updateCompositeModification(compositeModificationUuid, name);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping(value = "/{uuid}/replace", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Replaces all the network modifications inside a network composite modification")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
+    public ResponseEntity<Void> replaceNetworkCompositeModification(@PathVariable("uuid") UUID compositeModificationUuid,
+                                                                    @Parameter(description = "New composite name") @RequestParam(value = "name") String name,
+                                                                    @RequestBody List<UUID> modificationUuids) {
+        networkModificationService.replaceCompositeModification(compositeModificationUuid, name, modificationUuids);
         return ResponseEntity.ok().build();
     }
 }
