@@ -25,7 +25,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "limits_property")
+@Table(name = "limits_property",
+        indexes = {@Index(name = "limits_property_modification_operational_limit_group_id_idx", columnList = "operational_limit_group_id")})
 public class LimitsPropertyEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

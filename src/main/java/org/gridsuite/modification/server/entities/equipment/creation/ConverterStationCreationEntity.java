@@ -53,7 +53,8 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
     private Double voltageSetpoint;
 
     @ElementCollection
-    @CollectionTable(name = "converter_station_creation_rcc_points")
+    @CollectionTable(name = "converter_station_creation_rcc_points",
+            indexes = @Index(name = "converter_station_creation_rcc_points_entity_id_idx", columnList = "converter_station_creation_entity_id"))
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
 
     @Column

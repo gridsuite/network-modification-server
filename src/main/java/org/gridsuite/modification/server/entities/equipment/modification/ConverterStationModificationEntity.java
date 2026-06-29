@@ -68,7 +68,8 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     private DoubleModificationEmbedded voltageSetpoint;
 
     @ElementCollection
-    @CollectionTable(name = "converter_station_modification_rcc_points")
+    @CollectionTable(name = "converter_station_modification_rcc_points",
+            indexes = @Index(name = "converter_station_modification_rcc_points_entity_id_idx", columnList = "converter_station_modification_entity_id"))
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
 
     @Embedded
@@ -125,6 +126,10 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
             .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
             .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
             .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
+            .pMeasurementValue(toAttributeModification(getPMeasurementValue()))
+            .pMeasurementValidity(toAttributeModification(getPMeasurementValidity()))
+            .qMeasurementValue(toAttributeModification(getQMeasurementValue()))
+            .qMeasurementValidity(toAttributeModification(getQMeasurementValidity()))
             .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationInfos(getReactiveCapabilityCurvePoints()));
     }
 }

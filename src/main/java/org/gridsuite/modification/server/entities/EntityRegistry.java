@@ -109,6 +109,8 @@ public final class EntityRegistry {
         registerAttribute(Integer.class, IntegerEquipmentAttributeModificationEntity.class);
         registerAttribute(Float.class, FloatEquipmentAttributeModificationEntity.class);
         registerAttribute(Double.class, DoubleEquipmentAttributeModificationEntity.class);
+
+        register(ModificationReferenceInfos.class, ModificationReferenceEntity.class);
     }
 
     public static void register(Class<? extends ModificationInfos> dtoClass, Class<? extends ModificationEntity> entityClass) {

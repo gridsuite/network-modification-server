@@ -11,6 +11,7 @@ import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguratio
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -24,15 +25,31 @@ public class DTOAssert<T> extends AbstractAssert<DTOAssert<T>, T> {
 
     public DTOAssert<T> recursivelyEquals(T other) {
         isNotNull();
-        usingRecursiveComparison(this.getRecursiveConfiguration()).isEqualTo(other);
+        usingRecursiveComparison(getRecursiveConfiguration()).isEqualTo(other);
         return myself;
     }
 
-    private RecursiveComparisonConfiguration getRecursiveConfiguration() {
-        return RecursiveComparisonConfiguration.builder()
+    public static RecursiveComparisonConfiguration getRecursiveConfiguration() {
+        return getRecursiveConfiguration(true);
+    }
+
+    public static RecursiveComparisonConfiguration getRecursiveConfiguration(boolean ignoreCollectionOrder) {
+        RecursiveComparisonConfiguration.Builder builder = RecursiveComparisonConfiguration.builder()
             .withIgnoreAllOverriddenEquals(true)                                    // For equals test, need specific tests
             .withIgnoredFieldsOfTypes(UUID.class, Date.class, Instant.class)        // For these types, need specific tests (uuid from db for example)
-            .withIgnoreCollectionOrder(true)                                        // For collection order test, need specific tests
-            .build();
+            // DTO builders may leave activated null while it's set to true at creation
+            .withEqualsForFieldsMatchingRegexes(DTOAssert::activationFlagsAreEqualWithDefaultValue, ".*activated");
+        if (ignoreCollectionOrder) {
+            builder.withIgnoreCollectionOrder(true);                                // For collection order test, need specific tests
+        }
+        return builder.build();
+    }
+
+    private static boolean activationFlagsAreEqualWithDefaultValue(Object actual, Object expected) {
+        return Objects.equals(defaultActivation(actual), defaultActivation(expected));
+    }
+
+    private static Object defaultActivation(Object value) {
+        return value == null ? true : value;
     }
 }

@@ -1,0 +1,48 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="lesoteti (generated)" id="1779460567128-3">
+        <createIndex indexName="VariationFilter_assignment_id_idx" tableName="variation_filter">
+            <column name="assignment_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1779460567128-4">
+        <createIndex indexName="by_filter_deletion_filters_id_idx" tableName="by_filter_deletion_filters">
+            <column name="id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1779460567128-5">
+        <createIndex indexName="converter_station_creation_rcc_points_entity_id_idx" tableName="converter_station_creation_rcc_points">
+            <column name="converter_station_creation_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1779460567128-6">
+        <createIndex indexName="converter_station_modification_rcc_points_entity_id_idx" tableName="converter_station_modification_rcc_points">
+            <column name="converter_station_modification_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1779460567128-7">
+        <createIndex indexName="create_voltage_level_topology_switch_kinds_entity_id_idx" tableName="create_voltage_level_topology_switch_kinds">
+            <column name="create_voltage_level_topology_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1779460567128-8">
+        <createIndex indexName="lcc_converter_station_modification_on_side_index" tableName="lcc_converter_station_modification_on_side">
+            <column name="lcc_converter_station_modification_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1779460567128-9">
+        <createIndex indexName="limits_for_line_type_idx" tableName="limits_for_line_type">
+            <column name="line_type_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1779460567128-11">
+        <createIndex indexName="move_feeder_bay_modification_idx" tableName="move_feeder_bay">
+            <column name="modification_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1779460567128-12">
+        <createIndex indexName="shunt_compensator_on_side_index" tableName="shunt_compensator_on_side">
+            <column name="lcc_converter_station_creation_entity_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

@@ -40,8 +40,9 @@ public class LccConverterStationModificationEntity extends InjectionModification
     private FloatModificationEmbedded powerFactor;
 
     @ElementCollection
-    @CollectionTable(name = "lcc_converter_station_modification_on_side", joinColumns = @JoinColumn(name = "lcc_converter_station_modification_id"),
-        foreignKey = @ForeignKey(name = "lcc_converter_station_modification_on_side_fk"))
+    @CollectionTable(name = "lcc_converter_station_modification_on_side",
+            indexes = {@Index(name = "lcc_converter_station_modification_on_side_index", columnList = "lcc_converter_station_modification_id")},
+            joinColumns = @JoinColumn(name = "lcc_converter_station_modification_id"), foreignKey = @ForeignKey(name = "lcc_converter_station_modification_on_side_fk"))
     private List<ShuntCompensatorModificationEmbeddable> shuntCompensatorsOnSide;
 
     public LccConverterStationModificationEntity(LccConverterStationModificationInfos converterStationModificationInfos) {

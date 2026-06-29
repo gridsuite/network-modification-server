@@ -7,10 +7,13 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.BusbarSection;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
+import com.powsybl.iidm.network.extensions.Measurement;
+import com.powsybl.iidm.network.extensions.Measurements;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -19,10 +22,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.NetworkModificationException.Type.MODIFY_VOLTAGE_LEVEL_ERROR;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -39,6 +44,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
+    private static final Double MEASUREMENT_V_VALUE = 400.0;
+    private static final Boolean MEASUREMENT_V_VALID = true;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -57,6 +64,12 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
                 .ipMax(new AttributeModification<>(0.8, OperationType.SET))
                 .ipMin(new AttributeModification<>(0.7, OperationType.SET))
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
+                .busbarSectionVMeasurements(List.of(
+                        BusbarSectionVMeasurementInfos.builder()
+                                .busbarSectionId("1.1")
+                                .vMeasurementValue(new AttributeModification<>(MEASUREMENT_V_VALUE, OperationType.SET))
+                                .vMeasurementValidity(new AttributeModification<>(MEASUREMENT_V_VALID, OperationType.SET))
+                                .build()))
                 .build();
     }
 
@@ -71,6 +84,12 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
                 .highVoltageLimit(new AttributeModification<>(55D, OperationType.SET))
                 .ipMax(new AttributeModification<>(0.9, OperationType.SET))
                 .ipMin(new AttributeModification<>(0.5, OperationType.SET))
+                .busbarSectionVMeasurements(List.of(
+                        BusbarSectionVMeasurementInfos.builder()
+                                .busbarSectionId("1.1")
+                                .vMeasurementValue(new AttributeModification<>(380D, OperationType.SET))
+                                .vMeasurementValidity(new AttributeModification<>(false, OperationType.SET))
+                                .build()))
                 .build();
     }
 
@@ -87,6 +106,18 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
         assertEquals(0.8, identifiableShortCircuit.getIpMax(), 0);
         assertEquals(0.7, identifiableShortCircuit.getIpMin(), 0);
         assertEquals(PROPERTY_VALUE, getNetwork().getVoltageLevel("v1").getProperty(PROPERTY_NAME));
+        assertBusbarSectionMeasurement(getNetwork().getBusbarSection("1.1"), MEASUREMENT_V_VALUE, MEASUREMENT_V_VALID);
+    }
+
+    private void assertBusbarSectionMeasurement(BusbarSection bbs, double expectedValue, boolean expectedValid) {
+        assertNotNull(bbs);
+        Measurements<?> measurements = (Measurements<?>) bbs.getExtension(Measurements.class);
+        assertNotNull(measurements);
+        Collection<Measurement> voltageMeasurements = measurements.getMeasurements(Measurement.Type.VOLTAGE).stream().toList();
+        assertThat(voltageMeasurements).isNotEmpty().allSatisfy(m -> {
+            assertThat(m.getValue()).isEqualTo(expectedValue);
+            assertThat(m.isValid()).isEqualTo(expectedValid);
+        });
     }
 
     @Override
@@ -243,6 +274,30 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
         assertEquals(targetIpMax, identifiableShortCircuit1.getIpMax(), 0);
     }
 
+    @Test
+    void testBusbarSectionMeasurementUpdateExistingPath() throws Exception {
+        // Apply first modification: adds a new voltage measurement to the BBS (add path)
+        applyModification((VoltageLevelModificationInfos) buildModification());
+        assertBusbarSectionMeasurement(getNetwork().getBusbarSection("1.1"), MEASUREMENT_V_VALUE, MEASUREMENT_V_VALID);
+
+        // Apply second modification: updates the existing voltage measurement (update/upsert path)
+        final double updatedValue = 380.0;
+        final boolean updatedValidity = false;
+        VoltageLevelModificationInfos updateModif = VoltageLevelModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("v1")
+                .busbarSectionVMeasurements(List.of(
+                        BusbarSectionVMeasurementInfos.builder()
+                                .busbarSectionId("1.1")
+                                .vMeasurementValue(new AttributeModification<>(updatedValue, OperationType.SET))
+                                .vMeasurementValidity(new AttributeModification<>(updatedValidity, OperationType.SET))
+                                .build()))
+                .build();
+        applyModification(updateModif);
+
+        assertBusbarSectionMeasurement(getNetwork().getBusbarSection("1.1"), updatedValue, updatedValidity);
+    }
+
     private void applyModification(VoltageLevelModificationInfos infos) throws Exception {
         String body = getJsonBody(infos, null);
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri())
@@ -256,14 +311,16 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("VOLTAGE_LEVEL_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() {
+        });
         assertEquals("v1", createdValues.get("equipmentId"));
     }
 
     @Override
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("VOLTAGE_LEVEL_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() {
+        });
         assertEquals("v1Edited", updatedValues.get("equipmentId"));
     }
 }

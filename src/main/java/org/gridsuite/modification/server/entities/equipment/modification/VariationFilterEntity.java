@@ -6,18 +6,13 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.dto.FilterInfos;
+
 import java.util.UUID;
 
 /**
@@ -27,7 +22,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "VariationFilter", indexes = @Index(name = "formula_id_idx", columnList = "formula_id"))
+@Table(name = "VariationFilter", indexes = {
+    @Index(name = "formula_id_idx", columnList = "formula_id"),
+    @Index(name = "variation_filter_assignment_id_idx", columnList = "assignment_id")})
 public class VariationFilterEntity {
 
     @Id
