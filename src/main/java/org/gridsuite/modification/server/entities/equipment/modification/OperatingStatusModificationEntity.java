@@ -6,13 +6,12 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-
-import jakarta.persistence.*;
+import org.gridsuite.modification.dto.OperatingStatusModificationInfos;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>

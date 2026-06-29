@@ -24,7 +24,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * @author AJELLAL Ali <ali.ajellal@rte-france.com>
+ * @author AJELLAL Ali <ali.ajellal at rte-france.com>
  */
 @Tag("IntegrationTest")
 class TabularSubstationModificationsTest extends AbstractNetworkModificationTest {
@@ -39,8 +39,10 @@ class TabularSubstationModificationsTest extends AbstractNetworkModificationTest
     protected ModificationInfos buildModification() {
 
         List<ModificationInfos> modifications = List.of(
-                SubstationModificationInfos.builder().equipmentId("s1").equipmentName(new AttributeModification<>("s1", OperationType.SET)).country(new AttributeModification<>(Country.BE, OperationType.SET)).build(),
-                SubstationModificationInfos.builder().equipmentId("s2").equipmentName(new AttributeModification<>("s2", OperationType.SET)).country(new AttributeModification<>(Country.BE, OperationType.SET)).build()
+                SubstationModificationInfos.builder().equipmentId("s1").equipmentName(new AttributeModification<>("s1", OperationType.SET)).country(new AttributeModification<>(Country.BE,
+                        OperationType.SET)).build(),
+                SubstationModificationInfos.builder().equipmentId("s2").equipmentName(new AttributeModification<>("s2", OperationType.SET)).country(new AttributeModification<>(Country.BE,
+                        OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(MOFIFICATION_TYPE)
@@ -53,8 +55,10 @@ class TabularSubstationModificationsTest extends AbstractNetworkModificationTest
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                SubstationModificationInfos.builder().equipmentId("s1").equipmentName(new AttributeModification<>("s1", OperationType.SET)).country(new AttributeModification<>(Country.JP, OperationType.SET)).build(),
-                SubstationModificationInfos.builder().equipmentId("s2").equipmentName(new AttributeModification<>("s2", OperationType.SET)).country(new AttributeModification<>(Country.JP, OperationType.SET)).build()
+                SubstationModificationInfos.builder().equipmentId("s1").equipmentName(new AttributeModification<>("s1", OperationType.SET)).country(new AttributeModification<>(Country.JP,
+                        OperationType.SET)).build(),
+                SubstationModificationInfos.builder().equipmentId("s2").equipmentName(new AttributeModification<>("s2", OperationType.SET)).country(new AttributeModification<>(Country.JP,
+                        OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(MOFIFICATION_TYPE)

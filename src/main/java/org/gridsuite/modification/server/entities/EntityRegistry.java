@@ -6,9 +6,6 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.*;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
@@ -22,6 +19,8 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.StringEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.*;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>

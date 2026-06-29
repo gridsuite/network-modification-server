@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
  */
+
 @Tag("IntegrationTest")
 class VscModificationTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
@@ -170,20 +171,19 @@ class VscModificationTest extends AbstractNetworkModificationTest {
 
         VscModificationInfos vscModificationInfos = (VscModificationInfos) buildModification();
 
-        {
-            VscConverterStation vscConverterStation1 = (VscConverterStation) hvdcLine.getConverterStation1();
-            assertNotNull(vscConverterStation1);
-            assertEquals("v1vsc-name", vscConverterStation1.getOptionalName().orElse(""));
-            assertEquals(0.2, vscConverterStation1.getReactivePowerSetpoint(), 0);
-            assertEquals(0.1F, vscConverterStation1.getLossFactor(), 0);
-            assertEquals(ReactiveLimitsKind.CURVE, vscConverterStation1.getReactiveLimits().getKind());
-            ReactiveCapabilityCurve reactiveLimits1 = vscConverterStation1.getReactiveLimits(ReactiveCapabilityCurve.class);
-            assertEquals(2, reactiveLimits1.getPointCount());
-            Collection<ReactiveCapabilityCurve.Point> points = vscConverterStation1.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
-            List<ReactiveCapabilityCurve.Point> vscPoints = new ArrayList<>(points);
-            List<ReactiveCapabilityCurvePointsInfos> modificationPoints = vscModificationInfos.getConverterStation1().getReactiveCapabilityCurvePoints();
-            if (!CollectionUtils.isEmpty(points)) {
-                IntStream.range(0, vscPoints.size())
+        VscConverterStation vscConverterStation1 = (VscConverterStation) hvdcLine.getConverterStation1();
+        assertNotNull(vscConverterStation1);
+        assertEquals("v1vsc-name", vscConverterStation1.getOptionalName().orElse(""));
+        assertEquals(0.2, vscConverterStation1.getReactivePowerSetpoint(), 0);
+        assertEquals(0.1F, vscConverterStation1.getLossFactor(), 0);
+        assertEquals(ReactiveLimitsKind.CURVE, vscConverterStation1.getReactiveLimits().getKind());
+        ReactiveCapabilityCurve reactiveLimits1 = vscConverterStation1.getReactiveLimits(ReactiveCapabilityCurve.class);
+        assertEquals(2, reactiveLimits1.getPointCount());
+        Collection<ReactiveCapabilityCurve.Point> points = vscConverterStation1.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
+        List<ReactiveCapabilityCurve.Point> vscPoints = new ArrayList<>(points);
+        List<ReactiveCapabilityCurvePointsInfos> modificationPoints = vscModificationInfos.getConverterStation1().getReactiveCapabilityCurvePoints();
+        if (!CollectionUtils.isEmpty(points)) {
+            IntStream.range(0, vscPoints.size())
                         .forEach(i -> {
                             var point = vscPoints.get(i);
                             var modificationPoint = modificationPoints.get(i);
@@ -191,27 +191,24 @@ class VscModificationTest extends AbstractNetworkModificationTest {
                             assertEquals(modificationPoint.getMinQ(), point.getMinQ());
                             assertEquals(modificationPoint.getP(), point.getP());
                         });
-            }
-            assertEquals(0.3, vscConverterStation1.getVoltageSetpoint(), 0);
-            assertEquals("v1", vscConverterStation1.getTerminal().getVoltageLevel().getId());
-            assertMeasurements(vscConverterStation1, Measurement.Type.ACTIVE_POWER, CS_1_MEASUREMENT_P_VALUE, CS_1_MEASUREMENT_P_VALID);
-            assertMeasurements(vscConverterStation1, Measurement.Type.REACTIVE_POWER, CS_1_MEASUREMENT_Q_VALUE, CS_1_MEASUREMENT_Q_VALID);
         }
-        {
-            VscConverterStation vscConverterStation2 = (VscConverterStation) hvdcLine.getConverterStation2();
-            assertNotNull(vscConverterStation2);
-            assertEquals("v2vsc-name", vscConverterStation2.getOptionalName().orElse(""));
-            assertEquals(0.2, vscConverterStation2.getReactivePowerSetpoint(), 0);
-            assertEquals(0.1F, vscConverterStation2.getLossFactor(), 0);
-            assertEquals(ReactiveLimitsKind.MIN_MAX, vscConverterStation2.getReactiveLimits().getKind());
-            MinMaxReactiveLimits reactiveLimits2 = vscConverterStation2.getReactiveLimits(MinMaxReactiveLimits.class);
-            assertEquals(0.5, reactiveLimits2.getMaxQ(), 0);
-            assertEquals(0.4, reactiveLimits2.getMinQ(), 0);
-            assertEquals(0.3, vscConverterStation2.getVoltageSetpoint(), 0);
-            assertEquals("v2", vscConverterStation2.getTerminal().getVoltageLevel().getId());
-            assertMeasurements(vscConverterStation2, Measurement.Type.ACTIVE_POWER, CS_2_MEASUREMENT_P_VALUE, CS_2_MEASUREMENT_P_VALID);
-            assertMeasurements(vscConverterStation2, Measurement.Type.REACTIVE_POWER, CS_2_MEASUREMENT_Q_VALUE, CS_2_MEASUREMENT_Q_VALID);
-        }
+        assertEquals(0.3, vscConverterStation1.getVoltageSetpoint(), 0);
+        assertEquals("v1", vscConverterStation1.getTerminal().getVoltageLevel().getId());
+        assertMeasurements(vscConverterStation1, Measurement.Type.ACTIVE_POWER, CS_1_MEASUREMENT_P_VALUE, CS_1_MEASUREMENT_P_VALID);
+        assertMeasurements(vscConverterStation1, Measurement.Type.REACTIVE_POWER, CS_1_MEASUREMENT_Q_VALUE, CS_1_MEASUREMENT_Q_VALID);
+        VscConverterStation vscConverterStation2 = (VscConverterStation) hvdcLine.getConverterStation2();
+        assertNotNull(vscConverterStation2);
+        assertEquals("v2vsc-name", vscConverterStation2.getOptionalName().orElse(""));
+        assertEquals(0.2, vscConverterStation2.getReactivePowerSetpoint(), 0);
+        assertEquals(0.1F, vscConverterStation2.getLossFactor(), 0);
+        assertEquals(ReactiveLimitsKind.MIN_MAX, vscConverterStation2.getReactiveLimits().getKind());
+        MinMaxReactiveLimits reactiveLimits2 = vscConverterStation2.getReactiveLimits(MinMaxReactiveLimits.class);
+        assertEquals(0.5, reactiveLimits2.getMaxQ(), 0);
+        assertEquals(0.4, reactiveLimits2.getMinQ(), 0);
+        assertEquals(0.3, vscConverterStation2.getVoltageSetpoint(), 0);
+        assertEquals("v2", vscConverterStation2.getTerminal().getVoltageLevel().getId());
+        assertMeasurements(vscConverterStation2, Measurement.Type.ACTIVE_POWER, CS_2_MEASUREMENT_P_VALUE, CS_2_MEASUREMENT_P_VALID);
+        assertMeasurements(vscConverterStation2, Measurement.Type.REACTIVE_POWER, CS_2_MEASUREMENT_Q_VALUE, CS_2_MEASUREMENT_Q_VALID);
     }
 
     @Override

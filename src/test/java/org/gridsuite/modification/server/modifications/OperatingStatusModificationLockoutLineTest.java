@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.gridsuite.modification.NetworkModificationException;
@@ -22,10 +21,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
-
 import java.util.Map;
 import java.util.UUID;
-
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.FORCED_OUTAGE;
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.PLANNED_OUTAGE;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
