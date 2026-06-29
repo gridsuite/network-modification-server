@@ -37,7 +37,6 @@ public abstract class AbstractBaseImpact {
 
     public enum ImpactType {
         SIMPLE,
-
         COLLECTION
     }
 

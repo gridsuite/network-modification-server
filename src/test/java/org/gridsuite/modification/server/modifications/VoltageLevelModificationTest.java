@@ -65,11 +65,11 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
                 .ipMin(new AttributeModification<>(0.7, OperationType.SET))
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .busbarSectionVMeasurements(List.of(
-                        BusbarSectionVMeasurementInfos.builder()
-                                .busbarSectionId("1.1")
-                                .vMeasurementValue(new AttributeModification<>(MEASUREMENT_V_VALUE, OperationType.SET))
-                                .vMeasurementValidity(new AttributeModification<>(MEASUREMENT_V_VALID, OperationType.SET))
-                                .build()))
+                    BusbarSectionVMeasurementInfos.builder()
+                        .busbarSectionId("1.1")
+                        .vMeasurementValue(new AttributeModification<>(MEASUREMENT_V_VALUE, OperationType.SET))
+                        .vMeasurementValidity(new AttributeModification<>(MEASUREMENT_V_VALID, OperationType.SET))
+                        .build()))
                 .build();
     }
 
@@ -85,11 +85,11 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
                 .ipMax(new AttributeModification<>(0.9, OperationType.SET))
                 .ipMin(new AttributeModification<>(0.5, OperationType.SET))
                 .busbarSectionVMeasurements(List.of(
-                        BusbarSectionVMeasurementInfos.builder()
-                                .busbarSectionId("1.1")
-                                .vMeasurementValue(new AttributeModification<>(380D, OperationType.SET))
-                                .vMeasurementValidity(new AttributeModification<>(false, OperationType.SET))
-                                .build()))
+                    BusbarSectionVMeasurementInfos.builder()
+                        .busbarSectionId("1.1")
+                        .vMeasurementValue(new AttributeModification<>(380D, OperationType.SET))
+                        .vMeasurementValidity(new AttributeModification<>(false, OperationType.SET))
+                        .build()))
                 .build();
     }
 
