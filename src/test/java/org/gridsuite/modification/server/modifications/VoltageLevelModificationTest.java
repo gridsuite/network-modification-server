@@ -287,11 +287,11 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("v1")
                 .busbarSectionVMeasurements(List.of(
-                        BusbarSectionVMeasurementInfos.builder()
-                                .busbarSectionId("1.1")
-                                .vMeasurementValue(new AttributeModification<>(updatedValue, OperationType.SET))
-                                .vMeasurementValidity(new AttributeModification<>(updatedValidity, OperationType.SET))
-                                .build()))
+                    BusbarSectionVMeasurementInfos.builder()
+                        .busbarSectionId("1.1")
+                        .vMeasurementValue(new AttributeModification<>(updatedValue, OperationType.SET))
+                        .vMeasurementValidity(new AttributeModification<>(updatedValidity, OperationType.SET))
+                        .build()))
                 .build();
         applyModification(updateModif);
 
