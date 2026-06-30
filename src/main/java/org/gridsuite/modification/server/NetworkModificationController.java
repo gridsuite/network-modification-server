@@ -106,7 +106,8 @@ public class NetworkModificationController {
             @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
             @Parameter(description = "insert before this modification (MOVE only, empty = at end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
             @Parameter(description = "source container UUID (defaults to target for same-container moves)") @RequestParam(value = "originGroupUuid", required = false) UUID sourceContainerId,
-            @Parameter(description = "modifications can be applied (default true; ignored for COMPOSITE targets)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
+            @Parameter(description = "modifications can be applied (default true; ignored for COMPOSITE targets)")
+                @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
             @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
         return switch (action) {
             case COPY -> networkModificationService.duplicateModifications(

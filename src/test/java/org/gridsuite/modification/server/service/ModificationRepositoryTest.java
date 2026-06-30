@@ -561,7 +561,8 @@ class ModificationRepositoryTest {
         var modificationOriginal = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.moveModifications(ModificationContainerType.GROUP, TEST_GROUP_ID, ModificationContainerType.GROUP, TEST_GROUP_ID, List.of(modificationOriginal.get(5).getUuid()), modificationOriginal.get(1).getUuid());
+        networkModificationRepository.moveModifications(ModificationContainerType.GROUP, TEST_GROUP_ID, ModificationContainerType.GROUP, TEST_GROUP_ID,
+                List.of(modificationOriginal.get(5).getUuid()), modificationOriginal.get(1).getUuid());
         assertRequestsCount(6, 0, 2, 0);
 
         var modification = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -572,7 +573,8 @@ class ModificationRepositoryTest {
         assertEquals(getIds(expected), getIds(modification));
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.moveModifications(ModificationContainerType.GROUP, TEST_GROUP_ID, ModificationContainerType.GROUP, TEST_GROUP_ID, List.of(modificationOriginal.get(2).getUuid(), modificationOriginal.get(5).getUuid()), null);
+        networkModificationRepository.moveModifications(ModificationContainerType.GROUP, TEST_GROUP_ID, ModificationContainerType.GROUP, TEST_GROUP_ID,
+                List.of(modificationOriginal.get(2).getUuid(), modificationOriginal.get(5).getUuid()), null);
         assertRequestsCount(6, 0, 2, 0);
 
         // [0:1, 1:2, 2:4, 3:5, 4:6, 5:3 ]
@@ -605,7 +607,8 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         List<UUID> uuidsToMove = List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId());
-        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(ModificationContainerType.GROUP, TEST_GROUP_ID, ModificationContainerType.GROUP, TEST_GROUP_ID_2, uuidsToMove, null);
+        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(ModificationContainerType.GROUP, TEST_GROUP_ID,
+                ModificationContainerType.GROUP, TEST_GROUP_ID_2, uuidsToMove, null);
         assertEquals(uuidsToMove.size(), movedModifications.size());
         assertRequestsCount(5, 0, 1, 0);
 
@@ -621,7 +624,8 @@ class ModificationRepositoryTest {
         // cutting and pasting to non existing group should work (the destination group is implicitly created)
         SQLStatementCountValidator.reset();
         uuidsToMove = List.of(expected2.get(0).getUuid(), expected2.get(1).getUuid());
-        movedModifications = networkModificationRepository.moveModifications(ModificationContainerType.GROUP, TEST_GROUP_ID_2, ModificationContainerType.GROUP, TEST_GROUP_ID_3, uuidsToMove, null);
+        movedModifications = networkModificationRepository.moveModifications(ModificationContainerType.GROUP, TEST_GROUP_ID_2,
+                ModificationContainerType.GROUP, TEST_GROUP_ID_3, uuidsToMove, null);
         assertEquals(uuidsToMove.size(), movedModifications.size());
         assertRequestsCount(5, 2, 1, 0);
 
@@ -657,7 +661,8 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         List<UUID> uuidsToMove = List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId());
-        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(ModificationContainerType.GROUP, TEST_GROUP_ID, ModificationContainerType.GROUP, TEST_GROUP_ID_2, uuidsToMove, groovyScriptEntity6.getId());
+        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(ModificationContainerType.GROUP, TEST_GROUP_ID,
+                ModificationContainerType.GROUP, TEST_GROUP_ID_2, uuidsToMove, groovyScriptEntity6.getId());
         assertEquals(uuidsToMove.size(), movedModifications.size());
         assertRequestsCount(5, 0, 1, 0);
 
