@@ -177,8 +177,8 @@ class ModificationControllerTest {
     private void assertApplicationStatusOK(MvcResult mvcResult) throws Exception {
         NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(1, networkModificationsResult.modificationResults().size());
-        assertTrue(networkModificationsResult.modificationResults().get(0).isPresent());
-        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationsResult.modificationResults().get(0).get().getApplicationStatus());
+        assertTrue(networkModificationsResult.modificationResults().getFirst().isPresent());
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationsResult.modificationResults().getFirst().get().getApplicationStatus());
     }
 
     private String getJsonBody(List<UUID> uuids, String variantId) throws JsonProcessingException {
@@ -371,7 +371,7 @@ class ModificationControllerTest {
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
         assertEquals(1, modifications.size());
 
-        String uuidString = modifications.get(0).getUuid().toString();
+        String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString)
@@ -397,7 +397,7 @@ class ModificationControllerTest {
 
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(1, modifications.size());
-        String uuidString = modifications.get(0).getUuid().toString();
+        String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString)
@@ -424,7 +424,7 @@ class ModificationControllerTest {
 
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modifications.size());
-        assertEquals(true, modifications.get(0).getActivated());
+        assertEquals(true, modifications.getFirst().getActivated());
 
         ModificationInfos metadata = new ModificationInfos();
         metadata.setType(LINE_MODIFICATION);
@@ -436,7 +436,7 @@ class ModificationControllerTest {
                 .content(mapper.writeValueAsString(metadata))
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk());
-        assertEquals(false, modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0).getActivated());
+        assertEquals(false, modificationRepository.getModifications(TEST_GROUP_ID, true, true).getFirst().getActivated());
     }
 
     @Test
@@ -510,7 +510,7 @@ class ModificationControllerTest {
 
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(1, modifications.size());
-        String uuidString = modifications.get(0).getUuid().toString();
+        String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString))
@@ -920,8 +920,8 @@ class ModificationControllerTest {
         // incremental build: deletion impacts expected, all related to the moved load deletion (dealing with "s1" substation)
         NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(1, networkModificationsResult.modificationResults().size());
-        assertTrue(networkModificationsResult.modificationResults().get(0).isPresent());
-        networkModificationsResult.modificationResults().get(0).get().getNetworkImpacts().forEach(i -> {
+        assertTrue(networkModificationsResult.modificationResults().getFirst().isPresent());
+        networkModificationsResult.modificationResults().getFirst().get().getNetworkImpacts().forEach(i -> {
             assertTrue(i.isSimple());
             SimpleElementImpact simpleImpact = (SimpleElementImpact) i;
             assertEquals(Set.of(substationS1), simpleImpact.getSubstationIds());
@@ -953,7 +953,7 @@ class ModificationControllerTest {
         // try to move an unexisting modification before [0]: no error, no change
         List<UUID> movingModificationUuidList = List.of(UUID.randomUUID());
         String bodyJson = getJsonBody(movingModificationUuidList, NetworkCreation.VARIANT_ID);
-        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&originGroupUuid=" + TEST_GROUP_ID + "&before=" + modificationUuidList.get(0);
+        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&originGroupUuid=" + TEST_GROUP_ID + "&before=" + modificationUuidList.getFirst();
 
         mockMvc.perform(put(url).content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -1042,7 +1042,7 @@ class ModificationControllerTest {
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
         assertEquals(5, modifications.size());
         //stash the first modification
-        String uuidString = modifications.get(0).getUuid().toString();
+        String uuidString = modifications.getFirst().getUuid().toString();
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
@@ -1542,7 +1542,7 @@ class ModificationControllerTest {
 
         List<VoltageInitModificationInfos> modificationsInfos2 = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(1, modificationsInfos2.size());
-        assertThat(modificationsInfos2.get(0)).recursivelyEquals(modificationsInfos1);
+        assertThat(modificationsInfos2.getFirst()).recursivelyEquals(modificationsInfos1);
     }
 
     @Test
@@ -1561,7 +1561,7 @@ class ModificationControllerTest {
 
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modifications.size());
-        String uuidString = modifications.get(0).getUuid().toString();
+        String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString)
@@ -1597,22 +1597,22 @@ class ModificationControllerTest {
     void testMetadata() throws Exception {
         // create a single switch attribute modification in a group
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
-        UUID switchModificationId = modificationList.get(0).getUuid();
+        UUID switchModificationId = modificationList.getFirst().getUuid();
 
         MvcResult mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/metadata?ids={id}", switchModificationId)
                     .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         List<ModificationMetadata> metadata = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(1, metadata.size());
-        assertEquals(switchModificationId, metadata.get(0).getId());
-        assertEquals(EQUIPMENT_ATTRIBUTE_MODIFICATION, metadata.get(0).getType());
+        assertEquals(switchModificationId, metadata.getFirst().getId());
+        assertEquals(EQUIPMENT_ATTRIBUTE_MODIFICATION, metadata.getFirst().getType());
     }
 
     @Test
     void testStandaloneDeletionError() throws Exception {
         // create a single switch attribute modification in a group
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
-        UUID switchModificationId = modificationList.get(0).getUuid();
+        UUID switchModificationId = modificationList.getFirst().getUuid();
 
         // Try to delete this modification without its group: not allowed
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
@@ -1628,7 +1628,7 @@ class ModificationControllerTest {
     void testVerifyModifications() throws Exception {
         // create a single switch attribute modification in a group
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
-        UUID switchModificationId = modificationList.get(0).getUuid();
+        UUID switchModificationId = modificationList.getFirst().getUuid();
 
         createSomeSwitchModifications(TEST_GROUP2_ID, 1);
 
@@ -1819,7 +1819,7 @@ class ModificationControllerTest {
     /** Inserts a COPY of a standalone composite at the end of the group's root list. */
     private void insertCompositeIntoGroup(UUID groupId, UUID compositeUuid, String name) throws Exception {
         String body = TestUtils.getJsonBodyModificationCompositeInfos(
-                List.of(org.springframework.data.util.Pair.of(compositeUuid, name)),
+                List.of(new CompositesToBeInserted(compositeUuid, name, false)),
                 TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         runRequestAsync(mockMvc,
                 put("/v1/network-composite-modifications/groups/" + groupId + "?action=INSERT")
@@ -1909,5 +1909,101 @@ class ModificationControllerTest {
         assertEquals(List.of(e2, e3), fetchCompositeSubUuids(l.e()));
         // destination receives C(intact), D, extracted E1
         assertEquals(l.cSubs(), fetchCompositeSubUuids(l.c()));
+    }
+
+    @Test
+    void testGetReferencesData() throws Exception {
+        // Create a non-reference modification: it must be ignored by getReferencesData
+        List<ModificationInfos> switchModifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID nonReferenceModificationUuid = switchModifications.getFirst().getUuid();
+
+        // Create a referenced modification, not owned by the tested group
+        ModificationInfos referencedLoadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+        referencedLoadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(referencedLoadModificationInfo))).getFirst();
+
+        // Create an active reference to this modification
+        ModificationInfos activeReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(referencedLoadModificationInfo.getUuid())
+                .referenceInfos(referencedLoadModificationInfo)
+                .stashed(false)
+                .build();
+        activeReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(activeReferenceInfo))).getFirst();
+
+        // Create a stashed reference: it must also be ignored by getReferencesData
+        ModificationInfos stashedReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(referencedLoadModificationInfo.getUuid())
+                .referenceInfos(referencedLoadModificationInfo)
+                .stashed(true)
+                .build();
+        stashedReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(stashedReferenceInfo))).getFirst();
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/references")
+                        .queryParam("uuids",
+                                activeReferenceInfo.getUuid().toString(),
+                                nonReferenceModificationUuid.toString(),
+                                stashedReferenceInfo.getUuid().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        Map<UUID, UUID> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        assertEquals(1, referencesData.size());
+        assertTrue(referencesData.containsKey(referencedLoadModificationInfo.getUuid()));
+        assertNull(referencesData.get(referencedLoadModificationInfo.getUuid()));
+    }
+
+    @Test
+    void testGetAllReferencesDataFromGroup() throws Exception {
+        // Create a non-reference modification in the group: it must be ignored by getAllReferencesDataFromGroup
+        createSomeSwitchModifications(TEST_GROUP_ID, 1);
+
+        // Create a referenced modification, not owned by the tested group
+        ModificationInfos referencedLoadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+        referencedLoadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(referencedLoadModificationInfo))).getFirst();
+
+        // Create an active reference in the tested group: it must be returned
+        ModificationInfos activeReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(referencedLoadModificationInfo.getUuid())
+                .referenceInfos(referencedLoadModificationInfo)
+                .stashed(false)
+                .build();
+        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(activeReferenceInfo)));
+
+        // Create a stashed reference in the tested group: it must be ignored
+        ModificationInfos stashedReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(referencedLoadModificationInfo.getUuid())
+                .referenceInfos(referencedLoadModificationInfo)
+                .stashed(true)
+                .build();
+        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(stashedReferenceInfo)));
+
+        // Create an active reference in another group: it must not be returned for TEST_GROUP_ID
+        ModificationInfos otherGroupReferencedLoadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoadOther", "nameLoadOther", "1.1", LoadType.UNDEFINED);
+        otherGroupReferencedLoadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(otherGroupReferencedLoadModificationInfo))).getFirst();
+
+        ModificationInfos otherGroupReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(otherGroupReferencedLoadModificationInfo.getUuid())
+                .referenceInfos(otherGroupReferencedLoadModificationInfo)
+                .stashed(false)
+                .build();
+        modificationRepository.saveModifications(TEST_GROUP2_ID, List.of(ModificationEntity.fromDTO(otherGroupReferenceInfo)));
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/references", TEST_GROUP_ID)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        Map<UUID, UUID> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        assertEquals(1, referencesData.size());
+        assertTrue(referencesData.containsKey(referencedLoadModificationInfo.getUuid()));
+        assertNull(referencesData.get(referencedLoadModificationInfo.getUuid()));
+        assertFalse(referencesData.containsKey(otherGroupReferencedLoadModificationInfo.getUuid()));
     }
 }
