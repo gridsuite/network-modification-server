@@ -13,7 +13,9 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,18 +28,19 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "composite_modification")
-public class CompositeModificationEntity extends ModificationEntity {
+public class CompositeModificationEntity extends ModificationEntity implements ModificationContainer {
 
     @Column(name = "name")
     @ColumnDefault("'My Composite'")
     private String name;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "compositeModificationSubModifications",
-            joinColumns = @JoinColumn(name = "id"), foreignKey = @ForeignKey(name = "composite_modification_sub_modifications_id_fk"),
-            inverseJoinColumns = @JoinColumn(name = "modificationId"), inverseForeignKey = @ForeignKey(name = "modification_id_fk"))
+    // Purely used for read purpose, the relationship is driven by container_id to avoid write conflicts in between entities having a @JoinColumn on container_id
+    // SQLRestriction ensure we always go through (container_type, container_id) index
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @JoinColumn(name = "container_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), insertable = false, updatable = false)
+    @SQLRestriction("container_type = 'COMPOSITE'")
     @OrderBy("modificationsOrder asc")
+    @BatchSize(size = 100)
     private List<ModificationEntity> modifications = new ArrayList<>();
 
     public CompositeModificationEntity(@NonNull CompositeModificationInfos compositeModificationInfos) {
@@ -46,8 +49,15 @@ public class CompositeModificationEntity extends ModificationEntity {
     }
 
     @Override
+    public ModificationContainerType getContainerType() {
+        return ModificationContainerType.COMPOSITE;
+    }
+
+    @Override
     public CompositeModificationInfos toModificationInfos() {
-        List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).toList();
+        List<ModificationInfos> modificationsInfos = modifications.stream()
+                .map(ModificationEntity::toModificationInfos)
+                .toList();
         return CompositeModificationInfos.builder()
                 .name(getName())
                 .activated(getActivated())
@@ -66,14 +76,26 @@ public class CompositeModificationEntity extends ModificationEntity {
             .toList());
     }
 
-    public void setModifications(List<ModificationEntity> modifications) {
-        if (modifications == null) {
+    /**
+     * Replace the whole list. Re-numbers {@code modificationsOrder} and re-points each child at
+     * this composite.
+     */
+    public void setModifications(List<ModificationEntity> newChildren) {
+        if (newChildren == null) {
             throw new IllegalArgumentException("Modifications list for a composite cannot be null");
         }
+        this.modifications.forEach(ModificationEntity::detachFromContainer);
         this.modifications.clear();
-        this.modifications.addAll(modifications);
-        for (int i = 0; i < this.modifications.size(); i++) {
-            this.modifications.get(i).setModificationsOrder(i);
+        for (int i = 0; i < newChildren.size(); i++) {
+            ModificationEntity child = newChildren.get(i);
+            child.attachToContainer(this);
+            child.setModificationsOrder(i);
+            this.modifications.add(child);
         }
+    }
+
+    @Override
+    public void addModification(ModificationEntity child, int position) {
+        ContainerOps.insert(this, this.modifications, child, position);
     }
 }

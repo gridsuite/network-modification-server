@@ -63,21 +63,6 @@ public class CompositeController {
         };
     }
 
-    @PutMapping(value = "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Move a sub-modification within or between composites, or to/from root level")
-    @ApiResponse(responseCode = "200", description = "The sub-modification has been moved.")
-    public ResponseEntity<Void> moveSubModification(
-            @Parameter(description = "Group UUID of the target node") @PathVariable("groupUuid") UUID groupUuid,
-            @Parameter(description = "UUID of the sub-modification to move") @PathVariable("modificationUuid") UUID modificationUuid,
-            @Parameter(description = "Source composite UUID, empty when moving from root level") @RequestParam(value = "sourceCompositeUuid", required = false) UUID sourceCompositeUuid,
-            @Parameter(description = "Target composite UUID, empty when moving to root level") @RequestParam(value = "targetCompositeUuid", required = false) UUID targetCompositeUuid,
-            @Parameter(description = "Insert before this UUID, empty means append at end") @RequestParam(value = "beforeUuid", required = false) UUID beforeUuid) {
-        networkModificationService.moveSubModification(
-                groupUuid, sourceCompositeUuid, targetCompositeUuid, modificationUuid, beforeUuid);
-        return ResponseEntity.ok().build();
-    }
-
     @PostMapping(value = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Assemble some network modifications into a new composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})

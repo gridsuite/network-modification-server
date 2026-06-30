@@ -1,0 +1,122 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet id="unify-modification-container-model" author="marcellinh">
+        <addColumn tableName="modification">
+            <column name="container_id" type="UUID"/>
+            <column name="container_type" type="VARCHAR(32)"/>
+        </addColumn>
+        <sql>
+            UPDATE modification
+            SET container_id   = group_id,
+                container_type = 'GROUP'
+            WHERE group_id IS NOT NULL
+              AND container_id IS NULL;
+        </sql>
+        <sql>
+            UPDATE modification m
+            SET container_id = (
+                SELECT j.id
+                FROM composite_modification_sub_modifications j
+                WHERE j.modification_id = m.id
+            ),
+                container_type = 'COMPOSITE'
+            WHERE m.container_id IS NULL
+              AND EXISTS (
+                SELECT 1
+                FROM composite_modification_sub_modifications j
+                WHERE j.modification_id = m.id
+            );
+        </sql>
+
+        <rollback>
+            <dropColumn tableName="modification" columnName="container_id"/>
+            <dropColumn tableName="modification" columnName="container_type"/>
+        </rollback>
+    </changeSet>
+    <changeSet id="unify-modification-container-model-drop-legacy" author="marcellinh">
+        <createIndex tableName="modification" indexName="modification_container_idx">
+            <column name="container_type"/>
+            <column name="container_id"/>
+        </createIndex>
+        <dropForeignKeyConstraint baseTableName="modification"
+                                  constraintName="group_id_fk_constraint"/>
+        <dropColumn tableName="modification" columnName="group_id"/>
+        <dropTable tableName="composite_modification_sub_modifications"/>
+
+        <rollback>
+            <addColumn tableName="modification">
+                <column name="group_id" type="UUID" />
+            </addColumn>
+            <createTable tableName="composite_modification_sub_modifications">
+                <column name="id" type="UUID">
+                    <constraints nullable="false" primaryKey="true" primaryKeyName="composite_modification_sub_modificationsPK"/>
+                </column>
+                <column name="modification_id" type="UUID">
+                    <constraints nullable="false"/>
+                </column>
+            </createTable>
+            <addForeignKeyConstraint baseColumnNames="id" baseTableName="composite_modification_sub_modifications" constraintName="composite_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="composite_modification" validate="true"/>
+            <addForeignKeyConstraint baseColumnNames="modification_id" baseTableName="composite_modification_sub_modifications" constraintName="modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+            <sql>
+                UPDATE modification
+                SET group_id = container_id
+                WHERE container_type = 'GROUP';
+            </sql>
+            <sql>
+                INSERT INTO composite_modification_sub_modifications (id, modification_id)
+                SELECT container_id, id
+                FROM modification
+                WHERE container_type = 'COMPOSITE';
+            </sql>
+            <addForeignKeyConstraint baseColumnNames="group_id" baseTableName="modification" constraintName="group_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification_group" validate="true"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="unify-modification-container-model-supertable" author="marcellinh">
+        <createTable tableName="modification_container">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="modification_containerPK"/>
+            </column>
+            <column name="container_type" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <sql>
+            INSERT INTO modification_container (id, container_type)
+            SELECT id, 'GROUP' FROM modification_group
+            UNION ALL
+            SELECT id, 'COMPOSITE' FROM composite_modification;
+        </sql>
+        <rollback>
+            <dropTable tableName="modification_container"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="unify-modification-container-model-fks" author="marcellinh">
+        <!-- (id) alone is the PK; this pair-unique is the target the composite FK below needs -->
+        <addUniqueConstraint tableName="modification_container"
+                             columnNames="id, container_type"
+                             constraintName="modification_container_id_type_uq"/>
+        <!-- The load-bearing safeguard: a modification can only point at a container that exists
+             AND is the type it claims. This is the invariant the @SQLRestriction routing relies on. -->
+        <addForeignKeyConstraint
+                baseTableName="modification" baseColumnNames="container_id, container_type"
+                referencedTableName="modification_container" referencedColumnNames="id, container_type"
+                constraintName="modification_container_fk"/>
+        <!-- Make ensureContainer non-skippable: a group/composite cannot exist without its container row -->
+        <addForeignKeyConstraint
+                baseTableName="modification_group" baseColumnNames="id"
+                referencedTableName="modification_container" referencedColumnNames="id"
+                constraintName="modification_group_container_fk"/>
+        <addForeignKeyConstraint
+                baseTableName="composite_modification" baseColumnNames="id"
+                referencedTableName="modification_container" referencedColumnNames="id"
+                constraintName="composite_modification_container_fk"/>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="composite_modification" constraintName="composite_modification_container_fk"/>
+            <dropForeignKeyConstraint baseTableName="modification_group" constraintName="modification_group_container_fk"/>
+            <dropForeignKeyConstraint baseTableName="modification" constraintName="modification_container_fk"/>
+            <dropUniqueConstraint tableName="modification_container" constraintName="modification_container_id_type_uq"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>
