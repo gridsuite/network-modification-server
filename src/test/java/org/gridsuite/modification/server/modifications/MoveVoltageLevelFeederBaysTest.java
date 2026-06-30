@@ -10,20 +10,18 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.dto.MoveFeederBayInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.MoveFeederBayInfos;
 import org.gridsuite.modification.dto.MoveVoltageLevelFeederBaysInfos;
 import org.gridsuite.modification.modifications.MoveVoltageLevelFeederBays;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.utils.ModificationUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import static org.gridsuite.modification.server.utils.NetworkUtil.createBusBarSection;
 import static org.junit.jupiter.api.Assertions.*;
 

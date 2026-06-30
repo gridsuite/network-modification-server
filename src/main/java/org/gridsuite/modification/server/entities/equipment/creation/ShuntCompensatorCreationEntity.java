@@ -7,13 +7,12 @@
 
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.dto.ShuntCompensatorType;
-
-import jakarta.persistence.*;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -89,7 +88,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .maxSusceptance(getMaxSusceptance())
             .maxQAtNominalV(getMaxQAtNominalV())
             .shuntCompensatorType(getShuntCompensatorType())
-             // properties
+            // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)

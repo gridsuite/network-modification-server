@@ -82,6 +82,7 @@ public final class TestUtils {
         });
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public static void assertQueuesEmptyThenClear(List<String> destinations, OutputDestination output) {
         try {
             destinations.forEach(destination -> assertNull(output.receive(TIMEOUT, destination), "Should not be any messages in queue " + destination));
@@ -92,6 +93,7 @@ public final class TestUtils {
         }
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public static void assertServerRequestsEmptyThenShutdown(MockWebServer server) throws UncheckedInterruptedException, IOException {
         Set<String> httpRequest = null;
         try {
@@ -207,7 +209,8 @@ public final class TestUtils {
 
     public static void assertWiremockServerRequestsEmptyThenShutdown(WireMockServer wireMockServer) throws UncheckedInterruptedException, IOException {
         try {
-            wireMockServer.checkForUnmatchedRequests(); // requests no matched ? (it returns an exception if a request was not matched by wireMock, but does not complain if it was not verified by 'verify')
+            wireMockServer.checkForUnmatchedRequests();
+            // requests no matched ? (it returns an exception if a request was not matched by wireMock, but does not complain if it was not verified by 'verify')
             assertEquals(0, wireMockServer.findAll(WireMock.anyRequestedFor(WireMock.anyUrl())).size()); // requests no verified ?
         } finally {
             wireMockServer.shutdown();

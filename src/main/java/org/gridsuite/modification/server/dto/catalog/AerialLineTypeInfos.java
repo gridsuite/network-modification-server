@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.dto.catalog;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
 import org.gridsuite.modification.server.entities.catalog.AerialLineTypeEntity;
 
 /**

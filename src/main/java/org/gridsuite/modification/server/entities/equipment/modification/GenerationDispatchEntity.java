@@ -7,16 +7,6 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import org.gridsuite.modification.dto.GenerationDispatchInfos;
-import org.gridsuite.modification.dto.GeneratorsFilterInfos;
-import org.gridsuite.modification.dto.GeneratorsFrequencyReserveInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.SubstationsGeneratorsOrderingInfos;
-import org.gridsuite.modification.server.entities.ModificationEntity;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -27,6 +17,15 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import org.gridsuite.modification.dto.GenerationDispatchInfos;
+import org.gridsuite.modification.dto.GeneratorsFilterInfos;
+import org.gridsuite.modification.dto.GeneratorsFrequencyReserveInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.SubstationsGeneratorsOrderingInfos;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
