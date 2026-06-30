@@ -42,15 +42,15 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         ModificationInfos compositeInfo = buildCompositeModification();
         ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
-        ModificationInfos compositeMetadataInfo = modificationRepository.findBaseDataByIdIn(List.of(compositeEntity.getId())).getFirst().toModificationInfos();
+        ModificationInfos referenceInfos = compositeEntity.toModificationInfos();
 
         return ModificationReferenceInfos.builder()
-            .referenceType(ModificationReferenceInfos.Type.BASIC)
-            .referenceId(compositeMetadataInfo.getUuid())
-            .referenceInfos(compositeInfo)
-            .stashed(false)
-            .activated(true)
-            .build();
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(compositeEntity.getId())
+                .referenceInfos(referenceInfos)
+                .stashed(false)
+                .activated(true)
+                .build();
     }
 
     @Override

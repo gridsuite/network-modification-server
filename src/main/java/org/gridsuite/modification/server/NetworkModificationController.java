@@ -244,6 +244,20 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * filters out the netmods which are not references and returns the references data as :
+     * referenced element uuid -> container of the reference (uuid of the composite if there is one, null if it is at the root level)
+     */
+    @GetMapping(value = "/references", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "fetch references data of the network modifications")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references data were returned")})
+    public ResponseEntity<Map<UUID, UUID>> getReferencesData(
+            @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids) {
+        Map<UUID, UUID> referencesData = networkModificationService.getReferencesData(networkModificationUuids);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(referencesData);
+    }
+
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Updates the metadata of network modifications")
     @ApiResponse(responseCode = "200", description = "The metadata of the network modifications has been successfully updated")
