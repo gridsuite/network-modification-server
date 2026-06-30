@@ -9,10 +9,10 @@ package org.gridsuite.modification.server.entities;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import org.hibernate.annotations.SQLRestriction;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
