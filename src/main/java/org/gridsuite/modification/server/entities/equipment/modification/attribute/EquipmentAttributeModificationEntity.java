@@ -7,21 +7,17 @@
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
 import com.powsybl.iidm.network.IdentifiableType;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-import java.lang.reflect.Constructor;
-
-import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.entities.EntityRegistry;
-import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
-
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.entities.EntityRegistry;
+import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+import java.lang.reflect.Constructor;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>

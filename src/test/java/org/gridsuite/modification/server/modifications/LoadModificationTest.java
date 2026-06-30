@@ -12,7 +12,6 @@ import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.Measurement;
 import com.powsybl.iidm.network.extensions.Measurements;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.api.Assertions;
 import org.gridsuite.modification.dto.*;
@@ -20,12 +19,10 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;

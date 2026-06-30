@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -15,9 +16,6 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-
-import jakarta.persistence.*;
-
 import static org.gridsuite.modification.NetworkModificationException.Type.LINE_ATTACH_DESCRIPTION_ERROR;
 
 /**

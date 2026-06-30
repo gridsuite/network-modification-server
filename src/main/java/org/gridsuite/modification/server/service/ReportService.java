@@ -27,7 +27,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * @author Slimane amar <slimane.amar at rte-france.com
+ * @author Slimane amar <slimane.amar at rte-france.com>
  */
 @Service
 public class ReportService {

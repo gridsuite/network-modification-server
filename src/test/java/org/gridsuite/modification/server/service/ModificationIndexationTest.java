@@ -545,7 +545,8 @@ class ModificationIndexationTest {
 
             UUID groupUuid = UUID.randomUUID();
             List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationModificationInfos)));
-            NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos), networkInfos);
+            NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos),
+                    networkInfos);
             assertNotNull(result);
 
             assertEquals(1, modificationRepository.getModifications(groupUuid, true, true).size());

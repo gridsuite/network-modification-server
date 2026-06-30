@@ -6,13 +6,12 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.CurrentTemporaryLimitCreationInfos;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
 import java.util.List;
 import java.util.stream.Collectors;
 
