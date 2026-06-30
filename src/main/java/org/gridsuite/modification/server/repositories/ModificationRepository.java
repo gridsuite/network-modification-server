@@ -31,10 +31,12 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     //TODO This doesn't return a proper entity, it's actually just a DTO:
     //See https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#projections.dtos
     //TODO can we use the simpler interface based projections instead ? To avoid repeating the columns in @Query
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) FROM ModificationEntity m WHERE m.containerId = ?1 order by m.modificationsOrder")
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) FROM ModificationEntity m WHERE m.containerId = ?1 " +
+            "order by m.modificationsOrder")
     List<ModificationEntity> findAllBaseByContainerId(UUID uuid);
 
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) FROM ModificationEntity m WHERE m.containerId = ?1 order by m.modificationsOrder desc")
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) FROM ModificationEntity m WHERE m.containerId = ?1 " +
+            "order by m.modificationsOrder desc")
     List<ModificationEntity> findAllBaseByContainerIdReverse(UUID uuid);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.containerId = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
