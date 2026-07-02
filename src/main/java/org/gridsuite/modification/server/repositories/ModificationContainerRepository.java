@@ -10,7 +10,6 @@ import org.gridsuite.modification.server.entities.AbstractModificationContainerE
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-
 import java.util.UUID;
 
 /**

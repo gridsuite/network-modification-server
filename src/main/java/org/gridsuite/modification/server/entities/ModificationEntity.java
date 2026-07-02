@@ -147,10 +147,6 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         this.containerId = container.getId();
     }
 
-    public void detachFromContainer() {
-        this.containerId = null;
-    }
-
     public static ModificationEntity fromDTO(ModificationInfos dto) {
         if (dto instanceof EquipmentAttributeModificationInfos infos) {
             return EquipmentAttributeModificationEntity.createAttributeEntity(infos);

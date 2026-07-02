@@ -35,7 +35,7 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
     @JoinColumn(name = "container_id", insertable = false, updatable = false)
     @OrderBy("modificationsOrder asc")
     @BatchSize(size = 100)
-    private List<ModificationEntity> modifications = new ArrayList<>();
+    private final List<ModificationEntity> modifications = new ArrayList<>();
 
     protected AbstractModificationContainerEntity(UUID id) {
         this.id = id;
@@ -43,12 +43,11 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
 
     @Override
     public void addModification(ModificationEntity child, int position) {
-            int target = Math.clamp(position, 0, modifications.size());
-            child.attachToContainer(this);
-            modifications.add(target, child);
-            renumber(modifications);
+        int target = Math.clamp(position, 0, modifications.size());
+        child.attachToContainer(this);
+        modifications.add(target, child);
+        renumber(modifications);
     }
-
 
     private void renumber(List<ModificationEntity> list) {
         for (int i = 0; i < list.size(); i++) {
