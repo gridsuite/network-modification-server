@@ -12,8 +12,6 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
-import org.gridsuite.modification.server.entities.ModificationContainerEntity;
-import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationContainerRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
@@ -48,7 +46,6 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         ModificationInfos compositeInfo = buildCompositeModification();
         ModificationEntity compositeEntity = ModificationEntity.fromDTO(compositeInfo);
-        modificationContainerRepository.save(new ModificationContainerEntity(compositeEntity.getId(), ModificationContainerType.COMPOSITE));
         modificationRepository.save(compositeEntity);
         ModificationInfos compositeMetadataInfo = modificationRepository.findBaseDataByIdIn(List.of(compositeEntity.getId())).getFirst().toModificationInfos();
 

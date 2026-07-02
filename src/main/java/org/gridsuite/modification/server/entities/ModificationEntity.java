@@ -73,10 +73,6 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     @Column(name = "container_id")
     private UUID containerId;
 
-    @Column(name = "container_type")
-    @Enumerated(EnumType.STRING)
-    private ModificationContainerType containerType;
-
     public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues, String description) {
         this.id = id;
         this.type = type;
@@ -147,18 +143,12 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
     }
 
-    public ModificationContainerType getParentContainerType() {
-        return containerType;
-    }
-
     public void attachToContainer(@NonNull ModificationContainer container) {
         this.containerId = container.getId();
-        this.containerType = container.getContainerType();
     }
 
     public void detachFromContainer() {
         this.containerId = null;
-        this.containerType = null;
     }
 
     public static ModificationEntity fromDTO(ModificationInfos dto) {

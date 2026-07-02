@@ -1,101 +1,90 @@
 /*
-  Copyright (c) 2024, RTE (http://www.rte-france.com)
-  This Source Code Form is subject to the terms of the Mozilla Public
-  License, v. 2.0. If a copy of the MPL was not distributed with this
-  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server.entities;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.SQLRestriction;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
  */
-@NoArgsConstructor
 @Getter
 @Setter
 @Entity
 @Table(name = "composite_modification")
-public class CompositeModificationEntity extends ModificationEntity implements ModificationContainer {
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "composite_modification_id_fk_constraint"))
+public class CompositeModificationEntity extends ModificationEntity {
 
-    @Column(name = "name")
-    @ColumnDefault("'My Composite'")
-    private String name;
-
-    // Purely used for read purpose, the relationship is driven by container_id to avoid write conflicts in between entities having a @JoinColumn on container_id
-    // SQLRestriction ensure we always go through (container_type, container_id) index
-    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-    @JoinColumn(name = "container_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), insertable = false, updatable = false)
-    @SQLRestriction("container_type = 'COMPOSITE'")
-    @OrderBy("modificationsOrder asc")
-    @BatchSize(size = 100)
-    private List<ModificationEntity> modifications = new ArrayList<>();
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, optional = false)
+    @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "composite_modification_content_fk"))
+    private CompositeContainerEntity content;
 
     public CompositeModificationEntity(@NonNull CompositeModificationInfos compositeModificationInfos) {
         super(compositeModificationInfos);
         assignAttributes(compositeModificationInfos);
     }
 
-    @Override
-    public ModificationContainerType getContainerType() {
-        return ModificationContainerType.COMPOSITE;
-    }
+    public CompositeModificationEntity() {}
 
     @Override
     public CompositeModificationInfos toModificationInfos() {
-        List<ModificationInfos> modificationsInfos = modifications.stream()
+        List<ModificationInfos> modificationsInfos = getModifications().stream()
                 .map(ModificationEntity::toModificationInfos)
                 .toList();
         return CompositeModificationInfos.builder()
                 .name(getName())
                 .activated(getActivated())
-                .description(getDescription())
-                .date(getDate())
                 .uuid(getId())
+                .date(getDate())
                 .stashed(getStashed())
                 .modificationsInfos(modificationsInfos)
                 .build();
     }
 
-    private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
-        this.setName(compositeModificationInfos.getName());
+    protected void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
+        // The content takes that SAME id — the shared-PK guarantee, established at construction.
+        this.content = new CompositeContainerEntity(getId(), compositeModificationInfos.getName());
         setModifications(compositeModificationInfos.getModificationsInfos().stream()
-            .map(ModificationEntity::fromDTO)
-            .toList());
+                .map(ModificationEntity::fromDTO)
+                .toList());
     }
 
-    /**
-     * Replace the whole list. Re-numbers {@code modificationsOrder} and re-points each child at
-     * this composite.
-     */
+    public String getName() {
+        return content == null ? null : content.getName();
+    }
+
+    public void setName(String name) {
+        ensureContent().setName(name);
+    }
+
+    public List<ModificationEntity> getModifications() {
+        return content == null ? List.of() : content.getModifications();
+    }
+
     public void setModifications(List<ModificationEntity> newChildren) {
-        if (newChildren == null) {
-            throw new IllegalArgumentException("Modifications list for a composite cannot be null");
-        }
-        this.modifications.forEach(ModificationEntity::detachFromContainer);
-        this.modifications.clear();
-        for (int i = 0; i < newChildren.size(); i++) {
-            ModificationEntity child = newChildren.get(i);
-            child.attachToContainer(this);
-            child.setModificationsOrder(i);
-            this.modifications.add(child);
-        }
+        ensureContent().setModifications(newChildren);
     }
 
-    @Override
-    public void addModification(ModificationEntity child, int position) {
-        ContainerOps.insert(this, this.modifications, child, position);
+    private CompositeContainerEntity ensureContent() {
+        if (content == null) {
+            // getId() must be assigned by now (it is, for a persisted/constructed leaf)
+            content = new CompositeContainerEntity(getId(), null);
+        }
+        return content;
     }
 }

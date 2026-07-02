@@ -9,10 +9,9 @@ package org.gridsuite.modification.server.entities;
 import java.util.List;
 
 /**
- * Shared insert/remove logic used by both container implementations. Kept package-private
- * here rather than in a separate helper class to keep the diff small.
+ * Shared insert/renumber logic used by every container implementation.
  *
- * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
+ * @author Hugo Marcellin {@literal <hugo.marcelin at rte-france.com>}
  */
 final class ContainerOps {
     private ContainerOps() { }

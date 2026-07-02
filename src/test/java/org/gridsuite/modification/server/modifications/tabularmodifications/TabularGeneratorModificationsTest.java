@@ -174,7 +174,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
-        TestUtils.assertRequestsCount(13, 10, 2, 0); // (13, 9, 2, 0) before improvements
+        TestUtils.assertRequestsCount(12, 10, 2, 0); // (13, 9, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -186,7 +186,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
         // (95, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
-        TestUtils.assertRequestsCount(21, 10, 2, 0);
+        TestUtils.assertRequestsCount(20, 10, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -228,7 +228,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
-        TestUtils.assertRequestsCount(13, 10, 2, 0); // (19, 9, 2, 0) before improvements
+
+        TestUtils.assertRequestsCount(12, 10, 2, 0); // (19, 9, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -241,7 +242,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
         // (107, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for
         // insertions and is it reached for reactive_capability_curve_points
-        TestUtils.assertRequestsCount(21, 10, 2, 0);
+        TestUtils.assertRequestsCount(20, 10, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -282,7 +283,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
-        TestUtils.assertRequestsCount(12, 10, 2, 0); // (14, 9, 2, 0) before improvements
+        TestUtils.assertRequestsCount(11, 10, 2, 0); // (14, 9, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -295,7 +296,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
         // (26, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for
         // insertions and is it reached for reactive_capability_curve_points
-        TestUtils.assertRequestsCount(20, 10, 2, 0);
+        TestUtils.assertRequestsCount(19, 10, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -374,7 +375,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.deleteGroup(mockMvc, getGroupId());
         // It is actually (9, 0, 0, 15) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(8, 0, 0, 2);
+        TestUtils.assertRequestsCount(7, 0, 0, 2);
         assertEquals(0, modificationRepository.count());
         assertEquals(0, tabularPropertyRepository.count());
     }
@@ -386,7 +387,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.deleteGroup(mockMvc, getGroupId());
         // It is actually (12, 0, 0, 29) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(12, 0, 0, 2);
+        TestUtils.assertRequestsCount(11, 0, 0, 2);
         assertEquals(0, modificationRepository.count());
     }
 

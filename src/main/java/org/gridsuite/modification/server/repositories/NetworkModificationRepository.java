@@ -69,6 +69,7 @@ public class NetworkModificationRepository {
 
     private final TabularPropertyRepository tabularPropertyRepository;
     private final ModificationContainerRepository modificationContainerRepository;
+    private final CompositeContainerRepository compositeContainerRepository;
 
     private final ModificationApplicationInfosService modificationApplicationInfosService;
 
@@ -92,6 +93,7 @@ public class NetworkModificationRepository {
                                          VoltageLevelModificationRepository voltageLevelModificationRepository,
                                          TabularPropertyRepository tabularPropertyRepository,
                                          CompositeModificationRepository compositeModificationRepository,
+                                         CompositeContainerRepository compositeContainerRepository,
                                          ModificationContainerRepository modificationContainerRepository,
                                          ModificationApplicationInfosService modificationApplicationInfosService) {
         this.modificationGroupRepository = modificationGroupRepository;
@@ -110,37 +112,41 @@ public class NetworkModificationRepository {
         this.voltageLevelModificationRepository = voltageLevelModificationRepository;
         this.tabularPropertyRepository = tabularPropertyRepository;
         this.compositeModificationRepository = compositeModificationRepository;
+        this.compositeContainerRepository = compositeContainerRepository;
         this.modificationContainerRepository = modificationContainerRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
     }
 
     /**
-     * Inserts the container-identity row and flushes it immediately. The flush is required: the
-     * modification_container -> group/composite relationship is DB-only, so Hibernate won't order
-     * the parent insert before the dependent group/composite/child inserts on its own.
+     * Resolve the {@link ModificationContainer} addressed by a public id + kind.
+     * GROUP: the group itself (created on demand if allowed).
+     * COMPOSITE: the leaf's content container (leaf id -> content).
      */
-
-    private void ensureContainerExists(UUID id, ModificationContainerType type) {
-        if (!modificationContainerRepository.existsById(id)) {
-            modificationContainerRepository.save(new ModificationContainerEntity(id, type));
-        }
+    private ModificationContainer resolveContainer(ModificationContainerType type, UUID id, boolean createIfMissing) {
+        return switch (type) {
+            case GROUP -> createIfMissing ? getOrCreateModificationGroup(id) : getModificationGroup(id);
+            case COMPOSITE -> compositeContainerRepository.findById(id)          // id == the composite's id
+                    .map(ModificationContainer.class::cast)
+                    .orElseThrow(() -> new NetworkModificationException(
+                            MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, id)));
+        };
     }
 
-    /** Registers a container row for every composite in the subtree(s) about to be persisted.
-     *  Each composite node's insert needs its modification_container row to exist first. */
-    private void registerCompositeContainers(Collection<ModificationEntity> entities) {
-        for (ModificationEntity e : entities) {
-            if (e instanceof CompositeModificationEntity composite) {
-                ensureContainerExists(composite.getId(), ModificationContainerType.COMPOSITE);
-                registerCompositeContainers(composite.getModifications());
-            }
+    public ModificationContainerType resolveContainerKindOf(ModificationEntity m) {
+        UUID cid = m.getContainerId();
+        if (cid == null) {
+            return null;
         }
+        return modificationGroupRepository.existsById(cid)
+                ? ModificationContainerType.GROUP
+                : ModificationContainerType.COMPOSITE;
     }
 
     @Transactional // To have all the delete in the same transaction (atomic)
     public void deleteAll() {
         modificationApplicationInfosService.deleteAll();
         modificationRepository.deleteAll();
+        compositeContainerRepository.deleteAll();
         modificationGroupRepository.deleteAll();
     }
 
@@ -179,14 +185,12 @@ public class NetworkModificationRepository {
                 .toList();
 
         if (copyEntities.size() == 1 && copyEntities.getFirst() instanceof CompositeModificationEntity single) {
-            registerCompositeContainers(List.of(single));
             return modificationRepository.save(single).getId();
         }
 
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         compositeEntity.setModifications(copyEntities);
-        registerCompositeContainers(List.of(compositeEntity));
         return modificationRepository.save(compositeEntity).getId();
     }
 
@@ -212,44 +216,36 @@ public class NetworkModificationRepository {
                 .toList();
         deleteCompositeChildrenSubtree(List.of(compositeEntity));
         compositeEntity.setModifications(copyEntities);
-        registerCompositeContainers(List.of(compositeEntity));
         modificationRepository.save(compositeEntity);
     }
 
     private List<ModificationEntity> saveModificationsNonTransactional(@NonNull UUID groupUuid, List<ModificationEntity> modifications) {
-        int order = modificationRepository.countByContainerAndStashed(groupUuid, ModificationContainerType.GROUP, false);
-        var modificationGroupEntity = getOrCreateModificationGroup(groupUuid);
-        registerCompositeContainers(modifications);
+        int order = modificationRepository.countByContainerAndStashed(groupUuid, false);
+        ModificationGroupEntity group = getOrCreateModificationGroup(groupUuid);
         for (ModificationEntity m : modifications) {
-            modificationGroupEntity.addModification(m, order++);
+            group.addModification(m, order++);
         }
+        // persisting composite leaves cascades their content (and its modification_container row)
         return modificationRepository.saveAll(modifications);
     }
 
     @Transactional
     public List<ModificationInfos> moveModifications(
-            @NonNull ModificationContainerType sourceType, @NonNull UUID sourceContainerId,
-            @NonNull ModificationContainerType targetType, @NonNull UUID targetContainerId,
-            @NonNull List<UUID> modificationUuids,
-            UUID beforeModificationUuid) {
-
-        List<ModificationEntity> moved = moveModificationsNonTransactional(
-                sourceType, sourceContainerId,
-                targetType, targetContainerId,
-                modificationUuids, beforeModificationUuid);
-        return moved.stream().map(this::toModificationsInfosOptimized).toList();
+            @NonNull ModificationContainerType sourceType, @NonNull UUID sourceId,
+            @NonNull ModificationContainerType targetType, @NonNull UUID targetId,
+            @NonNull List<UUID> modificationUuids, UUID beforeModificationUuid) {
+        return moveModificationsNonTransactional(sourceType, sourceId, targetType, targetId, modificationUuids, beforeModificationUuid)
+                .stream().map(this::toModificationsInfosOptimized).toList();
     }
 
     private List<ModificationEntity> moveModificationsNonTransactional(
             ModificationContainerType sourceType, UUID sourceId,
             ModificationContainerType targetType, UUID targetId,
-            List<UUID> modificationUuids,
-            UUID beforeModificationUuid) {
+            List<UUID> modificationUuids, UUID beforeModificationUuid) {
+
         boolean sameContainer = sourceType == targetType && sourceId.equals(targetId);
-        ModificationContainer source = loadContainer(sourceType, sourceId, false);
-        ModificationContainer target = sameContainer
-                ? source
-                : loadContainer(targetType, targetId, true);
+        ModificationContainer source = resolveContainer(sourceType, sourceId, false);
+        ModificationContainer target = sameContainer ? source : resolveContainer(targetType, targetId, true);
 
         List<ModificationEntity> sourceChildren = source.getModifications().stream()
                 .filter(Objects::nonNull)
@@ -272,50 +268,35 @@ public class NetworkModificationRepository {
         }
 
         if (sourceType == ModificationContainerType.GROUP) {
-            // Collect modifications (composite's children)
-            // before moving origin modifications between nodes, remove applications since they are not applicable anymore
-            List<UUID> allMovedUuids = collectAllModificationUuids(moved);
-            modificationApplicationInfosService.deleteAllByModificationIds(allMovedUuids);
+            modificationApplicationInfosService.deleteAllByModificationIds(collectAllModificationUuids(moved));
         }
 
         List<ModificationEntity> targetChildren = new ArrayList<>(target.getModifications());
         targetChildren.removeIf(Objects::isNull);
         insertModifications(targetChildren, moved, beforeModificationUuid);
         target.setModifications(targetChildren);
+        source.setModifications(sourceChildren);
         return moved;
     }
 
-    private ModificationContainer loadContainer(ModificationContainerType type, UUID id, boolean createIfMissing) {
-        return switch (type) {
-            case GROUP -> createIfMissing
-                    ? getOrCreateModificationGroup(id)
-                    : getModificationGroup(id);
-            case COMPOSITE -> compositeModificationRepository.findById(id)
-                    .orElseThrow(() -> new NetworkModificationException(
-                            MODIFICATION_NOT_FOUND,
-                            String.format(MODIFICATION_NOT_FOUND_MESSAGE, id)));
-        };
-    }
-
-    private void assertNoCompositeCycle(List<ModificationEntity> moving, UUID targetCompositeId) {
+    private void assertNoCompositeCycle(List<ModificationEntity> moving, UUID targetCompositeLeafId) {
         for (ModificationEntity m : moving) {
             if (m instanceof CompositeModificationEntity movingComposite
-                    && (movingComposite.getId().equals(targetCompositeId)
-                    || isInsideComposite(movingComposite, targetCompositeId))) {
+                    && (movingComposite.getId().equals(targetCompositeLeafId)
+                    || isInsideComposite(movingComposite, targetCompositeLeafId))) {
                 throw new NetworkModificationException(MOVE_MODIFICATION_ERROR,
                         String.format("Moving composite (%s) into (%s) would create a cycle",
-                                m.getId(), targetCompositeId));
+                                m.getId(), targetCompositeLeafId));
             }
         }
     }
 
-    private boolean isInsideComposite(CompositeModificationEntity composite, UUID targetUuid) {
+    private boolean isInsideComposite(CompositeModificationEntity composite, UUID targetId) {
         for (ModificationEntity sub : composite.getModifications()) {
-            if (sub.getId().equals(targetUuid)) {
+            if (sub.getId().equals(targetId)) {
                 return true;
             }
-            if (sub instanceof CompositeModificationEntity subComposite
-                    && isInsideComposite(subComposite, targetUuid)) {
+            if (sub instanceof CompositeModificationEntity subComposite && isInsideComposite(subComposite, targetId)) {
                 return true;
             }
         }
@@ -382,7 +363,6 @@ public class NetworkModificationRepository {
                 .map(this::toModificationsInfosOptimized)
                 .map(ModificationEntity::fromDTO)
                 .toList();
-        registerCompositeContainers(copyEntities);
         List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
 
         // Iterate through sourceEntities and newEntities collections simultaneously to map sourceId -> newId
@@ -534,7 +514,7 @@ public class NetworkModificationRepository {
 
     private CompositeModificationInfos loadCompositeModification(CompositeModificationEntity compositeEntity, Set<UUID> modificationsToExclude) {
         // Load all sub-composites only for root composites (associated with a group) to avoid N+1 select
-        if (compositeEntity.getContainerType() == ModificationContainerType.GROUP) {
+        if (compositeEntity.getContent().getContainerType() == ModificationContainerType.GROUP) {
             List<UUID> uuids = modificationRepository.findOnlyCompositeChildrenUuids(compositeEntity.getId());
             modificationRepository.findAllCompositesWithModificationsByIdIn(uuids);
         }
@@ -650,14 +630,14 @@ public class NetworkModificationRepository {
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()));
     }
 
-    @Transactional // To have the 2 delete in the same transaction (atomic)
+    @Transactional
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
             if (!groupEntity.getModifications().isEmpty()) {
-                List<ModificationEntity> modifications = groupEntity.getModifications();
-                deleteModifications(modifications.stream().filter(Objects::nonNull).toList());
+                deleteModifications(groupEntity.getModifications().stream().filter(Objects::nonNull).toList());
             }
+            // deleting the group deletes its modification_container row (JOINED subtype delete)
             modificationGroupRepository.delete(groupEntity);
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
@@ -700,10 +680,7 @@ public class NetworkModificationRepository {
     private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid)
                 .orElseGet(
-                        () -> {
-                            ensureContainerExists(groupUuid, ModificationContainerType.GROUP);
-                            return modificationGroupRepository.save(new ModificationGroupEntity(groupUuid));
-                        });
+                        () -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
     }
 
     private Stream<ModificationEntity> getModificationEntityStream(UUID groupUuid) {
@@ -712,7 +689,7 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public Integer getModificationsCount(@NonNull UUID groupUuid, boolean stashed) {
-        return modificationRepository.countByContainerAndStashed(groupUuid, ModificationContainerType.GROUP, stashed);
+        return modificationRepository.countByContainerAndStashed(groupUuid, stashed);
     }
 
     private List<ModificationInfos> getModificationsInfosNonTransactional(List<UUID> uuids) {
@@ -732,7 +709,7 @@ public class NetworkModificationRepository {
      */
     @Transactional(readOnly = true)
     public List<ModificationInfos> getBasicNetworkModificationsFromComposite(@NonNull List<UUID> uuids) {
-        List<UUID> networkModificationsUuids = modificationRepository.findAllByContainers(uuids, ModificationContainerType.COMPOSITE).stream().map(ModificationEntity::getId).toList();
+        List<UUID> networkModificationsUuids = modificationRepository.findAllByContainers(uuids).stream().map(ModificationEntity::getId).toList();
         Map<UUID, ModificationEntity> entitiesById = modificationRepository.findBaseDataByIdIn(networkModificationsUuids).stream()
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
         Map<UUID, Integer> depths = batchCompositeDepths(entitiesById.values());
@@ -764,7 +741,7 @@ public class NetworkModificationRepository {
     private List<ModificationInfos> getModificationsInfosInsideCompositesNonTransactional(@NonNull List<UUID> compositeUuids) {
         List<ModificationInfos> entities = new ArrayList<>();
         compositeUuids.forEach(uuid -> {
-            List<UUID> foundEntities = modificationRepository.findAllByContainer(uuid, ModificationContainerType.COMPOSITE).stream().map(ModificationEntity::getId).toList();
+            List<UUID> foundEntities = modificationRepository.findAllByContainer(uuid).stream().map(ModificationEntity::getId).toList();
             List<ModificationInfos> orderedModifications = foundEntities
                     .stream()
                     .map(this::getModificationInfo)
@@ -922,23 +899,28 @@ public class NetworkModificationRepository {
                 .toList();
         deleteCompositeChildrenSubtree(compositesToDelete);
 
-        // delete other modification types with "in" requests
-        List<UUID> uuidsToDelete = modificationEntities.stream().filter(Predicate.not(TabularModificationsEntity.class::isInstance)).map(ModificationEntity::getId).toList();
+        List<UUID> uuidsToDelete = modificationEntities.stream()
+                .filter(Predicate.not(TabularModificationsEntity.class::isInstance))
+                .map(ModificationEntity::getId).toList();
         if (!uuidsToDelete.isEmpty()) {
             modificationApplicationInfosService.deleteAllByModificationIds(uuidsToDelete);
             modificationRepository.deleteAllByIdIn(uuidsToDelete);
-            modificationContainerRepository.deleteAllById(compositesToDelete.stream().map(ModificationEntity::getId).toList());
+            // bulk delete bypasses orphanRemoval; content shares the composite's id, so reap by the same ids.
+            // (Or declare ON DELETE CASCADE composite_container.id -> modification_container.id and skip this.)
+            List<UUID> compositeIds = compositesToDelete.stream().map(ModificationEntity::getId).toList();
+            compositeContainerRepository.deleteAllById(compositeIds);
         }
     }
 
     private void deleteCompositeChildrenSubtree(List<CompositeModificationEntity> composites) {
-        List<UUID> subModification = composites.stream().map(ModificationEntity::getId).toList();
+        // content id == composite id, so container ids ARE the composite ids
+        List<UUID> containerIds = composites.stream().map(ModificationEntity::getId).toList();
         List<ModificationEntity> descendants = new ArrayList<>();
-        while (!subModification.isEmpty()) {
-            List<ModificationEntity> children = modificationRepository.findAllByContainers(subModification, ModificationContainerType.COMPOSITE);
+        while (!containerIds.isEmpty()) {
+            List<ModificationEntity> children = modificationRepository.findAllByContainers(containerIds);
             descendants.addAll(children);
-            subModification = children.stream()
-                    .filter(c -> ModificationType.COMPOSITE_MODIFICATION.name().equals(c.getType()))
+            containerIds = children.stream()
+                    .filter(CompositeModificationEntity.class::isInstance)
                     .map(ModificationEntity::getId)
                     .toList();
         }
@@ -1054,79 +1036,75 @@ public class NetworkModificationRepository {
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
-    public ModificationContainerType getContainerType(UUID containerUuid, boolean createGroupIfMissing) {
-        if (compositeModificationRepository.existsById(containerUuid)) {
+    public ModificationContainerType getContainerType(UUID id, boolean createGroupIfMissing) {
+        if (compositeModificationRepository.existsById(id)) {
             return ModificationContainerType.COMPOSITE;
         }
-        if (modificationGroupRepository.existsById(containerUuid)) {
+        if (modificationGroupRepository.existsById(id)) {
             return ModificationContainerType.GROUP;
         } else if (createGroupIfMissing) {
-            getOrCreateModificationGroup(containerUuid);
+            getOrCreateModificationGroup(id);
             return ModificationContainerType.GROUP;
         }
         throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
-                String.format("No modification container found for id %s", containerUuid));
+                String.format("No modification container found for id %s", id));
     }
 
     @Transactional
     public CompositeModificationEntity assembleNetworkModificationsIntoNewComposite(List<UUID> assembledModificationsUuids) {
-        // get the target (group or composite of the first assembled modification + its index in this target)
         final UUID firstModifUuid = assembledModificationsUuids.getFirst();
         final ModificationEntity firstModificationEntity = getModificationEntity(firstModifUuid);
         final int targetIndex = firstModificationEntity.getModificationsOrder();
         ModificationGroupEntity targetGroup = null;
-        CompositeModificationEntity targetComposite = null;
-        if (firstModificationEntity.getParentContainerType() == ModificationContainerType.GROUP) {
+        CompositeContainerEntity targetComposite = null;
+        if (resolveContainerKindOf(firstModificationEntity) == ModificationContainerType.GROUP) {
             targetGroup = modificationGroupRepository.findById(firstModificationEntity.getContainerId()).orElse(null);
         } else {
-            targetComposite = compositeModificationRepository.findById(firstModificationEntity.getContainerId()).orElse(null);
+            targetComposite = compositeContainerRepository.findById(firstModificationEntity.getContainerId()).orElse(null);
         }
 
-        // get all the modifications to be assembled, remove previous assignment
         List<ModificationEntity> assembledModifications = assembledModificationsUuids.stream()
                 .map(modificationRepository::findById).filter(Optional::isPresent).map(Optional::get).toList();
-        // 1. cleans and reorders the origin group if there is one :
-        UUID groupUuid = assembledModifications.stream()
-                .filter(mod -> mod.getParentContainerType() == ModificationContainerType.GROUP)
-                .map(ModificationEntity::getContainerId)
-                .findFirst()
-                .orElse(null);
-        ModificationGroupEntity originGroup = groupUuid != null ? modificationGroupRepository.findById(groupUuid).orElse(null) : null;
+
+        // 1. clean the origin group, if any
+        UUID originContainerId = assembledModifications.stream()
+                .filter(mod -> resolveContainerKindOf(mod) == ModificationContainerType.GROUP)
+                .map(ModificationEntity::getContainerId).findFirst().orElse(null);
+        ModificationGroupEntity originGroup = originContainerId != null
+                ? modificationGroupRepository.findById(originContainerId).orElse(null) : null;
         if (originGroup != null) {
             List<ModificationEntity> kept = new ArrayList<>(originGroup.getModifications());
             kept.removeIf(mod -> assembledModificationsUuids.contains(mod.getId()));
             originGroup.setModifications(kept);
         }
-        // 2. cleans the composites whose submodifications are assembled into a new one
-        for (ModificationEntity assembledModification : assembledModifications.stream()
-                .filter(mod -> mod.getParentContainerType() == ModificationContainerType.COMPOSITE).toList()) {
-            CompositeModificationEntity previousOwner = compositeModificationRepository.findById(assembledModification.getContainerId()).orElse(null);
+
+        // 2. clean composites whose sub-modifications are assembled away
+        for (ModificationEntity assembled : assembledModifications.stream()
+                .filter(mod -> resolveContainerKindOf(mod) == ModificationContainerType.COMPOSITE).toList()) {
+            CompositeContainerEntity previousOwner = compositeContainerRepository.findById(assembled.getContainerId()).orElse(null);
             if (previousOwner != null) {
-                List<ModificationEntity> modificationsLeft = new ArrayList<>(previousOwner.getModifications());
-                modificationsLeft.removeIf(mod -> assembledModificationsUuids.contains(mod.getId()));
-                previousOwner.setModifications(modificationsLeft);
+                List<ModificationEntity> left = new ArrayList<>(previousOwner.getModifications());
+                left.removeIf(mod -> assembledModificationsUuids.contains(mod.getId()));
+                previousOwner.setModifications(left);
             }
         }
-        // create the new composite
+
         CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder()
                 .modificationsInfos(List.of())
                 .name("Composite modification")
                 .build();
-        CompositeModificationEntity newCompositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(newCompositeInfos);
-        registerCompositeContainers(List.of(newCompositeEntity));
+        CompositeModificationEntity newLeaf = (CompositeModificationEntity) ModificationEntity.fromDTO(newCompositeInfos);
+        newLeaf.setModifications(assembledModifications);
 
-        // assign the assembled modifications to the new composite
-        newCompositeEntity.setModifications(assembledModifications);
-        // put the new composite in the target group or composite
         if (targetGroup != null) {
-            List<ModificationEntity> modifications = new ArrayList<>(targetGroup.getModifications());
-            modifications.add(targetIndex, newCompositeEntity);
-            targetGroup.setModifications(modifications);
+            List<ModificationEntity> mods = new ArrayList<>(targetGroup.getModifications());
+            mods.add(targetIndex, newLeaf);
+            targetGroup.setModifications(mods);
         } else if (targetComposite != null) {
-            List<ModificationEntity> modifications = new ArrayList<>(targetComposite.getModifications());
-            modifications.add(targetIndex, newCompositeEntity);
-            targetComposite.setModifications(modifications);
+            List<ModificationEntity> mods = new ArrayList<>(targetComposite.getModifications());
+            mods.add(targetIndex, newLeaf);
+            targetComposite.setModifications(mods);
         }
-        return modificationRepository.save(newCompositeEntity);
+        return modificationRepository.save(newLeaf);
     }
 }

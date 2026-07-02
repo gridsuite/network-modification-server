@@ -6,13 +6,12 @@
  */
 package org.gridsuite.modification.server.repositories;
 
-import org.gridsuite.modification.server.entities.AbstractModificationContainerEntity;
+import org.gridsuite.modification.server.entities.CompositeContainerEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
 /**
- * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
+ * @author Hugo Marcellin {@literal <hugo.marcelin at rte-france.com>}
  */
-
-public interface ModificationContainerRepository extends JpaRepository<AbstractModificationContainerEntity, UUID> { }
+public interface CompositeContainerRepository extends JpaRepository<CompositeContainerEntity, UUID> { }

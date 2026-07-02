@@ -6,34 +6,42 @@
  */
 package org.gridsuite.modification.server.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.util.UUID;
 
 /**
- * A group is <em>only ever</em> a container (never a child of anything), so it is a clean subtype
- * of {@link AbstractModificationContainerEntity}. Its {@code modification_container} row is created by
- * inheritance when the group is persisted — no bookkeeping.
- *
  * @author Hugo Marcellin {@literal <hugo.marcelin at rte-france.com>}
  */
+@Getter
+@Setter
 @NoArgsConstructor
 @Entity
-@DiscriminatorValue("GROUP")
-@Table(name = "modificationGroup")
-@PrimaryKeyJoinColumn(name = "id", foreignKey = @jakarta.persistence.ForeignKey(name = "modification_group_container_fk"))
-public class ModificationGroupEntity extends AbstractModificationContainerEntity {
+@DiscriminatorValue("COMPOSITE")
+@Table(name = "composite_container")
+@PrimaryKeyJoinColumn(name = "id", foreignKey = @ForeignKey(name = "composite_container_container_fk"))
+public class CompositeContainerEntity extends AbstractModificationContainerEntity {
 
-    public ModificationGroupEntity(UUID uuid) {
-        super(uuid);
+    @Column(name = "name")
+    @ColumnDefault("'My Composite'")
+    private String name;
+
+    public CompositeContainerEntity(UUID id, String name) {
+        super(id);
+        this.name = name;
     }
 
     @Override
     public ModificationContainerType getContainerType() {
-        return ModificationContainerType.GROUP;
+        return ModificationContainerType.COMPOSITE;
     }
 }
