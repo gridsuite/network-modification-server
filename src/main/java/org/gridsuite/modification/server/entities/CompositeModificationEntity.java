@@ -13,6 +13,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
@@ -23,6 +24,7 @@ import java.util.List;
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
  */
+@NoArgsConstructor
 @Getter
 @Setter
 @Entity
@@ -38,8 +40,6 @@ public class CompositeModificationEntity extends ModificationEntity {
         super(compositeModificationInfos);
         assignAttributes(compositeModificationInfos);
     }
-
-    public CompositeModificationEntity() {}
 
     @Override
     public CompositeModificationInfos toModificationInfos() {
