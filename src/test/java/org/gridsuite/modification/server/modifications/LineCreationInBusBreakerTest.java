@@ -252,8 +252,8 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
             )
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("bus2")
-            .lineSegments(List.of(new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", "50", null),
-                new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", null, 0.95)))
+            .lineSegments(List.of(new LineSegmentInfos(UUID.randomUUID().toString(), 1.0, "1", "50", null),
+                new LineSegmentInfos(UUID.randomUUID().toString(), 1.0, "1", null, 0.95)))
             .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
