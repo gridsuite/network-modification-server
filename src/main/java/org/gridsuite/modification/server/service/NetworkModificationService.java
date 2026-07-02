@@ -407,8 +407,8 @@ public class NetworkModificationService {
             @NonNull List<UUID> modificationUuids,
             @NonNull List<ModificationApplicationContext> applicationContexts,
             boolean canApply) {
-        ModificationContainerType sourceType = networkModificationRepository.getContainerType(sourceContainerId, true);
-        ModificationContainerType targetType = networkModificationRepository.getContainerType(targetContainerId, true);
+        ModificationContainerType sourceType = networkModificationRepository.getContainerTypeOrCreateGroup(sourceContainerId, true);
+        ModificationContainerType targetType = networkModificationRepository.getContainerTypeOrCreateGroup(targetContainerId, true);
 
         // Find which selected UUIDs are composite modifications
         Set<UUID> selectedCompositeUuids = modificationRepository.findExistingCompositeModificationIds(modificationUuids);

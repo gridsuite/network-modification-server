@@ -7,7 +7,9 @@
 package org.gridsuite.modification.server.repositories;
 
 import org.gridsuite.modification.server.entities.AbstractModificationContainerEntity;
+import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.UUID;
 
@@ -15,4 +17,12 @@ import java.util.UUID;
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
  */
 
-public interface ModificationContainerRepository extends JpaRepository<AbstractModificationContainerEntity, UUID> { }
+public interface ModificationContainerRepository extends JpaRepository<AbstractModificationContainerEntity, UUID> {
+
+    @Query(value = """
+          SELECT container_type FROM modification_container m
+          WHERE id = :id
+        """, nativeQuery = true)
+    ModificationContainerType getContainerTypeById(UUID id);
+
+}

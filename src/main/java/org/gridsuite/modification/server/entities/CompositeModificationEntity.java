@@ -48,9 +48,10 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .toList();
         return CompositeModificationInfos.builder()
                 .name(getName())
+                .description(getDescription())
+                .date(getDate())
                 .activated(getActivated())
                 .uuid(getId())
-                .date(getDate())
                 .stashed(getStashed())
                 .modificationsInfos(modificationsInfos)
                 .build();
