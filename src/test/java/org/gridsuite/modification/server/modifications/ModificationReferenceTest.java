@@ -34,9 +34,6 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
     @Autowired
     protected ModificationRepository modificationRepository;
 
-    @Autowired
-    protected ModificationContainerRepository modificationContainerRepository;
-
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, false);
@@ -45,8 +42,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         ModificationInfos compositeInfo = buildCompositeModification();
-        ModificationEntity compositeEntity = ModificationEntity.fromDTO(compositeInfo);
-        modificationRepository.save(compositeEntity);
+        ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
         ModificationInfos compositeMetadataInfo = modificationRepository.findBaseDataByIdIn(List.of(compositeEntity.getId())).getFirst().toModificationInfos();
 
         return ModificationReferenceInfos.builder()
