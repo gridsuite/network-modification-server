@@ -30,9 +30,7 @@ import static org.gridsuite.modification.NetworkModificationException.Type.MISSI
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(
         name = "modification",
-        indexes = {
-            @Index(name = "modification_container_idx", columnList = "container_type, container_id")
-        }
+        indexes = { @Index(name = "modification_container_idx", columnList = "container_id") }
 )
 public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> {
 
@@ -68,10 +66,10 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     @Column(name = "description", columnDefinition = "CLOB")
     private String description;
 
-    // Written by the child itself (see attachToContainer). The owning collections map this column
-    // read-only (insertable=false, updatable=false), so there is a single writer and no UPDATE pass.
-    @Column(name = "container_id")
-    private UUID containerId;
+    @Setter(AccessLevel.NONE)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "container_id", foreignKey = @ForeignKey(name = "modification_container_fk"))
+    private AbstractModificationContainerEntity container;
 
     public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues, String description) {
         this.id = id;
@@ -143,8 +141,12 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
     }
 
-    public void attachToContainer(@NonNull ModificationContainer container) {
-        this.containerId = container.getId();
+    void attachToContainer(@NonNull AbstractModificationContainerEntity container) {
+        this.container = container;
+    }
+
+    public UUID getContainerUuid() {
+        return container == null ? null : container.getId();
     }
 
     public static ModificationEntity fromDTO(ModificationInfos dto) {

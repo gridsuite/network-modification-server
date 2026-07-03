@@ -62,7 +62,7 @@ public class ModificationApplicationEntity {
             .createdEquipmentIds(this.getCreatedEquipmentIds())
             .modifiedEquipmentIds(this.getModifiedEquipmentIds())
             .networkUuid(this.getNetworkUuid())
-            .groupUuid(this.getModification().getContainerId())
+            .groupUuid(this.getModification().getContainerUuid())
             .build();
     }
 }

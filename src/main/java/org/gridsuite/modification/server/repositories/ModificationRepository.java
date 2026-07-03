@@ -31,17 +31,17 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     //See https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#projections.dtos
     //TODO can we use the simpler interface based projections instead ? To avoid repeating the columns in @Query
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) "
-            + "FROM ModificationEntity m WHERE m.containerId = ?1 order by m.modificationsOrder")
+            + "FROM ModificationEntity m WHERE m.container.id = ?1 order by m.modificationsOrder")
     List<ModificationEntity> findAllBaseByContainerId(UUID containerId);
 
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) "
-            + "FROM ModificationEntity m WHERE m.containerId = ?1 order by m.modificationsOrder desc")
+            + "FROM ModificationEntity m WHERE m.container.id = ?1 order by m.modificationsOrder desc")
     List<ModificationEntity> findAllBaseByContainerIdReverse(UUID containerId);
 
-    @Query(value = "SELECT m FROM ModificationEntity m WHERE m.containerId = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
+    @Query(value = "SELECT m FROM ModificationEntity m WHERE m.container.id = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
     List<ModificationEntity> findAllByContainerId(@Param("containerId") UUID containerId, @Param("stashed") Boolean stashed);
 
-    @Query(value = "SELECT m FROM ModificationEntity m WHERE m.containerId = ?1 AND m.stashed = false AND m.activated = true AND m.id NOT IN (?2) order by m.modificationsOrder")
+    @Query(value = "SELECT m FROM ModificationEntity m WHERE m.container.id = ?1 AND m.stashed = false AND m.activated = true AND m.id NOT IN (?2) order by m.modificationsOrder")
     List<ModificationEntity> findAllActiveModificationsByContainerId(UUID containerId, Set<UUID> excludedList);
 
     @Query(value = "SELECT new ModificationEntity(m.id, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
@@ -67,14 +67,14 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(UUID uuid);
 
     // children of one / many containers (no type param — id disambiguates)
-    @Query("SELECT m FROM ModificationEntity m WHERE m.containerId = :containerId ORDER BY m.modificationsOrder ASC")
+    @Query("SELECT m FROM ModificationEntity m WHERE m.container.id = :containerId ORDER BY m.modificationsOrder ASC")
     List<ModificationEntity> findAllByContainer(@Param("containerId") UUID containerId);
 
     @Query("""
           SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description)
             FROM ModificationEntity m
-           WHERE m.containerId IN :containerIds
-           ORDER BY m.containerId, m.modificationsOrder ASC
+           WHERE m.container.id IN :containerIds
+           ORDER BY m.container.id, m.modificationsOrder ASC
         """)
     List<ModificationEntity> findAllByContainers(@Param("containerIds") Collection<UUID> containerIds);
 
@@ -88,7 +88,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     @Query("""
           SELECT COUNT(m) FROM ModificationEntity m
-          WHERE m.containerId = :containerId AND m.stashed = :stashed
+          WHERE m.container.id = :containerId AND m.stashed = :stashed
         """)
     int countByContainerAndStashed(@Param("containerId") UUID containerId, @Param("stashed") boolean stashed);
 

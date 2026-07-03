@@ -84,7 +84,7 @@ class SupervisionTest {
         modificationApplicationEntity = Mockito.spy(modificationApplicationEntity);
         modificationApplicationEntity2 = Mockito.spy(modificationApplicationEntity2);
         Mockito.when(modificationMock.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(modificationMock.getContainerId()).thenReturn(groupUuid);
+        Mockito.when(modificationMock.getContainerUuid()).thenReturn(groupUuid);
         Mockito.when(modificationApplicationEntity.getModification()).thenReturn(modificationMock);
         Mockito.when(modificationApplicationEntity2.getModification()).thenReturn(modificationMock);
 

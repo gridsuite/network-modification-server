@@ -647,10 +647,10 @@ public class NetworkModificationRepository {
             groupEntity.getModifications().removeAll(modifications); // No need to remove the group from the modification as we're going to delete it
         } else if (uuids != null) {
             modifications = modificationRepository.findAllById(uuids);
-            Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getContainerId() != null).findFirst();
+            Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getContainerUuid() != null).findFirst();
             if (optionalModificationWithGroup.isPresent()) {
                 throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, String.format("%s is owned by group %s",
-                        optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getContainerId()));
+                        optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getContainerUuid()));
             }
         } else {
             throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, "need to specify the group or give a list of UUIDs");
@@ -1034,7 +1034,7 @@ public class NetworkModificationRepository {
     }
 
     public ModificationContainerType getContainerType(ModificationEntity m) {
-        UUID cid = m.getContainerId();
+        UUID cid = m.getContainerUuid();
         if (cid == null) {
             return null;
         }
@@ -1061,9 +1061,9 @@ public class NetworkModificationRepository {
         ModificationGroupEntity targetGroup = null;
         CompositeContainerEntity targetComposite = null;
         if (getContainerType(firstModificationEntity) == ModificationContainerType.GROUP) {
-            targetGroup = modificationGroupRepository.findById(firstModificationEntity.getContainerId()).orElse(null);
+            targetGroup = modificationGroupRepository.findById(firstModificationEntity.getContainerUuid()).orElse(null);
         } else {
-            targetComposite = compositeContainerRepository.findById(firstModificationEntity.getContainerId()).orElse(null);
+            targetComposite = compositeContainerRepository.findById(firstModificationEntity.getContainerUuid()).orElse(null);
         }
 
         List<ModificationEntity> assembledModifications = assembledModificationsUuids.stream()
@@ -1072,7 +1072,7 @@ public class NetworkModificationRepository {
         // 1. clean the origin group, if any
         UUID originContainerId = assembledModifications.stream()
                 .filter(mod -> getContainerType(mod) == ModificationContainerType.GROUP)
-                .map(ModificationEntity::getContainerId).findFirst().orElse(null);
+                .map(ModificationEntity::getContainerUuid).findFirst().orElse(null);
         ModificationGroupEntity originGroup = originContainerId != null
                 ? modificationGroupRepository.findById(originContainerId).orElse(null) : null;
         if (originGroup != null) {
@@ -1084,7 +1084,7 @@ public class NetworkModificationRepository {
         // 2. clean composites whose sub-modifications are assembled away
         for (ModificationEntity assembled : assembledModifications.stream()
                 .filter(mod -> getContainerType(mod) == ModificationContainerType.COMPOSITE).toList()) {
-            CompositeContainerEntity previousOwner = compositeContainerRepository.findById(assembled.getContainerId()).orElse(null);
+            CompositeContainerEntity previousOwner = compositeContainerRepository.findById(assembled.getContainerUuid()).orElse(null);
             if (previousOwner != null) {
                 List<ModificationEntity> left = new ArrayList<>(previousOwner.getModifications());
                 left.removeIf(mod -> assembledModificationsUuids.contains(mod.getId()));

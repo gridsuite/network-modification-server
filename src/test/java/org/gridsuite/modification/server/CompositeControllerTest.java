@@ -485,12 +485,12 @@ class CompositeControllerTest {
 
         // The moved modification must now belong to TEST_GROUP_ID (has a group at root level)
         ModificationEntity movedEntity = modificationRepository.getModificationEntity(movingUuid);
-        assertNotNull(movedEntity.getContainerId());
-        assertEquals(TEST_GROUP_ID, movedEntity.getContainerId());
+        assertNotNull(movedEntity.getContainerUuid());
+        assertEquals(TEST_GROUP_ID, movedEntity.getContainerUuid());
 
         // The remaining sub-modification must still have no group (still owned by the composite)
         ModificationEntity remainingEntity = modificationRepository.getModificationEntity(actualSubUuids.get(1));
-        assertEquals(remainingEntity.getContainerId(), compositeUuid);
+        assertEquals(remainingEntity.getContainerUuid(), compositeUuid);
     }
 
     @Test
@@ -531,9 +531,9 @@ class CompositeControllerTest {
 
         // The new composite must belong to TEST_GROUP_ID at root level
         CompositeModificationEntity firstComposite = compositeRepository.findById(firstCompositeUuid).orElseThrow();
-        assertNotNull(firstComposite.getContainerId());
+        assertNotNull(firstComposite.getContainerUuid());
         assertEquals(ModificationContainerType.GROUP, modificationRepository.getContainerType(firstComposite));
-        assertEquals(TEST_GROUP_ID, firstComposite.getContainerId());
+        assertEquals(TEST_GROUP_ID, firstComposite.getContainerUuid());
 
         // The assembled modifications must no longer belong directly to the group
         ModificationEntity firstAssembledEntity = modificationRepository.getModificationEntity(originalRootModUuids.get(0));
@@ -543,9 +543,9 @@ class CompositeControllerTest {
 
         // The non-assembled modification must still belong to TEST_GROUP_ID
         ModificationEntity remainingInGroupEntity = modificationRepository.getModificationEntity(originalRootModUuids.get(2));
-        assertNotNull(remainingInGroupEntity.getContainerId());
+        assertNotNull(remainingInGroupEntity.getContainerUuid());
         assertEquals(ModificationContainerType.GROUP, modificationRepository.getContainerType(remainingInGroupEntity));
-        assertEquals(TEST_GROUP_ID, remainingInGroupEntity.getContainerId());
+        assertEquals(TEST_GROUP_ID, remainingInGroupEntity.getContainerUuid());
 
         // ---- 2. now assembles a modification which is inside a composite with something that is outside :
         assembledModificationUuids = List.of(compositeContent.getFirst().getUuid(), remainingInGroupEntity.getId());
@@ -702,7 +702,7 @@ class CompositeControllerTest {
 
         // The moved modification must now have no group (owned by the composite, not the group)
         ModificationEntity movedEntity = modificationRepository.getModificationEntity(rootModUuid);
-        assertEquals(movedEntity.getContainerId(), compositeUuid);
+        assertEquals(movedEntity.getContainerUuid(), compositeUuid);
     }
 
     @Test
