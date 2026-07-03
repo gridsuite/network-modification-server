@@ -180,6 +180,10 @@ public class NetworkModificationRepository {
                         ModificationEntity::getId,
                         e -> ModificationEntity.fromDTO(toModificationsInfosOptimized(e))
                 ));
+
+        //Delete previously held modifications
+        deleteModifications(compositeEntity.getModifications());
+
         // Reorder clones to match caller-specified order
         List<ModificationEntity> copyEntities = modificationUuids.stream()
                 .map(cloneByUuid::get)
