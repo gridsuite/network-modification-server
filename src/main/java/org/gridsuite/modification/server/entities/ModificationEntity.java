@@ -145,6 +145,10 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         this.container = container;
     }
 
+    public void detachFromContainer() {
+        this.container = null;
+    }
+
     public UUID getContainerUuid() {
         return container == null ? null : container.getId();
     }

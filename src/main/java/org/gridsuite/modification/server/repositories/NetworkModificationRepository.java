@@ -960,6 +960,7 @@ public class NetworkModificationRepository {
     }
 
     private void deleteTabularModification(TabularModificationsEntity tabularEntity) {
+        tabularEntity.detachFromContainer();
         UUID modificationUuid = tabularEntity.getId();
         List<UUID> modificationToCleanUuids = new ArrayList<>();
         modificationToCleanUuids.add(modificationUuid);
