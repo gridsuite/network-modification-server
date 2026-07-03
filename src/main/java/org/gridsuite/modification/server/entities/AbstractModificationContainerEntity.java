@@ -46,12 +46,8 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
         int target = Math.clamp(position, 0, modifications.size());
         child.attachToContainer(this);
         modifications.add(target, child);
-        renumber(modifications);
-    }
-
-    private void renumber(List<ModificationEntity> list) {
-        for (int i = 0; i < list.size(); i++) {
-            list.get(i).setModificationsOrder(i);
+        for (int i = 0; i < modifications.size(); i++) {
+            modifications.get(i).setModificationsOrder(i);
         }
     }
 

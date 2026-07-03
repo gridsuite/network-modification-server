@@ -487,11 +487,13 @@ public class NetworkModificationRepository {
                 .build();
     }
 
-    private CompositeModificationInfos loadCompositeModification(CompositeModificationEntity compositeEntity, Set<UUID> modificationsToExclude) {
-        // Load all sub-composites only for root composites (associated with a group) to avoid N+1 select
-        if (getContainerType(compositeEntity) == ModificationContainerType.GROUP) {
-            List<UUID> uuids = modificationRepository.findOnlyCompositeChildrenUuids(compositeEntity.getId());
-            modificationRepository.findAllCompositesWithModificationsByIdIn(uuids);
+    private CompositeModificationInfos loadCompositeModification(CompositeModificationEntity compositeEntity,
+                                                                 Set<UUID> modificationsToExclude,
+                                                                 boolean prefetchSubTree) {
+        if (prefetchSubTree) {
+            List<UUID> compositeUuids = new ArrayList<>(modificationRepository.findOnlyCompositeChildrenUuids(compositeEntity.getId()));
+            compositeUuids.add(compositeEntity.getId());
+            modificationRepository.findAllCompositesWithModificationsByIdIn(compositeUuids);
         }
         return CompositeModificationInfos.builder()
                 .name(compositeEntity.getName())
@@ -504,7 +506,7 @@ public class NetworkModificationRepository {
                         compositeEntity.getModifications()
                                 .stream()
                                 .filter(m -> !modificationsToExclude.contains(m.getId()))
-                                .map(m -> toModificationsInfosOptimized(m, modificationsToExclude))
+                                .map(m -> toModificationsInfosOptimized(m, modificationsToExclude, Map.of(), false))
                                 .toList())
                 .build();
     }
@@ -542,21 +544,25 @@ public class NetworkModificationRepository {
     }
 
     private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity) {
-        return toModificationsInfosOptimized(modificationEntity, Set.of(), Map.of());
+        return toModificationsInfosOptimized(modificationEntity, Set.of(), Map.of(), true);
     }
 
     private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity, Set<UUID> modificationsToExclude) {
-        return toModificationsInfosOptimized(modificationEntity, modificationsToExclude, Map.of());
+        return toModificationsInfosOptimized(modificationEntity, modificationsToExclude, Map.of(), true);
     }
 
     private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity,
                                                             Set<UUID> modificationsToExclude,
                                                             Map<UUID, Integer> precomputedDepths) {
-        // A composite may arrive as a real CompositeModificationEntity (full load, sub-modifications
-        // available) or as a plain ModificationEntity with type == COMPOSITE_MODIFICATION
-        // from findAllBaseByGroupId which strips subclass when retrieving only metadata
+        return toModificationsInfosOptimized(modificationEntity, modificationsToExclude, precomputedDepths, true);
+    }
+
+    private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity,
+                                                            Set<UUID> modificationsToExclude,
+                                                            Map<UUID, Integer> precomputedDepths,
+                                                            boolean prefetchCompositeSubTree) {
         if (modificationEntity instanceof CompositeModificationEntity compositeEntity) {
-            return loadCompositeModification(compositeEntity, modificationsToExclude);
+            return loadCompositeModification(compositeEntity, modificationsToExclude, prefetchCompositeSubTree);
         } else if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
             return loadCompositeModificationMetadata(modificationEntity, precomputedDepths.get(modificationEntity.getId()));
         }
