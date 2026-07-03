@@ -981,8 +981,11 @@ public class NetworkModificationRepository {
                 .findFirst()
                 .orElse(null);
         if (originGroup != null) {
-            List<ModificationEntity> originGroupModifications = originGroup.getModifications();
+            List<ModificationEntity> originGroupModifications = new ArrayList<>(originGroup.getModifications());
             originGroupModifications.removeIf(mod -> assembledModificationsUuids.contains(mod.getId()));
+            for (int i = 0; i < originGroupModifications.size(); i++) {
+                originGroupModifications.get(i).setModificationsOrder(i);
+            }
             originGroup.setModifications(originGroupModifications);
             assembledModifications.forEach(modificationEntity -> modificationEntity.setGroup(null));
         }
@@ -992,10 +995,13 @@ public class NetworkModificationRepository {
             if (compositeUuid != null) {
                 CompositeModificationEntity previousOwner = compositeModificationRepository.findById(compositeUuid).orElse(null);
                 if (previousOwner != null) {
-                    List<ModificationEntity> modificationsLeft = previousOwner.getModifications()
+                    List<ModificationEntity> modificationsLeft = new ArrayList<>(previousOwner.getModifications()
                             .stream()
                             .filter(mod -> !assembledModificationsUuids.contains(mod.getId()))
-                            .toList();
+                            .toList());
+                    for (int i = 0; i < modificationsLeft.size(); i++) {
+                        modificationsLeft.get(i).setModificationsOrder(i);
+                    }
                     previousOwner.setModifications(modificationsLeft);
                 }
             }
@@ -1013,15 +1019,19 @@ public class NetworkModificationRepository {
         newCompositeEntity.setModifications(assembledModifications);
         // put the new composite in the target group or composite
         if (targetGroup != null) {
-            List<ModificationEntity> modifications = targetGroup.getModifications();
+            List<ModificationEntity> modifications = new ArrayList<>(targetGroup.getModifications());
             modifications.add(targetIndex, newCompositeEntity);
+            for (int i = 0; i < modifications.size(); i++) {
+                modifications.get(i).setModificationsOrder(i);
+            }
             targetGroup.setModifications(modifications);
         } else if (targetComposite != null) {
-            List<ModificationEntity> modifications = targetComposite.getModifications();
+            List<ModificationEntity> modifications = new ArrayList<>(targetComposite.getModifications());
             modifications.add(targetIndex, newCompositeEntity);
-            for (int i = 0; i < targetComposite.getModifications().size(); i++) {
-                targetComposite.getModifications().get(i).setModificationsOrder(i);
+            for (int i = 0; i < modifications.size(); i++) {
+                modifications.get(i).setModificationsOrder(i);
             }
+            targetComposite.setModifications(modifications);
         }
 
         return modificationRepository.save(newCompositeEntity);
