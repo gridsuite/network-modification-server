@@ -611,7 +611,7 @@ class ModificationRepositoryTest {
         List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(ModificationContainerType.GROUP, TEST_GROUP_ID,
                 ModificationContainerType.GROUP, TEST_GROUP_ID_2, uuidsToMove, null);
         assertEquals(uuidsToMove.size(), movedModifications.size());
-        assertRequestsCount(4, 0, 1, 0);
+        assertRequestsCount(5, 0, 1, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
@@ -665,7 +665,7 @@ class ModificationRepositoryTest {
         List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(ModificationContainerType.GROUP, TEST_GROUP_ID,
                 ModificationContainerType.GROUP, TEST_GROUP_ID_2, uuidsToMove, groovyScriptEntity6.getId());
         assertEquals(uuidsToMove.size(), movedModifications.size());
-        assertRequestsCount(4, 0, 1, 0);
+        assertRequestsCount(5, 0, 1, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
@@ -708,7 +708,7 @@ class ModificationRepositoryTest {
                 ModificationContainerType.GROUP, TEST_GROUP_ID,
                 ModificationContainerType.GROUP, TEST_GROUP_ID_3,
                 modificationsToMoveUuid, null);
-        assertRequestsCount(4, 0, 1, 0);
+        assertRequestsCount(5, 0, 1, 0);
         // only the valid modification is moved
         assertEquals(1, movedModifications.size());
         assertEquals(groovyScriptEntity1.getId(), movedModifications.get(0).getUuid());
@@ -731,7 +731,7 @@ class ModificationRepositoryTest {
                         ModificationContainerType.GROUP, TEST_GROUP_ID_2,
                         modificationsToMoveUuid2, referenceNodeUuid),
                 new NetworkModificationException(MOVE_MODIFICATION_ERROR).getMessage());
-        assertRequestsCount(4, 0, 0, 0);
+        assertRequestsCount(5, 0, 0, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
