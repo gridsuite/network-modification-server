@@ -374,7 +374,7 @@ public class NetworkModificationRepository {
         Map<UUID, Integer> depths = batchCompositeDepths(base);
         return base.stream()
                 .filter(m -> !onlyStashed || m.getStashed())
-                .map(m -> toModificationsInfosOptimized(m, Set.of(), depths))
+                .map(m -> toModificationMetadataInfos(m, depths))
                 .toList();
     }
 
@@ -487,14 +487,15 @@ public class NetworkModificationRepository {
                 .build();
     }
 
+    private void prefetchCompositeSubTree(CompositeModificationEntity compositeEntity) {
+        // Constant query count for the whole subtree: one recursive CTE + one fetch-join load.
+        List<UUID> compositeUuids = new ArrayList<>(modificationRepository.findOnlyCompositeChildrenUuids(compositeEntity.getId()));
+        compositeUuids.add(compositeEntity.getId());
+        modificationRepository.findAllCompositesWithModificationsByIdIn(compositeUuids);
+    }
+
     private CompositeModificationInfos loadCompositeModification(CompositeModificationEntity compositeEntity,
-                                                                 Set<UUID> modificationsToExclude,
-                                                                 boolean prefetchSubTree) {
-        if (prefetchSubTree) {
-            List<UUID> compositeUuids = new ArrayList<>(modificationRepository.findOnlyCompositeChildrenUuids(compositeEntity.getId()));
-            compositeUuids.add(compositeEntity.getId());
-            modificationRepository.findAllCompositesWithModificationsByIdIn(compositeUuids);
-        }
+                                                                 Set<UUID> modificationsToExclude) {
         return CompositeModificationInfos.builder()
                 .name(compositeEntity.getName())
                 .activated(compositeEntity.getActivated())
@@ -506,7 +507,7 @@ public class NetworkModificationRepository {
                         compositeEntity.getModifications()
                                 .stream()
                                 .filter(m -> !modificationsToExclude.contains(m.getId()))
-                                .map(m -> toModificationsInfosOptimized(m, modificationsToExclude, Map.of(), false))
+                                .map(m -> convertModification(m, modificationsToExclude))
                                 .toList())
                 .build();
     }
@@ -544,27 +545,32 @@ public class NetworkModificationRepository {
     }
 
     private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity) {
-        return toModificationsInfosOptimized(modificationEntity, Set.of(), Map.of(), true);
+        return toModificationsInfosOptimized(modificationEntity, Set.of());
     }
 
     private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity, Set<UUID> modificationsToExclude) {
-        return toModificationsInfosOptimized(modificationEntity, modificationsToExclude, Map.of(), true);
-    }
-
-    private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity,
-                                                            Set<UUID> modificationsToExclude,
-                                                            Map<UUID, Integer> precomputedDepths) {
-        return toModificationsInfosOptimized(modificationEntity, modificationsToExclude, precomputedDepths, true);
-    }
-
-    private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity,
-                                                            Set<UUID> modificationsToExclude,
-                                                            Map<UUID, Integer> precomputedDepths,
-                                                            boolean prefetchCompositeSubTree) {
         if (modificationEntity instanceof CompositeModificationEntity compositeEntity) {
-            return loadCompositeModification(compositeEntity, modificationsToExclude, prefetchCompositeSubTree);
+            prefetchCompositeSubTree(compositeEntity);
+        }
+        return convertModification(modificationEntity, modificationsToExclude);
+    }
+
+    private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Map<UUID, Integer> depths) {
+        if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
+            return loadCompositeModificationMetadata(modificationEntity, depths.get(modificationEntity.getId()));
+        }
+        if (ModificationType.MODIFICATION_REFERENCE.name().equals(modificationEntity.getType())) {
+            return loadModificationReference(modificationEntity);
+        }
+        return modificationEntity.toModificationInfos();
+    }
+
+    private ModificationInfos convertModification(ModificationEntity modificationEntity, Set<UUID> modificationsToExclude) {
+        if (modificationEntity instanceof CompositeModificationEntity compositeEntity) {
+            return loadCompositeModification(compositeEntity, modificationsToExclude);
         } else if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
-            return loadCompositeModificationMetadata(modificationEntity, precomputedDepths.get(modificationEntity.getId()));
+            // defensive: a base projection that lost its subclass — metadata-only view, depth unknown
+            return loadCompositeModificationMetadata(modificationEntity, null);
         }
         if (modificationEntity instanceof TabularModificationsEntity tabularEntity) {
             return loadTabularModification(tabularEntity);
@@ -697,7 +703,7 @@ public class NetworkModificationRepository {
         return new ArrayList<>(networkModificationsUuids.stream()
                 .map(entitiesById::get)
                 .filter(Objects::nonNull)
-                .map(m -> toModificationsInfosOptimized(m, Set.of(), depths))
+                .map(m -> toModificationMetadataInfos(m, depths))
                 .toList());
     }
 
