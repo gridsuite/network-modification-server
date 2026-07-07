@@ -719,10 +719,9 @@ public class NetworkModificationRepository {
 
         List<ModificationEntity> modificationEntities = this.modificationRepository.findAllByIdIn(modificationUuids);
 
-        modificationEntities.stream()
-                // TODO GRD-4785 : for now shared modification are only at the root level and can't be inside composites, so the composite uuid is set to null
-                // but when it will be the case a specific function will have to be done in order to fetch the composite containing the modificationReference (if there is one)
-                .filter(modificationEntity -> Boolean.FALSE.equals(modificationEntity.getStashed()))
+        // TODO GRD-4785 : for now shared modification are only at the root level and can't be inside composites, so the composite uuid is set to null
+        // but when it will be the case a specific function will have to be done in order to fetch the composite containing the modificationReference (if there is one)
+        modificationEntities
                 .forEach(modificationEntity -> {
             if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {
                 references.putIfAbsent(modificationReference.getReferenceId(), null);
