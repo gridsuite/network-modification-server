@@ -229,7 +229,7 @@ public class NetworkModificationRepository {
             // insert into origin list
             insertModifications(originModificationEntities, modificationsToMove, referenceModificationUuid);
         } else { // 2-group case
-             // Collect modifications (composite's children)
+            // Collect modifications (composite's children)
             // before moving origin modifications between nodes, remove applications since they are not applicable anymore
             List<UUID> allMovedUuids = collectAllModificationUuids(modificationsToMove);
             modificationApplicationInfosService.deleteAllByModificationIds(allMovedUuids);
@@ -858,7 +858,8 @@ public class NetworkModificationRepository {
         // efficient so no need to dig deeper about that for now.
 
         // delete tabular modifications/creations
-        List<TabularModificationsEntity> tabularModificationsToDelete = modificationEntities.stream().filter(TabularModificationsEntity.class::isInstance).map(TabularModificationsEntity.class::cast).toList();
+        List<TabularModificationsEntity> tabularModificationsToDelete = modificationEntities.stream().filter(TabularModificationsEntity.class::isInstance).map(
+                TabularModificationsEntity.class::cast).toList();
         tabularModificationsToDelete.forEach(this::deleteTabularModification);
 
         // delete other modification types with "in" requests
@@ -938,7 +939,8 @@ public class NetworkModificationRepository {
 
     @Transactional
     public List<ModificationInfos> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = originGroupUuid != null ? getUnstashedModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
+        List<ModificationInfos> modificationInfos = originGroupUuid != null ? getUnstashedModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(
+                modificationsUuids);
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
         // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();

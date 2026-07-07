@@ -34,13 +34,10 @@ import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
 import java.util.*;
 import java.util.stream.Collectors;
-
 import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -165,7 +162,8 @@ class ModificationSearchTest {
 
         // Load creation for equipment Id newLoadId
         LoadCreationInfos loadCreationInfos = createLoadCreationInfos("newLoadId");
-        List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationCreationInfos), ModificationEntity.fromDTO(substationModificationInfos), ModificationEntity.fromDTO(loadCreationInfos)));
+        List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationCreationInfos), ModificationEntity.fromDTO(
+                substationModificationInfos), ModificationEntity.fromDTO(loadCreationInfos)));
 
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator,
                 new ModificationApplicationGroup(groupUuid, modifications, reportInfos),

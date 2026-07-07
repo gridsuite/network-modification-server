@@ -10,10 +10,10 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.loadflow.LoadFlowParameters;
-import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.server.service.LoadFlowService;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.NetworkModificationServerException;
+import org.gridsuite.modification.server.service.LoadFlowService;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,11 +22,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.HttpStatusCodeException;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
