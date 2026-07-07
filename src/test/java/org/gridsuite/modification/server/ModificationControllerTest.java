@@ -1984,7 +1984,10 @@ class ModificationControllerTest {
 
         // Create an active reference in another group: it must not be returned for TEST_GROUP_ID
         ModificationInfos otherGroupReferencedLoadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoadOther", "nameLoadOther", "1.1", LoadType.UNDEFINED);
-        otherGroupReferencedLoadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(otherGroupReferencedLoadModificationInfo))).getFirst();
+        otherGroupReferencedLoadModificationInfo = modificationRepository.saveModifications(
+                UUID.randomUUID(),
+                List.of(ModificationEntity.fromDTO(otherGroupReferencedLoadModificationInfo))
+        ).getFirst();
 
         ModificationInfos otherGroupReferenceInfo = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
