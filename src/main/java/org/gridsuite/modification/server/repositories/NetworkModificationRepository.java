@@ -711,23 +711,25 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the composite is at the root level
+     * @return elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
     public Map<UUID, UUID> getReferencesData(@NonNull List<UUID> modificationUuids) {
-        Map<UUID, UUID> referencesToBeDeleted = new HashMap<>();
-        for (UUID modificationUuid : modificationUuids) {
-            ModificationEntity modificationEntity = this.modificationRepository
-                    .findById(modificationUuid)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
-            if (Boolean.FALSE.equals(modificationEntity.getStashed()) && modificationEntity instanceof ModificationReferenceEntity modificationReference) {
+        Map<UUID, UUID> references = new HashMap<>();
+
+        List<ModificationEntity> modificationEntities = this.modificationRepository.findAllByIdIn(modificationUuids);
+
+        modificationEntities.stream()
                 // TODO GRD-4785 : for now shared modification are only at the root level and can't be inside composites, so the composite uuid is set to null
                 // but when it will be the case a specific function will have to be done in order to fetch the composite containing the modificationReference (if there is one)
-                referencesToBeDeleted.putIfAbsent(modificationReference.getReferenceId(), null);
+                .filter(modificationEntity -> Boolean.FALSE.equals(modificationEntity.getStashed()))
+                .forEach(modificationEntity -> {
+            if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {
+                references.putIfAbsent(modificationReference.getReferenceId(), null);
             }
-        }
+        });
 
-        return referencesToBeDeleted;
+        return references;
     }
 
     @Transactional
