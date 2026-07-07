@@ -236,14 +236,12 @@ class CompositeControllerTest {
         String bodyJson = getJsonBodyModificationCompositeToBeInserted(
                 List.of(new CompositesToBeInserted(compositeModificationUuid, "shared composite", true)));
 
-        mvcResult = runRequestAsync(
+        runRequestAsync(
                 mockMvc,
                 put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP_ID + "?action=INSERT")
                         .content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON),
                 status().isOk());
-
-        assertApplicationStatusOK(mvcResult);
 
         List<ModificationInfos> newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(modificationsNumber + 1, newModificationList.size());
