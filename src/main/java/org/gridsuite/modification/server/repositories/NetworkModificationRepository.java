@@ -964,30 +964,24 @@ public class NetworkModificationRepository {
         List<ModificationInfos> newCompositeModifications = new ArrayList<>();
         List<ModificationInfos> modificationInfos = getModificationsInfosNonTransactional(compositeUuids);
         for (CompositesToBeInserted compositeToBeInserted : compositesToBeInserted) {
-            if (compositeToBeInserted.isShared()) {
-                CompositeModificationInfos referencedCompositeModification = (CompositeModificationInfos) modificationInfos.stream()
-                        .filter(modif -> modif.getUuid().equals(compositeToBeInserted.id()))
-                        .findFirst().orElse(null);
-                if (referencedCompositeModification != null) {
-                    referencedCompositeModification.setName(compositeToBeInserted.name());
+            CompositeModificationInfos compositeModification = (CompositeModificationInfos) modificationInfos.stream()
+                    .filter(modif -> modif.getUuid().equals(compositeToBeInserted.id()))
+                    .findFirst().orElse(null);
+            if (compositeModification != null) {
+                if (compositeToBeInserted.isShared()) {
                     ModificationReferenceInfos newModificationReference = ModificationReferenceInfos.builder()
                             .referenceId(compositeToBeInserted.id())
                             .referenceType(ModificationReferenceInfos.Type.BASIC)
-                            .referenceInfos(referencedCompositeModification)
+                            .referenceInfos(compositeModification)
                             .build();
                     newCompositeModifications.add(newModificationReference);
+                } else {
+                    // apply the new composite name to the corresponding composite modification
+                    compositeModification.setName(compositeToBeInserted.name());
+                    newCompositeModifications.add(compositeModification);
                 }
             } else {
-                // apply the new composite name to the corresponding composite modifications
-                CompositeModificationInfos newCompositeModification = (CompositeModificationInfos) modificationInfos.stream()
-                        .filter(modif -> modif.getUuid().equals(compositeToBeInserted.id()))
-                        .findFirst().orElse(null);
-                if (newCompositeModification != null) {
-                    newCompositeModification.setName(compositeToBeInserted.name());
-                    newCompositeModifications.add(newCompositeModification);
-                } else {
-                    LOGGER.error("Could not find composite modification with uuid {} to apply its name {}", compositeToBeInserted.id(), compositeToBeInserted.name());
-                }
+                LOGGER.error("Could not find composite modification with uuid {} to apply its name {}", compositeToBeInserted.id(), compositeToBeInserted.name());
             }
         }
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
