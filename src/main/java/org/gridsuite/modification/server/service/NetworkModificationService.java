@@ -414,13 +414,13 @@ public class NetworkModificationService {
         Set<UUID> selectedCompositeUuids = modificationRepository.findExistingCompositeModificationIds(modificationUuids);
 
         // Get all children of selected composites (to skip sub-modifications that move with their ancestor)
-        Set<UUID> childrenOfSelectedComposites = selectedCompositeUuids.isEmpty()
+        Set<UUID> childrenOfSelectedComposites = new HashSet<>(selectedCompositeUuids.isEmpty()
                 ? Set.of()
-                : new HashSet<>(networkModificationRepository.findAllChildrenUuids(new ArrayList<>(selectedCompositeUuids)));
+                : new HashSet<>(networkModificationRepository.findAllChildrenUuids(new ArrayList<>(selectedCompositeUuids))));
+        childrenOfSelectedComposites.removeAll(selectedCompositeUuids);
 
         // Sub-modifications: selected UUIDs that are not composite roots and not already covered by a selected ancestor
         List<UUID> subModificationUuids = modificationUuids.stream()
-                .filter(uuid -> !selectedCompositeUuids.contains(uuid))
                 .filter(uuid -> !childrenOfSelectedComposites.contains(uuid))
                 .toList();
         for (UUID uuid : subModificationUuids) {
