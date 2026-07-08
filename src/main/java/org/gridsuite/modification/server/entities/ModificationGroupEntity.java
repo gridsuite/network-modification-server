@@ -6,10 +6,7 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
@@ -21,15 +18,10 @@ import java.util.UUID;
 @Entity
 @DiscriminatorValue("GROUP")
 @Table(name = "modificationGroup")
-@PrimaryKeyJoinColumn(name = "id", foreignKey = @jakarta.persistence.ForeignKey(name = "modification_group_container_fk"))
+@PrimaryKeyJoinColumn(name = "id", foreignKey = @ForeignKey(name = "modification_group_container_fk"))
 public class ModificationGroupEntity extends AbstractModificationContainerEntity {
 
     public ModificationGroupEntity(UUID uuid) {
-        super(uuid);
-    }
-
-    @Override
-    public ModificationContainerType getContainerType() {
-        return ModificationContainerType.GROUP;
+        super(uuid, ModificationContainerType.GROUP);
     }
 }

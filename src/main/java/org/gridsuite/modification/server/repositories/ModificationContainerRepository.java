@@ -19,9 +19,9 @@ import java.util.UUID;
 public interface ModificationContainerRepository extends JpaRepository<AbstractModificationContainerEntity, UUID> {
 
     @Query(value = """
-          SELECT container_type FROM modification_container m
+          SELECT type FROM modification_container m
           WHERE id = :id
         """, nativeQuery = true)
-    ModificationContainerType getContainerTypeById(UUID id);
+    ModificationContainerType getTypeById(UUID id);
 
 }

@@ -18,6 +18,7 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ActionType;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
@@ -442,9 +443,9 @@ class CompositeControllerTest {
         // Move the first sub-modification to the end (no beforeUuid = append)
         // was [0,1,2] → [1,2,0]
         mockMvc.perform(put("/v1/groups/{groupUuid}", compositeUuid)
-                        .queryParam("action", "MOVE")
+                        .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", compositeUuid.toString())
-                        .content(mapper.writeValueAsString(Pair.of(List.of(subUuids.get(0)), List.of())))
+                        .content(mapper.writeValueAsString(Pair.of(List.of(subUuids.getFirst()), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -461,7 +462,7 @@ class CompositeControllerTest {
         // Move the last sub-modification before the first using beforeUuid
         // current [1,2,0] → move 0 before 1 → [0,1,2]
         mockMvc.perform(put("/v1/groups/{groupUuid}", compositeUuid)
-                        .queryParam("action", "MOVE")
+                        .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", compositeUuid.toString())
                         .queryParam("before", orderAfterFirst.get(0).toString())
                         .content(mapper.writeValueAsString(Pair.of(List.of(orderAfterFirst.get(2)), List.of())))
@@ -508,7 +509,7 @@ class CompositeControllerTest {
         // Move first sub-modification from composite to root level (no targetCompositeUuid)
         UUID movingUuid = actualSubUuids.getFirst();
         mockMvc.perform(put("/v1/groups/{groupUuid}", TEST_GROUP_ID)
-                        .queryParam("action", "MOVE")
+                        .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", compositeUuid.toString())
                         .queryParam("build", "false")
                         .content(mapper.writeValueAsString(Pair.of(List.of(movingUuid), List.of())))
@@ -724,7 +725,7 @@ class CompositeControllerTest {
 
         // Move root-level modification into the composite (origin = root group), append at end
         mockMvc.perform(put("/v1/groups/{groupUuid}", compositeUuid)
-                        .queryParam("action", "MOVE")
+                        .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", TEST_GROUP_ID.toString())
                         .content(mapper.writeValueAsString(Pair.of(List.of(rootModUuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -803,7 +804,7 @@ class CompositeControllerTest {
 
         // Case 1: direct child — move composite1 into composite2 (direct child of composite1)
         mockMvc.perform(put("/v1/groups/{groupUuid}", actualComposite2Uuid)
-                        .queryParam("action", "MOVE")
+                        .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", composite0Uuid.toString())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -811,7 +812,7 @@ class CompositeControllerTest {
 
         // Case 2: recursive — move composite1 into composite3 (grandchild of composite1)
         mockMvc.perform(put("/v1/groups/{groupUuid}", actualComposite3Uuid)
-                        .queryParam("action", "MOVE")
+                        .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", composite0Uuid.toString())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -819,7 +820,7 @@ class CompositeControllerTest {
 
         // Case 3: self — move composite1 into itself
         mockMvc.perform(put("/v1/groups/{groupUuid}", actualComposite1Uuid)
-                        .queryParam("action", "MOVE")
+                        .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", composite0Uuid.toString())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))

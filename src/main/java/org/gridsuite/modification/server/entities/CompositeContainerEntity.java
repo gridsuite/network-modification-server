@@ -36,12 +36,7 @@ public class CompositeContainerEntity extends AbstractModificationContainerEntit
     private String name;
 
     public CompositeContainerEntity(UUID id, String name) {
-        super(id);
+        super(id, ModificationContainerType.COMPOSITE);
         this.name = name;
-    }
-
-    @Override
-    public ModificationContainerType getContainerType() {
-        return ModificationContainerType.COMPOSITE;
     }
 }

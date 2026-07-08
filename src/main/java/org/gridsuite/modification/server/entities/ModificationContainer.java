@@ -16,7 +16,7 @@ public interface ModificationContainer {
 
     UUID getId();
 
-    ModificationContainerType getContainerType();
+    String getType();
 
     List<ModificationEntity> getModifications();
 

@@ -881,7 +881,7 @@ public class NetworkModificationRepository {
         // delete tabular modifications/creations
         List<TabularModificationsEntity> tabularModificationsToDelete = modificationEntities.stream().filter(TabularModificationsEntity.class::isInstance).map(
                 TabularModificationsEntity.class::cast).toList();
-        tabularModificationsToDelete.forEach(ModificationEntity::detachFromContainer);
+        tabularModificationsToDelete.forEach(m -> m.setContainer(null));
         tabularModificationsToDelete.forEach(this::deleteTabularModification);
 
         List<CompositeModificationEntity> compositesToDelete = modificationEntities.stream()
@@ -1046,7 +1046,7 @@ public class NetworkModificationRepository {
     }
 
     public ModificationContainerType getContainerTypeOrCreateGroup(UUID id, boolean createGroupIfMissing) {
-        ModificationContainerType containerType = modificationContainerRepository.getContainerTypeById(id);
+        ModificationContainerType containerType = modificationContainerRepository.getTypeById(id);
         if (containerType != null) {
             return containerType;
         } else if (createGroupIfMissing) {

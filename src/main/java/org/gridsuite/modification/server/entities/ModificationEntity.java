@@ -66,7 +66,6 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     @Column(name = "description", columnDefinition = "CLOB")
     private String description;
 
-    @Setter(AccessLevel.NONE)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "container_id", foreignKey = @ForeignKey(name = "modification_container_fk"))
     private AbstractModificationContainerEntity container;
@@ -139,14 +138,6 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
             this.setDescription(modificationInfos.getDescription());
         }
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
-    }
-
-    void attachToContainer(@NonNull AbstractModificationContainerEntity container) {
-        this.container = container;
-    }
-
-    public void detachFromContainer() {
-        this.container = null;
     }
 
     public UUID getContainerUuid() {

@@ -33,11 +33,6 @@ import java.util.concurrent.CompletableFuture;
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
 
-    private enum GroupModificationAction {
-        MOVE,
-        COPY,
-    }
-
     private final NetworkModificationService networkModificationService;
 
     private final LineTypesCatalogService lineTypesCatalogService;
@@ -103,7 +98,7 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The container has been updated.")
     public CompletableFuture<ResponseEntity<NetworkModificationsResult>> handleNetworkModifications(
             @Parameter(description = "target container UUID") @PathVariable("groupUuid") UUID targetContainerId,
-            @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
+            @Parameter(description = "action type", required = true) @RequestParam(value = "action") ActionType action,
             @Parameter(description = "insert before this modification (MOVE only, empty = at end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
             @Parameter(description = "source container UUID (defaults to target for same-container moves)") @RequestParam(value = "originGroupUuid", required = false) UUID sourceContainerId,
             @Parameter(description = "modifications can be applied (default true; ignored for COMPOSITE targets)")

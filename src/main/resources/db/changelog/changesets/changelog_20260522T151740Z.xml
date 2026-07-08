@@ -5,7 +5,7 @@
             <column name="id" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="modification_containerPK"/>
             </column>
-            <column name="container_type" type="VARCHAR(32)">
+            <column name="type" type="VARCHAR(32)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
@@ -23,11 +23,11 @@
 
     <changeSet id="split-container-seed-rows" author="marcellinh">
         <sql>
-            INSERT INTO modification_container (id, container_type)
+            INSERT INTO modification_container (id, type)
             SELECT id, 'GROUP' FROM modification_group;
         </sql>
         <sql>
-            INSERT INTO modification_container (id, container_type)
+            INSERT INTO modification_container (id, type)
             SELECT id, 'COMPOSITE' FROM composite_modification;
         </sql>
         <sql>
@@ -36,8 +36,8 @@
         </sql>
         <rollback>
             <sql>DELETE FROM composite_container;</sql>
-            <sql>DELETE FROM modification_container WHERE container_type = 'COMPOSITE';</sql>
-            <sql>DELETE FROM modification_container WHERE container_type = 'GROUP';</sql>
+            <sql>DELETE FROM modification_container WHERE type = 'COMPOSITE';</sql>
+            <sql>DELETE FROM modification_container WHERE type = 'GROUP';</sql>
         </rollback>
     </changeSet>
 
