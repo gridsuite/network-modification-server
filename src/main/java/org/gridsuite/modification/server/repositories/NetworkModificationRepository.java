@@ -142,7 +142,7 @@ public class NetworkModificationRepository {
         return saveModificationsNonTransactional(groupUuid, entities);
     }
 
-    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
+    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
         // Fetch originals once, preserving order
         Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
                 .collect(Collectors.toMap(
@@ -159,20 +159,15 @@ public class NetworkModificationRepository {
             return modificationRepository.save(single).getId();
         }
 
-        CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).build();
+        CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).name(name).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         compositeEntity.setModifications(copyEntities);
         return modificationRepository.save(compositeEntity).getId();
     }
 
-    public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
-        ModificationEntity modificationEntity = modificationRepository.findById(compositeUuid)
+    public void replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<UUID> modificationUuids) {
+        CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
-
-        if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
-            throw new NetworkModificationException(MODIFICATION_ERROR,
-                    String.format("Modification (%s) is not a composite modification", compositeUuid));
-        }
 
         // Fetch originals once, preserving order
         Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
@@ -180,13 +175,25 @@ public class NetworkModificationRepository {
                         ModificationEntity::getId,
                         e -> ModificationEntity.fromDTO(toModificationsInfosOptimized(e))
                 ));
+
+        //Delete previously held modifications
+        deleteModifications(compositeEntity.getModifications());
+
         // Reorder clones to match caller-specified order
         List<ModificationEntity> copyEntities = modificationUuids.stream()
                 .map(cloneByUuid::get)
                 .filter(Objects::nonNull)
                 .toList();
         compositeEntity.setModifications(copyEntities);
-        modificationRepository.save(compositeEntity);
+        compositeEntity.setName(name);
+    }
+
+    public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
+        CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
+        if (name != null) {
+            compositeEntity.setName(name);
+        }
     }
 
     private List<ModificationEntity> saveModificationsNonTransactional(@NonNull UUID groupUuid, List<ModificationEntity> modifications) {
