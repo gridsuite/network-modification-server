@@ -7,15 +7,13 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.PhaseTapChanger;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.TapChangerType;
 import org.gridsuite.modification.dto.*;
-
-import jakarta.persistence.*;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -171,8 +169,10 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         List<TapChangerStepCreationEmbeddable> ratioTapChangerSteps = new ArrayList<>();
         List<TapChangerStepCreationEmbeddable> phaseTapChangerSteps = new ArrayList<>();
         if (getTapChangerSteps() != null && getTapChangerSteps().size() > 0) {
-            ratioTapChangerSteps = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.RATIO)).sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
-            phaseTapChangerSteps = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.PHASE)).sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
+            ratioTapChangerSteps = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.RATIO)).sorted(Comparator.comparing(
+                    TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
+            phaseTapChangerSteps = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.PHASE)).sorted(Comparator.comparing(
+                    TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
         }
 
         TwoWindingsTransformerCreationInfos.TwoWindingsTransformerCreationInfosBuilder<?, ?> builder = TwoWindingsTransformerCreationInfos

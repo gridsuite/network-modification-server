@@ -51,12 +51,14 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     private DoubleModificationEmbedded maxQ;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "reactivePowerSetpoint")), @AttributeOverride(name = "opType", column = @Column(name = "reactivePowerSetpointOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "reactivePowerSetpoint")), @AttributeOverride(name = "opType",
+            column = @Column(name = "reactivePowerSetpointOp"))
     })
     private DoubleModificationEmbedded reactivePowerSetpoint;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "voltageRegulationOn")), @AttributeOverride(name = "opType", column = @Column(name = "voltageRegulationOnOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "voltageRegulationOn")), @AttributeOverride(name = "opType",
+            column = @Column(name = "voltageRegulationOnOp"))
     })
     private BooleanModificationEmbedded voltageRegulationOn;
 
@@ -66,11 +68,13 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     private DoubleModificationEmbedded voltageSetpoint;
 
     @ElementCollection
-    @CollectionTable(name = "converter_station_modification_rcc_points", indexes = @Index(name = "converter_station_modification_rcc_points_entity_id_idx", columnList = "converter_station_modification_entity_id"))
+    @CollectionTable(name = "converter_station_modification_rcc_points",
+            indexes = @Index(name = "converter_station_modification_rcc_points_entity_id_idx", columnList = "converter_station_modification_entity_id"))
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "reactiveCapabilityCurve")), @AttributeOverride(name = "opType", column = @Column(name = "reactiveCapabilityCurveOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "reactiveCapabilityCurve")), @AttributeOverride(name = "opType",
+            column = @Column(name = "reactiveCapabilityCurveOp"))
     })
     private BooleanModificationEmbedded reactiveCapabilityCurve;
 
@@ -89,10 +93,13 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
         this.lossFactor = converterStationModificationInfos.getLossFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getLossFactor()) : null;
         this.minQ = converterStationModificationInfos.getMinQ() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMinQ()) : null;
         this.maxQ = converterStationModificationInfos.getMaxQ() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMaxQ()) : null;
-        this.reactivePowerSetpoint = converterStationModificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getReactivePowerSetpoint()) : null;
-        this.voltageRegulationOn = converterStationModificationInfos.getVoltageRegulationOn() != null ? new BooleanModificationEmbedded(converterStationModificationInfos.getVoltageRegulationOn()) : null;
+        this.reactivePowerSetpoint = converterStationModificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(
+                converterStationModificationInfos.getReactivePowerSetpoint()) : null;
+        this.voltageRegulationOn = converterStationModificationInfos.getVoltageRegulationOn() != null ? new BooleanModificationEmbedded(
+                converterStationModificationInfos.getVoltageRegulationOn()) : null;
         this.voltageSetpoint = converterStationModificationInfos.getVoltageSetpoint() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getVoltageSetpoint()) : null;
-        this.reactiveCapabilityCurve = converterStationModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(converterStationModificationInfos.getReactiveCapabilityCurve()) : null;
+        this.reactiveCapabilityCurve = converterStationModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(
+                converterStationModificationInfos.getReactiveCapabilityCurve()) : null;
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(converterStationModificationInfos.getReactiveCapabilityCurvePoints());
 
     }

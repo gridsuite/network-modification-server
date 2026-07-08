@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,8 +14,6 @@ import org.gridsuite.modification.ReactiveVariationMode;
 import org.gridsuite.modification.VariationMode;
 import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.ScalingVariationInfos;
-
-import jakarta.persistence.*;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;

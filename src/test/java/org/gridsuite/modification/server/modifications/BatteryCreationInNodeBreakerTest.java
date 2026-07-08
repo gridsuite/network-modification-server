@@ -183,7 +183,8 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         batteryCreationInfosJson = getJsonBody(batteryCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(CREATE_BATTERY_ERROR, "Battery 'idBattery1' : maximum reactive power is expected to be greater than or equal to minimum reactive power").getMessage(),
+        assertLogMessage(new NetworkModificationException(CREATE_BATTERY_ERROR,
+                "Battery 'idBattery1' : maximum reactive power is expected to be greater than or equal to minimum reactive power").getMessage(),
             ERROR_MESSAGE_KEY, reportService);
 
         // invalid reactive capability curve limit

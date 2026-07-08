@@ -6,14 +6,13 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
