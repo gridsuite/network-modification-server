@@ -319,7 +319,7 @@ class CompositeControllerTest {
     @Test
     void testUpdateNetworkCompositeModificationName() throws Exception {
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
-        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
         // Create a composite modification with the switch modification
         List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
