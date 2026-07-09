@@ -51,8 +51,9 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
 
     public void setModifications(List<ModificationEntity> modifications) {
         this.modifications = modifications;
-        modifications.forEach(modification ->
-            modification.setGroup(this)
-        );
+        for (int i = 0; i < modifications.size(); i++) {
+            modifications.get(i).setModificationsOrder(i);
+            modifications.get(i).setGroup(this);
+        }
     }
 }
