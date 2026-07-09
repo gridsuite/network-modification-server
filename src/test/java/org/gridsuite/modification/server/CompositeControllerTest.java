@@ -234,7 +234,7 @@ class CompositeControllerTest {
         int modificationsNumber = 2;
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, modificationsNumber);
 
-        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "composite name")
                         .content(mapper.writeValueAsString(modificationList.stream().map(ModificationInfos::getUuid).toList()))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -251,7 +251,7 @@ class CompositeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON),
                 status().isOk());
 
-        List<ModificationInfos> newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> newModificationList = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(modificationsNumber + 1, newModificationList.size());
 
         ModificationReferenceInfos insertedReference = assertInstanceOf(
