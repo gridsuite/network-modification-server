@@ -44,17 +44,13 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>50.1.0</gridsuite-dependencies.version>
-        <powsybl-network-store.version>1.44.0</powsybl-network-store.version>
+        <gridsuite-dependencies.version>50.2.0-SNAPSHOT</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
-        <!-- TODO network-modification.version remove when included in gridsuite-dependencies -->
-        <network-modification.version>1.1.0</network-modification.version>
-        <gridsuite-filter.version>1.25.0</gridsuite-filter.version>
     </properties>
 
     <build>
@@ -89,12 +85,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- FIXME: to be removed at next release of gridsuite-dependencies or gridsuite-dependencies -->
-            <dependency>
-                <groupId>org.gridsuite</groupId>
-                <artifactId>gridsuite-filter</artifactId>
-                <version>${gridsuite-filter.version}</version>
-            </dependency>
             <!-- overrides of imports -->
             <dependency><!-- To remove when integrate in next release of gridsuite-dependencies or powsybl-ws-dependencies -->
                 <groupId>com.squareup.okhttp3</groupId>
@@ -102,25 +92,6 @@
                 <version>${mockwebserver3.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-
-            <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-network-store-client</artifactId>
-                <version>${powsybl-network-store.version}</version>
-            </dependency>
-            <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-network-store-iidm-impl</artifactId>
-                <version>${powsybl-network-store.version}</version>
-            </dependency>
-            <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-network-store-model</artifactId>
-                <version>${powsybl-network-store.version}</version>
             </dependency>
 
             <!-- imports -->
@@ -147,11 +118,9 @@
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-client</artifactId>
         </dependency>
-        <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-network-modification</artifactId>
-            <version>${network-modification.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
