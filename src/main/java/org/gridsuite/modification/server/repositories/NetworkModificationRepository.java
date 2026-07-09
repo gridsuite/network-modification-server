@@ -185,14 +185,14 @@ public class NetworkModificationRepository {
                 .filter(Objects::nonNull)
                 .toList();
         compositeEntity.setModifications(copyEntities);
-        compositeEntity.setName(name);
+        compositeModificationRepository.renameCompositeModification(compositeEntity, name);
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
         if (name != null) {
-            compositeEntity.setName(name);
+            compositeModificationRepository.renameCompositeModification(compositeEntity, name);
         }
     }
 
@@ -797,7 +797,7 @@ public class NetworkModificationRepository {
             if (metadata instanceof CompositeModificationInfos compositeMetadata
                     && modificationEntity instanceof CompositeModificationEntity composite
                     && compositeMetadata.getName() != null) {
-                compositeModificationRepository.renameCompositeModifications(composite, compositeMetadata);
+                compositeModificationRepository.updateCompositeModificationMetadata(composite, compositeMetadata);
             }
         }
     }
