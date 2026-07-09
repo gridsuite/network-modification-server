@@ -371,11 +371,19 @@ class CompositeControllerTest {
         List<ModificationInfos> newModificationList = createSomeSwitchModifications(TEST_GROUP2_ID, newModificationsNumber);
         List<UUID> newModificationUuids = newModificationList.stream().map(ModificationInfos::getUuid).toList();
 
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}&onlyMetadata=false", compositeModificationUuid))
+                .andExpect(status().isOk()).andReturn();
+        Map<UUID, List<ModificationInfos>> compositeContentMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<UUID> baseCompositeContent = compositeContentMap.get(compositeModificationUuid).stream().map(ModificationInfos::getUuid).toList();
+
         // Update the composite modification with the new modifications
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeModificationUuid + "/replace")
                         .param("name", "new name")
                         .content(mapper.writeValueAsString(newModificationUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+
+        // Check the previously held modifications were deleted
+        assertEquals(0, modificationRepository.findAllByIdIn(baseCompositeContent).size());
 
         // Get the composite modification content and verify it has been updated
         mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}&onlyMetadata=false", compositeModificationUuid))
