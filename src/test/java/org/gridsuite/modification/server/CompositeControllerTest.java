@@ -593,6 +593,9 @@ class CompositeControllerTest {
         ModificationEntity remainingInGroupEntity = networkModificationRepository.getModificationEntity(originalRootModUuids.get(2));
         assertNotNull(remainingInGroupEntity.getGroup());
         assertEquals(TEST_GROUP_ID, remainingInGroupEntity.getGroup().getId());
+        assertContiguousOrder(modificationRepository.findAllByGroupId(TEST_GROUP_ID, false));
+        assertContiguousOrder(modificationRepository.findAllByIdIn(
+                modificationRepository.findModificationIdsByCompositeModificationId(firstCompositeUuid)));
 
         // ---- 2. now assembles a modification which is inside a composite with something that is outside :
         assembledModificationUuids = List.of(compositeContent.getFirst().getUuid(), remainingInGroupEntity.getId());
@@ -630,6 +633,12 @@ class CompositeControllerTest {
         assertTrue(compositeContentMap.get(firstCompositeUuid).stream()
                 .map(ModificationInfos::getUuid)
                 .anyMatch(twodepthCompositeUuid::equals));
+
+        assertContiguousOrder(modificationRepository.findAllByGroupId(TEST_GROUP_ID, false));
+        assertContiguousOrder(modificationRepository.findAllByIdIn(
+                modificationRepository.findModificationIdsByCompositeModificationId(firstCompositeUuid)));
+        assertContiguousOrder(modificationRepository.findAllByIdIn(
+                modificationRepository.findModificationIdsByCompositeModificationId(twodepthCompositeUuid)));
     }
 
     @Test
@@ -849,5 +858,15 @@ class CompositeControllerTest {
         List<ModificationInfos> children = ((CompositeModificationInfos) resultInfos).getModificationsInfos();
         assertEquals(2, children.size());
         children.forEach(child -> assertFalse(child instanceof CompositeModificationInfos));
+    }
+
+    private static void assertContiguousOrder(List<ModificationEntity> modifications) {
+        List<ModificationEntity> sorted = modifications.stream()
+                .sorted(Comparator.comparingInt(ModificationEntity::getModificationsOrder))
+                .toList();
+        for (int i = 0; i < sorted.size(); i++) {
+            assertEquals(i, sorted.get(i).getModificationsOrder(),
+                    "gap or duplicate at index " + i + " for modification " + sorted.get(i).getId());
+        }
     }
 }
