@@ -8,8 +8,8 @@ package org.gridsuite.modification.server.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.gridsuite.modification.ILoadFlowService;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.LoadFlowParametersInfos;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationServerException.handleChangeError;
+import static org.gridsuite.modification.error.NetworkModificationExceptionType.LOAD_FLOW_PARAMETERS_FETCH_ERROR;
 
 /**
  * @author Achour BERRAHMA <achour.berrahma at rte-france.com>
@@ -50,7 +50,7 @@ public class LoadFlowService implements ILoadFlowService {
                 log.error("Load flow parameters with UUID {} not found", uuid);
                 return null;
             } else {
-                throw handleChangeError(e, NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR);
+                throw new NetworkModificationException(LOAD_FLOW_PARAMETERS_FETCH_ERROR, e.getMessage());
             }
         }
     }

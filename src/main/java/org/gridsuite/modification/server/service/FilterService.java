@@ -12,6 +12,7 @@ import org.gridsuite.filter.utils.FilterServiceUtils;
 import org.gridsuite.modification.IFilterService;
 import org.gridsuite.modification.dto.FilterEquipments;
 import org.gridsuite.modification.dto.IdentifiableAttributes;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -28,8 +29,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.FILTERS_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationServerException.handleChangeError;
+import static org.gridsuite.modification.error.NetworkModificationExceptionType.FILTERS_NOT_FOUND;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -63,7 +63,7 @@ public class FilterService implements IFilterService {
         try {
             return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null, new ParameterizedTypeReference<List<AbstractFilter>>() { }).getBody();
         } catch (HttpStatusCodeException e) {
-            throw handleChangeError(e, FILTERS_NOT_FOUND);
+            throw new NetworkModificationException(FILTERS_NOT_FOUND, e.getMessage());
         }
     }
 

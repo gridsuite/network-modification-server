@@ -10,13 +10,13 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.LineAttachToVoltageLevelInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-import static org.gridsuite.modification.NetworkModificationException.Type.LINE_ATTACH_DESCRIPTION_ERROR;
+import static org.gridsuite.modification.error.NetworkModificationExceptionType.LINE_ATTACH_DESCRIPTION_ERROR;
 
 /**
  * @author Nicolas NOIR <nicolas.noir at rte-france.com>

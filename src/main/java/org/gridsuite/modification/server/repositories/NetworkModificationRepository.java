@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
@@ -18,6 +17,7 @@ import org.gridsuite.modification.dto.tabular.LimitSetsTabularModificationInfos;
 import org.gridsuite.modification.dto.tabular.TabularBaseInfos;
 import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
@@ -41,7 +41,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.apache.commons.collections4.SetUtils.emptyIfNull;
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.error.NetworkModificationExceptionType.*;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE;
 
@@ -334,7 +334,7 @@ public class NetworkModificationRepository {
         try {
             return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsInfos(List.of(groupUuid), onlyStashed);
         } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+            if (e.getMessage().startsWith(MODIFICATION_GROUP_NOT_FOUND.getMessage()) && !errorOnGroupNotFound) {
                 return List.of();
             }
             throw e;
@@ -562,7 +562,7 @@ public class NetworkModificationRepository {
                     .filter(modification -> !modification.getStashed())
                     .map(this::toModificationsInfosOptimized).toList();
         } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+            if (e.getMessage().startsWith(MODIFICATION_GROUP_NOT_FOUND.getMessage()) && !errorOnGroupNotFound) {
                 return List.of();
             }
             throw e;
@@ -592,7 +592,7 @@ public class NetworkModificationRepository {
             }
             modificationGroupRepository.delete(groupEntity);
         } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+            if (e.getMessage().startsWith(MODIFICATION_GROUP_NOT_FOUND.getMessage()) && !errorOnGroupNotFound) {
                 return;
             }
             throw e;
@@ -837,7 +837,7 @@ public class NetworkModificationRepository {
                 deleteModifications(modifications);
             }
         } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+            if (e.getMessage().startsWith(MODIFICATION_GROUP_NOT_FOUND.getMessage()) && !errorOnGroupNotFound) {
                 return;
             }
             throw e;
