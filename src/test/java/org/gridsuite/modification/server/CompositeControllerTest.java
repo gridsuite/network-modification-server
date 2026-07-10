@@ -18,6 +18,8 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
@@ -35,7 +37,6 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -174,8 +175,8 @@ class CompositeControllerTest {
         checkCompositeModificationContent(compositeModificationContent);
 
         // Insert the composite modification in the group
-        final String bodyJson = getJsonBodyModificationCompositeInfos(
-                List.of(Pair.of(compositeModificationUuid, "random name")));
+        final String bodyJson = getJsonBodyModificationCompositeToBeInserted(
+                List.of(new CompositeInfos(compositeModificationUuid, "random name", false)));
         mvcResult = runRequestAsync(
                 mockMvc,
                 put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP_ID + "?action=SPLIT")
@@ -210,8 +211,8 @@ class CompositeControllerTest {
         assertEquals(modificationsNumber, modificationInfosList.size());
 
         // Insert the composite modification in the group
-        final String bodyJson = getJsonBodyModificationCompositeInfos(
-                List.of(Pair.of(compositeModificationUuid, "random name")));
+        final String bodyJson = getJsonBodyModificationCompositeToBeInserted(
+                List.of(new CompositeInfos(compositeModificationUuid, "random name", false)));
 
         // insert the same composite modification inside as a complete composite, not split into regular network modifications
         mvcResult = runRequestAsync(
@@ -226,6 +227,46 @@ class CompositeControllerTest {
                 modificationInfos.getType().equals(COMPOSITE_MODIFICATION)).findFirst().orElseThrow();
         assertNotNull(insertedComposite);
         checkCompositeModificationContent(insertedComposite.getModificationsInfos());
+    }
+
+    @Test
+    void testInsertSharedComposite() throws Exception {
+        int modificationsNumber = 2;
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, modificationsNumber);
+
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "composite name")
+                        .content(mapper.writeValueAsString(modificationList.stream().map(ModificationInfos::getUuid).toList()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        String bodyJson = getJsonBodyModificationCompositeToBeInserted(
+                List.of(new CompositeInfos(compositeModificationUuid, "shared composite", true)));
+
+        runRequestAsync(
+                mockMvc,
+                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP_ID + "?action=INSERT")
+                        .content(bodyJson)
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+
+        List<ModificationInfos> newModificationList = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(modificationsNumber + 1, newModificationList.size());
+
+        ModificationReferenceInfos insertedReference = assertInstanceOf(
+                ModificationReferenceInfos.class,
+                newModificationList.getLast()
+        );
+        assertEquals(compositeModificationUuid, insertedReference.getReferenceId());
+        assertEquals(ModificationReferenceInfos.Type.BASIC, insertedReference.getReferenceType());
+
+        CompositeModificationInfos referencedComposite = assertInstanceOf(
+                CompositeModificationInfos.class,
+                insertedReference.getReferenceInfos()
+        );
+        assertEquals(compositeModificationUuid, referencedComposite.getUuid());
+        checkCompositeModificationContent(referencedComposite.getModificationsInfos());
     }
 
     private static void checkCompositeModificationContent(List<ModificationInfos> compositeModificationContent) {
@@ -254,7 +295,7 @@ class CompositeControllerTest {
         return modificationList;
     }
 
-    private String getJsonBodyModificationCompositeInfos(List<Pair<UUID, String>> modifs) throws JsonProcessingException {
+    private String getJsonBodyModificationCompositeToBeInserted(List<CompositeInfos> modifs) throws JsonProcessingException {
         return TestUtils.getJsonBodyModificationCompositeInfos(modifs, TEST_NETWORK_ID, VARIANT_ID);
     }
 
@@ -500,7 +541,8 @@ class CompositeControllerTest {
 
         runRequestAsync(mockMvc,
                 put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}?action=INSERT", TEST_GROUP_ID)
-                        .content(getJsonBodyModificationCompositeInfos(List.of(Pair.of(compositeUuid, "composite"))))
+                        .content(getJsonBodyModificationCompositeToBeInserted(
+                                List.of(new CompositeInfos(compositeUuid, "composite", false))))
                         .contentType(MediaType.APPLICATION_JSON),
                 status().isOk());
 
@@ -721,7 +763,7 @@ class CompositeControllerTest {
 
         runRequestAsync(mockMvc,
                 put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}?action=INSERT", TEST_GROUP_ID)
-                        .content(getJsonBodyModificationCompositeInfos(List.of(Pair.of(compositeUuid, "composite"))))
+                        .content(getJsonBodyModificationCompositeToBeInserted(List.of(new CompositeInfos(compositeUuid, "composite", false))))
                         .contentType(MediaType.APPLICATION_JSON),
                 status().isOk());
 
