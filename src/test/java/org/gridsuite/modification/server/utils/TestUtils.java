@@ -229,7 +229,7 @@ public final class TestUtils {
         return createJsonPayload(uuids, networkUuid, variantId);
     }
 
-    public static String getJsonBodyModificationCompositeInfos(List<CompositesToBeInserted> modifs, UUID networkUuid, String variantId) throws JsonProcessingException {
+    public static String getJsonBodyModificationCompositeInfos(List<CompositeInfos> modifs, UUID networkUuid, String variantId) throws JsonProcessingException {
         return createJsonPayload(modifs, networkUuid, variantId);
     }
 

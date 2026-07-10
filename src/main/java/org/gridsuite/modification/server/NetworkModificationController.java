@@ -245,7 +245,7 @@ public class NetworkModificationController {
     }
 
     /**
-     * filters out the netmods which are not references and returns the references as :
+     * From a list of network modification UUIDs, apply a filter and return the ones that are of type reference, mapped to the UUID of the container that owns them.
      * referenced element uuid -> container of the reference (uuid of the composite if there is one, null if it is at the root level)
      */
     @GetMapping(value = "/references", produces = MediaType.APPLICATION_JSON_VALUE)

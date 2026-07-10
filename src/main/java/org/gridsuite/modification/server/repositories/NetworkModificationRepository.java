@@ -18,7 +18,7 @@ import org.gridsuite.modification.dto.tabular.LimitSetsTabularModificationInfos;
 import org.gridsuite.modification.dto.tabular.TabularBaseInfos;
 import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
-import org.gridsuite.modification.server.dto.CompositesToBeInserted;
+import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
@@ -964,9 +964,9 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationInfos> insertCompositeModifications(
             @NonNull UUID targetGroupUuid,
-            @NonNull List<CompositesToBeInserted> compositesToBeInserted) {
+            @NonNull List<CompositeInfos> compositeInfos) {
         List<ModificationInfos> newCompositeModifications = new ArrayList<>();
-        for (CompositesToBeInserted compositeToBeInserted : compositesToBeInserted) {
+        for (CompositeInfos compositeToBeInserted : compositeInfos) {
             CompositeModificationInfos compositeModification = (CompositeModificationInfos) getModificationEntity(compositeToBeInserted.id()).toModificationInfos();
             if (compositeModification != null) {
                 if (compositeToBeInserted.isShared()) {
