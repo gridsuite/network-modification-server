@@ -1913,8 +1913,8 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testGetReferencesData() throws Exception {
-        // Create a non-reference modification: it must be ignored by getReferencesData
+    void testGetReferences() throws Exception {
+        // Create a non-reference modification: it must be ignored by getReferences
         List<ModificationInfos> switchModifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         UUID nonReferenceModificationUuid = switchModifications.getFirst().getUuid();
 
@@ -1931,7 +1931,7 @@ class ModificationControllerTest {
                 .build();
         activeReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(activeReferenceInfo))).getFirst();
 
-        // Create a stashed reference: it must also be ignored by getReferencesData
+        // Create a stashed reference: it must also be ignored by getReferences
         ModificationInfos stashedReferenceInfo = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
                 .referenceId(referencedLoadModificationInfo.getUuid())

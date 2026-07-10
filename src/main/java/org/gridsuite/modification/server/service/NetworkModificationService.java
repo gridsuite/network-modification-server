@@ -271,8 +271,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public Map<UUID, UUID> getReferencesData(@NonNull List<UUID> modificationUuids) {
-        return networkModificationRepository.getReferencesData(modificationUuids);
+    public Map<UUID, UUID> getReferences(@NonNull List<UUID> modificationUuids) {
+        return networkModificationRepository.getReferences(modificationUuids);
     }
 
     @Transactional

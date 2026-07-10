@@ -721,7 +721,7 @@ public class NetworkModificationRepository {
      * @return elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
-    public Map<UUID, UUID> getReferencesData(@NonNull List<UUID> modificationUuids) {
+    public Map<UUID, UUID> getReferences(@NonNull List<UUID> modificationUuids) {
         Map<UUID, UUID> references = new HashMap<>();
 
         List<ModificationEntity> modificationEntities = this.modificationRepository.findAllByIdIn(modificationUuids);

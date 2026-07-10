@@ -249,11 +249,11 @@ public class NetworkModificationController {
      * referenced element uuid -> container of the reference (uuid of the composite if there is one, null if it is at the root level)
      */
     @GetMapping(value = "/references", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "fetch references data of the network modifications")
+    @Operation(summary = "fetch references of the network modifications")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references data were returned")})
-    public ResponseEntity<Map<UUID, UUID>> getReferencesData(
+    public ResponseEntity<Map<UUID, UUID>> getReferences(
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids) {
-        Map<UUID, UUID> referencesData = networkModificationService.getReferencesData(networkModificationUuids);
+        Map<UUID, UUID> referencesData = networkModificationService.getReferences(networkModificationUuids);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(referencesData);
     }
@@ -272,7 +272,7 @@ public class NetworkModificationController {
         List<UUID> netModUuids = networkModificationService.getNetworkModifications(groupUuid, true, false, false)
                 .stream().map(ModificationInfos::getUuid)
                 .toList();
-        Map<UUID, UUID> referencesData = networkModificationService.getReferencesData(netModUuids);
+        Map<UUID, UUID> referencesData = networkModificationService.getReferences(netModUuids);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(referencesData);
     }
