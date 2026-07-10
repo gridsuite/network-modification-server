@@ -1012,12 +1012,12 @@ public class NetworkModificationRepository {
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
+        List<ModificationEntity> groupModifications = null;
         if (originGroup != null) {
-            List<ModificationEntity> originGroupModifications = originGroup.getModifications();
-            originGroupModifications.removeIf(mod -> assembledModificationsUuids.contains(mod.getId()));
-            originGroup.setModifications(originGroupModifications);
-            assembledModifications.forEach(modificationEntity -> modificationEntity.setGroup(null));
+            groupModifications = originGroup.getModifications();
+            groupModifications.removeIf(mod -> assembledModificationsUuids.contains(mod.getId()));
         }
+        assembledModifications.forEach(modificationEntity -> modificationEntity.setGroup(null));
         // 2. cleans the composites whose submodifications are assembled into a new one
         for (ModificationEntity assembledModification : assembledModifications.stream().filter(mod -> mod.getGroup() == null).toList()) {
             UUID compositeUuid = modificationRepository.findCompositeIdByContainedModificationId(assembledModification.getId());
@@ -1045,15 +1045,21 @@ public class NetworkModificationRepository {
         newCompositeEntity.setModifications(assembledModifications);
         // put the new composite in the target group or composite
         if (targetGroup != null) {
-            List<ModificationEntity> modifications = targetGroup.getModifications();
-            modifications.add(targetIndex, newCompositeEntity);
-            targetGroup.setModifications(modifications);
+            if (groupModifications == null) {
+                groupModifications = targetGroup.getModifications();
+            }
+            groupModifications.add(targetIndex, newCompositeEntity);
         } else if (targetComposite != null) {
             List<ModificationEntity> modifications = targetComposite.getModifications();
             modifications.add(targetIndex, newCompositeEntity);
             for (int i = 0; i < targetComposite.getModifications().size(); i++) {
                 targetComposite.getModifications().get(i).setModificationsOrder(i);
             }
+        }
+
+        // if the group has been edited :
+        if (groupModifications != null) {
+            targetGroup.setModifications(groupModifications);
         }
 
         return modificationRepository.save(newCompositeEntity);
