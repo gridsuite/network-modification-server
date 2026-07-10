@@ -965,13 +965,9 @@ public class NetworkModificationRepository {
     public List<ModificationInfos> insertCompositeModifications(
             @NonNull UUID targetGroupUuid,
             @NonNull List<CompositesToBeInserted> compositesToBeInserted) {
-        List<UUID> compositeUuids = compositesToBeInserted.stream().map(CompositesToBeInserted::id).toList();
         List<ModificationInfos> newCompositeModifications = new ArrayList<>();
-        List<ModificationInfos> modificationInfos = getModificationsInfosNonTransactional(compositeUuids);
         for (CompositesToBeInserted compositeToBeInserted : compositesToBeInserted) {
-            CompositeModificationInfos compositeModification = (CompositeModificationInfos) modificationInfos.stream()
-                    .filter(modif -> modif.getUuid().equals(compositeToBeInserted.id()))
-                    .findFirst().orElse(null);
+            CompositeModificationInfos compositeModification = (CompositeModificationInfos) getModificationEntity(compositeToBeInserted.id()).toModificationInfos();
             if (compositeModification != null) {
                 if (compositeToBeInserted.isShared()) {
                     ModificationReferenceInfos newModificationReference = ModificationReferenceInfos.builder()
