@@ -6,16 +6,14 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.dto.CurrentLimitsModificationInfos;
-
 import java.util.List;
 import java.util.UUID;
-
-import jakarta.persistence.*;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -52,6 +50,7 @@ public class CurrentLimitsModificationEntity {
     }
 
     public CurrentLimitsModificationEntity(CurrentLimitsModificationInfos currentLimitsModificationInfos) {
-        this(null, currentLimitsModificationInfos.getPermanentLimit(), CurrentTemporaryLimitModificationEmbeddable.toEmbeddableCurrentTemporaryLimits(currentLimitsModificationInfos.getTemporaryLimits()));
+        this(null, currentLimitsModificationInfos.getPermanentLimit(), CurrentTemporaryLimitModificationEmbeddable.toEmbeddableCurrentTemporaryLimits(currentLimitsModificationInfos
+                .getTemporaryLimits()));
     }
 }

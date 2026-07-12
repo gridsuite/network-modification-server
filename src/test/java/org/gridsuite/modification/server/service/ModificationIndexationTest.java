@@ -298,7 +298,8 @@ class ModificationIndexationTest {
 
         // Create the composite modification to pass later to ?action=insert
         UUID compositeUuid = networkModificationService.createNetworkCompositeModification(
-                modifications.stream().map(ModificationInfos::getUuid).toList()
+                modifications.stream().map(ModificationInfos::getUuid).toList(),
+                "composite name"
         );
 
         // Need to remove the listener created in the last modifications application
@@ -308,9 +309,10 @@ class ModificationIndexationTest {
         Split this composite and insert the contained modifications to group 2, variant 2
          */
         UUID groupUuid2 = UUID.randomUUID();
-        Pair<List<CompositesToBeInserted>, List<ModificationApplicationContext>> modificationContextInfos = Pair.of(
-                List.of(new CompositesToBeInserted(compositeUuid, "", false)),
-                List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
+
+        Pair<List<CompositeInfos>, List<ModificationApplicationContext>> modificationContextInfos = Pair.of(
+                List.of(new CompositeInfos(compositeUuid, "", false)),
+                 List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
         );
         NetworkModificationsResult modificationsResult = networkModificationService.splitCompositeModifications(
             groupUuid2,
@@ -545,7 +547,8 @@ class ModificationIndexationTest {
 
             UUID groupUuid = UUID.randomUUID();
             List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationModificationInfos)));
-            NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos), networkInfos);
+            NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos),
+                    networkInfos);
             assertNotNull(result);
 
             assertEquals(1, modificationRepository.getModifications(groupUuid, true, true).size());

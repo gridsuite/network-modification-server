@@ -7,13 +7,11 @@
 package org.gridsuite.modification.server.entities;
 
 import jakarta.persistence.*;
-
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -53,8 +51,9 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
 
     public void setModifications(List<ModificationEntity> modifications) {
         this.modifications = modifications;
-        modifications.forEach(modification ->
-            modification.setGroup(this)
-        );
+        for (int i = 0; i < modifications.size(); i++) {
+            modifications.get(i).setModificationsOrder(i);
+            modifications.get(i).setGroup(this);
+        }
     }
 }

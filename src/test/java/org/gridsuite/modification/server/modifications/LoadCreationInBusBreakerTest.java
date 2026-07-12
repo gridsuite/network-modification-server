@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("IntegrationTest")
 class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTest {
-    private static String PROPERTY_NAME = "property-name";
-    private static String PROPERTY_VALUE = "property-value";
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {

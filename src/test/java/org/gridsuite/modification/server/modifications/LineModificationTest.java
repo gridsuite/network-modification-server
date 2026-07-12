@@ -148,8 +148,8 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                         )).build())
                                 .build()
                 ))
-                .lineSegments(List.of(new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", "50", null),
-                    new LineSegmentInfos(UUID.randomUUID().toString(), 1, "1", null, 0.95)))
+                .lineSegments(List.of(new LineSegmentInfos(UUID.randomUUID().toString(), 1.0, "1", "50", null),
+                    new LineSegmentInfos(UUID.randomUUID().toString(), 1.0, "1", null, 0.95)))
                 .applySegmentsLimits(true)
                 .selectedOperationalLimitsGroupId1(new AttributeModification<>("newOpLG1", OperationType.SET))
                 .selectedOperationalLimitsGroupId2(new AttributeModification<>("newOpLG2", OperationType.SET))

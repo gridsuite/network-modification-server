@@ -19,7 +19,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
