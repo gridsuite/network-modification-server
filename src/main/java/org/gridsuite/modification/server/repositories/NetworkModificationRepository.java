@@ -514,7 +514,7 @@ public class NetworkModificationRepository {
                         compositeEntity.getModifications()
                                 .stream()
                                 .filter(m -> !modificationsToExclude.contains(m.getId()))
-                                .map(m -> convertModification(m, modificationsToExclude))
+                                .map(m -> loadOptimizedModificationInfos(m, modificationsToExclude))
                                 .toList())
                 .build();
     }
@@ -559,7 +559,7 @@ public class NetworkModificationRepository {
         if (modificationEntity instanceof CompositeModificationEntity compositeEntity) {
             prefetchCompositeSubTree(compositeEntity);
         }
-        return convertModification(modificationEntity, modificationsToExclude);
+        return loadOptimizedModificationInfos(modificationEntity, modificationsToExclude);
     }
 
     private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Map<UUID, Integer> depths) {
@@ -572,7 +572,7 @@ public class NetworkModificationRepository {
         return modificationEntity.toModificationInfos();
     }
 
-    private ModificationInfos convertModification(ModificationEntity modificationEntity, Set<UUID> modificationsToExclude) {
+    private ModificationInfos loadOptimizedModificationInfos(ModificationEntity modificationEntity, Set<UUID> modificationsToExclude) {
         if (modificationEntity instanceof CompositeModificationEntity compositeEntity) {
             return loadCompositeModification(compositeEntity, modificationsToExclude);
         } else if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
