@@ -22,6 +22,7 @@ import java.util.UUID;
 public interface CompositeModificationRepository extends JpaRepository<CompositeModificationEntity, UUID> {
 
     @SneakyThrows
+    //TODO: Move this method to a service class
     default void renameCompositeModifications(CompositeModificationEntity compositeEntity, CompositeModificationInfos compositeMetadata) {
         compositeEntity.setName(compositeMetadata.getName());
         compositeEntity.setMessageValues(new ObjectMapper().writeValueAsString(compositeMetadata.getMapMessageValues()));

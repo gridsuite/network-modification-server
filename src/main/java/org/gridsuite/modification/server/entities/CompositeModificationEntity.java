@@ -13,6 +13,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.util.List;
 
@@ -25,9 +26,13 @@ import java.util.List;
 @Entity
 @Table(name = "composite_modification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "composite_modification_id_fk_constraint"))
-public class CompositeModificationEntity extends ModificationEntity {
+public class CompositeModificationEntity extends ModificationEntity implements ModificationContainer {
 
-    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, optional = false, fetch = FetchType.LAZY)
+    @Column(name = "name")
+    @ColumnDefault("'My Composite'")
+    private String name;
+
+    @OneToOne(cascade = CascadeType.ALL, optional = false, fetch = FetchType.LAZY)
     @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "composite_modification_content_fk"))
     private CompositeContainerEntity content;
 
@@ -53,34 +58,25 @@ public class CompositeModificationEntity extends ModificationEntity {
     }
 
     protected void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
-        // The content takes that SAME id — the shared-PK guarantee, established at construction.
-        this.content = new CompositeContainerEntity(getId(), compositeModificationInfos.getName());
+        this.name = compositeModificationInfos.getName();
+        this.content = new CompositeContainerEntity(getId());
         setModifications(compositeModificationInfos.getModificationsInfos().stream()
                 .map(ModificationEntity::fromDTO)
                 .toList());
     }
 
-    public String getName() {
-        return content == null ? null : content.getName();
-    }
-
-    public void setName(String name) {
-        ensureContent().setName(name);
-    }
-
+    @Override
     public List<ModificationEntity> getModifications() {
-        return content == null ? List.of() : content.getModifications();
+        return content.getModifications();
     }
 
+    @Override
     public void setModifications(List<ModificationEntity> newChildren) {
-        ensureContent().setModifications(newChildren);
+        content.setModifications(newChildren);
     }
 
-    private CompositeContainerEntity ensureContent() {
-        if (content == null) {
-            // getId() must be assigned by now (it is, for a persisted/constructed leaf)
-            content = new CompositeContainerEntity(getId(), null);
-        }
-        return content;
+    @Override
+    public void addModification(ModificationEntity child, int position) {
+        content.addModification(child, position);
     }
 }

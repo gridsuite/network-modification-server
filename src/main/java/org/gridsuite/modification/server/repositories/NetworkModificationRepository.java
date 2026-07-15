@@ -159,6 +159,7 @@ public class NetworkModificationRepository {
                 .filter(Objects::nonNull)
                 .toList();
 
+        //TODO : separate creation and copy
         if (copyEntities.size() == 1 && copyEntities.getFirst() instanceof CompositeModificationEntity single) {
             return modificationRepository.save(single).getId();
         }
@@ -378,6 +379,7 @@ public class NetworkModificationRepository {
         List<ModificationEntity> base = onlyStashed
                 ? modificationRepository.findAllBaseByContainerIdReverse(groupId)
                 : modificationRepository.findAllBaseByContainerId(groupId);
+        // TODO : move depth handling in specific code for composite
         Map<UUID, Integer> depths = batchCompositeDepths(base);
         return base.stream()
                 .filter(m -> !onlyStashed || m.getStashed())
@@ -514,7 +516,7 @@ public class NetworkModificationRepository {
                         compositeEntity.getModifications()
                                 .stream()
                                 .filter(m -> !modificationsToExclude.contains(m.getId()))
-                                .map(m -> convertModification(m, modificationsToExclude))
+                                .map(m -> toModificationsInfosOptimized(m, modificationsToExclude, false))
                                 .toList())
                 .build();
     }
@@ -552,28 +554,14 @@ public class NetworkModificationRepository {
     }
 
     private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity) {
-        return toModificationsInfosOptimized(modificationEntity, Set.of());
+        return toModificationsInfosOptimized(modificationEntity, Set.of(), true);
     }
 
-    private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity, Set<UUID> modificationsToExclude) {
+    private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity, Set<UUID> modificationsToExclude, boolean rootModification) {
         if (modificationEntity instanceof CompositeModificationEntity compositeEntity) {
-            prefetchCompositeSubTree(compositeEntity);
-        }
-        return convertModification(modificationEntity, modificationsToExclude);
-    }
-
-    private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Map<UUID, Integer> depths) {
-        if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
-            return loadCompositeModificationMetadata(modificationEntity, depths.get(modificationEntity.getId()));
-        }
-        if (ModificationType.MODIFICATION_REFERENCE.name().equals(modificationEntity.getType())) {
-            return loadModificationReference(modificationEntity);
-        }
-        return modificationEntity.toModificationInfos();
-    }
-
-    private ModificationInfos convertModification(ModificationEntity modificationEntity, Set<UUID> modificationsToExclude) {
-        if (modificationEntity instanceof CompositeModificationEntity compositeEntity) {
+            if (rootModification) {
+                prefetchCompositeSubTree(compositeEntity);
+            }
             return loadCompositeModification(compositeEntity, modificationsToExclude);
         } else if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
             // defensive: a base projection that lost its subclass — metadata-only view, depth unknown
@@ -588,10 +576,20 @@ public class NetworkModificationRepository {
         return modificationEntity.toModificationInfos();
     }
 
+    private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Map<UUID, Integer> depths) {
+        if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
+            return loadCompositeModificationMetadata(modificationEntity, depths.get(modificationEntity.getId()));
+        }
+        if (ModificationType.MODIFICATION_REFERENCE.name().equals(modificationEntity.getType())) {
+            return loadModificationReference(modificationEntity);
+        }
+        return modificationEntity.toModificationInfos();
+    }
+
     @Transactional(readOnly = true)
     public List<ModificationInfos> getActiveModifications(UUID groupUuid, @NonNull Set<UUID> modificationsToExclude) {
         List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByContainerId(groupUuid, emptyIfNull(modificationsToExclude));
-        return modificationsEntities.stream().map(m -> toModificationsInfosOptimized(m, modificationsToExclude)).toList();
+        return modificationsEntities.stream().map(m -> toModificationsInfosOptimized(m, modificationsToExclude, true)).toList();
     }
 
     private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {

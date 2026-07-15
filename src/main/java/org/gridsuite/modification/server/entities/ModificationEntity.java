@@ -34,9 +34,6 @@ import static org.gridsuite.modification.NetworkModificationException.Type.MISSI
 )
 public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> {
 
-    // Application-assigned id: set at construction (see the DTO constructor)
-    // so that children can be pointed at their container BEFORE the insert
-    // No @GeneratedValue; insert-vs-merge is driven by Persistable#isNew() from the superclass.
     @Id
     @Column(name = "id")
     private UUID id;
@@ -79,13 +76,11 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         this.messageType = messageType;
         this.messageValues = messageValues;
         this.description = description;
-        markNotNew();
     }
 
     public ModificationEntity(UUID id, String type) {
         this.id = id;
         this.type = type;
-        markNotNew();
     }
 
     protected ModificationEntity(ModificationInfos modificationInfos) {

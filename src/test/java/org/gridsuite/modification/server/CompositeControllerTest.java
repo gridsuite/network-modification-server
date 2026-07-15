@@ -30,6 +30,7 @@ import org.gridsuite.modification.server.repositories.NetworkModificationReposit
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
+import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,6 +63,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @AutoConfigureMockMvc
 @SpringBootTest
+@DisableElasticsearch
 class CompositeControllerTest {
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();

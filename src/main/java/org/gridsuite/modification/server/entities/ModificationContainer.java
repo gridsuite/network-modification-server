@@ -7,17 +7,11 @@
 package org.gridsuite.modification.server.entities;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author Hugo Marcellin {@literal <hugo.marcelin at rte-france.com>}
  */
 public interface ModificationContainer {
-
-    UUID getId();
-
-    String getType();
-
     List<ModificationEntity> getModifications();
 
     void addModification(ModificationEntity child, int position);

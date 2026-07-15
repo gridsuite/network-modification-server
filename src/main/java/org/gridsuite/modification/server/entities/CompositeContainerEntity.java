@@ -6,16 +6,10 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.util.UUID;
 
@@ -31,12 +25,7 @@ import java.util.UUID;
 @PrimaryKeyJoinColumn(name = "id", foreignKey = @ForeignKey(name = "composite_container_container_fk"))
 public class CompositeContainerEntity extends AbstractModificationContainerEntity {
 
-    @Column(name = "name")
-    @ColumnDefault("'My Composite'")
-    private String name;
-
-    public CompositeContainerEntity(UUID id, String name) {
+    public CompositeContainerEntity(UUID id) {
         super(id, ModificationContainerType.COMPOSITE);
-        this.name = name;
     }
 }

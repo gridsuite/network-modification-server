@@ -13,9 +13,8 @@
             <column name="id" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="composite_containerPK"/>
             </column>
-            <column name="name" type="VARCHAR(255)"/>
         </createTable>
-        <rollback>
+         <rollback>
             <dropTable tableName="composite_container"/>
             <dropTable tableName="modification_container"/>
         </rollback>
@@ -31,8 +30,8 @@
             SELECT id, 'COMPOSITE' FROM composite_modification;
         </sql>
         <sql>
-            INSERT INTO composite_container (id, name)
-            SELECT id, name FROM composite_modification;
+            INSERT INTO composite_container (id)
+            SELECT id FROM composite_modification;
         </sql>
         <rollback>
             <sql>DELETE FROM composite_container;</sql>
@@ -109,7 +108,6 @@
     <changeSet id="split-container-drop-legacy" author="marcellinh">
         <dropForeignKeyConstraint baseTableName="modification" constraintName="group_id_fk_constraint"/>
         <dropColumn tableName="modification" columnName="group_id"/>
-        <dropColumn tableName="composite_modification" columnName="name"/>
         <dropTable tableName="composite_modification_sub_modifications"/>
 
         <rollback>
