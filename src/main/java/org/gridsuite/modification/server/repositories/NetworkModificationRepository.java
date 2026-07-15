@@ -218,10 +218,7 @@ public class NetworkModificationRepository {
     private List<ModificationEntity> moveModificationsNonTransactional(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
         // read origin group and modifications
         ModificationGroupEntity originModificationGroupEntity = getModificationGroup(originGroupUuid);
-        List<ModificationEntity> originModificationEntities = originModificationGroupEntity.getModifications()
-            .stream()
-            .filter(modificationEntity -> !modificationEntity.getStashed())
-            .collect(Collectors.toList());
+        List<ModificationEntity> originModificationEntities = originModificationGroupEntity.getNotStashedModifications();
         // To remove null entities when @orderColumn is not a contiguous sequence starting from 0 (to be fixed?)
         // (there are several places in this file where we filter non-null modification entities)
         originModificationEntities.removeIf(Objects::isNull);
@@ -1013,7 +1010,7 @@ public class NetworkModificationRepository {
                 .findFirst()
                 .orElse(null);
         if (originGroup != null) {
-            List<ModificationEntity> originGroupModifications = originGroup.getModifications();
+            List<ModificationEntity> originGroupModifications = originGroup.getNotStashedModifications();
             originGroupModifications.removeIf(mod -> assembledModificationsUuids.contains(mod.getId()));
             originGroup.setModifications(originGroupModifications);
             assembledModifications.forEach(modificationEntity -> modificationEntity.setGroup(null));
@@ -1045,7 +1042,7 @@ public class NetworkModificationRepository {
         newCompositeEntity.setModifications(assembledModifications);
         // put the new composite in the target group or composite
         if (targetGroup != null) {
-            List<ModificationEntity> modifications = targetGroup.getModifications();
+            List<ModificationEntity> modifications = targetGroup.getNotStashedModifications();
             modifications.add(targetIndex, newCompositeEntity);
             targetGroup.setModifications(modifications);
         } else if (targetComposite != null) {
@@ -1096,10 +1093,7 @@ public class NetworkModificationRepository {
         } else {
             // moved from the root level of the network modification table
             ModificationGroupEntity group = getModificationGroup(groupUuid);
-            notMovedMods = group.getModifications()
-                    .stream()
-                    .filter(m -> !m.getStashed())
-                    .collect(Collectors.toList());
+            notMovedMods = group.getNotStashedModifications();
             notMovedMods.removeIf(Objects::isNull);
             movedMods = removeModifications(notMovedMods, List.of(modificationUuid));
             if (movedMods.isEmpty()) {

@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -49,12 +50,18 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
         }
     }
 
+    /**
+     * @return a mutable ArrayList of the modifications without those stashed
+     */
+    public List<ModificationEntity> getNotStashedModifications() {
+        return modifications.stream().filter(m -> !m.getStashed()).collect(Collectors.toCollection(ArrayList::new));
+    }
+
     public void setModifications(List<ModificationEntity> modifications) {
         this.modifications = modifications;
         modifications.forEach(m -> m.setGroup(this));
         // the unstashed modifications have to be reordered
-        List<ModificationEntity> unstashedModifications = modifications.stream()
-                .filter(m -> !m.getStashed()).toList();
+        List<ModificationEntity> unstashedModifications = getNotStashedModifications();
         for (int i = 0; i < unstashedModifications.size(); i++) {
             unstashedModifications.get(i).setModificationsOrder(i);
         }
