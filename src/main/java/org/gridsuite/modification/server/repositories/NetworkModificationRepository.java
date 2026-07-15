@@ -995,9 +995,9 @@ public class NetworkModificationRepository {
         final UUID firstModifUuid = assembledModificationsUuids.getFirst();
         final ModificationEntity firstModificationEntity = getModificationEntity(firstModifUuid);
         final int targetIndex = firstModificationEntity.getModificationsOrder();
-        ModificationGroupEntity targetGroup = firstModificationEntity.getGroup();
+        boolean assembleIntoTheGroup = firstModificationEntity.getGroup() != null;
         CompositeModificationEntity targetComposite = null;
-        if (targetGroup == null) {
+        if (!assembleIntoTheGroup) {
             // the first modification is inside a composite
             UUID targetCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(firstModifUuid);
             targetComposite = compositeModificationRepository.findById(targetCompositeUuid).orElse(null);
@@ -1012,12 +1012,12 @@ public class NetworkModificationRepository {
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
+        List<ModificationEntity> groupModifications = null;
         if (originGroup != null) {
-            List<ModificationEntity> originGroupModifications = originGroup.getModifications();
-            originGroupModifications.removeIf(mod -> assembledModificationsUuids.contains(mod.getId()));
-            originGroup.setModifications(originGroupModifications);
-            assembledModifications.forEach(modificationEntity -> modificationEntity.setGroup(null));
+            groupModifications = originGroup.getModifications();
+            groupModifications.removeIf(mod -> assembledModificationsUuids.contains(mod.getId()));
         }
+        assembledModifications.forEach(modificationEntity -> modificationEntity.setGroup(null));
         // 2. cleans the composites whose submodifications are assembled into a new one
         for (ModificationEntity assembledModification : assembledModifications.stream().filter(mod -> mod.getGroup() == null).toList()) {
             UUID compositeUuid = modificationRepository.findCompositeIdByContainedModificationId(assembledModification.getId());
@@ -1044,16 +1044,19 @@ public class NetworkModificationRepository {
         // assign modifications
         newCompositeEntity.setModifications(assembledModifications);
         // put the new composite in the target group or composite
-        if (targetGroup != null) {
-            List<ModificationEntity> modifications = targetGroup.getModifications();
-            modifications.add(targetIndex, newCompositeEntity);
-            targetGroup.setModifications(modifications);
+        if (assembleIntoTheGroup && groupModifications != null) {
+            groupModifications.add(targetIndex, newCompositeEntity);
         } else if (targetComposite != null) {
             List<ModificationEntity> modifications = targetComposite.getModifications();
             modifications.add(targetIndex, newCompositeEntity);
             for (int i = 0; i < targetComposite.getModifications().size(); i++) {
                 targetComposite.getModifications().get(i).setModificationsOrder(i);
             }
+        }
+
+        // if the group has been edited it has to be reordered :
+        if (originGroup != null) {
+            originGroup.setModifications(groupModifications);
         }
 
         return modificationRepository.save(newCompositeEntity);
