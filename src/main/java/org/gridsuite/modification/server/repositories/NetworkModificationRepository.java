@@ -995,9 +995,9 @@ public class NetworkModificationRepository {
         final UUID firstModifUuid = assembledModificationsUuids.getFirst();
         final ModificationEntity firstModificationEntity = getModificationEntity(firstModifUuid);
         final int targetIndex = firstModificationEntity.getModificationsOrder();
-        ModificationGroupEntity targetGroup = firstModificationEntity.getGroup();
+        boolean assembleIntoTheGroup = firstModificationEntity.getGroup() != null;
         CompositeModificationEntity targetComposite = null;
-        if (targetGroup == null) {
+        if (!assembleIntoTheGroup) {
             // the first modification is inside a composite
             UUID targetCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(firstModifUuid);
             targetComposite = compositeModificationRepository.findById(targetCompositeUuid).orElse(null);
@@ -1044,10 +1044,7 @@ public class NetworkModificationRepository {
         // assign modifications
         newCompositeEntity.setModifications(assembledModifications);
         // put the new composite in the target group or composite
-        if (targetGroup != null) {
-            if (groupModifications == null) {
-                groupModifications = targetGroup.getModifications();
-            }
+        if (assembleIntoTheGroup && groupModifications != null) {
             groupModifications.add(targetIndex, newCompositeEntity);
         } else if (targetComposite != null) {
             List<ModificationEntity> modifications = targetComposite.getModifications();
@@ -1057,9 +1054,9 @@ public class NetworkModificationRepository {
             }
         }
 
-        // if the group has been edited :
-        if (groupModifications != null) {
-            targetGroup.setModifications(groupModifications);
+        // if the group has been edited it has to be reordered :
+        if (originGroup != null) {
+            originGroup.setModifications(groupModifications);
         }
 
         return modificationRepository.save(newCompositeEntity);
