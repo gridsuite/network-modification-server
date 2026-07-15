@@ -51,9 +51,12 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
 
     public void setModifications(List<ModificationEntity> modifications) {
         this.modifications = modifications;
-        for (int i = 0; i < modifications.size(); i++) {
-            modifications.get(i).setModificationsOrder(i);
-            modifications.get(i).setGroup(this);
+        modifications.forEach(m -> m.setGroup(this));
+        // the unstashed modifications have to be reordered
+        List<ModificationEntity> unstashedModifications = modifications.stream()
+                .filter(m -> !m.getStashed()).toList();
+        for (int i = 0; i < unstashedModifications.size(); i++) {
+            unstashedModifications.get(i).setModificationsOrder(i);
         }
     }
 }
