@@ -18,6 +18,7 @@ import org.gridsuite.modification.dto.tabular.LimitSetsTabularModificationInfos;
 import org.gridsuite.modification.dto.tabular.TabularBaseInfos;
 import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
+import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
@@ -26,7 +27,6 @@ import org.gridsuite.modification.server.entities.tabular.TabularModificationsEn
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -191,14 +191,14 @@ public class NetworkModificationRepository {
                 .toList();
         deleteCompositeChildrenSubtree(List.of(compositeEntity));
         compositeEntity.setModifications(copyEntities);
-        compositeEntity.setName(name);
+        compositeModificationRepository.renameCompositeModification(compositeEntity, name);
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
         if (name != null) {
-            compositeEntity.setName(name);
+            compositeModificationRepository.renameCompositeModification(compositeEntity, name);
         }
     }
 
@@ -753,6 +753,26 @@ public class NetworkModificationRepository {
         return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(this::toModificationsInfosOptimized).toList();
     }
 
+    /**
+     * @return elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
+     */
+    @Transactional
+    public Map<UUID, UUID> getReferences(@NonNull List<UUID> modificationUuids) {
+        Map<UUID, UUID> references = new HashMap<>();
+
+        List<ModificationEntity> modificationEntities = this.modificationRepository.findAllByIdIn(modificationUuids);
+
+        // TODO GRD-4785 : for now shared modification are only at the root level and can't be inside composites, so the composite uuid is set to null
+        // but when it will be the case a specific function will have to be done in order to fetch the composite containing the modificationReference (if there is one)
+        modificationEntities.forEach(modificationEntity -> {
+            if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {
+                references.putIfAbsent(modificationReference.getReferenceId(), null);
+            }
+        });
+
+        return references;
+    }
+
     @Transactional
     public void stashNetworkModifications(@NonNull List<UUID> modificationUuids, int stashedModificationCount) {
         int stashModificationOrder = -stashedModificationCount - 1;
@@ -813,7 +833,7 @@ public class NetworkModificationRepository {
             if (metadata instanceof CompositeModificationInfos compositeMetadata
                     && modificationEntity instanceof CompositeModificationEntity composite
                     && compositeMetadata.getName() != null) {
-                compositeModificationRepository.renameCompositeModifications(composite, compositeMetadata);
+                compositeModificationRepository.updateCompositeModificationMetadata(composite, compositeMetadata);
             }
         }
     }
@@ -1009,20 +1029,25 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationInfos> insertCompositeModifications(
             @NonNull UUID targetGroupUuid,
-            @NonNull List<Pair<UUID, String>> compositesUuidName) {
-        List<UUID> compositeUuids = compositesUuidName.stream().map(Pair::getFirst).toList();
+            @NonNull List<CompositeInfos> compositeInfos) {
         List<ModificationInfos> newCompositeModifications = new ArrayList<>();
-        List<ModificationInfos> modificationInfos = getModificationsInfosNonTransactional(compositeUuids);
-        // apply the new composite name to the corresponding composite modifications
-        for (Pair<UUID, String> compositeUuidName : compositesUuidName) {
-            CompositeModificationInfos newCompositeModification = (CompositeModificationInfos) modificationInfos.stream()
-                    .filter(modif -> modif.getUuid().equals(compositeUuidName.getFirst()))
-                    .findFirst().orElse(null);
-            if (newCompositeModification != null) {
-                newCompositeModification.setName(compositeUuidName.getSecond());
-                newCompositeModifications.add(newCompositeModification);
+        for (CompositeInfos compositeToBeInserted : compositeInfos) {
+            CompositeModificationInfos compositeModification = (CompositeModificationInfos) getModificationEntity(compositeToBeInserted.id()).toModificationInfos();
+            if (compositeModification != null) {
+                if (compositeToBeInserted.isShared()) {
+                    ModificationReferenceInfos newModificationReference = ModificationReferenceInfos.builder()
+                            .referenceId(compositeToBeInserted.id())
+                            .referenceType(ModificationReferenceInfos.Type.BASIC)
+                            .referenceInfos(compositeModification)
+                            .build();
+                    newCompositeModifications.add(newModificationReference);
+                } else {
+                    // apply the new composite name to the corresponding composite modification
+                    compositeModification.setName(compositeToBeInserted.name());
+                    newCompositeModifications.add(compositeModification);
+                }
             } else {
-                LOGGER.error("Could not find composite modification with uuid {} to apply its name {}", compositeUuidName.getFirst(), compositeUuidName.getSecond());
+                LOGGER.error("Could not find composite modification with uuid {} to apply its name {}", compositeToBeInserted.id(), compositeToBeInserted.name());
             }
         }
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);

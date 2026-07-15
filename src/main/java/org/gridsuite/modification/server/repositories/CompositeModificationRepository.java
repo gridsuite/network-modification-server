@@ -23,8 +23,14 @@ public interface CompositeModificationRepository extends JpaRepository<Composite
 
     @SneakyThrows
     //TODO: Move this method to a service class
-    default void renameCompositeModifications(CompositeModificationEntity compositeEntity, CompositeModificationInfos compositeMetadata) {
+    default void updateCompositeModificationMetadata(CompositeModificationEntity compositeEntity, CompositeModificationInfos compositeMetadata) {
         compositeEntity.setName(compositeMetadata.getName());
         compositeEntity.setMessageValues(new ObjectMapper().writeValueAsString(compositeMetadata.getMapMessageValues()));
+    }
+
+    @SneakyThrows
+    default void renameCompositeModification(CompositeModificationEntity compositeEntity, String name) {
+        compositeEntity.setName(name);
+        compositeEntity.setMessageValues(new ObjectMapper().writeValueAsString(compositeEntity.toModificationInfos().getMapMessageValues()));
     }
 }
