@@ -184,7 +184,7 @@ class CompositeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON),
                 status().isOk());
 
-        //assertApplicationStatusOK(mvcResult);
+        assertApplicationStatusOK(mvcResult);
 
         List<ModificationInfos> newModificationList = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(modificationsNumber * 2, newModificationList.size());

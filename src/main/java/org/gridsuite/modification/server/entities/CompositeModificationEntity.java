@@ -51,7 +51,7 @@ public class CompositeModificationEntity extends ModificationEntity {
     public CompositeModificationInfos toModificationInfos() {
         List<ModificationInfos> modificationsInfos = modifications.stream()
                 .map(ModificationEntity::toModificationInfos)
-                .peek(this::fillDisplayMessage)
+                .map(this::withDisplayMessage)
                 .toList();
         return CompositeModificationInfos.builder()
                 .name(getName())
@@ -64,7 +64,7 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .build();
     }
 
-    private void fillDisplayMessage(ModificationInfos child) {
+    private ModificationInfos withDisplayMessage(ModificationInfos child) {
         if (child.getMessageType() == null) {
             child.setMessageType(child.getType().name());
         }
@@ -75,6 +75,7 @@ public class CompositeModificationEntity extends ModificationEntity {
                 child.setMessageValues("{}");
             }
         }
+        return child;
     }
 
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
