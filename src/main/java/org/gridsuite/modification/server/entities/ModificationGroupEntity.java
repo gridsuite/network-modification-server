@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -54,7 +55,10 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
      * @return a mutable ArrayList of the modifications without those stashed
      */
     public List<ModificationEntity> getActiveModifications() {
-        return modifications.stream().filter(m -> !m.getStashed()).collect(Collectors.toCollection(ArrayList::new));
+        return modifications.stream()
+                .filter(Objects::nonNull)
+                .filter(m -> !m.getStashed())
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     // adds the modifications to the group and reorders them
