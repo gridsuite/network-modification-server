@@ -53,15 +53,18 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
     /**
      * @return a mutable ArrayList of the modifications without those stashed
      */
-    public List<ModificationEntity> getNotStashedModifications() {
+    public List<ModificationEntity> getActiveModifications() {
         return modifications.stream().filter(m -> !m.getStashed()).collect(Collectors.toCollection(ArrayList::new));
     }
 
+    // adds the modifications to the group and reorders them
+    // BUT doesn't remove the previous modifications from the group. This has to be done manually because orphanRemoval is set to false.
+    // which means that you may affect a list of the active modifications here, the stashed modifications won't be affected
     public void setModifications(List<ModificationEntity> modifications) {
         this.modifications = modifications;
         modifications.forEach(m -> m.setGroup(this));
         // the unstashed modifications have to be reordered
-        List<ModificationEntity> unstashedModifications = getNotStashedModifications();
+        List<ModificationEntity> unstashedModifications = getActiveModifications();
         for (int i = 0; i < unstashedModifications.size(); i++) {
             unstashedModifications.get(i).setModificationsOrder(i);
         }
