@@ -62,6 +62,8 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .minQ(20.0)
                 .maxQ(25.0)
                 .droop(5f)
+                .voltageRegulationOn(true)
+                .targetV(225.)
                 .stepUpTransformerX(60.0)
                 .directTransX(61.0)
                 .participate(true)
