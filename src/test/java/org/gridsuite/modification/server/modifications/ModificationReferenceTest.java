@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -87,5 +88,45 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
             .modificationsInfos(modifications)
             .stashed(false)
             .build();
+    }
+
+    private ModificationInfos buildCompositeModificationWithTwoChildren() {
+        List<ModificationInfos> modifications = List.of(
+                ModificationCreation.getCreationLoad("v1", "idLoad2", "nameLoad2", "1.1", LoadType.UNDEFINED),
+                ModificationCreation.getCreationLoad("v1", "idLoad3", "nameLoad3", "1.1", LoadType.UNDEFINED)
+        );
+        return CompositeModificationInfos.builder()
+                .name("composite-with-two-children")
+                .modificationsInfos(modifications)
+                .stashed(false)
+                .build();
+    }
+
+    @Test
+    void testReferenceToCompositeFillsChildrenDisplayMessages() {
+        ModificationInfos compositeInfo = buildCompositeModificationWithTwoChildren();
+        ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
+
+        ModificationInfos referenceInfos = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(compositeEntity.getId())
+                .referenceInfos(compositeEntity.toModificationInfos())
+                .stashed(false)
+                .activated(true)
+                .build();
+        saveModification(referenceInfos);
+
+        ModificationInfos loaded = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        assertInstanceOf(ModificationReferenceInfos.class, loaded);
+        ModificationInfos loadedReferenceInfos = ((ModificationReferenceInfos) loaded).getReferenceInfos();
+        assertInstanceOf(CompositeModificationInfos.class, loadedReferenceInfos);
+
+        List<ModificationInfos> children = ((CompositeModificationInfos) loadedReferenceInfos).getModificationsInfos();
+        assertEquals(2, children.size());
+        children.forEach(child -> {
+            assertEquals(ModificationType.LOAD_CREATION.name(), child.getMessageType());
+            assertNotNull(child.getMessageValues());
+            assertDoesNotThrow(() -> mapper.readTree(child.getMessageValues()));
+        });
     }
 }
