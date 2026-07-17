@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.entities;
 
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
-
 import java.util.UUID;
 
 /**
