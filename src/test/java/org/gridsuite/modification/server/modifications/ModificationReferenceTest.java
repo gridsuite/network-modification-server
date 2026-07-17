@@ -12,6 +12,7 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ModificationCreation;
@@ -81,13 +82,13 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
     private ModificationInfos buildCompositeModification() {
         List<ModificationInfos> modifications = List.of(
-            ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED)
+                ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED)
         );
         return CompositeModificationInfos.builder()
-            .name("composite")
-            .modificationsInfos(modifications)
-            .stashed(false)
-            .build();
+                .name("composite")
+                .modificationsInfos(modifications)
+                .stashed(false)
+                .build();
     }
 
     private ModificationInfos buildCompositeModificationWithTwoChildren() {
@@ -128,5 +129,31 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
             assertNotNull(child.getMessageValues());
             assertDoesNotThrow(() -> mapper.readTree(child.getMessageValues()));
         });
+    }
+
+    @Test
+    void testCompositeToModificationInfosOnlyFillsMissingDisplayMessage() {
+        ModificationInfos childWithoutMessage = ModificationCreation.getCreationLoad("v1", "idLoad4", "nameLoad4", "1.1", LoadType.UNDEFINED);
+        ModificationInfos childWithMessage = ModificationCreation.getCreationLoad("v1", "idLoad5", "nameLoad5", "1.1", LoadType.UNDEFINED);
+        childWithMessage.setMessageType("CUSTOM_MESSAGE_TYPE");
+        childWithMessage.setMessageValues("{\"custom\":true}");
+
+        CompositeModificationInfos compositeInfo = CompositeModificationInfos.builder()
+                .name("composite-with-mixed-children")
+                .modificationsInfos(List.of(childWithoutMessage, childWithMessage))
+                .stashed(false)
+                .build();
+        CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfo);
+
+        List<ModificationInfos> children = compositeEntity.toModificationInfos().getModificationsInfos();
+
+        ModificationInfos filled = children.getFirst();
+        assertEquals(ModificationType.LOAD_CREATION.name(), filled.getMessageType());
+        assertNotNull(filled.getMessageValues());
+        assertDoesNotThrow(() -> mapper.readTree(filled.getMessageValues()));
+
+        ModificationInfos untouched = children.get(1);
+        assertEquals("LOAD_CREATION", untouched.getMessageType());
+        assertEquals("{\"equipmentId\":\"idLoad5\"}", untouched.getMessageValues());
     }
 }
