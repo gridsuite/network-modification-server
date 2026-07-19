@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server.repositories;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
@@ -502,7 +504,20 @@ public class NetworkModificationRepository {
             ModificationEntity referencedEntity = modificationRepository.findAllByIdIn(List.of(referenceEntity.getReferenceId())).stream().findFirst()
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, referenceEntity.getReferenceId())));
             ModificationReferenceInfos modificationReferenceInfos = referenceEntity.toModificationInfos();
-            modificationReferenceInfos.setReferenceInfos(toModificationsInfosOptimized(referencedEntity));
+            ModificationInfos refInfos = toModificationsInfosOptimized(referencedEntity);
+
+            if (refInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
+                ObjectMapper mapper = new ObjectMapper();
+                composite.getModificationsInfos().forEach(child -> {
+                    if (child.getMessageType() == null) {
+                        child.setMessageType(child.getType().name());
+                    }
+                    if (child.getMessageValues() == null) {
+                        child.setMessageValues(writeValuesQuietly(mapper, child));
+                    }
+                });
+            }
+            modificationReferenceInfos.setReferenceInfos(refInfos);
             return modificationReferenceInfos;
         } else {
             ModificationEntity referencedEntity = modificationRepository.findReferencedModificationMetadataByReferenceId(modificationEntity.getId());
@@ -513,6 +528,14 @@ public class NetworkModificationRepository {
             modificationInfos.setMessageType(referencedEntity.getMessageType());
             modificationInfos.setMessageValues(referencedEntity.getMessageValues());
             return modificationInfos;
+        }
+    }
+
+    public static String writeValuesQuietly(ObjectMapper mapper, ModificationInfos child) {
+        try {
+            return mapper.writeValueAsString(child.getMapMessageValues());
+        } catch (JsonProcessingException e) {
+            return "{}";
         }
     }
 
