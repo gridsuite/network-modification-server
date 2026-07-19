@@ -49,9 +49,10 @@ public class CompositeModificationEntity extends ModificationEntity {
 
     @Override
     public CompositeModificationInfos toModificationInfos() {
+        ObjectMapper mapper = new ObjectMapper();
         List<ModificationInfos> modificationsInfos = modifications.stream()
                 .map(ModificationEntity::toModificationInfos)
-                .map(this::withDisplayMessage)
+                .map(child -> fillDisplayMessage(mapper, child))
                 .toList();
         return CompositeModificationInfos.builder()
                 .name(getName())
@@ -64,13 +65,13 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .build();
     }
 
-    private ModificationInfos withDisplayMessage(ModificationInfos child) {
+    public static ModificationInfos fillDisplayMessage(ObjectMapper mapper, ModificationInfos child) {
         if (child.getMessageType() == null) {
             child.setMessageType(child.getType().name());
         }
         if (child.getMessageValues() == null) {
             try {
-                child.setMessageValues(new ObjectMapper().writeValueAsString(child.getMapMessageValues()));
+                child.setMessageValues(mapper.writeValueAsString(child.getMapMessageValues()));
             } catch (JsonProcessingException e) {
                 child.setMessageValues("{}");
             }

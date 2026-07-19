@@ -6,12 +6,15 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -19,6 +22,7 @@ import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -186,5 +190,42 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
             .modificationsInfos(modifications)
             .stashed(false)
             .build();
+    }
+
+    @Test
+    void testFillDisplayMessageOnJsonError() throws JsonProcessingException {
+        ObjectMapper mapper = Mockito.mock(ObjectMapper.class);
+
+        Mockito.when(mapper.writeValueAsString(Mockito.any()))
+                .thenThrow(new RuntimeException("err"));
+
+        ModificationInfos child = ModificationCreation.getCreationLoad(
+                "v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+
+        child.setMessageType(null);
+        child.setMessageValues(null);
+
+        assertThrows(RuntimeException.class,
+                () -> CompositeModificationEntity.fillDisplayMessage(mapper, child));
+    }
+
+    @Test
+    void testGetModificationReferenceToNonComposite() {
+        ModificationInfos load = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+        ModificationEntity loadEntity = modificationRepository.save(ModificationEntity.fromDTO(load));
+
+        ModificationInfos referenceInfos = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(loadEntity.getId())
+                .referenceInfos(loadEntity.toModificationInfos())
+                .stashed(false)
+                .activated(true)
+                .build();
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos));
+
+        ModificationInfos fetched = networkModificationRepository.getModificationInfo(saved.get(0).getUuid());
+
+        assertInstanceOf(ModificationReferenceInfos.class, fetched);
+        assertNotNull(((ModificationReferenceInfos) fetched).getReferenceInfos());
     }
 }
