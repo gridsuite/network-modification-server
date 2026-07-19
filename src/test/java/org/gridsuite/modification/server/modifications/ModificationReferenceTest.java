@@ -179,12 +179,12 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
     private ModificationInfos buildCompositeModification() {
         List<ModificationInfos> modifications = List.of(
-                ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED)
+            ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED)
         );
         return CompositeModificationInfos.builder()
-                .name("composite")
-                .modificationsInfos(modifications)
-                .stashed(false)
-                .build();
+            .name("composite")
+            .modificationsInfos(modifications)
+            .stashed(false)
+            .build();
     }
 }
