@@ -62,12 +62,8 @@ public class CompositeModificationEntity extends ModificationEntity {
 
     @SneakyThrows
     public static ModificationInfos fillDisplayMessage(ModificationInfos child) {
-        if (child.getMessageType() == null) {
-            child.setMessageType(child.getType().name());
-        }
-        if (child.getMessageValues() == null) {
-            child.setMessageValues(new ObjectMapper().writeValueAsString(child.getMapMessageValues()));
-        }
+        child.setMessageType(child.getType().name());
+        child.setMessageValues(new ObjectMapper().writeValueAsString(child.getMapMessageValues()));
         return child;
     }
 

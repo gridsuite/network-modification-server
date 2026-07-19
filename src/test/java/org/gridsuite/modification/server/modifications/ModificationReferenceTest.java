@@ -12,6 +12,7 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -206,5 +207,24 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
         assertInstanceOf(ModificationReferenceInfos.class, fetched);
         assertNotNull(((ModificationReferenceInfos) fetched).getReferenceInfos());
+    }
+
+    @Test
+    void testFillDisplayMessageKeepsExistingValues() {
+        ModificationInfos child = ModificationCreation.getCreationLoad(
+                "v1",
+                "idLoad",
+                "nameLoad",
+                "1.1",
+                LoadType.UNDEFINED
+        );
+
+        child.setMessageType(null);
+        child.setMessageValues(null);
+
+        ModificationInfos result = CompositeModificationEntity.fillDisplayMessage(child);
+
+        assertEquals("LOAD_CREATION", result.getMessageType());
+        assertEquals("{\"equipmentId\":\"idLoad\"}", result.getMessageValues());
     }
 }
