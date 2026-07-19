@@ -6,13 +6,9 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.hibernate.annotations.ColumnDefault;
@@ -49,10 +45,9 @@ public class CompositeModificationEntity extends ModificationEntity {
 
     @Override
     public CompositeModificationInfos toModificationInfos() {
-        ObjectMapper mapper = new ObjectMapper();
         List<ModificationInfos> modificationsInfos = modifications.stream()
                 .map(ModificationEntity::toModificationInfos)
-                .map(child -> fillDisplayMessage(mapper, child))
+                .map(CompositeModificationEntity::fillDisplayMessage)
                 .toList();
         return CompositeModificationInfos.builder()
                 .name(getName())
@@ -65,16 +60,13 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .build();
     }
 
-    public static ModificationInfos fillDisplayMessage(ObjectMapper mapper, ModificationInfos child) {
+    @SneakyThrows
+    public static ModificationInfos fillDisplayMessage(ModificationInfos child) {
         if (child.getMessageType() == null) {
             child.setMessageType(child.getType().name());
         }
         if (child.getMessageValues() == null) {
-            try {
-                child.setMessageValues(mapper.writeValueAsString(child.getMapMessageValues()));
-            } catch (JsonProcessingException e) {
-                child.setMessageValues("{}");
-            }
+            child.setMessageValues(new ObjectMapper().writeValueAsString(child.getMapMessageValues()));
         }
         return child;
     }
