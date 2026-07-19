@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
@@ -114,6 +115,16 @@ public class NetworkModificationRepository {
         this.tabularPropertyRepository = tabularPropertyRepository;
         this.compositeModificationRepository = compositeModificationRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
+    }
+
+    @SneakyThrows
+    private static void loadModificationReferenceChildren(ModificationInfos child) {
+        if (child.getMessageType() == null) {
+            child.setMessageType(child.getType().name());
+        }
+        if (child.getMessageValues() == null) {
+            child.setMessageValues(new ObjectMapper().writeValueAsString(child.getMapMessageValues()));
+        }
     }
 
     @Transactional // To have all the delete in the same transaction (atomic)
@@ -507,15 +518,7 @@ public class NetworkModificationRepository {
             ModificationInfos refInfos = toModificationsInfosOptimized(referencedEntity);
 
             if (refInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
-                ObjectMapper mapper = new ObjectMapper();
-                composite.getModificationsInfos().forEach(child -> {
-                    if (child.getMessageType() == null) {
-                        child.setMessageType(child.getType().name());
-                    }
-                    if (child.getMessageValues() == null) {
-                        child.setMessageValues(writeValuesQuietly(mapper, child));
-                    }
-                });
+                composite.getModificationsInfos().forEach(NetworkModificationRepository::loadModificationReferenceChildren);
             }
             modificationReferenceInfos.setReferenceInfos(refInfos);
             return modificationReferenceInfos;
