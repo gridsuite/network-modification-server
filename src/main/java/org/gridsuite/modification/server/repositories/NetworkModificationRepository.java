@@ -509,8 +509,12 @@ public class NetworkModificationRepository {
             if (refInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
                 ObjectMapper mapper = new ObjectMapper();
                 composite.getModificationsInfos().forEach(child -> {
-                    child.setMessageType(child.getType().name());
-                    child.setMessageValues(writeValuesQuietly(mapper, child));
+                    if (child.getMessageType() == null) {
+                        child.setMessageType(child.getType().name());
+                    }
+                    if (child.getMessageValues() == null) {
+                        child.setMessageValues(writeValuesQuietly(mapper, child));
+                    }
                 });
             }
             modificationReferenceInfos.setReferenceInfos(refInfos);

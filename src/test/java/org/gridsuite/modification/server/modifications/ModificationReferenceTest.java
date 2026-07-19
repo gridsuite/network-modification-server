@@ -90,7 +90,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
         CompositeModificationInfos result = (CompositeModificationInfos) compositeEntity.toModificationInfos();
 
-        ModificationInfos resultChild = result.getModificationsInfos().getFirst();
+        ModificationInfos resultChild = result.getModificationsInfos().get(0);
         assertEquals(ModificationType.LOAD_CREATION.name(), resultChild.getMessageType());
         assertNotNull(resultChild.getMessageValues());
     }
@@ -111,8 +111,8 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
         CompositeModificationInfos result = (CompositeModificationInfos) compositeEntity.toModificationInfos();
 
-        ModificationInfos resultChild = result.getModificationsInfos().getFirst();
-        assertEquals("LOAD_CREATION", resultChild.getMessageType());
+        ModificationInfos resultChild = result.getModificationsInfos().get(0);
+        assertEquals(ModificationType.LOAD_CREATION.name(), resultChild.getMessageType());
         assertEquals("{\"equipmentId\":\"idLoad\"}", resultChild.getMessageValues());
     }
 
@@ -120,7 +120,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
     void testGetModificationReferenceInfoFillsChildDisplayMessageFromRepository() {
         // Forces the repository's DB-reload path (findAllByIdIn -> loadCompositeModification),
         // as opposed to buildModification()'s direct compositeEntity.toModificationInfos() call.
-        // This is the only way to exercise loadModificationReference()'s new forEach block.
+        // This is the only way to exercise loadModificationReference()'s forEach block.
         ModificationInfos compositeInfo = buildCompositeModification();
         ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
 
@@ -132,26 +132,59 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
                 .activated(true)
                 .build();
         List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos));
-        UUID referenceUuid = saved.getFirst().getUuid();
+        UUID referenceUuid = saved.get(0).getUuid();
 
         ModificationInfos fetched = networkModificationRepository.getModificationInfo(referenceUuid);
 
         assertInstanceOf(ModificationReferenceInfos.class, fetched);
         ModificationInfos refInfos = ((ModificationReferenceInfos) fetched).getReferenceInfos();
         assertInstanceOf(CompositeModificationInfos.class, refInfos);
-        ModificationInfos fetchedChild = ((CompositeModificationInfos) refInfos).getModificationsInfos().getFirst();
+        ModificationInfos fetchedChild = ((CompositeModificationInfos) refInfos).getModificationsInfos().get(0);
         assertEquals(ModificationType.LOAD_CREATION.name(), fetchedChild.getMessageType());
         assertNotNull(fetchedChild.getMessageValues());
     }
 
+    @Test
+    void testGetModificationReferenceInfoPreservesExistingChildDisplayMessageFromRepository() {
+        // Same DB-reload path as above, but the child already has custom messageType/messageValues:
+        // the null-guards in loadModificationReference() must leave them untouched, not overwrite
+        // them with the computed fallback. Covers the false branch of the two new ifs.
+        ModificationInfos child = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+        child.setMessageType(ModificationType.LOAD_CREATION.name());
+        child.setMessageValues("{\"equipmentId\":\"idLoad\"}");
+        CompositeModificationInfos compositeInfo = CompositeModificationInfos.builder()
+                .name("composite")
+                .modificationsInfos(List.of(child))
+                .stashed(false)
+                .build();
+        ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
+
+        ModificationInfos referenceInfos = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(compositeEntity.getId())
+                .referenceInfos(compositeEntity.toModificationInfos())
+                .stashed(false)
+                .activated(true)
+                .build();
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos));
+        UUID referenceUuid = saved.get(0).getUuid();
+
+        ModificationInfos fetched = networkModificationRepository.getModificationInfo(referenceUuid);
+
+        ModificationInfos refInfos = ((ModificationReferenceInfos) fetched).getReferenceInfos();
+        ModificationInfos fetchedChild = ((CompositeModificationInfos) refInfos).getModificationsInfos().get(0);
+        assertEquals(ModificationType.LOAD_CREATION.name(), fetchedChild.getMessageType());
+        assertEquals("{\"equipmentId\":\"idLoad\"}", fetchedChild.getMessageValues());
+    }
+
     private ModificationInfos buildCompositeModification() {
         List<ModificationInfos> modifications = List.of(
-            ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED)
+                ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED)
         );
         return CompositeModificationInfos.builder()
-            .name("composite")
-            .modificationsInfos(modifications)
-            .stashed(false)
-            .build();
+                .name("composite")
+                .modificationsInfos(modifications)
+                .stashed(false)
+                .build();
     }
 }
