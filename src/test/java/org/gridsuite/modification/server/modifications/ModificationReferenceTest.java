@@ -85,7 +85,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
     @Test
     void testCompositeToModificationInfosFillsMissingDisplayMessage() {
-         ModificationInfos compositeInfo = buildCompositeModification();
+        ModificationInfos compositeInfo = buildCompositeModification();
         ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
 
         CompositeModificationInfos result = (CompositeModificationInfos) compositeEntity.toModificationInfos();
