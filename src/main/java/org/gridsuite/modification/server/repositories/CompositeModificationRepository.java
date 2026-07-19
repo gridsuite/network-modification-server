@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.repositories;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -31,5 +32,15 @@ public interface CompositeModificationRepository extends JpaRepository<Composite
     default void renameCompositeModification(CompositeModificationEntity compositeEntity, String name) {
         compositeEntity.setName(name);
         compositeEntity.setMessageValues(new ObjectMapper().writeValueAsString(compositeEntity.toModificationInfos().getMapMessageValues()));
+    }
+
+    @SneakyThrows
+    default void loadCompositeModification(ModificationInfos modificationInfos) {
+        if (modificationInfos.getMessageType() == null) {
+            modificationInfos.setMessageType(modificationInfos.getType().name());
+        }
+        if (modificationInfos.getMessageValues() == null) {
+            modificationInfos.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
+        }
     }
 }

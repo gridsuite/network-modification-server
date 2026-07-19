@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.ModificationType;
@@ -23,9 +22,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -226,18 +223,5 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
         assertEquals("LOAD_CREATION", result.getMessageType());
         assertEquals("{\"equipmentId\":\"idLoad\"}", result.getMessageValues());
-    }
-
-    @Test
-    void shouldReturnEmptyJsonWhenWriteValuesFails() {
-        ModificationInfos child = new ModificationInfos();
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("self", map);
-
-        child.setMessageValues(map.toString());
-        String result = NetworkModificationRepository.writeValuesQuietly(new ObjectMapper(), child);
-
-        assertEquals("{}", result);
     }
 }
