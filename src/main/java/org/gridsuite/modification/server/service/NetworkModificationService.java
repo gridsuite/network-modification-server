@@ -86,6 +86,8 @@ public class NetworkModificationService {
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
     static final String DELETED_EQUIPMENT_IDS = "deletedEquipmentIds.fullascii";
+    static final String DIFFERENT_SIZES_ERROR_MESSAGE =
+            "Error while mapping two modifications list with each other : both lists have different sizes";
     private final ModificationRepository modificationRepository;
     private static final int PAGE_MAX_SIZE = 500;
 
@@ -462,12 +464,12 @@ public class NetworkModificationService {
     /**
      * recursively map the uuids from two lists of modifications, including those inside the composite modifications
      */
-    private static void mapUuidsFromTwoModificationsLists(
+    static void mapUuidsFromTwoModificationsLists(
             List<ModificationInfos> modificationsList1,
             List<ModificationInfos> modificationsList2,
             Map<UUID, UUID> modificationsMapping) {
         if (modificationsList1.size() != modificationsList2.size()) {
-            throw new IllegalArgumentException("Error while mapping two modifications list with each other : both lists have different sizes");
+            throw new IllegalArgumentException(DIFFERENT_SIZES_ERROR_MESSAGE);
         }
         for (int i = 0; i < modificationsList1.size(); i++) {
             modificationsMapping.put(modificationsList1.get(i).getUuid(), modificationsList2.get(i).getUuid());
