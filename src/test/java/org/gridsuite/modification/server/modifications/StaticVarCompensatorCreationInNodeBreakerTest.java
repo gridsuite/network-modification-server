@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.StaticVarCompensator;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
+import org.gridsuite.modification.error.NetworkModificationExceptionType;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -156,7 +157,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
         compensatorCreationInfosJson = getJsonBody(compensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("An error occurred while creating the static var compensator : StaticVarCompensator 'idStaticVarCompensator2' : minimum susceptance is not set",
+        assertLogMessage(NetworkModificationExceptionType.CREATE_STATIC_VAR_COMPENSATOR_ERROR.getMessage() + " : StaticVarCompensator 'idStaticVarCompensator2' : minimum susceptance is not set",
                 ERROR_MESSAGE_KEY, reportService);
         compensatorCreationInfos.setMinSusceptance(200.0);
         compensatorCreationInfos.setMaxSusceptance(null);
@@ -165,7 +166,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
         compensatorCreationInfosJson = getJsonBody(compensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("An error occurred while creating the static var compensator : " +
+        assertLogMessage(NetworkModificationExceptionType.CREATE_STATIC_VAR_COMPENSATOR_ERROR.getMessage() + " : " +
                         "StaticVarCompensator 'idStaticVarCompensator2' : maximum susceptance is not set",
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -176,7 +177,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
         compensatorCreationInfosJson = getJsonBody(compensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("An error occurred while creating the static var compensator : " +
+        assertLogMessage(NetworkModificationExceptionType.CREATE_STATIC_VAR_COMPENSATOR_ERROR.getMessage() + " : " +
                         "StaticVarCompensator 'idStaticVarCompensator2' : maximum susceptance is expected to be greater than or equal to minimum susceptance",
                 ERROR_MESSAGE_KEY, reportService);
         compensatorCreationInfos.setMaxSusceptance(null);
@@ -186,7 +187,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
         compensatorCreationInfosJson = getJsonBody(compensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("An error occurred while creating the static var compensator : " +
+        assertLogMessage(NetworkModificationExceptionType.CREATE_STATIC_VAR_COMPENSATOR_ERROR.getMessage() + " : " +
                         "StaticVarCompensator 'idStaticVarCompensator2' : maximum Q at nominal voltage is expected to be greater than or equal to minimum Q",
                 ERROR_MESSAGE_KEY, reportService);
         compensatorCreationInfos.setMaxQAtNominalV(200.0);
@@ -196,7 +197,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
         compensatorCreationInfosJson = getJsonBody(compensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("An error occurred while creating the static var compensator : " +
+        assertLogMessage(NetworkModificationExceptionType.CREATE_STATIC_VAR_COMPENSATOR_ERROR.getMessage() + " : " +
                         "StaticVarCompensator 'idStaticVarCompensator2' : Reactive power setpoint is not set",
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -205,7 +206,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
         compensatorCreationInfosJson = getJsonBody(compensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("An error occurred while creating the static var compensator : " +
+        assertLogMessage(NetworkModificationExceptionType.CREATE_STATIC_VAR_COMPENSATOR_ERROR.getMessage() + " : " +
                         "StaticVarCompensator 'idStaticVarCompensator2' : Voltage setpoint is not set",
                 ERROR_MESSAGE_KEY, reportService);
         compensatorCreationInfos.setEquipmentId("idStaticVarCompensator3");
@@ -279,7 +280,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
         compensatorCreationInfosJson = getJsonBody(compensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("An error occurred while creating the static var compensator : " +
+        assertLogMessage(NetworkModificationExceptionType.CREATE_STATIC_VAR_COMPENSATOR_ERROR.getMessage() + " : " +
                         "StaticVarCompensator 'idStaticVarCompensator2' : q0 must be within the range of minimum Q and maximum Q",
                 ERROR_MESSAGE_KEY, reportService);
         compensatorCreationInfos.setMinQAtNominalV(null);
@@ -291,7 +292,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
         compensatorCreationInfosJson = getJsonBody(compensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("An error occurred while creating the static var compensator : " +
+        assertLogMessage(NetworkModificationExceptionType.CREATE_STATIC_VAR_COMPENSATOR_ERROR.getMessage() + " : " +
                         "StaticVarCompensator 'idStaticVarCompensator2' : b0 must be within the range of minimum susceptance and maximum susceptance",
                 ERROR_MESSAGE_KEY, reportService);
         compensatorCreationInfos.setRegulating(false);
@@ -302,7 +303,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
         compensatorCreationInfosJson = getJsonBody(compensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("An error occurred while creating the static var compensator : " +
+        assertLogMessage(NetworkModificationExceptionType.CREATE_STATIC_VAR_COMPENSATOR_ERROR.getMessage() + " : " +
                         "StaticVarCompensator 'idStaticVarCompensator2' : Standby is only supported in Voltage Regulation mode",
                 ERROR_MESSAGE_KEY, reportService);
         compensatorCreationInfos.setRegulationMode(VOLTAGE);

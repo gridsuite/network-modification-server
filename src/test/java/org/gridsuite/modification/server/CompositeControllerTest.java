@@ -19,6 +19,7 @@ import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.error.NetworkModificationException;
+import org.gridsuite.modification.error.NetworkModificationExceptionType;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -353,7 +354,7 @@ class CompositeControllerTest {
         assertEquals(1, groupModifications.size());
         assertEquals(modificationUuidList.getFirst(), groupModifications.getFirst().getUuid());
         // duplicate has been deleted
-        assertEquals("The modification could not be found : " + returnedNewId, assertThrows(NetworkModificationException.class, ()
+        assertEquals(NetworkModificationExceptionType.MODIFICATION_NOT_FOUND.getMessage() + " : " + returnedNewId, assertThrows(NetworkModificationException.class, ()
                 -> networkModificationRepository.getModificationInfo(returnedNewId)).getMessage());
     }
 

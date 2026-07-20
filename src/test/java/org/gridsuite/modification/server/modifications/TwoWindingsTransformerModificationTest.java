@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.TwoWindingsTransformerToBeEstimated;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
+import org.gridsuite.modification.error.NetworkModificationExceptionType;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -767,7 +768,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
             // change not applied
             assertThat(terminal.isConnected()).isNotEqualTo(expectedState);
             assertEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
-            assertLogMessage("An error occurred while modifying the branch : " + errorMessage, ERROR_MESSAGE_KEY, reportService);
+            assertLogMessage(NetworkModificationExceptionType.BRANCH_MODIFICATION_ERROR.getMessage() + " : " + errorMessage, ERROR_MESSAGE_KEY, reportService);
         } else {
             // connection state has changed as expected
             assertThat(terminal.isConnected()).isEqualTo(expectedState);
@@ -835,12 +836,14 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         AttributeModification<Boolean> regulatingModification = new AttributeModification<>(true, OperationType.SET);
         String message = assertThrows(NetworkModificationException.class, () -> processPhaseTapRegulation(null, adder, false,
             null, regulationValueModification, null, regulatingModification, regulationReports)).getMessage();
-        assertEquals("An error occurred while creating the two windings transformer : Regulation mode is missing when creating tap phase changer with regulation enabled", message);
+        assertEquals(NetworkModificationExceptionType.CREATE_TWO_WINDINGS_TRANSFORMER_ERROR.getMessage()
+                + " : Regulation mode is missing when creating tap phase changer with regulation enabled", message);
 
         AttributeModification<PhaseTapChanger.RegulationMode> regulationModeModification = new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET);
         String message2 = assertThrows(NetworkModificationException.class, () -> processPhaseTapRegulation(null, adder, false,
             regulationModeModification, null, null, regulatingModification, regulationReports)).getMessage();
-        assertEquals("An error occurred while creating the two windings transformer : Regulation value is missing when creating tap phase changer with regulation enabled", message2);
+        assertEquals(NetworkModificationExceptionType.CREATE_TWO_WINDINGS_TRANSFORMER_ERROR.getMessage()
+                + " : Regulation value is missing when creating tap phase changer with regulation enabled", message2);
         processPhaseTapRegulation(null, adder, false,
             new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET),
             null, null, null, regulationReports);

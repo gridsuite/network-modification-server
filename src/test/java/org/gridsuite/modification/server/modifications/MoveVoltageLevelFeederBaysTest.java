@@ -13,6 +13,7 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.MoveFeederBayInfos;
 import org.gridsuite.modification.dto.MoveVoltageLevelFeederBaysInfos;
 import org.gridsuite.modification.error.NetworkModificationException;
+import org.gridsuite.modification.error.NetworkModificationExceptionType;
 import org.gridsuite.modification.modifications.MoveVoltageLevelFeederBays;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.utils.ModificationUtils;
@@ -181,7 +182,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
         MoveVoltageLevelFeederBays moveVoltageLevelFeederBays = (MoveVoltageLevelFeederBays) moveVoltageLevelFeederBaysInfos.toModification();
         assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS", moveVoltageLevelFeederBays.getName());
         String message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification)).getMessage();
-        assertEquals("An error occurred while moving the voltage level feeder bays : "
+        assertEquals(NetworkModificationExceptionType.MOVE_VOLTAGE_LEVEL_FEEDER_BAYS_ERROR.getMessage() + " : "
                 + "MoveVoltageLevelFeederBays is not implemented for class com.powsybl.network.store.iidm.impl.ThreeWindingsTransformerImpl", message);
         // busbar not found on a branch
         MoveFeederBayInfos connectablePositionModification2 = MoveFeederBayInfos.builder()
@@ -193,7 +194,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
         message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification2)).getMessage();
-        assertEquals("An error occurred while moving the voltage level feeder bays : Invalid connection side: THREE for branch line1", message);
+        assertEquals(NetworkModificationExceptionType.MOVE_VOLTAGE_LEVEL_FEEDER_BAYS_ERROR.getMessage() + " : Invalid connection side: THREE for branch line1", message);
         // injection with no error
         MoveFeederBayInfos connectablePositionModification3 = MoveFeederBayInfos.builder()
             .equipmentId("v3Battery")

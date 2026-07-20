@@ -16,6 +16,7 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAt
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
+import org.gridsuite.modification.error.NetworkModificationExceptionType;
 import org.gridsuite.modification.modifications.GenerationDispatch;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -592,11 +593,11 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
 
         final GenerationDispatch generationDispatch1 = GenerationDispatch.builder().lossCoefficient(150.).defaultOutageRate(0.).build();
         assertThrows(NetworkModificationException.class, () -> generationDispatch1.check(network),
-                "An error occurred while dispatching the generation : The loss coefficient must be between 0 and 100");
+                NetworkModificationExceptionType.GENERATION_DISPATCH_ERROR.getMessage() + " : The loss coefficient must be between 0 and 100");
 
         final GenerationDispatch generationDispatch2 = GenerationDispatch.builder().lossCoefficient(20.).defaultOutageRate(140.).build();
         assertThrows(NetworkModificationException.class, () -> generationDispatch2.check(network),
-                "An error occurred while dispatching the generation : The default outage rate must be between 0 and 100");
+                NetworkModificationExceptionType.GENERATION_DISPATCH_ERROR.getMessage() + " : The default outage rate must be between 0 and 100");
     }
 
     @Test

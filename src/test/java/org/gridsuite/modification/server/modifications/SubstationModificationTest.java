@@ -11,6 +11,7 @@ import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Substation;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.error.NetworkModificationExceptionType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -99,7 +100,7 @@ class SubstationModificationTest extends AbstractNetworkModificationTest {
         String infosJson = getJsonBody(infos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(infosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("The substation could not be found : Substation unknown does not exist in network", ERROR_MESSAGE_KEY, reportService);
+        assertLogMessage(NetworkModificationExceptionType.SUBSTATION_NOT_FOUND.getMessage() + " : Substation unknown does not exist in network", ERROR_MESSAGE_KEY, reportService);
     }
 
     @Override

@@ -142,7 +142,7 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
                 () -> loadFlowService.getLoadFlowParametersInfos(ERROR_LOADFLOW_PARAMETERS_UUID)
         );
 
-        assertEquals("An error occurred while fetching the load flow parameters : Internal server error", exception.getMessage());
+        assertEquals(NetworkModificationExceptionType.LOAD_FLOW_PARAMETERS_FETCH_ERROR.getMessage() + " : Internal server error", exception.getMessage());
     }
 
     @Override

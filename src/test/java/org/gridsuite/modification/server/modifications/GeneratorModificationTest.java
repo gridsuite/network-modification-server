@@ -16,6 +16,7 @@ import com.powsybl.iidm.network.extensions.Measurement;
 import com.powsybl.iidm.network.extensions.Measurements;
 import org.assertj.core.api.Assertions;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.error.NetworkModificationExceptionType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -438,7 +439,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
-        assertLogMessage("An error occurred while modifying the generator : Generator '" + "idGenerator"
+        assertLogMessage(NetworkModificationExceptionType.MODIFY_GENERATOR_ERROR.getMessage() + " : Generator '" + "idGenerator"
                 + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power "
                 + minQ.get(),
                 ERROR_MESSAGE_KEY, reportService);
@@ -463,7 +464,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
-        assertLogMessage("An error occurred while modifying the generator : Generator '" + "idGenerator" + "' : Active power " + activePower
+        assertLogMessage(NetworkModificationExceptionType.MODIFY_GENERATOR_ERROR.getMessage() + " : Generator '" + "idGenerator" + "' : Active power " + activePower
                 + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]",
                 ERROR_MESSAGE_KEY, reportService);
 
