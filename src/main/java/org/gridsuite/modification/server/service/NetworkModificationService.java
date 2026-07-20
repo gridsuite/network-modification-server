@@ -439,15 +439,16 @@ public class NetworkModificationService {
                 groupUuid, sourceCompositeUuid, targetCompositeUuid, modificationUuid, beforeUuid);
     }
 
+    /**
+     * @return a mapping between the uuids of the duplicated modifications and the uuid of the new modifications
+     */
     public Map<UUID, UUID> duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
         try {
             List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
             List<ModificationInfos> newModifications = networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationToDuplicateInfos);
 
             Map<UUID, UUID> duplicateModificationMapping = new HashMap<>();
-            for (int i = 0; i < modificationToDuplicateInfos.size(); i++) {
-                duplicateModificationMapping.put(modificationToDuplicateInfos.get(i).getUuid(), newModifications.get(i).getUuid());
-            }
+            mapUuidsFromTwoModificationsLists(modificationToDuplicateInfos, newModifications, duplicateModificationMapping);
 
             return duplicateModificationMapping;
         } catch (NetworkModificationException e) {
@@ -455,6 +456,26 @@ public class NetworkModificationService {
                 return Map.of();
             }
             throw e;
+        }
+    }
+
+    /**
+     * resursively map the uuids from two lists of modifications, including those inside the composite modifications
+     */
+    private static void mapUuidsFromTwoModificationsLists(
+            List<ModificationInfos> modificationList1,
+            List<ModificationInfos> modificationsList2,
+            Map<UUID, UUID> modificationsMapping) throws RuntimeException {
+        if (modificationList1.size() != modificationsList2.size()) {
+            throw new RuntimeException("Error while mapping two modifications list with each other");
+        }
+        for (int i = 0; i < modificationList1.size(); i++) {
+            modificationsMapping.put(modificationList1.get(i).getUuid(), modificationsList2.get(i).getUuid());
+            if (modificationList1.get(i).getType() == ModificationType.COMPOSITE_MODIFICATION) {
+                CompositeModificationInfos compositeToDuplicateInfos = (CompositeModificationInfos) modificationList1.get(i);
+                CompositeModificationInfos newComposite = (CompositeModificationInfos) modificationsList2.get(i);
+                mapUuidsFromTwoModificationsLists(compositeToDuplicateInfos.getModificationsInfos(), newComposite.getModificationsInfos(), modificationsMapping);
+            }
         }
     }
 
