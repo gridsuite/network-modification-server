@@ -310,7 +310,7 @@ class ModificationIndexationTest {
          */
         UUID groupUuid2 = UUID.randomUUID();
         Pair<List<CompositeInfos>, List<ModificationApplicationContext>> modificationContextInfos = Pair.of(
-                List.of(new CompositeInfos(compositeUuid, "", false)),
+                List.of(new CompositeInfos(compositeUuid, "", false, "description")),
                 List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
         );
         NetworkModificationsResult modificationsResult = networkModificationService.splitCompositeModifications(

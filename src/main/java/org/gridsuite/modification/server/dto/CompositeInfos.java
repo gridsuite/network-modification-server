@@ -12,5 +12,5 @@ import java.util.UUID;
  * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
  * used as a parameter for composite insertion
  */
-public record CompositeInfos(UUID id, String name, boolean isShared) { }
+public record CompositeInfos(UUID id, String name, boolean isShared, String description) { }
 
