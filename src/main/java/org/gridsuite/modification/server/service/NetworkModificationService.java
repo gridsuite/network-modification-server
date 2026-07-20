@@ -460,19 +460,19 @@ public class NetworkModificationService {
     }
 
     /**
-     * resursively map the uuids from two lists of modifications, including those inside the composite modifications
+     * recursively map the uuids from two lists of modifications, including those inside the composite modifications
      */
     private static void mapUuidsFromTwoModificationsLists(
-            List<ModificationInfos> modificationList1,
+            List<ModificationInfos> modificationsList1,
             List<ModificationInfos> modificationsList2,
-            Map<UUID, UUID> modificationsMapping) throws RuntimeException {
-        if (modificationList1.size() != modificationsList2.size()) {
-            throw new RuntimeException("Error while mapping two modifications list with each other");
+            Map<UUID, UUID> modificationsMapping) {
+        if (modificationsList1.size() != modificationsList2.size()) {
+            throw new IllegalArgumentException("Error while mapping two modifications list with each other : both lists have different sizes");
         }
-        for (int i = 0; i < modificationList1.size(); i++) {
-            modificationsMapping.put(modificationList1.get(i).getUuid(), modificationsList2.get(i).getUuid());
-            if (modificationList1.get(i).getType() == ModificationType.COMPOSITE_MODIFICATION) {
-                CompositeModificationInfos compositeToDuplicateInfos = (CompositeModificationInfos) modificationList1.get(i);
+        for (int i = 0; i < modificationsList1.size(); i++) {
+            modificationsMapping.put(modificationsList1.get(i).getUuid(), modificationsList2.get(i).getUuid());
+            if (modificationsList1.get(i).getType() == ModificationType.COMPOSITE_MODIFICATION) {
+                CompositeModificationInfos compositeToDuplicateInfos = (CompositeModificationInfos) modificationsList1.get(i);
                 CompositeModificationInfos newComposite = (CompositeModificationInfos) modificationsList2.get(i);
                 mapUuidsFromTwoModificationsLists(compositeToDuplicateInfos.getModificationsInfos(), newComposite.getModificationsInfos(), modificationsMapping);
             }
