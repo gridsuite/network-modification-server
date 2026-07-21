@@ -21,17 +21,18 @@ import java.util.UUID;
  */
 @Repository
 public interface CompositeModificationRepository extends JpaRepository<CompositeModificationEntity, UUID> {
+    ObjectMapper MAPPER = new ObjectMapper();
 
     @SneakyThrows
     default void updateCompositeModificationMetadata(CompositeModificationEntity compositeEntity, CompositeModificationInfos compositeMetadata) {
         compositeEntity.setName(compositeMetadata.getName());
-        compositeEntity.setMessageValues(new ObjectMapper().writeValueAsString(compositeMetadata.getMapMessageValues()));
+        compositeEntity.setMessageValues(MAPPER.writeValueAsString(compositeMetadata.getMapMessageValues()));
     }
 
     @SneakyThrows
     default void renameCompositeModification(CompositeModificationEntity compositeEntity, String name) {
         compositeEntity.setName(name);
-        compositeEntity.setMessageValues(new ObjectMapper().writeValueAsString(compositeEntity.toModificationInfos().getMapMessageValues()));
+        compositeEntity.setMessageValues(MAPPER.writeValueAsString(compositeEntity.toModificationInfos().getMapMessageValues()));
     }
 
     @SneakyThrows
@@ -40,7 +41,7 @@ public interface CompositeModificationRepository extends JpaRepository<Composite
             modificationInfos.setMessageType(modificationInfos.getType().name());
         }
         if (modificationInfos.getMessageValues() == null) {
-            modificationInfos.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
+            modificationInfos.setMessageValues(MAPPER.writeValueAsString(modificationInfos.getMapMessageValues()));
         }
     }
 }

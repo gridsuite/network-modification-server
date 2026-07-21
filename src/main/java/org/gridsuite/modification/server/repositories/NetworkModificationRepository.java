@@ -535,18 +535,19 @@ public class NetworkModificationRepository {
         // A composite may arrive as a real CompositeModificationEntity (full load, sub-modifications
         // available) or as a plain ModificationEntity with type == COMPOSITE_MODIFICATION
         // from findAllBaseByGroupId which strips subclass when retrieving only metadata
+        ModificationInfos infos = modificationEntity.toModificationInfos();
         if (modificationEntity instanceof CompositeModificationEntity compositeEntity) {
-            return loadCompositeModification(compositeEntity, modificationsToExclude);
+            infos = loadCompositeModification(compositeEntity, modificationsToExclude);
         } else if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
-            return loadCompositeModificationMetadata(modificationEntity, precomputedDepths.get(modificationEntity.getId()));
+            infos = loadCompositeModificationMetadata(modificationEntity, precomputedDepths.get(modificationEntity.getId()));
         }
         if (modificationEntity instanceof TabularModificationsEntity tabularEntity) {
-            return loadTabularModification(tabularEntity);
+            infos = loadTabularModification(tabularEntity);
         }
         if (ModificationType.MODIFICATION_REFERENCE.name().equals(modificationEntity.getType())) {
-            return loadModificationReference(modificationEntity);
+            infos = loadModificationReference(modificationEntity);
         }
-        return modificationEntity.toModificationInfos();
+        return infos;
     }
 
     @Transactional(readOnly = true)
