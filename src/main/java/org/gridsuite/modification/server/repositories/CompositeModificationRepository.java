@@ -35,7 +35,7 @@ public interface CompositeModificationRepository extends JpaRepository<Composite
     }
 
     @SneakyThrows
-    default void loadCompositeModification(ModificationInfos modificationInfos) {
+    default void generateModificationMessage(ModificationInfos modificationInfos) {
         if (modificationInfos.getMessageType() == null) {
             modificationInfos.setMessageType(modificationInfos.getType().name());
         }

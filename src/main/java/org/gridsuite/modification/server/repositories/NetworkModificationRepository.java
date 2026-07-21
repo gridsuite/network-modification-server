@@ -505,7 +505,7 @@ public class NetworkModificationRepository {
             ModificationInfos refInfos = toModificationsInfosOptimized(referencedEntity);
 
             if (refInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
-                composite.getModificationsInfos().forEach(compositeModificationRepository::loadCompositeModification);
+                composite.getModificationsInfos().forEach(compositeModificationRepository::generateModificationMessage);
             }
             modificationReferenceInfos.setReferenceInfos(refInfos);
             return modificationReferenceInfos;

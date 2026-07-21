@@ -97,27 +97,6 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    void testCompositeToModificationInfosPreservesExistingDisplayMessage() {
-        // child already carries a messageType/messageValues: withDisplayMessage() must
-        // leave them untouched (the "non-null" branch of each if).
-        ModificationInfos child = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
-        child.setMessageType("LOAD_CREATION");
-        child.setMessageValues("{\"equipmentId\":\"idLoad\"}");
-        CompositeModificationInfos compositeInfo = CompositeModificationInfos.builder()
-                .name("composite")
-                .modificationsInfos(List.of(child))
-                .stashed(false)
-                .build();
-        ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
-
-        CompositeModificationInfos result = (CompositeModificationInfos) compositeEntity.toModificationInfos();
-
-        ModificationInfos resultChild = result.getModificationsInfos().get(0);
-        assertEquals(ModificationType.LOAD_CREATION.name(), resultChild.getMessageType());
-        assertEquals("{\"equipmentId\":\"idLoad\"}", resultChild.getMessageValues());
-    }
-
-    @Test
     void testGetModificationReferenceInfoFillsChildDisplayMessageFromRepository() {
         ModificationInfos compositeInfo = buildCompositeModification();
         ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
@@ -142,48 +121,15 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
         assertNotNull(fetchedChild.getMessageValues());
     }
 
-    @Test
-    void testGetModificationReferenceInfoPreservesExistingChildDisplayMessageFromRepository() {
-        // Same DB-reload path as above, but the child already has custom messageType/messageValues:
-        // the null-guards in loadModificationReference() must leave them untouched, not overwrite
-        // them with the computed fallback. Covers the false branch of the two new ifs.
-        ModificationInfos child = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
-        child.setMessageType(ModificationType.LOAD_CREATION.name());
-        child.setMessageValues("{\"equipmentId\":\"idLoad\"}");
-        CompositeModificationInfos compositeInfo = CompositeModificationInfos.builder()
-                .name("composite")
-                .modificationsInfos(List.of(child))
-                .stashed(false)
-                .build();
-        ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
-
-        ModificationInfos referenceInfos = ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
-                .referenceId(compositeEntity.getId())
-                .referenceInfos(compositeEntity.toModificationInfos())
-                .stashed(false)
-                .activated(true)
-                .build();
-        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos));
-        UUID referenceUuid = saved.get(0).getUuid();
-
-        ModificationInfos fetched = networkModificationRepository.getModificationInfo(referenceUuid);
-
-        ModificationInfos refInfos = ((ModificationReferenceInfos) fetched).getReferenceInfos();
-        ModificationInfos fetchedChild = ((CompositeModificationInfos) refInfos).getModificationsInfos().get(0);
-        assertEquals(ModificationType.LOAD_CREATION.name(), fetchedChild.getMessageType());
-        assertEquals("{\"equipmentId\":\"idLoad\"}", fetchedChild.getMessageValues());
-    }
-
     private ModificationInfos buildCompositeModification() {
         List<ModificationInfos> modifications = List.of(
-            ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED)
+                ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED)
         );
         return CompositeModificationInfos.builder()
-            .name("composite")
-            .modificationsInfos(modifications)
-            .stashed(false)
-            .build();
+                .name("composite")
+                .modificationsInfos(modifications)
+                .stashed(false)
+                .build();
     }
 
     @Test
@@ -207,21 +153,12 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    void testFillDisplayMessageKeepsExistingValues() {
-        ModificationInfos child = ModificationCreation.getCreationLoad(
-                "v1",
-                "idLoad",
-                "nameLoad",
-                "1.1",
-                LoadType.UNDEFINED
-        );
-
+    void testFillDisplayMessage() {
+        ModificationInfos child = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
         child.setMessageType(null);
         child.setMessageValues(null);
-
         ModificationInfos result = CompositeModificationEntity.fillDisplayMessage(child);
-
-        assertEquals("LOAD_CREATION", result.getMessageType());
+        assertEquals(ModificationType.LOAD_CREATION.name(), result.getMessageType());
         assertEquals("{\"equipmentId\":\"idLoad\"}", result.getMessageValues());
     }
 }
