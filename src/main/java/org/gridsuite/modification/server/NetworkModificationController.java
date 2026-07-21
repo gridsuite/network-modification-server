@@ -87,7 +87,10 @@ public class NetworkModificationController {
                                                                         defaultValue = "false") Boolean stashed) {
         return ResponseEntity.ok().body(networkModificationService.getNetworkModificationsCount(groupUuid, stashed));
     }
-
+  
+    /**
+     * @return a mapping of the duplicated group's modifications' UUIDs to the new group's modifications' UUIDs, including those contained inside composites
+     */
     @PostMapping(value = "/groups/{sourceGroupUuid}/duplicate")
     @Operation(summary = "Create a modification group based on another group")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group and its modifications have been duplicated")})
