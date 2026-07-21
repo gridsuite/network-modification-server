@@ -498,9 +498,9 @@ class CompositeControllerTest {
 
         // Move the first sub-modification to the end (no beforeUuid = append)
         // was [0,1,2] → [1,2,0]
-        mockMvc.perform(put("/v1/groups/{groupUuid}", compositeUuid)
+        mockMvc.perform(put("/v1/containers/{targetContainerId}", compositeUuid)
                         .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("originGroupUuid", compositeUuid.toString())
+                        .queryParam("sourceContainerId", compositeUuid.toString())
                         .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
                         .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(subUuids.getFirst()), List.of())))
@@ -519,9 +519,9 @@ class CompositeControllerTest {
 
         // Move the last sub-modification before the first using beforeUuid
         // current [1,2,0] → move 0 before 1 → [0,1,2]
-        mockMvc.perform(put("/v1/groups/{groupUuid}", compositeUuid)
+        mockMvc.perform(put("/v1/containers/{targetContainerId}", compositeUuid)
                         .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("originGroupUuid", compositeUuid.toString())
+                        .queryParam("sourceContainerId", compositeUuid.toString())
                         .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
                         .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .queryParam("before", orderAfterFirst.get(0).toString())
@@ -569,9 +569,9 @@ class CompositeControllerTest {
 
         // Move first sub-modification from composite to root level (no targetCompositeUuid)
         UUID movingUuid = actualSubUuids.getFirst();
-        mockMvc.perform(put("/v1/groups/{groupUuid}", TEST_GROUP_ID)
+        mockMvc.perform(put("/v1/containers/{targetContainerId}", TEST_GROUP_ID)
                         .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("originGroupUuid", compositeUuid.toString())
+                        .queryParam("sourceContainerId", compositeUuid.toString())
                         .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
                         .queryParam("targetContainerType", ModificationContainerType.GROUP.name())
                         .queryParam("build", "false")
@@ -793,9 +793,9 @@ class CompositeControllerTest {
         int rootSizeBefore = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size();
 
         // Move root-level modification into the composite (origin = root group), append at end
-        mockMvc.perform(put("/v1/groups/{groupUuid}", compositeUuid)
+        mockMvc.perform(put("/v1/containers/{targetContainerId}", compositeUuid)
                         .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("originGroupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("sourceContainerId", TEST_GROUP_ID.toString())
                         .queryParam("sourceContainerType", ModificationContainerType.GROUP.name())
                         .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(rootModUuid), List.of())))
@@ -874,9 +874,9 @@ class CompositeControllerTest {
                 .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
 
         // Case 1: direct child — move composite1 into composite2 (direct child of composite1)
-        mockMvc.perform(put("/v1/groups/{groupUuid}", actualComposite2Uuid)
+        mockMvc.perform(put("/v1/containers/{targetContainerId}", actualComposite2Uuid)
                         .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("originGroupUuid", composite0Uuid.toString())
+                        .queryParam("sourceContainerId", composite0Uuid.toString())
                         .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
                         .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
@@ -884,9 +884,9 @@ class CompositeControllerTest {
                 .andExpect(status().is5xxServerError());
 
         // Case 2: recursive — move composite1 into composite3 (grandchild of composite1)
-        mockMvc.perform(put("/v1/groups/{groupUuid}", actualComposite3Uuid)
+        mockMvc.perform(put("/v1/containers/{targetContainerId}", actualComposite3Uuid)
                         .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("originGroupUuid", composite0Uuid.toString())
+                        .queryParam("sourceContainerId", composite0Uuid.toString())
                         .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
                         .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
@@ -894,9 +894,9 @@ class CompositeControllerTest {
                 .andExpect(status().is5xxServerError());
 
         // Case 3: self — move composite1 into itself
-        mockMvc.perform(put("/v1/groups/{groupUuid}", actualComposite1Uuid)
+        mockMvc.perform(put("/v1/containers/{targetContainerId}", actualComposite1Uuid)
                         .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("originGroupUuid", composite0Uuid.toString())
+                        .queryParam("sourceContainerId", composite0Uuid.toString())
                         .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
                         .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))

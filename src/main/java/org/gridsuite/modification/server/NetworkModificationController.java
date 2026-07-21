@@ -95,16 +95,16 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid));
     }
 
-    @PutMapping(value = "/groups/{groupUuid}", consumes = MediaType.APPLICATION_JSON_VALUE,
+    @PutMapping(value = "/containers/{targetContainerId}", consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Move or copy modifications between containers (groups or composites)")
     @ApiResponse(responseCode = "200", description = "The container has been updated.")
     public CompletableFuture<ResponseEntity<NetworkModificationsResult>> handleNetworkModifications(
-            @Parameter(description = "target container UUID") @PathVariable("groupUuid") UUID targetContainerId,
+            @Parameter(description = "target container UUID") @PathVariable("targetContainerId") UUID targetContainerId,
             @Parameter(description = "target container type (required for MOVE only)") @RequestParam(value = "targetContainerType", required = false) ModificationContainerType targetContainerType,
             @Parameter(description = "action type", required = true) @RequestParam(value = "action") ActionType action,
             @Parameter(description = "insert before this modification (MOVE only, empty = at end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
-            @Parameter(description = "source container UUID (defaults to target for same-container moves)") @RequestParam(value = "originGroupUuid", required = false) UUID sourceContainerId,
+            @Parameter(description = "source container UUID (defaults to target for same-container moves)") @RequestParam(value = "sourceContainerId", required = false) UUID sourceContainerId,
             @Parameter(description = "source container type (defaults to target's type for same-container moves)")
                 @RequestParam(value = "sourceContainerType", required = false) ModificationContainerType sourceContainerType,
             @Parameter(description = "modifications can be applied (default true; ignored for COMPOSITE targets)")
@@ -123,7 +123,7 @@ public class NetworkModificationController {
                 }
                 yield networkModificationService.moveModifications(
                         sourceContainerId == null ? targetContainerId : sourceContainerId,
-                        sourceContainerType == null ? targetContainerType : sourceContainerType,
+                        sourceContainerType,
                         targetContainerId,
                         targetContainerType,
                         beforeModificationUuid,
