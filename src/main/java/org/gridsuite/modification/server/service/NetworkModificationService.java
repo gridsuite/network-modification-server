@@ -86,7 +86,7 @@ public class NetworkModificationService {
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
     static final String DELETED_EQUIPMENT_IDS = "deletedEquipmentIds.fullascii";
-    static final String DIFFERENT_SIZES_ERROR_MESSAGE =
+    static final String MODIFICATION_LIST_SIZE_MISMATCH_ERROR =
             "Error while mapping two modifications list with each other : both lists have different sizes";
     private final ModificationRepository modificationRepository;
     private static final int PAGE_MAX_SIZE = 500;
@@ -461,23 +461,28 @@ public class NetworkModificationService {
         }
     }
 
+    private List<ModificationInfos> getNestedModifications(ModificationInfos modificationInfos) {
+        return modificationInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null
+                ? composite.getModificationsInfos()
+                : List.of();
+    }
+
     /**
      * recursively map the uuids from two lists of modifications, including those inside the composite modifications
      */
-    static void mapUuidsFromTwoModificationsLists(
+    void mapUuidsFromTwoModificationsLists(
             List<ModificationInfos> modificationsList1,
             List<ModificationInfos> modificationsList2,
             Map<UUID, UUID> modificationsMapping) {
         if (modificationsList1.size() != modificationsList2.size()) {
-            throw new IllegalArgumentException(DIFFERENT_SIZES_ERROR_MESSAGE);
+            throw new IllegalArgumentException(MODIFICATION_LIST_SIZE_MISMATCH_ERROR);
         }
         for (int i = 0; i < modificationsList1.size(); i++) {
             modificationsMapping.put(modificationsList1.get(i).getUuid(), modificationsList2.get(i).getUuid());
-            if (modificationsList1.get(i).getType() == ModificationType.COMPOSITE_MODIFICATION) {
-                CompositeModificationInfos compositeToDuplicateInfos = (CompositeModificationInfos) modificationsList1.get(i);
-                CompositeModificationInfos newComposite = (CompositeModificationInfos) modificationsList2.get(i);
-                mapUuidsFromTwoModificationsLists(compositeToDuplicateInfos.getModificationsInfos(), newComposite.getModificationsInfos(), modificationsMapping);
-            }
+            mapUuidsFromTwoModificationsLists(
+                    getNestedModifications(modificationsList1.get(i)),
+                    getNestedModifications(modificationsList2.get(i)),
+                    modificationsMapping);
         }
     }
 

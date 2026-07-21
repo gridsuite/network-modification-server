@@ -1,20 +1,35 @@
+/**
+ * Copyright (c) 2026, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package org.gridsuite.modification.server.service;
 
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.service.NetworkModificationService.DIFFERENT_SIZES_ERROR_MESSAGE;
-import static org.gridsuite.modification.server.service.NetworkModificationService.mapUuidsFromTwoModificationsLists;
+import static org.gridsuite.modification.server.service.NetworkModificationService.MODIFICATION_LIST_SIZE_MISMATCH_ERROR;
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
+ */
+@SpringBootTest
 class NetworkModificationServiceTest {
+
+    @Autowired
+    private NetworkModificationService networkModificationService;
+
     @Test
     void shouldMapUuidsFromTwoModificationsLists() {
         UUID sourceModificationUuid1 = UUID.randomUUID();
@@ -33,7 +48,7 @@ class NetworkModificationServiceTest {
 
         Map<UUID, UUID> modificationsMapping = new HashMap<>();
 
-        mapUuidsFromTwoModificationsLists(sourceModifications, duplicatedModifications, modificationsMapping);
+        networkModificationService.mapUuidsFromTwoModificationsLists(sourceModifications, duplicatedModifications, modificationsMapping);
 
         assertEquals(2, modificationsMapping.size());
         assertEquals(duplicatedModificationUuid1, modificationsMapping.get(sourceModificationUuid1));
@@ -68,7 +83,7 @@ class NetworkModificationServiceTest {
 
         Map<UUID, UUID> modificationsMapping = new HashMap<>();
 
-        mapUuidsFromTwoModificationsLists(
+        networkModificationService.mapUuidsFromTwoModificationsLists(
                 List.of(sourceComposite),
                 List.of(duplicatedComposite),
                 modificationsMapping
@@ -93,13 +108,13 @@ class NetworkModificationServiceTest {
         Map<UUID, UUID> modificationsMapping = new HashMap<>();
         IllegalArgumentException exception = assertThrowsExactly(
                 IllegalArgumentException.class,
-                () -> mapUuidsFromTwoModificationsLists(
+                () -> networkModificationService.mapUuidsFromTwoModificationsLists(
                         sourceModifications,
                         duplicatedModifications,
                         modificationsMapping
                 )
         );
-        assertEquals(DIFFERENT_SIZES_ERROR_MESSAGE, exception.getMessage());
+        assertEquals(MODIFICATION_LIST_SIZE_MISMATCH_ERROR, exception.getMessage());
     }
 
     @Test
@@ -123,13 +138,13 @@ class NetworkModificationServiceTest {
         Map<UUID, UUID> modificationsMapping = new HashMap<>();
         IllegalArgumentException exception = assertThrowsExactly(
                 IllegalArgumentException.class,
-                () -> mapUuidsFromTwoModificationsLists(
+                () -> networkModificationService.mapUuidsFromTwoModificationsLists(
                         List.of(sourceComposite),
                         List.of(duplicatedComposite),
                         modificationsMapping
                 )
         );
-        assertEquals(DIFFERENT_SIZES_ERROR_MESSAGE, exception.getMessage());
+        assertEquals(MODIFICATION_LIST_SIZE_MISMATCH_ERROR, exception.getMessage());
     }
 
     private static LoadModificationInfos dummyModification(UUID uuid) {
