@@ -628,7 +628,7 @@ class ModificationRepositoryTest {
         movedModifications = networkModificationRepository.moveModifications(ModificationContainerType.GROUP, TEST_GROUP_ID_2,
                 ModificationContainerType.GROUP, TEST_GROUP_ID_3, uuidsToMove, null);
         assertEquals(uuidsToMove.size(), movedModifications.size());
-        assertRequestsCount(4, 2, 1, 0);
+        assertRequestsCount(5, 2, 1, 0);
 
         modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
         var modification3 = networkModificationRepository.getModifications(TEST_GROUP_ID_3, true, true);

@@ -408,41 +408,15 @@ public class NetworkModificationService {
 
     public CompletableFuture<NetworkModificationsResult> moveModifications(
             @NonNull UUID sourceContainerId,
+            @NonNull ModificationContainerType sourceType,
             @NonNull UUID targetContainerId,
+            @NonNull ModificationContainerType targetType,
             UUID beforeModificationUuid,
             @NonNull List<UUID> modificationUuids,
             @NonNull List<ModificationApplicationContext> applicationContexts,
             boolean canApply) {
-        ModificationContainerType sourceType = networkModificationRepository.getContainerTypeOrCreateGroup(sourceContainerId, true);
-        ModificationContainerType targetType = networkModificationRepository.getContainerTypeOrCreateGroup(targetContainerId, true);
-
-        // Find which selected UUIDs are composite modifications
-        Set<UUID> selectedCompositeUuids = modificationRepository.findExistingCompositeModificationIds(modificationUuids);
-
-        // Get all children of selected composites (to skip sub-modifications that move with their ancestor)
-        Set<UUID> childrenOfSelectedComposites = new HashSet<>(selectedCompositeUuids.isEmpty()
-                ? Set.of()
-                : new HashSet<>(networkModificationRepository.findAllChildrenUuids(new ArrayList<>(selectedCompositeUuids))));
-        childrenOfSelectedComposites.removeAll(selectedCompositeUuids);
-
-        // Sub-modifications: selected UUIDs that are not composite roots and not already covered by a selected ancestor
-        List<UUID> subModificationUuids = modificationUuids.stream()
-                .filter(uuid -> !childrenOfSelectedComposites.contains(uuid))
-                .toList();
-        for (UUID uuid : subModificationUuids) {
-            UUID parentCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(uuid);
-            if (parentCompositeUuid != null && !parentCompositeUuid.equals(sourceContainerId)) {
-                networkModificationRepository.moveModifications(
-                        ModificationContainerType.COMPOSITE, parentCompositeUuid,
-                        ModificationContainerType.GROUP, sourceContainerId,
-                        List.of(uuid), null);
-            }
-        }
-
-        List<ModificationInfos> modifications = networkModificationRepository.moveModifications(
-                sourceType, sourceContainerId,
-                targetType, targetContainerId,
-                modificationUuids, beforeModificationUuid);
+        List<ModificationInfos> modifications = networkModificationRepository.prepareAndMoveModifications(
+                sourceContainerId, sourceType, targetContainerId, targetType, beforeModificationUuid, modificationUuids);
 
         boolean shouldApply = canApply
                 && !sourceContainerId.equals(targetContainerId)

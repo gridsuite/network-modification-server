@@ -28,6 +28,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
+import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
@@ -884,7 +885,8 @@ class ModificationControllerTest {
         // swap modifications: move [1] before [0]
         List<UUID> movingModificationUuidList = List.of(modificationUuidList.get(1));
         String bodyJson = getJsonBody(movingModificationUuidList, NetworkCreation.VARIANT_ID);
-        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&before=" + modificationUuidList.get(0);
+        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&before=" + modificationUuidList.get(0) + "&sourceContainerType=" + ModificationContainerType.GROUP.name() +
+                "&targetContainerType=" + ModificationContainerType.GROUP.name();
         mockMvc.perform(put(url).content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -914,7 +916,8 @@ class ModificationControllerTest {
         // cut origin[0] and append to destination
         List<UUID> movingModificationUuidList = List.of(originSingleModification);
         String bodyJson = getJsonBody(movingModificationUuidList, NetworkCreation.VARIANT_ID);
-        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&originGroupUuid=" + TEST_GROUP2_ID + "&build=true";
+        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&originGroupUuid=" + TEST_GROUP2_ID + "&build=true&sourceContainerType=" + ModificationContainerType.GROUP.name() +
+                "&targetContainerType=" + ModificationContainerType.GROUP.name();
         MvcResult mvcResult = runRequestAsync(mockMvc, put(url).content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
         // incremental build: deletion impacts expected, all related to the moved load deletion (dealing with "s1" substation)
@@ -953,7 +956,8 @@ class ModificationControllerTest {
         // try to move an unexisting modification before [0]: no error, no change
         List<UUID> movingModificationUuidList = List.of(UUID.randomUUID());
         String bodyJson = getJsonBody(movingModificationUuidList, NetworkCreation.VARIANT_ID);
-        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&originGroupUuid=" + TEST_GROUP_ID + "&before=" + modificationUuidList.getFirst();
+        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&originGroupUuid=" + TEST_GROUP_ID + "&before=" + modificationUuidList.getFirst() + "&sourceContainerType="
+                + ModificationContainerType.GROUP.name() + "&targetContainerType=" + ModificationContainerType.GROUP.name();
 
         mockMvc.perform(put(url).content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -1871,7 +1875,8 @@ class ModificationControllerTest {
         UUID e3 = l.eSubs().get(2);
 
         MvcResult res = runRequestAsync(mockMvc,
-                put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&originGroupUuid=" + TEST_GROUP_ID)
+                put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&originGroupUuid=" + TEST_GROUP_ID + "&sourceContainerType=" + ModificationContainerType.GROUP.name() + "&targetContainerType="
+                        + ModificationContainerType.GROUP.name())
                         .content(getJsonBody(List.of(l.d(), e1, l.c()), NetworkCreation.VARIANT_ID))
                         .contentType(MediaType.APPLICATION_JSON),
                 status().isOk());
@@ -1900,7 +1905,8 @@ class ModificationControllerTest {
         UUID e3 = l.eSubs().get(2);
 
         runRequestAsync(mockMvc,
-                put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&originGroupUuid=" + TEST_GROUP2_ID)
+                put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&originGroupUuid=" + TEST_GROUP2_ID + "&sourceContainerType=" + ModificationContainerType.GROUP.name() + "&targetContainerType="
+                        + ModificationContainerType.GROUP.name())
                         .content(getJsonBody(List.of(l.d(), e1, l.c()), NetworkCreation.VARIANT_ID))
                         .contentType(MediaType.APPLICATION_JSON),
                 status().isOk());

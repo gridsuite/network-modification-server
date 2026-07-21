@@ -26,7 +26,7 @@ import java.util.List;
 @Entity
 @Table(name = "composite_modification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "composite_modification_id_fk_constraint"))
-public class CompositeModificationEntity extends ModificationEntity implements ModificationContainer {
+public class CompositeModificationEntity extends ModificationEntity {
 
     @Column(name = "name")
     @ColumnDefault("'My Composite'")
@@ -65,17 +65,14 @@ public class CompositeModificationEntity extends ModificationEntity implements M
                 .toList());
     }
 
-    @Override
     public List<ModificationEntity> getModifications() {
         return content.getModifications();
     }
 
-    @Override
     public void setModifications(List<ModificationEntity> newChildren) {
         content.setModifications(newChildren);
     }
 
-    @Override
     public void addModification(ModificationEntity child, int position) {
         content.addModification(child, position);
     }

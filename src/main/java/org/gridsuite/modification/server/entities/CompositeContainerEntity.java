@@ -10,8 +10,12 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gridsuite.modification.NetworkModificationException;
 
+import java.util.List;
 import java.util.UUID;
+
+import static org.gridsuite.modification.NetworkModificationException.Type.MOVE_MODIFICATION_ERROR;
 
 /**
  * @author Hugo Marcellin {@literal <hugo.marcelin at rte-france.com>}
@@ -27,5 +31,21 @@ public class CompositeContainerEntity extends AbstractModificationContainerEntit
 
     public CompositeContainerEntity(UUID id) {
         super(id, ModificationContainerType.COMPOSITE);
+    }
+
+    @Override
+    public void insertModifications(List<ModificationEntity> toInsert, UUID beforeModificationUuid) {
+        assertNoCycle(toInsert);
+        super.insertModifications(toInsert, beforeModificationUuid);
+    }
+
+    private void assertNoCycle(List<ModificationEntity> toInsert) {
+        for (ModificationEntity m : toInsert) {
+            if (m instanceof CompositeModificationEntity movingComposite
+                    && movingComposite.getContent().containsOrIsContainer(getId())) {
+                throw new NetworkModificationException(MOVE_MODIFICATION_ERROR,
+                        String.format("Moving composite (%s) into (%s) would create a cycle", m.getId(), getId()));
+            }
+        }
     }
 }

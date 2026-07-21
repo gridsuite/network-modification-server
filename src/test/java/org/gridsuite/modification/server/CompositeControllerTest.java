@@ -501,6 +501,8 @@ class CompositeControllerTest {
         mockMvc.perform(put("/v1/groups/{groupUuid}", compositeUuid)
                         .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", compositeUuid.toString())
+                        .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
+                        .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(subUuids.getFirst()), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -520,6 +522,8 @@ class CompositeControllerTest {
         mockMvc.perform(put("/v1/groups/{groupUuid}", compositeUuid)
                         .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", compositeUuid.toString())
+                        .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
+                        .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .queryParam("before", orderAfterFirst.get(0).toString())
                         .content(mapper.writeValueAsString(Pair.of(List.of(orderAfterFirst.get(2)), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -568,6 +572,8 @@ class CompositeControllerTest {
         mockMvc.perform(put("/v1/groups/{groupUuid}", TEST_GROUP_ID)
                         .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", compositeUuid.toString())
+                        .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
+                        .queryParam("targetContainerType", ModificationContainerType.GROUP.name())
                         .queryParam("build", "false")
                         .content(mapper.writeValueAsString(Pair.of(List.of(movingUuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -790,6 +796,8 @@ class CompositeControllerTest {
         mockMvc.perform(put("/v1/groups/{groupUuid}", compositeUuid)
                         .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("sourceContainerType", ModificationContainerType.GROUP.name())
+                        .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(rootModUuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -869,6 +877,8 @@ class CompositeControllerTest {
         mockMvc.perform(put("/v1/groups/{groupUuid}", actualComposite2Uuid)
                         .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", composite0Uuid.toString())
+                        .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
+                        .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError());
@@ -877,6 +887,8 @@ class CompositeControllerTest {
         mockMvc.perform(put("/v1/groups/{groupUuid}", actualComposite3Uuid)
                         .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", composite0Uuid.toString())
+                        .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
+                        .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError());
@@ -885,6 +897,8 @@ class CompositeControllerTest {
         mockMvc.perform(put("/v1/groups/{groupUuid}", actualComposite1Uuid)
                         .queryParam("action", ActionType.MOVE.name())
                         .queryParam("originGroupUuid", composite0Uuid.toString())
+                        .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
+                        .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError());

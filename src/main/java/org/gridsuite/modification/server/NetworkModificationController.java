@@ -15,12 +15,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
+import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.data.util.Pair;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -98,11 +101,14 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The container has been updated.")
     public CompletableFuture<ResponseEntity<NetworkModificationsResult>> handleNetworkModifications(
             @Parameter(description = "target container UUID") @PathVariable("groupUuid") UUID targetContainerId,
+            @Parameter(description = "target container type (required for MOVE only)") @RequestParam(value = "targetContainerType", required = false) ModificationContainerType targetContainerType,
             @Parameter(description = "action type", required = true) @RequestParam(value = "action") ActionType action,
             @Parameter(description = "insert before this modification (MOVE only, empty = at end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
             @Parameter(description = "source container UUID (defaults to target for same-container moves)") @RequestParam(value = "originGroupUuid", required = false) UUID sourceContainerId,
+            @Parameter(description = "source container type (defaults to target's type for same-container moves)")
+                @RequestParam(value = "sourceContainerType", required = false) ModificationContainerType sourceContainerType,
             @Parameter(description = "modifications can be applied (default true; ignored for COMPOSITE targets)")
-                @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
+            @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
             @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
         return switch (action) {
             case COPY -> networkModificationService.duplicateModifications(
@@ -110,14 +116,22 @@ public class NetworkModificationController {
                     modificationContextInfos.getFirst(),
                     modificationContextInfos.getSecond()
             ).thenApply(ResponseEntity.ok()::body);
-            case MOVE -> networkModificationService.moveModifications(
+            case MOVE -> {
+                if (targetContainerType == null || sourceContainerType == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "container types are required for MOVE");
+                }
+                yield networkModificationService.moveModifications(
                         sourceContainerId == null ? targetContainerId : sourceContainerId,
+                        sourceContainerType == null ? targetContainerType : sourceContainerType,
                         targetContainerId,
+                        targetContainerType,
                         beforeModificationUuid,
                         modificationContextInfos.getFirst(),
                         modificationContextInfos.getSecond(),
                         canApply
-            ).thenApply(ResponseEntity.ok()::body);
+                ).thenApply(ResponseEntity.ok()::body);
+            }
         };
     }
 
