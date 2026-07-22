@@ -67,6 +67,21 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     @Column(name = "stepUpTransformerX")
     private Double stepUpTransformerX;
 
+    @Column(name = "voltageRegulationOn")
+    private Boolean voltageRegulationOn;
+
+    @Column(name = "targetV")
+    private Double targetV;
+
+    @Column(name = "regulatingTerminalId")
+    private String regulatingTerminalId;
+
+    @Column(name = "regulatingTerminalType")
+    private String regulatingTerminalType;
+
+    @Column(name = "regulatingTerminalVlId")
+    private String regulatingTerminalVlId;
+
     public BatteryCreationEntity(@NonNull BatteryCreationInfos batteryCreationInfos) {
         super(batteryCreationInfos);
         assignAttributes(batteryCreationInfos);
@@ -91,6 +106,11 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
         this.droop = batteryCreationInfos.getDroop();
         this.directTransX = batteryCreationInfos.getDirectTransX();
         this.stepUpTransformerX = batteryCreationInfos.getStepUpTransformerX();
+        this.voltageRegulationOn = batteryCreationInfos.getVoltageRegulationOn();
+        this.targetV = batteryCreationInfos.getTargetV();
+        this.regulatingTerminalId = batteryCreationInfos.getRegulatingTerminalId();
+        this.regulatingTerminalType = batteryCreationInfos.getRegulatingTerminalType();
+        this.regulatingTerminalVlId = batteryCreationInfos.getRegulatingTerminalVlId();
     }
 
     @Override
@@ -128,6 +148,11 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .droop(getDroop())
                 .directTransX(getDirectTransX())
                 .stepUpTransformerX(getStepUpTransformerX())
+                .voltageRegulationOn(getVoltageRegulationOn())
+                .targetV(getTargetV())
+                .regulatingTerminalId(getRegulatingTerminalId())
+                .regulatingTerminalType(getRegulatingTerminalType())
+                .regulatingTerminalVlId(getRegulatingTerminalVlId())
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
