@@ -84,7 +84,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
               JOIN composite_container c ON c.id = m.container_id
              WHERE m.id = :uuid
             """, nativeQuery = true)
-    UUID findCompositeIdByContainedModificationId(@Param("uuid") UUID uuid);
+    UUID findCompositeContainerIdByModificationId(@Param("uuid") UUID uuid);
 
     @Query("""
           SELECT COUNT(m) FROM ModificationEntity m
