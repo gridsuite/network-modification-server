@@ -33,7 +33,10 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
     @Column(name = "type")
     private String type;
 
-    @OneToMany(mappedBy = "container", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @OneToMany(
+        mappedBy = "container",
+        // Remove is not here because we handle the deletion manually
+        cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @OrderBy("modificationsOrder asc")
     private final List<ModificationEntity> modifications = new ArrayList<>();
 

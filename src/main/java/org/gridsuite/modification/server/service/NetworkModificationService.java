@@ -287,7 +287,7 @@ public class NetworkModificationService {
     @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         for (UUID modificationUuid : modificationUuids) {
-            UUID parentCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(modificationUuid);
+            UUID parentCompositeUuid = modificationRepository.findCompositeContainerIdByModificationId(modificationUuid);
             if (parentCompositeUuid != null) {
                 networkModificationRepository.moveModifications(ModificationContainerType.COMPOSITE, parentCompositeUuid, ModificationContainerType.GROUP, groupUuid, List.of(modificationUuid), null);
             }
@@ -415,8 +415,8 @@ public class NetworkModificationService {
             @NonNull List<UUID> modificationUuids,
             @NonNull List<ModificationApplicationContext> applicationContexts,
             boolean canApply) {
-        List<ModificationInfos> modifications = networkModificationRepository.prepareAndMoveModifications(
-                sourceContainerId, sourceType, targetContainerId, targetType, beforeModificationUuid, modificationUuids);
+        List<ModificationInfos> modifications = networkModificationRepository.moveModificationsFromGroup(
+            sourceType, sourceContainerId, targetType, targetContainerId, modificationUuids, beforeModificationUuid);
 
         boolean shouldApply = canApply
                 && !sourceContainerId.equals(targetContainerId)
