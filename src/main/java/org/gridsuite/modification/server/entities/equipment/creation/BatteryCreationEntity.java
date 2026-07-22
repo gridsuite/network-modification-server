@@ -68,7 +68,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     private Double stepUpTransformerX;
 
     @Column(name = "voltageRegulationOn")
-    private boolean voltageRegulationOn;
+    private Boolean voltageRegulationOn;
 
     @Column(name = "targetV")
     private Double targetV;
@@ -106,7 +106,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
         this.droop = batteryCreationInfos.getDroop();
         this.directTransX = batteryCreationInfos.getDirectTransX();
         this.stepUpTransformerX = batteryCreationInfos.getStepUpTransformerX();
-        this.voltageRegulationOn = batteryCreationInfos.isVoltageRegulationOn();
+        this.voltageRegulationOn = batteryCreationInfos.getVoltageRegulationOn();
         this.targetV = batteryCreationInfos.getTargetV();
         this.regulatingTerminalId = batteryCreationInfos.getRegulatingTerminalId();
         this.regulatingTerminalType = batteryCreationInfos.getRegulatingTerminalType();
@@ -148,7 +148,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .droop(getDroop())
                 .directTransX(getDirectTransX())
                 .stepUpTransformerX(getStepUpTransformerX())
-                .voltageRegulationOn(isVoltageRegulationOn())
+                .voltageRegulationOn(getVoltageRegulationOn())
                 .targetV(getTargetV())
                 .regulatingTerminalId(getRegulatingTerminalId())
                 .regulatingTerminalType(getRegulatingTerminalType())
