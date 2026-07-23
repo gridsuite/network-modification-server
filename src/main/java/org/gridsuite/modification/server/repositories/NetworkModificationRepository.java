@@ -502,7 +502,12 @@ public class NetworkModificationRepository {
             ModificationEntity referencedEntity = modificationRepository.findAllByIdIn(List.of(referenceEntity.getReferenceId())).stream().findFirst()
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, referenceEntity.getReferenceId())));
             ModificationReferenceInfos modificationReferenceInfos = referenceEntity.toModificationInfos();
-            modificationReferenceInfos.setReferenceInfos(toModificationsInfosOptimized(referencedEntity));
+            ModificationInfos refInfos = toModificationsInfosOptimized(referencedEntity);
+
+            if (refInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
+                composite.getModificationsInfos().forEach(compositeModificationRepository::generateModificationMessage);
+            }
+            modificationReferenceInfos.setReferenceInfos(refInfos);
             return modificationReferenceInfos;
         } else {
             ModificationEntity referencedEntity = modificationRepository.findReferencedModificationMetadataByReferenceId(modificationEntity.getId());
