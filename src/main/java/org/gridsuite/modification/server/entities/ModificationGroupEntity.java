@@ -11,7 +11,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -49,10 +51,26 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
         }
     }
 
+    /**
+     * @return a mutable ArrayList of the modifications without those stashed
+     */
+    public List<ModificationEntity> getActiveModifications() {
+        return modifications.stream()
+                .filter(Objects::nonNull)
+                .filter(m -> !m.getStashed())
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    // adds the modifications to the group and reorders them
+    // BUT doesn't remove the previous modifications from the group. This has to be done manually because orphanRemoval is set to false.
+    // which means that you may affect a list of the active modifications here, the stashed modifications won't be affected
     public void setModifications(List<ModificationEntity> modifications) {
         this.modifications = modifications;
-        modifications.forEach(modification ->
-            modification.setGroup(this)
-        );
+        modifications.forEach(m -> m.setGroup(this));
+        // the unstashed modifications have to be reordered
+        List<ModificationEntity> unstashedModifications = getActiveModifications();
+        for (int i = 0; i < unstashedModifications.size(); i++) {
+            unstashedModifications.get(i).setModificationsOrder(i);
+        }
     }
 }

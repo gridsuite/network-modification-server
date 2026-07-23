@@ -49,9 +49,8 @@ public final class ApiUtils {
 
     public static void postGroups(MockMvc mockMvc, UUID originGroupUuid, UUID targetGroupUuid) throws Exception {
         mockMvc.perform(
-                post("/v1/groups")
+                post("/v1/groups/{uuid}/duplicate", originGroupUuid)
                     .param("groupUuid", targetGroupUuid.toString())
-                    .param("duplicateFrom", originGroupUuid.toString())
             )
             .andExpectAll(status().isOk());
     }

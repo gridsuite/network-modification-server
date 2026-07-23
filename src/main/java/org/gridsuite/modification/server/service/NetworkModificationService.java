@@ -27,6 +27,7 @@ import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
@@ -85,6 +86,8 @@ public class NetworkModificationService {
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
     static final String DELETED_EQUIPMENT_IDS = "deletedEquipmentIds.fullascii";
+    static final String MODIFICATION_LIST_SIZE_MISMATCH_ERROR =
+            "Error while mapping two modifications list with each other : both lists have different sizes";
     private final ModificationRepository modificationRepository;
     private static final int PAGE_MAX_SIZE = 500;
 
@@ -270,6 +273,11 @@ public class NetworkModificationService {
     }
 
     @Transactional
+    public Map<UUID, UUID> getReferences(@NonNull List<UUID> modificationUuids) {
+        return networkModificationRepository.getReferences(modificationUuids);
+    }
+
+    @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         for (UUID modificationUuid : modificationUuids) {
             UUID parentCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(modificationUuid);
@@ -433,15 +441,16 @@ public class NetworkModificationService {
                 groupUuid, sourceCompositeUuid, targetCompositeUuid, modificationUuid, beforeUuid);
     }
 
+    /**
+     * @return a mapping between the uuids of the duplicated modifications and the uuid of the new modifications
+     */
     public Map<UUID, UUID> duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
         try {
             List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
             List<ModificationInfos> newModifications = networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationToDuplicateInfos);
 
             Map<UUID, UUID> duplicateModificationMapping = new HashMap<>();
-            for (int i = 0; i < modificationToDuplicateInfos.size(); i++) {
-                duplicateModificationMapping.put(modificationToDuplicateInfos.get(i).getUuid(), newModifications.get(i).getUuid());
-            }
+            mapUuidsFromTwoModificationsLists(modificationToDuplicateInfos, newModifications, duplicateModificationMapping);
 
             return duplicateModificationMapping;
         } catch (NetworkModificationException e) {
@@ -449,6 +458,31 @@ public class NetworkModificationService {
                 return Map.of();
             }
             throw e;
+        }
+    }
+
+    private List<ModificationInfos> getNestedModifications(ModificationInfos modificationInfos) {
+        return modificationInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null
+                ? composite.getModificationsInfos()
+                : List.of();
+    }
+
+    /**
+     * recursively map the uuids from two lists of modifications, including those inside the composite modifications
+     */
+    void mapUuidsFromTwoModificationsLists(
+            List<ModificationInfos> modificationsList1,
+            List<ModificationInfos> modificationsList2,
+            Map<UUID, UUID> modificationsMapping) {
+        if (modificationsList1.size() != modificationsList2.size()) {
+            throw new IllegalArgumentException(MODIFICATION_LIST_SIZE_MISMATCH_ERROR);
+        }
+        for (int i = 0; i < modificationsList1.size(); i++) {
+            modificationsMapping.put(modificationsList1.get(i).getUuid(), modificationsList2.get(i).getUuid());
+            mapUuidsFromTwoModificationsLists(
+                    getNestedModifications(modificationsList1.get(i)),
+                    getNestedModifications(modificationsList2.get(i)),
+                    modificationsMapping);
         }
     }
 
@@ -487,8 +521,8 @@ public class NetworkModificationService {
      */
     public CompletableFuture<NetworkModificationsResult> splitCompositeModifications(
             @NonNull UUID targetGroupUuid,
-            @NonNull Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
-        List<UUID> compositesUuids = modificationContextInfos.getFirst().stream().map(Pair::getFirst).toList();
+            @NonNull Pair<List<CompositeInfos>, List<ModificationApplicationContext>> modificationContextInfos) {
+        List<UUID> compositesUuids = modificationContextInfos.getFirst().stream().map(CompositeInfos::id).toList();
         List<ModificationInfos> modifications = networkModificationRepository.extractModificationsFromCompositesAndSave(targetGroupUuid, compositesUuids);
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, modifications, modificationContextInfos.getSecond()).thenApply(result ->
@@ -497,7 +531,7 @@ public class NetworkModificationService {
 
     public CompletableFuture<NetworkModificationsResult> insertCompositeModifications(
             @NonNull UUID targetGroupUuid,
-            @NonNull Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
+            @NonNull Pair<List<CompositeInfos>, List<ModificationApplicationContext>> modificationContextInfos) {
         List<ModificationInfos> modifications = networkModificationRepository.insertCompositeModifications(
                 targetGroupUuid, modificationContextInfos.getFirst());
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
