@@ -281,10 +281,10 @@ public class NetworkModificationRepository {
         boolean sameContainer = sourceContainer.getId().equals(targetContainer.getId());
 
         if (sameContainer) {
-            return sourceContainer.moveModificationsWithin(modificationUuids, beforeModificationUuid);
+            return sourceContainer.moveModifications(modificationUuids, beforeModificationUuid);
         }
 
-        List<ModificationEntity> modificationsMoved = sourceContainer.extractModifications(modificationUuids);
+        List<ModificationEntity> modificationsMoved = sourceContainer.removeModifications(modificationUuids);
         if (modificationsMoved.isEmpty()) {
             return List.of();
         }
@@ -1110,7 +1110,7 @@ public class NetworkModificationRepository {
         newLeaf.setModifications(assembledModifications);
 
         if (targetGroup != null) {
-            List<ModificationEntity> mods = targetGroup.getActiveModifications();
+            List<ModificationEntity> mods = targetGroup.getNonStashedModifications();
             mods.add(targetIndex, newLeaf);
             targetGroup.setModifications(mods);
         } else if (targetComposite != null) {

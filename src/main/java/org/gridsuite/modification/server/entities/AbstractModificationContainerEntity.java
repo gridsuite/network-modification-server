@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.NetworkModificationException;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
@@ -53,76 +54,71 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
         return ModificationContainerType.COMPOSITE.name().equals(type);
     }
 
-    public boolean containsOrIsContainer(UUID targetId) {
-        return getId().equals(targetId)
-                || getModifications().stream().anyMatch(sub -> isOrContains(sub, targetId));
-    }
-
-    private boolean isOrContains(ModificationEntity sub, UUID targetId) {
-        if (sub.getId().equals(targetId)) {
-            return true;
-        }
-        return sub instanceof CompositeModificationEntity composite
-                && composite.getContent().containsOrIsContainer(targetId);
-    }
-
-    /** Active (non-stashed, non-null) modifications as a mutable working copy, in current order */
-    public List<ModificationEntity> getActiveModifications() {
+    public List<ModificationEntity> getNonStashedModifications() {
         return modifications.stream()
                 .filter(Objects::nonNull)
                 .filter(m -> !Boolean.TRUE.equals(m.getStashed()))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private int indexOf(List<ModificationEntity> view, UUID referenceUuid) {
-        for (int i = 0; i < view.size(); i++) {
-            if (referenceUuid.equals(view.get(i).getId())) {
+    private int indexOf(UUID referenceUuid) {
+        List<ModificationEntity> modifications = getNonStashedModifications();
+        for (int i = 0; i < modifications.size(); i++) {
+            if (referenceUuid.equals(modifications.get(i).getId())) {
                 return i;
             }
         }
         throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
-                String.format("Modification %s not found in target container %s", referenceUuid, getId()));
+            String.format("Modification %s not found in target container %s", referenceUuid, getId()));
     }
 
-    public void renumberActiveModificationsOnly() {
-        renumber(getActiveModifications());
+    private int getNextPositionOrder() {
+        return getNonStashedModifications().stream()
+            .mapToInt(ModificationEntity::getModificationsOrder)
+            .max()
+            .orElse(0) + 1;
     }
 
-    private void renumber(List<ModificationEntity> orderedActives) {
-        for (int i = 0; i < orderedActives.size(); i++) {
-            orderedActives.get(i).setContainer(this);
-            orderedActives.get(i).setModificationsOrder(i);
+    private int getPositionOrder(UUID beforeModificationUuid) {
+        return getNonStashedModifications().stream()
+            .filter(m -> m.getId().equals(beforeModificationUuid))
+            .mapToInt(ModificationEntity::getModificationsOrder)
+            .findFirst()
+            .getAsInt();
+    }
+
+    private void resetPositionsOrder() {
+        List<ModificationEntity> modifications = getNonStashedModifications();
+        for (int i = 0; i < modifications.size(); i++) {
+            modifications.get(i).setModificationsOrder(i);
         }
     }
 
-    private List<ModificationEntity> removeFrom(List<ModificationEntity> view, List<UUID> orderedIdsToRemove) {
-        Set<UUID> idsToRemove = new HashSet<>(orderedIdsToRemove);
-        Map<UUID, ModificationEntity> removedById = new HashMap<>();
-        view.removeIf(e -> idsToRemove.contains(e.getId()) && removedById.put(e.getId(), e) == null);
+    private List<ModificationEntity> getOrderedModifications(List<UUID> orderedIdsToRemove) {
+        Set<UUID> idsSetToRemove = new HashSet<>(orderedIdsToRemove);
+        Map<UUID, ModificationEntity> modificationsToBeRemoved = getNonStashedModifications().stream()
+            .filter(e -> e != null && idsSetToRemove.contains(e.getId()))
+            .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
 
         return orderedIdsToRemove.stream()
-                .map(removedById::get)
-                .filter(Objects::nonNull)
-                .toList();
+            .map(modificationsToBeRemoved::get)
+            .filter(Objects::nonNull)
+            .toList();
     }
 
-    public List<ModificationEntity> extractModifications(List<UUID> uuidsToExtract) {
-        List<ModificationEntity> actives = getActiveModifications();
-        List<ModificationEntity> extracted = removeFrom(actives, uuidsToExtract);
-        modifications.removeAll(extracted);
-        return extracted;
+    public List<ModificationEntity> removeModifications(List<UUID> uuidsToRemove) {
+        List<ModificationEntity> modificationsToBeRemoved = getOrderedModifications(uuidsToRemove);
+        modifications.removeAll(modificationsToBeRemoved);
+        return modificationsToBeRemoved;
     }
 
-    public List<ModificationEntity> moveModificationsWithin(List<UUID> uuidsToMove, UUID beforeModificationUuid) {
-        List<ModificationEntity> actives = getActiveModifications();
-        List<ModificationEntity> moved = removeFrom(actives, uuidsToMove);
-        if (moved.isEmpty()) {
+    public List<ModificationEntity> moveModifications(List<UUID> uuidsToMove, UUID beforeModificationUuid) {
+        List<ModificationEntity> modificationsToBeMoved = removeModifications(uuidsToMove);
+        if (modificationsToBeMoved.isEmpty()) {
             return List.of();
         }
-        int insertionIndex = beforeModificationUuid == null ? actives.size() : indexOf(actives, beforeModificationUuid);
-        actives.addAll(insertionIndex, moved);
-        renumber(actives);
-        return moved;
+        insertModifications(modificationsToBeMoved, beforeModificationUuid);
+        return modificationsToBeMoved;
     }
 
     public void addModification(ModificationEntity child, int modificationsOrder) {
@@ -132,10 +128,10 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
     }
 
     public void insertModifications(List<ModificationEntity> toInsert, UUID beforeModificationUuid) {
-        List<ModificationEntity> modifs = new ArrayList<>(modifications);
-        int insertionIndex = beforeModificationUuid == null ? modifs.size() : indexOf(modifs, beforeModificationUuid);
-        modifs.addAll(insertionIndex, toInsert);
-        setModifications(modifs);
+        int insertionIndex = beforeModificationUuid == null ? modifications.size() : indexOf(beforeModificationUuid);
+        List<ModificationEntity> modifications = getNonStashedModifications();
+        modifications.addAll(insertionIndex, toInsert);
+        setModifications(modifications);
     }
 
     public void setModifications(List<ModificationEntity> newChildren) {
@@ -145,6 +141,6 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
             child.setContainer(this);
             this.modifications.add(child);
         }
-        renumberActiveModificationsOnly();
+        resetPositionsOrder();
     }
 }
