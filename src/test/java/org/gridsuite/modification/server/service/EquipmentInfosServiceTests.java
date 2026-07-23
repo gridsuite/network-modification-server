@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.service;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
-import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.dto.SubstationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;

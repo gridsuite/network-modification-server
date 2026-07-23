@@ -11,8 +11,8 @@ import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.OperationalLimitsGroup;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -23,8 +23,8 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
+import static org.gridsuite.modification.error.NetworkModificationExceptionType.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;

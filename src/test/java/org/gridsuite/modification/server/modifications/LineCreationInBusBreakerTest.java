@@ -8,8 +8,8 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.BUS_NOT_FOUND;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
+import static org.gridsuite.modification.error.NetworkModificationExceptionType.BUS_NOT_FOUND;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;

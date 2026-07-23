@@ -20,12 +20,11 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.NetworkModificationServerException;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
@@ -54,8 +53,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.apache.commons.collections4.SetUtils.emptyIfNull;
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
+import static org.gridsuite.modification.error.NetworkModificationExceptionType.*;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
 
 /**
@@ -361,7 +359,7 @@ public class NetworkModificationService {
                 try {
                     modifications = networkModificationRepository.getActiveModifications(groupUuid, emptyIfNull(modificationsToExclude));
                 } catch (NetworkModificationException e) {
-                    if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+                    if (!e.getMessage().startsWith(MODIFICATION_GROUP_NOT_FOUND.getMessage())) { // May not exist
                         throw e;
                     }
                 }
@@ -454,7 +452,7 @@ public class NetworkModificationService {
 
             return duplicateModificationMapping;
         } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+            if (e.getMessage().startsWith(MODIFICATION_GROUP_NOT_FOUND.getMessage())) { // May not exist
                 return Map.of();
             }
             throw e;
@@ -508,7 +506,7 @@ public class NetworkModificationService {
     public CompletableFuture<NetworkModificationsResult> duplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids,
             @NonNull List<ModificationApplicationContext> applicationContexts) {
         if (originGroupUuid != null && !modificationsUuids.isEmpty()) { // Duplicate modifications from a group or from a list only
-            throw new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID);
+            throw new NetworkModificationException(MODIFICATION_ERROR, "Invalid argument for duplication");
         }
         List<ModificationInfos> duplicateModifications = networkModificationRepository.saveDuplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids);
         List<UUID> ids = duplicateModifications.stream().map(ModificationInfos::getUuid).toList();

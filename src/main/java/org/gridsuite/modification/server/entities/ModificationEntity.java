@@ -10,15 +10,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
-import static org.gridsuite.modification.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
+import static org.gridsuite.modification.error.NetworkModificationExceptionType.MISSING_MODIFICATION_DESCRIPTION;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -141,6 +141,9 @@ public class ModificationEntity {
                 Constructor<? extends ModificationEntity> constructor = entityClass.getConstructor(dto.getClass());
                 return constructor.newInstance(dto);
             } catch (Exception e) {
+                if (e.getCause() instanceof NetworkModificationException networkModificationException) {
+                    throw networkModificationException;
+                }
                 throw new RuntimeException("Failed to map DTO to Entity", e);
             }
         } else {

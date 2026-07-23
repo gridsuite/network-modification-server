@@ -9,9 +9,9 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.error.NetworkModificationExceptionType.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testEmptyImpacts;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
@@ -32,7 +32,6 @@ import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -160,9 +159,10 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
 
         String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().isBadRequest(),
-                content().string(new NetworkModificationException(EQUIPMENT_ATTRIBUTE_NAME_ERROR, "For switch status, the attribute name is only 'open'").getMessage()));
+            .andExpect(status().isInternalServerError())
+            .andExpect(result -> assertEquals(
+                new NetworkModificationException(EQUIPMENT_ATTRIBUTE_NAME_ERROR, "For switch status, the attribute name is only 'open'").getMessage(),
+                result.getResolvedException().getMessage()));
 
         // bad equipment attribute value
         switchStatusModificationInfos.setEquipmentAttributeName("open");
@@ -170,9 +170,10 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().isBadRequest(),
-                content().string(new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + Set.of(true, false)).getMessage()));
+            .andExpect(status().isInternalServerError())
+            .andExpect(result -> assertEquals(
+                new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + Set.of(true, false)).getMessage(),
+                result.getResolvedException().getMessage()));
     }
 
     @Override

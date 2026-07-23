@@ -14,11 +14,12 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.error.NetworkModificationException;
+import org.gridsuite.modification.error.NetworkModificationExceptionType;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -353,7 +354,7 @@ class CompositeControllerTest {
         assertEquals(1, groupModifications.size());
         assertEquals(modificationUuidList.getFirst(), groupModifications.getFirst().getUuid());
         // duplicate has been deleted
-        assertEquals("MODIFICATION_NOT_FOUND : " + returnedNewId, assertThrows(NetworkModificationException.class, ()
+        assertEquals(NetworkModificationExceptionType.MODIFICATION_NOT_FOUND.getMessage() + " : " + returnedNewId, assertThrows(NetworkModificationException.class, ()
                 -> networkModificationRepository.getModificationInfo(returnedNewId)).getMessage());
     }
 
@@ -444,7 +445,7 @@ class CompositeControllerTest {
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + nonExistentUuid + "/replace")
                         .param("name", "new name")
                         .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
