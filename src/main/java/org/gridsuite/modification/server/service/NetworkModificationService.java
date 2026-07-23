@@ -31,9 +31,11 @@ import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
+import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
+import org.gridsuite.modification.server.repositories.ModificationContainerRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.data.domain.PageRequest;
@@ -54,7 +56,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.apache.commons.collections4.SetUtils.emptyIfNull;
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
+import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
+import static org.gridsuite.modification.NetworkModificationException.Type.NETWORK_NOT_FOUND;
+import static org.gridsuite.modification.NetworkModificationException.Type.VARIANT_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
 
@@ -67,6 +72,7 @@ public class NetworkModificationService {
     private final NetworkStoreService networkStoreService;
 
     private final NetworkModificationRepository networkModificationRepository;
+    private final ModificationContainerRepository modificationContainerRepository;
 
     private final NetworkModificationApplicator modificationApplicator;
 
@@ -100,6 +106,7 @@ public class NetworkModificationService {
                                       ModificationApplicationInfosService applicationInfosService,
                                       ElasticsearchOperations elasticsearchOperations,
                                       ModificationRepository modificationRepository,
+                                      ModificationContainerRepository modificationContainerRepository,
                                       FilterService filterService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
@@ -110,6 +117,7 @@ public class NetworkModificationService {
         this.applicationInfosService = applicationInfosService;
         this.elasticsearchOperations = elasticsearchOperations;
         this.modificationRepository = modificationRepository;
+        this.modificationContainerRepository = modificationContainerRepository;
         this.filterService = filterService;
     }
 
@@ -233,6 +241,7 @@ public class NetworkModificationService {
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         deleteIndexedModificationGroup(List.of(groupUuid));
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
+        modificationContainerRepository.deleteById(groupUuid);
     }
 
     private void deleteIndexedModificationGroup(List<UUID> groupUuids) {
@@ -280,9 +289,9 @@ public class NetworkModificationService {
     @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         for (UUID modificationUuid : modificationUuids) {
-            UUID parentCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(modificationUuid);
+            UUID parentCompositeUuid = modificationRepository.findCompositeContainerIdByModificationId(modificationUuid);
             if (parentCompositeUuid != null) {
-                networkModificationRepository.moveSubModification(groupUuid, parentCompositeUuid, null, modificationUuid, null);
+                networkModificationRepository.moveModifications(ModificationContainerType.COMPOSITE, parentCompositeUuid, ModificationContainerType.GROUP, groupUuid, List.of(modificationUuid), null);
             }
         }
         networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
@@ -399,46 +408,31 @@ public class NetworkModificationService {
         }
     }
 
-    @Transactional
     public CompletableFuture<NetworkModificationsResult> moveModifications(
-            @NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid, UUID beforeModificationUuid, @NonNull List<UUID> modificationsToMoveUuids,
-            @NonNull List<ModificationApplicationContext> applicationContexts, boolean applyModifications) {
-        // Find which selected UUIDs are composite modifications
-        Set<UUID> selectedCompositeUuids = modificationRepository.findExistingCompositeModificationIds(modificationsToMoveUuids);
+            @NonNull UUID sourceContainerId,
+            @NonNull ModificationContainerType sourceType,
+            @NonNull UUID targetContainerId,
+            @NonNull ModificationContainerType targetType,
+            UUID beforeModificationUuid,
+            @NonNull List<UUID> modificationUuids,
+            @NonNull List<ModificationApplicationContext> applicationContexts,
+            boolean canApply) {
+        List<ModificationInfos> modifications = networkModificationRepository.moveModificationsFromGroup(
+            sourceType, sourceContainerId, targetType, targetContainerId, modificationUuids, beforeModificationUuid);
 
-        // Get all children of selected composites (to skip sub-modifications that move with their ancestor)
-        Set<UUID> childrenOfSelectedComposites = new HashSet<>(selectedCompositeUuids.isEmpty()
-                ? Set.of()
-                : new HashSet<>(networkModificationRepository.findAllChildrenUuids(new ArrayList<>(selectedCompositeUuids))));
-        childrenOfSelectedComposites.removeAll(selectedCompositeUuids);
+        boolean shouldApply = canApply
+                && !sourceContainerId.equals(targetContainerId)
+                && targetType == ModificationContainerType.GROUP
+                && !modifications.isEmpty();
 
-        // Sub-modifications: selected UUIDs that are not composite roots and not already covered by a selected ancestor
-        List<UUID> subModificationUuids = modificationsToMoveUuids.stream()
-                .filter(uuid -> !childrenOfSelectedComposites.contains(uuid))
-                .toList();
-        for (UUID uuid : subModificationUuids) {
-            UUID parentCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(uuid);
-            if (parentCompositeUuid != null) {
-                networkModificationRepository.moveSubModification(originGroupUuid, parentCompositeUuid, null, uuid, null);
-            }
-        }
-        List<ModificationInfos> modifications = networkModificationRepository.moveModifications(
-                destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
+        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = shouldApply
+                ? applyModifications(targetContainerId, modifications, applicationContexts)
+                : CompletableFuture.completedFuture(List.of());
 
-        boolean shouldApply = applyModifications && !modifications.isEmpty();
-        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult =
-                shouldApply ? applyModifications(destinationGroupUuid, modifications, applicationContexts) : CompletableFuture.completedFuture(List.of());
-        return futureResult.thenApply(result -> new NetworkModificationsResult(modifications.stream().map(ModificationInfos::getUuid).toList(), result));
-    }
-
-    public void moveSubModification(
-            @NonNull UUID groupUuid,
-            UUID sourceCompositeUuid,
-            UUID targetCompositeUuid,
-            @NonNull UUID modificationUuid,
-            UUID beforeUuid) {
-        networkModificationRepository.moveSubModification(
-                groupUuid, sourceCompositeUuid, targetCompositeUuid, modificationUuid, beforeUuid);
+        return futureResult.thenApply(result ->
+                new NetworkModificationsResult(
+                        modifications.stream().map(ModificationInfos::getUuid).toList(),
+                        result));
     }
 
     /**

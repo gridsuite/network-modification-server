@@ -15,6 +15,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -29,19 +30,19 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     //TODO This doesn't return a proper entity, it's actually just a DTO:
     //See https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#projections.dtos
     //TODO can we use the simpler interface based projections instead ? To avoid repeating the columns in @Query
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) FROM ModificationEntity m WHERE m.group.id = ?1 order "
-            + "by m.modificationsOrder")
-    List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) "
+            + "FROM ModificationEntity m WHERE m.container.id = ?1 order by m.modificationsOrder")
+    List<ModificationEntity> findAllBaseByContainerId(UUID containerId);
 
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) FROM ModificationEntity m WHERE m.group.id = ?1 order "
-            + "by m.modificationsOrder desc")
-    List<ModificationEntity> findAllBaseByGroupIdReverse(UUID uuid);
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) "
+            + "FROM ModificationEntity m WHERE m.container.id = ?1 order by m.modificationsOrder desc")
+    List<ModificationEntity> findAllBaseByContainerIdReverse(UUID containerId);
 
-    @Query(value = "SELECT m FROM ModificationEntity m WHERE m.group.id = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
-    List<ModificationEntity> findAllByGroupId(@Param("groupId") UUID groupId, @Param("stashed") Boolean stashed);
+    @Query(value = "SELECT m FROM ModificationEntity m WHERE m.container.id = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
+    List<ModificationEntity> findAllByContainerId(@Param("containerId") UUID containerId, @Param("stashed") Boolean stashed);
 
-    @Query(value = "SELECT m FROM ModificationEntity m WHERE m.group.id = ?1 AND m.stashed = false AND m.activated = true AND m.id NOT IN (?2) order by m.modificationsOrder")
-    List<ModificationEntity> findAllActiveModificationsByGroupId(UUID groupUuid, Set<UUID> excludedList);
+    @Query(value = "SELECT m FROM ModificationEntity m WHERE m.container.id = ?1 AND m.stashed = false AND m.activated = true AND m.id NOT IN (?2) order by m.modificationsOrder")
+    List<ModificationEntity> findAllActiveModificationsByContainerId(UUID containerId, Set<UUID> excludedList);
 
     @Query(value = "SELECT new ModificationEntity(m.id, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
     List<ModificationEntity> findMetadataIn(List<UUID> uuids);
@@ -65,40 +66,36 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modifications_modifications WHERE tabular_modifications_entity_id = :uuid ORDER BY modifications_order", nativeQuery = true)
     List<UUID> findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(UUID uuid);
 
-    @Query(value = """
-        SELECT CAST(sm.modification_id AS VARCHAR)
-        FROM composite_modification_sub_modifications sm
-        INNER JOIN modification m ON sm.modification_id = m.id
-        WHERE sm.id = :uuid
-        ORDER BY m.modifications_order
-        """, nativeQuery = true)
-    List<UUID> findModificationIdsByCompositeModificationId(UUID uuid);
+    // children of one / many containers (no type param — id disambiguates)
+    @Query("SELECT m FROM ModificationEntity m WHERE m.container.id = :containerId ORDER BY m.modificationsOrder ASC")
+    List<ModificationEntity> findAllByContainer(@Param("containerId") UUID containerId);
 
-    // return the uuid of the composite containing the modification sent as parameter
+    @Query("""
+          SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description)
+            FROM ModificationEntity m
+           WHERE m.container.id IN :containerIds
+           ORDER BY m.container.id, m.modificationsOrder ASC
+        """)
+    List<ModificationEntity> findAllByContainers(@Param("containerIds") Collection<UUID> containerIds);
+
     @Query(value = """
-        SELECT CAST(sm.id AS VARCHAR)
-        FROM composite_modification_sub_modifications sm
-        INNER JOIN modification m ON sm.modification_id = m.id
-        WHERE sm.modification_id = :uuid
-        ORDER BY m.modifications_order
-        """, nativeQuery = true)
-    UUID findCompositeIdByContainedModificationId(UUID uuid);
+            SELECT CAST(m.container_id AS VARCHAR)
+              FROM modification m
+              JOIN composite_container c ON c.id = m.container_id
+             WHERE m.id = :uuid
+            """, nativeQuery = true)
+    UUID findCompositeContainerIdByModificationId(@Param("uuid") UUID uuid);
+
+    @Query("""
+          SELECT COUNT(m) FROM ModificationEntity m
+          WHERE m.container.id = :containerId AND m.stashed = :stashed
+        """)
+    int countByContainerAndStashed(@Param("containerId") UUID containerId, @Param("stashed") boolean stashed);
 
     // return the referenced modification of a modification reference
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) " +
             "from ModificationEntity m WHERE m.id = (select r.referenceId from ModificationReferenceEntity r WHERE r.id = ?1)")
     ModificationEntity findReferencedModificationMetadataByReferenceId(UUID uuid);
-
-    @Query(value = """
-        SELECT CAST(sm.modification_id AS VARCHAR)
-        FROM composite_modification_sub_modifications sm
-        INNER JOIN modification m ON sm.modification_id = m.id
-        WHERE sm.id IN (?1)
-        ORDER BY m.modifications_order
-        """, nativeQuery = true)
-    List<UUID> findModificationIdsByCompositeModificationIdIn(List<UUID> uuids);
-
-    Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
 
     @Query(value = "SELECT cast(operational_limits_groups_id AS VARCHAR) FROM line_modification_operational_limits_groups WHERE branch_id IN ?1", nativeQuery = true)
     List<UUID> findLineModificationOpLimitsGroupsIdsByBranchIds(List<UUID> uuids);
@@ -111,33 +108,45 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     void deleteAllByIdIn(List<UUID> ids);
 
-    @Query(value = "SELECT DISTINCT cast(id AS VARCHAR) FROM composite_modification_sub_modifications WHERE id IN (?1)", nativeQuery = true)
-    Set<UUID> findExistingCompositeModificationIds(List<UUID> compositeIds);
+    // still just a PK existence probe, but on the leaf table
+    @Query("SELECT c.id FROM CompositeModificationEntity c WHERE c.id IN :ids")
+    Set<UUID> findExistingCompositeModificationIds(@Param("ids") List<UUID> ids);
 
-    @NativeQuery("WITH RECURSIVE ModificationHierarchy (id) AS ( " +
-        "  SELECT m0.id" +
-        "  FROM composite_modification_sub_modifications m0 " +
-        "  WHERE m0.id = :compositeUuid " +
-        "  UNION ALL " +
-        "  SELECT distinct m.modification_id" +
-        "  FROM composite_modification_sub_modifications m " +
-        "  INNER JOIN ModificationHierarchy mh ON m.id = mh.id " +
-        ") " +
-        "SELECT cast(m.id AS VARCHAR) FROM composite_modification m " +
-        "WHERE m.id IN (SELECT mh.id FROM ModificationHierarchy mh)")
-    List<UUID> findOnlyCompositeChildrenUuids(UUID compositeUuid);
+    /**
+     * Recursively returns all <em>composite</em> descendants of {@code compositeUuid}
+     * (i.e. only the composites in the subtree, leaves excluded).
+     */
+    @NativeQuery("""
+        WITH RECURSIVE descendants(id) AS (
+            SELECT m.id
+              FROM modification m
+             WHERE m.container_id = :compositeUuid
+            UNION ALL
+            SELECT m.id
+              FROM modification m
+              JOIN descendants d ON m.container_id = d.id
+        )
+        SELECT CAST(c.id AS VARCHAR)
+          FROM composite_modification c
+         WHERE c.id IN (SELECT id FROM descendants)
+        """)
+    List<UUID> findOnlyCompositeChildrenUuids(@Param("compositeUuid") UUID compositeUuid);
 
-    // Returns the composite uuid and all its children uuid recursively
-    @NativeQuery("WITH RECURSIVE ModificationHierarchy (modification_id, path) AS ( " +
-            "  SELECT cast(:compositeUuid AS VARCHAR), ARRAY[0] " +
-            "  UNION ALL " +
-            "  SELECT cast(sm.modification_id AS VARCHAR), mh.path || (m.modifications_order) " +
-            "  FROM composite_modification_sub_modifications sm " +
-            "  INNER JOIN modification m ON m.id = sm.modification_id " +
-            "  INNER JOIN ModificationHierarchy mh ON cast(sm.id AS VARCHAR) = mh.modification_id " +
-            ") " +
-            "SELECT modification_id FROM ModificationHierarchy ORDER BY path")
-    List<UUID> findAllChildrenUuids(UUID compositeUuid);
+    /**
+     * Returns the composite UUID followed by every descendant UUID (composites <em>and</em> leaves),
+     * ordered depth-first by {@code modifications_order} at each level.
+     */
+    @NativeQuery("""
+        WITH RECURSIVE hierarchy(id, path) AS (
+            SELECT CAST(:compositeUuid AS uuid), ARRAY[0]
+            UNION ALL
+            SELECT m.id, h.path || m.modifications_order
+              FROM modification m
+              JOIN hierarchy h ON m.container_id = h.id
+        )
+        SELECT CAST(id AS VARCHAR) FROM hierarchy ORDER BY path
+        """)
+    List<UUID> findAllChildrenUuids(@Param("compositeUuid") UUID compositeUuid);
 
     interface CompositeDepth {
         String getId();
@@ -145,20 +154,28 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         Integer getDepth();
     }
 
-    @NativeQuery("WITH RECURSIVE ModificationHierarchy (root_id, id, level) AS ( " +
-            "    SELECT m0.id, m0.modification_id, 1 " +
-            "    FROM composite_modification_sub_modifications m0 " +
-            "    INNER JOIN modification mod ON mod.id = m0.modification_id AND mod.stashed = false " +
-            "    WHERE m0.id IN (:compositeUuids) " +
-            "    UNION ALL " +
-            "    SELECT mh.root_id, m.modification_id, mh.level + 1 " +
-            "    FROM composite_modification_sub_modifications m " +
-            "    INNER JOIN modification mod ON mod.id = m.modification_id AND mod.stashed = false " +
-            "    INNER JOIN ModificationHierarchy mh ON m.id = mh.id " +
-            ") " +
-            "SELECT cast(root_id AS VARCHAR) AS id, MAX(level) AS depth FROM ModificationHierarchy GROUP BY root_id")
+    /**
+     * For each root composite in {@code compositeUuids}, returns the maximum depth of its
+     * (unstashed) descendant tree. Composites with no unstashed children do not appear in the result.
+     */
+    @NativeQuery("""
+        WITH RECURSIVE hierarchy(root_id, id, level) AS (
+            SELECT m.container_id, m.id, 1
+              FROM modification m
+             WHERE m.container_id IN (:compositeUuids)
+               AND m.stashed = false
+            UNION ALL
+            SELECT h.root_id, m.id, h.level + 1
+              FROM modification m
+              JOIN hierarchy h ON m.container_id = h.id
+             WHERE m.stashed = false
+        )
+        SELECT CAST(root_id AS VARCHAR) AS id, MAX(level) AS depth
+          FROM hierarchy
+         GROUP BY root_id
+        """)
     List<CompositeDepth> getCompositesMaxDepth(@Param("compositeUuids") List<UUID> compositeUuids);
 
-    @EntityGraph(attributePaths = {"modifications"}, type = EntityGraph.EntityGraphType.LOAD)
+    @EntityGraph(attributePaths = {"content.modifications"}, type = EntityGraph.EntityGraphType.LOAD)
     List<CompositeModificationEntity> findAllCompositesWithModificationsByIdIn(List<UUID> compositeUuids);
 }

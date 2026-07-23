@@ -66,14 +66,14 @@ public class ModificationApplicationInfosService {
 
     public void deleteAllByGroupUuidsAndNetworkUuid(List<UUID> groupUuids, UUID networkUuid) {
         Lists.partition(groupUuids, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).parallelStream().forEach(ids ->
-            modificationApplicationRepository.deleteAllByNetworkUuidAndModificationGroupIdIn(networkUuid, ids));
+            modificationApplicationRepository.deleteAllByNetworkUuidAndModificationContainerIdIn(networkUuid, ids));
         Lists.partition(groupUuids, partitionSizeForDeletion).parallelStream().forEach(ids ->
             modificationApplicationInfosRepository.deleteAllByNetworkUuidAndGroupUuidIn(networkUuid, ids));
     }
 
     public void deleteAllByGroupUuids(List<UUID> groupUuids) {
         Lists.partition(groupUuids, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).parallelStream()
-            .forEach(modificationApplicationRepository::deleteAllByModificationGroupIdIn);
+            .forEach(modificationApplicationRepository::deleteAllByModificationContainerIdIn);
         Lists.partition(groupUuids, partitionSizeForDeletion).parallelStream()
             .forEach(modificationApplicationInfosRepository::deleteAllByGroupUuidIn);
     }

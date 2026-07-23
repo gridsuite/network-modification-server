@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.LccConverterStationCreationInfos;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.gridsuite.modification.server.entities.equipment.creation.ShuntCompensatorCreationEmbeddable.fromEmbeddableShuntCompensatorCreation;
 import static org.gridsuite.modification.server.entities.equipment.creation.ShuntCompensatorCreationEmbeddable.toEmbeddableShuntCompensatorCreation;
@@ -30,10 +29,6 @@ import static org.gridsuite.modification.server.entities.equipment.creation.Shun
 @Table(name = "lccConverterStationCreation")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "lcc_converter_station_creation_id_fk_constraint"))
 public class LccConverterStationCreationEntity extends InjectionCreationEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
-    private UUID id;
 
     @Column
     private Float lossFactor;

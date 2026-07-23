@@ -1,8 +1,8 @@
 /*
-  Copyright (c) 2024, RTE (http://www.rte-france.com)
-  This Source Code Form is subject to the terms of the Mozilla Public
-  License, v. 2.0. If a copy of the MPL was not distributed with this
-  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server.entities;
 
@@ -15,7 +15,6 @@ import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,19 +25,16 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "composite_modification")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "composite_modification_id_fk_constraint"))
 public class CompositeModificationEntity extends ModificationEntity {
 
     @Column(name = "name")
     @ColumnDefault("'My Composite'")
     private String name;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "compositeModificationSubModifications",
-            joinColumns = @JoinColumn(name = "id"), foreignKey = @ForeignKey(name = "composite_modification_sub_modifications_id_fk"),
-            inverseJoinColumns = @JoinColumn(name = "modificationId"), inverseForeignKey = @ForeignKey(name = "modification_id_fk"))
-    @OrderBy("modificationsOrder asc")
-    private List<ModificationEntity> modifications = new ArrayList<>();
+    @OneToOne(cascade = CascadeType.ALL, optional = false, fetch = FetchType.LAZY)
+    @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "composite_modification_content_fk"))
+    private CompositeContainerEntity content;
 
     public CompositeModificationEntity(@NonNull CompositeModificationInfos compositeModificationInfos) {
         super(compositeModificationInfos);
@@ -47,33 +43,37 @@ public class CompositeModificationEntity extends ModificationEntity {
 
     @Override
     public CompositeModificationInfos toModificationInfos() {
-        List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).toList();
+        List<ModificationInfos> modificationsInfos = getModifications().stream()
+                .map(ModificationEntity::toModificationInfos)
+                .toList();
         return CompositeModificationInfos.builder()
                 .name(getName())
-                .activated(getActivated())
                 .description(getDescription())
                 .date(getDate())
+                .activated(getActivated())
                 .uuid(getId())
                 .stashed(getStashed())
                 .modificationsInfos(modificationsInfos)
                 .build();
     }
 
-    private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
-        this.setName(compositeModificationInfos.getName());
+    protected void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
+        this.name = compositeModificationInfos.getName();
+        this.content = new CompositeContainerEntity(getId());
         setModifications(compositeModificationInfos.getModificationsInfos().stream()
-            .map(ModificationEntity::fromDTO)
-            .toList());
+                .map(ModificationEntity::fromDTO)
+                .toList());
     }
 
-    public void setModifications(List<ModificationEntity> modifications) {
-        if (modifications == null) {
-            throw new IllegalArgumentException("Modifications list for a composite cannot be null");
-        }
-        this.modifications.clear();
-        this.modifications.addAll(modifications);
-        for (int i = 0; i < this.modifications.size(); i++) {
-            this.modifications.get(i).setModificationsOrder(i);
-        }
+    public List<ModificationEntity> getModifications() {
+        return content.getModifications();
+    }
+
+    public void setModifications(List<ModificationEntity> newChildren) {
+        content.setModifications(newChildren);
+    }
+
+    public void addModification(ModificationEntity child, int position) {
+        content.addModification(child, position);
     }
 }
