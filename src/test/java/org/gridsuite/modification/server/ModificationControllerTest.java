@@ -1820,7 +1820,7 @@ class ModificationControllerTest {
     /** Inserts a COPY of a standalone composite at the end of the group's root list. */
     private void insertCompositeIntoGroup(UUID groupId, UUID compositeUuid, String name) throws Exception {
         String body = TestUtils.getJsonBodyModificationCompositeInfos(
-                List.of(new CompositeInfos(compositeUuid, name, false)),
+                List.of(new CompositeInfos(compositeUuid, name, false, "description")),
                 TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         runRequestAsync(mockMvc,
                 put("/v1/network-composite-modifications/groups/" + groupId + "?action=INSERT")
