@@ -29,6 +29,7 @@ public interface CompositeModificationRepository extends JpaRepository<Composite
 
     @SneakyThrows
     default void renameCompositeModification(CompositeModificationEntity compositeEntity, String name) {
+        // TODO : handle the notification of renaming
         compositeEntity.setName(name);
         compositeEntity.setMessageValues(new ObjectMapper().writeValueAsString(compositeEntity.toModificationInfos().getMapMessageValues()));
     }

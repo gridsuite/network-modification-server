@@ -620,9 +620,50 @@ public class NetworkModificationRepository {
         } else {
             throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, "need to specify the group or give a list of UUIDs");
         }
+        // the deleted modifications may be inside a shared modification, including recursively
+        // this has to be checked in order to notify all the uses of that shared modification
+        List<CompositeModificationEntity> sharedCompositesReferencingDeleted = modifications.stream()
+                .map(mod -> getSharedCompositeContainer(mod.getId()))
+                .filter(Objects::nonNull)
+                .distinct().toList();
+        // send notification to all the shared composites referencing the deleted netmod
+        // TODO : sharedCompositesReferencingDeleted.forEach(uuid -> notifySharedComposite(uuid));
+        // must be sent to study-server -> directory-server (identifies all the uses) -> send to study-server as list -> study-server handles some and send the rest to netmod-server (deletion etc)
+        // SHOULD NOT be done here in the transactional
         int count = modifications.size();
         deleteModifications(modifications);
         return count;
+    }
+
+    /**
+     * @return the uuid of the shared modification which contains the modificationUuid if there is one, null otherwise
+     */
+    private CompositeModificationEntity getSharedCompositeContainer(@NonNull UUID modificationUuid) {
+        UUID topCompositeUuid = getTopCompositeContainingThisModification(modificationUuid);
+        if (topCompositeUuid != null) {
+            Optional<CompositeModificationEntity> compositeModificationEntity = compositeModificationRepository.findById(topCompositeUuid);
+            // TODO : if the modificationUuid is not from a groupUuid recursively through its composites it is probably part of a shared
+            // but the uuid of the suspected composite which is not part of a group should be checked with directory-server
+            if (compositeModificationEntity.isPresent() && compositeModificationEntity.get().getGroup() == null) {
+                return compositeModificationEntity.get();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return the top composite which contains this modificationUuid (recursively to the top). Null if there are none
+     */
+    private UUID getTopCompositeContainingThisModification(@NonNull UUID modificationUuid) {
+        UUID compositeUuid = modificationRepository.findCompositeIdByContainedModificationId(modificationUuid);
+        if (compositeUuid != null) {
+            UUID containerComposite = getTopCompositeContainingThisModification(compositeUuid);
+            return Objects.requireNonNullElse(containerComposite, compositeUuid);
+        }
+
+        // the modificationUuid is probably at the node root level (in a group)
+        return null;
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
