@@ -81,7 +81,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = """
             SELECT CAST(m.container_id AS VARCHAR)
               FROM modification m
-              JOIN composite_container c ON c.id = m.container_id
+              JOIN modification_container c ON c.type = 'COMPOSITE' AND c.id = m.container_id
              WHERE m.id = :uuid
             """, nativeQuery = true)
     UUID findCompositeContainerIdByModificationId(@Param("uuid") UUID uuid);

@@ -23,16 +23,14 @@ import static org.gridsuite.modification.NetworkModificationException.Type.MODIF
 @Getter
 @NoArgsConstructor
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING)
 @Table(name = "modification_container")
 public abstract class AbstractModificationContainerEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> {
 
     @Id
     @Column(name = "id")
     private UUID id;
-
-    @Column(name = "type")
-    private String type;
 
     @OneToMany(
         mappedBy = "container",
@@ -41,22 +39,23 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
     @OrderBy("modificationsOrder asc")
     private final List<ModificationEntity> modifications = new ArrayList<>();
 
+    public abstract String getType();
+
     // Return a copy to avoid external modification of the internal list
     public List<ModificationEntity> getModifications() {
         return modifications.stream().toList();
     }
 
-    protected AbstractModificationContainerEntity(UUID id, ModificationContainerType type) {
+    protected AbstractModificationContainerEntity(UUID id) {
         this.id = id;
-        this.type = type.name();
     }
 
     public boolean isGroup() {
-        return ModificationContainerType.GROUP.name().equals(type);
+        return ModificationContainerType.GROUP.name().equals(getType());
     }
 
     public boolean isComposite() {
-        return ModificationContainerType.COMPOSITE.name().equals(type);
+        return ModificationContainerType.COMPOSITE.name().equals(getType());
     }
 
     public List<ModificationEntity> getNonStashedModifications() {
@@ -69,9 +68,9 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
 
     private List<ModificationEntity> getModifications(boolean stashed) {
         return modifications.stream()
-                .filter(Objects::nonNull)
-                .filter(m -> stashed == m.getStashed())
-                .collect(Collectors.toCollection(ArrayList::new));
+            .filter(Objects::nonNull)
+            .filter(m -> stashed == m.getStashed())
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 
     private int indexOf(UUID referenceUuid) {

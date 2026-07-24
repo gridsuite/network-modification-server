@@ -6,13 +6,9 @@
  */
 package org.gridsuite.modification.server.entities;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.Table;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.gridsuite.modification.NetworkModificationException;
 
 import java.util.List;
@@ -23,16 +19,18 @@ import static org.gridsuite.modification.NetworkModificationException.Type.MOVE_
 /**
  * @author Hugo Marcellin {@literal <hugo.marcelin at rte-france.com>}
  */
-@Getter
-@Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "composite_container")
-@PrimaryKeyJoinColumn(name = "id", foreignKey = @ForeignKey(name = "composite_container_container_fk"))
+@DiscriminatorValue("COMPOSITE")
 public class CompositeContainerEntity extends AbstractModificationContainerEntity {
 
     public CompositeContainerEntity(UUID id) {
-        super(id, ModificationContainerType.COMPOSITE);
+        super(id);
+    }
+
+    @Override
+    public String getType() {
+        return ModificationContainerType.COMPOSITE.name();
     }
 
     @Override
