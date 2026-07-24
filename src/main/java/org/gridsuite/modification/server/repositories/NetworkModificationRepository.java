@@ -505,14 +505,23 @@ public class NetworkModificationRepository {
             modificationReferenceInfos.setReferenceInfos(toModificationsInfosOptimized(referencedEntity));
             return modificationReferenceInfos;
         } else {
+            // Metadata only: the entity comes from a projection which strips the subclass, so the reference
+            // attributes are not loaded. The referenced modification is fetched through the reference anyway,
+            // and its id is precisely the referenceId, which the clients need to identify the shared element.
             ModificationEntity referencedEntity = modificationRepository.findReferencedModificationMetadataByReferenceId(modificationEntity.getId());
             if (referencedEntity == null) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()));
             }
-            ModificationInfos modificationInfos = modificationEntity.toModificationInfos();
-            modificationInfos.setMessageType(referencedEntity.getMessageType());
-            modificationInfos.setMessageValues(referencedEntity.getMessageValues());
-            return modificationInfos;
+            return ModificationReferenceInfos.builder()
+                .uuid(modificationEntity.getId())
+                .date(modificationEntity.getDate())
+                .stashed(modificationEntity.getStashed())
+                .activated(modificationEntity.getActivated())
+                .description(modificationEntity.getDescription())
+                .messageType(referencedEntity.getMessageType())
+                .messageValues(referencedEntity.getMessageValues())
+                .referenceId(referencedEntity.getId())
+                .build();
         }
     }
 
