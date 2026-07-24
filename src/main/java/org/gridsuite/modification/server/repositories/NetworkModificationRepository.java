@@ -622,15 +622,15 @@ public class NetworkModificationRepository {
         List<ModificationEntity> modifications;
         if (groupUuid != null) {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-            Stream<ModificationEntity> modificationStream = getModificationEntityStream(groupUuid);
+            modifications = groupEntity.getModifications();
             if (uuids != null) {
-                modificationStream = modificationStream.filter(m -> uuids.contains(m.getId()));
+                modifications = groupEntity.removeModifications(uuids);
+            } else {
+                groupEntity.removeAllModifications();
             }
-            modifications = modificationStream.collect(Collectors.toList());
-            groupEntity.getModifications().removeAll(modifications); // No need to remove the group from the modification as we're going to delete it
         } else if (uuids != null) {
             modifications = modificationRepository.findAllById(uuids);
-            Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getContainerUuid() != null).findFirst();
+            Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getContainer() != null && m.getContainer().isGroup()).findFirst();
             if (optionalModificationWithGroup.isPresent()) {
                 throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, String.format("%s is owned by group %s",
                         optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getContainerUuid()));
@@ -844,13 +844,8 @@ public class NetworkModificationRepository {
     @Transactional
     public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         try {
-            ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-            List<ModificationEntity> modifications = getModificationEntityStream(groupUuid)
-                    .filter(Objects::nonNull)
-                    .filter(ModificationEntity::getStashed)
-                    .toList();
+            List<ModificationEntity> modifications = getModificationGroup(groupUuid).removeAllStashedModifications();
             if (!modifications.isEmpty()) {
-                groupEntity.getModifications().removeAll(modifications); // No need to remove the group from the modification as we're going to delete it
                 deleteModifications(modifications);
             }
         } catch (NetworkModificationException e) {

@@ -241,7 +241,6 @@ public class NetworkModificationService {
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         deleteIndexedModificationGroup(List.of(groupUuid));
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
-        modificationContainerRepository.deleteById(groupUuid);
     }
 
     private void deleteIndexedModificationGroup(List<UUID> groupUuids) {

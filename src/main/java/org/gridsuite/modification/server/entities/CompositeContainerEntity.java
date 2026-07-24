@@ -6,7 +6,10 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,7 +27,6 @@ import static org.gridsuite.modification.NetworkModificationException.Type.MOVE_
 @Setter
 @NoArgsConstructor
 @Entity
-@DiscriminatorValue("COMPOSITE")
 @Table(name = "composite_container")
 @PrimaryKeyJoinColumn(name = "id", foreignKey = @ForeignKey(name = "composite_container_container_fk"))
 public class CompositeContainerEntity extends AbstractModificationContainerEntity {
@@ -43,9 +45,9 @@ public class CompositeContainerEntity extends AbstractModificationContainerEntit
     private void assertNoCycle(List<ModificationEntity> childrenToInsert) {
         for (ModificationEntity m : childrenToInsert) {
             if (m instanceof CompositeModificationEntity childToInsert
-                    && childToInsert.getContent().containsOrIsContainer(getId())) {
+                && childToInsert.getContent().containsOrIsContainer(getId())) {
                 throw new NetworkModificationException(MOVE_MODIFICATION_ERROR,
-                        String.format("Moving composite (%s) into (%s) would create a cycle", m.getId(), getId()));
+                    String.format("Moving composite (%s) into (%s) would create a cycle", m.getId(), getId()));
             }
         }
     }

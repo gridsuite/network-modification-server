@@ -36,10 +36,15 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
 
     @OneToMany(
         mappedBy = "container",
-        // Remove is not here because we handle the deletion manually
+        // Remove is not here because we handle the deletion manually (optimization)
         cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @OrderBy("modificationsOrder asc")
     private final List<ModificationEntity> modifications = new ArrayList<>();
+
+    // Return a copy to avoid external modification of the internal list
+    public List<ModificationEntity> getModifications() {
+        return modifications.stream().toList();
+    }
 
     protected AbstractModificationContainerEntity(UUID id, ModificationContainerType type) {
         this.id = id;
@@ -55,9 +60,17 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
     }
 
     public List<ModificationEntity> getNonStashedModifications() {
+        return getModifications(false);
+    }
+
+    public List<ModificationEntity> getStashedModifications() {
+        return getModifications(true);
+    }
+
+    private List<ModificationEntity> getModifications(boolean stashed) {
         return modifications.stream()
                 .filter(Objects::nonNull)
-                .filter(m -> !Boolean.TRUE.equals(m.getStashed()))
+                .filter(m -> stashed == m.getStashed())
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -96,7 +109,7 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
 
     private List<ModificationEntity> getOrderedModifications(List<UUID> orderedIdsToRemove) {
         Set<UUID> idsSetToRemove = new HashSet<>(orderedIdsToRemove);
-        Map<UUID, ModificationEntity> modificationsToBeRemoved = getNonStashedModifications().stream()
+        Map<UUID, ModificationEntity> modificationsToBeRemoved = modifications.stream()
             .filter(e -> e != null && idsSetToRemove.contains(e.getId()))
             .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
 
@@ -104,6 +117,16 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
             .map(modificationsToBeRemoved::get)
             .filter(Objects::nonNull)
             .toList();
+    }
+
+    public void removeAllModifications() {
+        modifications.clear();
+    }
+
+    public List<ModificationEntity> removeAllStashedModifications() {
+        List<ModificationEntity> stashedModifications = getStashedModifications();
+        modifications.removeAll(stashedModifications);
+        return stashedModifications;
     }
 
     public List<ModificationEntity> removeModifications(List<UUID> uuidsToRemove) {
