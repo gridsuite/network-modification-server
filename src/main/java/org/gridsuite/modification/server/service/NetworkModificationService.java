@@ -27,10 +27,10 @@ import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
+import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -280,9 +280,12 @@ public class NetworkModificationService {
     @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         for (UUID modificationUuid : modificationUuids) {
-            UUID parentCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(modificationUuid);
+            UUID parentCompositeUuid = modificationRepository.findCompositeContainerIdByModificationId(modificationUuid);
             if (parentCompositeUuid != null) {
-                networkModificationRepository.moveSubModification(groupUuid, parentCompositeUuid, null, modificationUuid, null);
+                networkModificationRepository.moveModifications(
+                    new ModificationContainerInfos(parentCompositeUuid, ModificationContainerType.COMPOSITE),
+                    new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP),
+                    List.of(modificationUuid), null);
             }
         }
         networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
@@ -399,46 +402,29 @@ public class NetworkModificationService {
         }
     }
 
-    @Transactional
     public CompletableFuture<NetworkModificationsResult> moveModifications(
-            @NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid, UUID beforeModificationUuid, @NonNull List<UUID> modificationsToMoveUuids,
-            @NonNull List<ModificationApplicationContext> applicationContexts, boolean applyModifications) {
-        // Find which selected UUIDs are composite modifications
-        Set<UUID> selectedCompositeUuids = modificationRepository.findExistingCompositeModificationIds(modificationsToMoveUuids);
+            @NonNull ModificationContainerInfos sourceContainerInfos,
+            @NonNull ModificationContainerInfos targetContainerInfos,
+            UUID beforeModificationUuid,
+            @NonNull List<UUID> modificationUuids,
+            @NonNull List<ModificationApplicationContext> applicationContexts,
+            boolean canApply) {
+        List<ModificationInfos> modifications = networkModificationRepository.moveModificationsFromGroup(
+            sourceContainerInfos, targetContainerInfos, modificationUuids, beforeModificationUuid);
 
-        // Get all children of selected composites (to skip sub-modifications that move with their ancestor)
-        Set<UUID> childrenOfSelectedComposites = new HashSet<>(selectedCompositeUuids.isEmpty()
-                ? Set.of()
-                : new HashSet<>(networkModificationRepository.findAllChildrenUuids(new ArrayList<>(selectedCompositeUuids))));
-        childrenOfSelectedComposites.removeAll(selectedCompositeUuids);
+        boolean shouldApply = canApply
+                && !sourceContainerInfos.id().equals(targetContainerInfos.id())
+                && targetContainerInfos.type() == ModificationContainerType.GROUP
+                && !modifications.isEmpty();
 
-        // Sub-modifications: selected UUIDs that are not composite roots and not already covered by a selected ancestor
-        List<UUID> subModificationUuids = modificationsToMoveUuids.stream()
-                .filter(uuid -> !childrenOfSelectedComposites.contains(uuid))
-                .toList();
-        for (UUID uuid : subModificationUuids) {
-            UUID parentCompositeUuid = modificationRepository.findCompositeIdByContainedModificationId(uuid);
-            if (parentCompositeUuid != null) {
-                networkModificationRepository.moveSubModification(originGroupUuid, parentCompositeUuid, null, uuid, null);
-            }
-        }
-        List<ModificationInfos> modifications = networkModificationRepository.moveModifications(
-                destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
+        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = shouldApply
+                ? applyModifications(targetContainerInfos.id(), modifications, applicationContexts)
+                : CompletableFuture.completedFuture(List.of());
 
-        boolean shouldApply = applyModifications && !modifications.isEmpty();
-        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult =
-                shouldApply ? applyModifications(destinationGroupUuid, modifications, applicationContexts) : CompletableFuture.completedFuture(List.of());
-        return futureResult.thenApply(result -> new NetworkModificationsResult(modifications.stream().map(ModificationInfos::getUuid).toList(), result));
-    }
-
-    public void moveSubModification(
-            @NonNull UUID groupUuid,
-            UUID sourceCompositeUuid,
-            UUID targetCompositeUuid,
-            @NonNull UUID modificationUuid,
-            UUID beforeUuid) {
-        networkModificationRepository.moveSubModification(
-                groupUuid, sourceCompositeUuid, targetCompositeUuid, modificationUuid, beforeUuid);
+        return futureResult.thenApply(result ->
+                new NetworkModificationsResult(
+                        modifications.stream().map(ModificationInfos::getUuid).toList(),
+                        result));
     }
 
     /**
