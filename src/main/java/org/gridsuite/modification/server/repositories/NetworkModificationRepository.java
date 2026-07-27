@@ -900,19 +900,16 @@ public class NetworkModificationRepository {
     }
 
     private void deleteCompositeChildrenSubtree(List<CompositeModificationEntity> composites) {
+        if (composites.isEmpty()) {
+            return;
+        }
         // content id == composite id, so container ids ARE the composite ids
         List<UUID> containerIds = composites.stream().map(ModificationEntity::getId).toList();
-        List<ModificationEntity> descendants = new ArrayList<>();
-        while (!containerIds.isEmpty()) {
-            List<ModificationEntity> children = modificationRepository.findAllByContainers(containerIds);
-            descendants.addAll(children);
-            containerIds = children.stream()
-                    .filter(CompositeModificationEntity.class::isInstance)
-                    .map(ModificationEntity::getId)
-                    .toList();
-        }
-        if (!descendants.isEmpty()) {
-            deleteModifications(modificationRepository.findAllById(descendants.stream().map(ModificationEntity::getId).toList()));
+        List<UUID> childrenIds = modificationRepository.findAllByContainers(containerIds).stream()
+                .map(ModificationEntity::getId)
+                .toList();
+        if (!childrenIds.isEmpty()) {
+            deleteModifications(modificationRepository.findAllById(childrenIds));
         }
     }
 
@@ -1042,12 +1039,6 @@ public class NetworkModificationRepository {
                 String.format("Container %s is of type %s, expected type : %s", containerInfos.id(), containerEntity.getType(), containerInfos.type().name()));
         }
         return containerEntity;
-    }
-
-    private AbstractModificationContainerEntity getContainer(UUID id) {
-        return modificationContainerRepository.findById(id)
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
-                        String.format("No modification container found for id %s", id)));
     }
 
     public ModificationContainerType getContainerType(ModificationEntity m) {

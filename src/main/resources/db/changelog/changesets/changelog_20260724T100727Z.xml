@@ -16,7 +16,7 @@
             <column name="type" type="VARCHAR(31)" defaultValue="GROUP"/>
         </addColumn>
         <dropUniqueConstraint tableName="modification_container" constraintName="modification_groupPK"/>
-        <addUniqueConstraint tableName="modification_container" columnNames="id" constraintName="modification_containerPK"/>
+        <addPrimaryKey tableName="modification_container" columnNames="id" constraintName="modification_containerPK"/>
 
         <addForeignKeyConstraint baseTableName="modification" baseColumnNames="container_id" constraintName="container_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification_container" validate="true"/>
 
@@ -41,7 +41,8 @@
             );
         </sql>
 
-        <!-- drop composite_modification_sub_modifications -->
+        <!-- drop composite_modification_sub_modifications later for tmp backup purpose but drop FK to avoid conflicts -->
+        <dropAllForeignKeyConstraints baseTableName="composite_modification_sub_modifications" />
     </changeSet>
 </databaseChangeLog>
 
