@@ -76,7 +76,7 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
     private int indexOf(UUID referenceUuid) {
         for (int i = 0; i < modifications.size(); i++) {
             ModificationEntity modification = modifications.get(i);
-            if (!modification.getStashed() && referenceUuid.equals(modification.getId())) {
+            if (Boolean.FALSE.equals(modification.getStashed()) && referenceUuid.equals(modification.getId())) {
                 return i;
             }
         }

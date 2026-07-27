@@ -27,7 +27,6 @@ import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
@@ -35,7 +34,6 @@ import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
-import org.gridsuite.modification.server.repositories.ModificationContainerRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.data.domain.PageRequest;
@@ -56,10 +54,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.apache.commons.collections4.SetUtils.emptyIfNull;
-import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
-import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
-import static org.gridsuite.modification.NetworkModificationException.Type.NETWORK_NOT_FOUND;
-import static org.gridsuite.modification.NetworkModificationException.Type.VARIANT_NOT_FOUND;
+import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
 
@@ -72,7 +67,6 @@ public class NetworkModificationService {
     private final NetworkStoreService networkStoreService;
 
     private final NetworkModificationRepository networkModificationRepository;
-    private final ModificationContainerRepository modificationContainerRepository;
 
     private final NetworkModificationApplicator modificationApplicator;
 
@@ -106,7 +100,6 @@ public class NetworkModificationService {
                                       ModificationApplicationInfosService applicationInfosService,
                                       ElasticsearchOperations elasticsearchOperations,
                                       ModificationRepository modificationRepository,
-                                      ModificationContainerRepository modificationContainerRepository,
                                       FilterService filterService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
@@ -117,7 +110,6 @@ public class NetworkModificationService {
         this.applicationInfosService = applicationInfosService;
         this.elasticsearchOperations = elasticsearchOperations;
         this.modificationRepository = modificationRepository;
-        this.modificationContainerRepository = modificationContainerRepository;
         this.filterService = filterService;
     }
 
@@ -290,7 +282,10 @@ public class NetworkModificationService {
         for (UUID modificationUuid : modificationUuids) {
             UUID parentCompositeUuid = modificationRepository.findCompositeContainerIdByModificationId(modificationUuid);
             if (parentCompositeUuid != null) {
-                networkModificationRepository.moveModifications(ModificationContainerType.COMPOSITE, parentCompositeUuid, ModificationContainerType.GROUP, groupUuid, List.of(modificationUuid), null);
+                networkModificationRepository.moveModifications(
+                    new ModificationContainerInfos(parentCompositeUuid, ModificationContainerType.COMPOSITE),
+                    new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP),
+                    List.of(modificationUuid), null);
             }
         }
         networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
@@ -408,24 +403,22 @@ public class NetworkModificationService {
     }
 
     public CompletableFuture<NetworkModificationsResult> moveModifications(
-            @NonNull UUID sourceContainerId,
-            @NonNull ModificationContainerType sourceType,
-            @NonNull UUID targetContainerId,
-            @NonNull ModificationContainerType targetType,
+            @NonNull ModificationContainerInfos sourceContainerInfos,
+            @NonNull ModificationContainerInfos targetContainerInfos,
             UUID beforeModificationUuid,
             @NonNull List<UUID> modificationUuids,
             @NonNull List<ModificationApplicationContext> applicationContexts,
             boolean canApply) {
         List<ModificationInfos> modifications = networkModificationRepository.moveModificationsFromGroup(
-            sourceType, sourceContainerId, targetType, targetContainerId, modificationUuids, beforeModificationUuid);
+            sourceContainerInfos, targetContainerInfos, modificationUuids, beforeModificationUuid);
 
         boolean shouldApply = canApply
-                && !sourceContainerId.equals(targetContainerId)
-                && targetType == ModificationContainerType.GROUP
+                && !sourceContainerInfos.id().equals(targetContainerInfos.id())
+                && targetContainerInfos.type() == ModificationContainerType.GROUP
                 && !modifications.isEmpty();
 
         CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = shouldApply
-                ? applyModifications(targetContainerId, modifications, applicationContexts)
+                ? applyModifications(targetContainerInfos.id(), modifications, applicationContexts)
                 : CompletableFuture.completedFuture(List.of());
 
         return futureResult.thenApply(result ->

@@ -125,11 +125,10 @@ public class NetworkModificationController {
                             "container types are required for MOVE");
                 }
                 yield networkModificationService.moveModifications(
-                        sourceContainerId == null ? targetContainerId : sourceContainerId,
-                        sourceContainerType,
-                        targetContainerId,
-                        targetContainerType,
-                        beforeModificationUuid,
+                    new ModificationContainerInfos(sourceContainerId == null ? targetContainerId : sourceContainerId, sourceContainerType),
+                    new ModificationContainerInfos(targetContainerId, targetContainerType),
+
+                    beforeModificationUuid,
                         modificationContextInfos.getFirst(),
                         modificationContextInfos.getSecond(),
                         canApply

@@ -10,7 +10,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -27,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @SpringBootTest
 @DisableElasticsearch
@@ -66,7 +64,7 @@ class SupervisionTest {
     void testReindexElements() {
         UUID networkUuid = UUID.randomUUID();
         UUID groupUuid = UUID.randomUUID();
-        ModificationEntity modificationMock = Mockito.mock(ModificationEntity.class);
+        ModificationEntity modificationMock = mock(ModificationEntity.class);
 
         ModificationApplicationEntity modificationApplicationEntity = ModificationApplicationEntity.builder()
             .networkUuid(networkUuid)
@@ -81,12 +79,12 @@ class SupervisionTest {
             .deletedEquipmentIds(Set.of("equipment23"))
             .build();
 
-        modificationApplicationEntity = Mockito.spy(modificationApplicationEntity);
-        modificationApplicationEntity2 = Mockito.spy(modificationApplicationEntity2);
-        Mockito.when(modificationMock.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(modificationMock.getContainerUuid()).thenReturn(groupUuid);
-        Mockito.when(modificationApplicationEntity.getModification()).thenReturn(modificationMock);
-        Mockito.when(modificationApplicationEntity2.getModification()).thenReturn(modificationMock);
+        modificationApplicationEntity = spy(modificationApplicationEntity);
+        modificationApplicationEntity2 = spy(modificationApplicationEntity2);
+        when(modificationMock.getId()).thenReturn(UUID.randomUUID());
+        when(modificationMock.getContainerUuid()).thenReturn(groupUuid);
+        when(modificationApplicationEntity.getModification()).thenReturn(modificationMock);
+        when(modificationApplicationEntity2.getModification()).thenReturn(modificationMock);
 
         List<ModificationApplicationEntity> allModifications = List.of(modificationApplicationEntity, modificationApplicationEntity2);
         when(modificationApplicationRepository.findWithModificationByNetworkUuid(networkUuid)).thenReturn(allModifications);
