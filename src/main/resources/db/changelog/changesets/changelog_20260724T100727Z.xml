@@ -21,6 +21,11 @@
         <addForeignKeyConstraint baseTableName="modification" baseColumnNames="container_id" constraintName="container_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification_container" validate="true"/>
 
         <!-- Migrate data composite modifications -->
+        <sql>
+            INSERT INTO modification_container (id, type)
+            SELECT id, 'COMPOSITE' FROM composite_modification;
+        </sql>
+
         <!-- composite children: container_id := the composite id (== join-table id, == content id) -->
         <sql>
             UPDATE modification child
@@ -34,11 +39,6 @@
                 SELECT 1 FROM composite_modification_sub_modifications j
                 WHERE j.modification_id = child.id
             );
-        </sql>
-
-        <sql>
-            INSERT INTO modification_container (id, type)
-            SELECT id, 'COMPOSITE' FROM composite_modification;
         </sql>
 
         <!-- drop composite_modification_sub_modifications -->
