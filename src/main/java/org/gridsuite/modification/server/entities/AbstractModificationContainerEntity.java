@@ -74,9 +74,9 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
     }
 
     private int indexOf(UUID referenceUuid) {
-        List<ModificationEntity> modifications = getNonStashedModifications();
         for (int i = 0; i < modifications.size(); i++) {
-            if (referenceUuid.equals(modifications.get(i).getId())) {
+            ModificationEntity modification = modifications.get(i);
+            if (!modification.getStashed() && referenceUuid.equals(modification.getId())) {
                 return i;
             }
         }
@@ -100,9 +100,9 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
     }
 
     private void resetPositionsOrder() {
-        List<ModificationEntity> modifications = getNonStashedModifications();
-        for (int i = 0; i < modifications.size(); i++) {
-            modifications.get(i).setModificationsOrder(i);
+        List<ModificationEntity> nonStashedModifications = getNonStashedModifications();
+        for (int i = 0; i < nonStashedModifications.size(); i++) {
+            nonStashedModifications.get(i).setModificationsOrder(i);
         }
     }
 
@@ -149,11 +149,11 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
         modifications.add(child);
     }
 
-    public void insertModifications(List<ModificationEntity> toInsert, UUID beforeModificationUuid) {
+    public void insertModifications(List<ModificationEntity> modificationsToInsert, UUID beforeModificationUuid) {
         int insertionIndex = beforeModificationUuid == null ? modifications.size() : indexOf(beforeModificationUuid);
-        List<ModificationEntity> modifications = getNonStashedModifications();
-        modifications.addAll(insertionIndex, toInsert);
-        setModifications(modifications);
+        modifications.addAll(insertionIndex, modificationsToInsert);
+        modificationsToInsert.forEach(m -> m.setContainer(this));
+        resetPositionsOrder();
     }
 
     public void setModifications(List<ModificationEntity> newChildren) {
