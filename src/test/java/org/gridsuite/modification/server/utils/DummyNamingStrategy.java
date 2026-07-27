@@ -81,6 +81,12 @@ public class DummyNamingStrategy implements NamingStrategy {
     }
 
     @Override
+    public String getBusbarId(String baseId, List<SwitchKind> leftSwitchesBetweenBusbar,
+                              List<SwitchKind> rightSwitchesBetweenBusbar, int id1Num, int id2Num) {
+        return getBusbarId(baseId, id1Num, id2Num);
+    }
+
+    @Override
     public final String getBusId(String baseId) {
         return baseId;
     }
