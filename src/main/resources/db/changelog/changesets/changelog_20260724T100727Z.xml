@@ -13,8 +13,10 @@
         <!-- Rename modification_group table to modification_container and add type column -->
         <renameTable oldTableName="modification_group" newTableName="modification_container"/>
         <addColumn tableName="modification_container">
-            <column name="type" type="VARCHAR(31)" defaultValue="GROUP"/>
+            <column name="type" type="VARCHAR(31)" defaultValue="GROUP" />
         </addColumn>
+        <addNotNullConstraint tableName="modification_container"
+                              columnName="type" />
         <dropUniqueConstraint tableName="modification_container" constraintName="modification_groupPK"/>
         <addPrimaryKey tableName="modification_container" columnNames="id" constraintName="modification_containerPK"/>
 
