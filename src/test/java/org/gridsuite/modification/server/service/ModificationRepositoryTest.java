@@ -736,11 +736,12 @@ class ModificationRepositoryTest {
 
         // moving modification with reference node not in destination: exception expected
         SQLStatementCountValidator.reset();
+        ModificationContainerInfos source = new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP);
+        ModificationContainerInfos target = new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP);
         List<UUID> modificationsToMoveUuid2 = List.of(groovyScriptEntity2.getId());
         UUID referenceNodeUuid = groovyScriptEntity2.getId();
         assertThrows(NetworkModificationException.class, () -> networkModificationRepository.moveModifications(
-                new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP),
-                new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
+                source, target,
                 modificationsToMoveUuid2, referenceNodeUuid),
                 new NetworkModificationException(MOVE_MODIFICATION_ERROR).getMessage());
         assertRequestsCount(5, 0, 0, 0);
