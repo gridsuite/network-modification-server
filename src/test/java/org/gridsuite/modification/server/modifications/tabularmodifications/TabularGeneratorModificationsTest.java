@@ -228,6 +228,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
+
         TestUtils.assertRequestsCount(12, 9, 2, 0); // (19, 9, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
@@ -239,7 +240,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
-        // (107, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        // (107, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for
+        // insertions and is it reached for reactive_capability_curve_points
         TestUtils.assertRequestsCount(20, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
@@ -292,7 +294,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
-        // (26, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        // (26, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for
+        // insertions and is it reached for reactive_capability_curve_points
         TestUtils.assertRequestsCount(19, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
@@ -371,7 +374,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteGroup(mockMvc, getGroupId());
-        // It is actually (8, 0, 0, 15) because deletes made in the native query are not counted
+        // It is actually (9, 0, 0, 15) because deletes made in the native query are not counted
         TestUtils.assertRequestsCount(7, 0, 1, 1);
         assertEquals(0, modificationRepository.count());
         assertEquals(0, tabularPropertyRepository.count());
@@ -413,7 +416,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
         // It is actually (6, 0, 0, 14) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(6, 0, 0, 0);
+        TestUtils.assertRequestsCount(6, 0, 1, 0);
         assertEquals(0, modificationRepository.count());
     }
 
@@ -425,7 +428,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
         // It is actually (10, 0, 0, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(10, 0, 0, 0);
+        TestUtils.assertRequestsCount(10, 0, 1, 0);
         assertEquals(0, modificationRepository.count());
     }
 
@@ -453,7 +456,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId());
         // It is actually (6, 0, 0, 14) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(6, 0, 0, 0);
+        TestUtils.assertRequestsCount(6, 0, 1, 0);
         assertEquals(0, modificationRepository.count());
     }
 
@@ -464,7 +467,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId());
         // It is actually (10, 0, 0, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(10, 0, 0, 0);
+        TestUtils.assertRequestsCount(10, 0, 1, 0);
         assertEquals(0, modificationRepository.count());
     }
 
@@ -494,7 +497,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         // removing only first tabular modification in the group
         ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), List.of(modifications.get(0).getLeft()));
         // It is actually (4, 0, 1, 7) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(4, 0, 0, 0);
+        TestUtils.assertRequestsCount(4, 0, 1, 0);
         assertEquals(4, modificationRepository.count()); // then second tabular still exists (and its sub-modifications)
     }
 
@@ -506,7 +509,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         // removing only 3 first tabular modifications in the group
         ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), modifications.subList(0, 3).stream().map(Pair::getLeft).toList());
         // It is actually (8, 0, 1, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(8, 0, 0, 0);
+        TestUtils.assertRequestsCount(8, 0, 1, 0);
         assertEquals(31, modificationRepository.count()); // then last tabular still exists (and its sub-modifications)
     }
 

@@ -1,0 +1,52 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="amarsli (generated)" id="1784887674329-12">
+
+        <!-- Rename group_id to container_id in modification table -->
+        <renameColumn tableName="modification" oldColumnName="group_id" newColumnName="container_id"/>
+        <dropForeignKeyConstraint baseTableName="modification" constraintName="group_id_fk_constraint"/>
+        <dropIndex tableName="modification" indexName="modificationEntity_group_id_index"/>
+        <createIndex tableName="modification" indexName="modification_container_idx">
+            <column name="container_id"/>
+        </createIndex>
+
+        <!-- Rename modification_group table to modification_container and add type column -->
+        <renameTable oldTableName="modification_group" newTableName="modification_container"/>
+        <addColumn tableName="modification_container">
+            <column name="type" type="VARCHAR(31)" defaultValue="GROUP" />
+        </addColumn>
+        <addNotNullConstraint tableName="modification_container"
+                              columnName="type" />
+        <dropUniqueConstraint tableName="modification_container" constraintName="modification_groupPK"/>
+        <addPrimaryKey tableName="modification_container" columnNames="id" constraintName="modification_containerPK"/>
+
+        <addForeignKeyConstraint baseTableName="modification" baseColumnNames="container_id" constraintName="container_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification_container" validate="true"/>
+
+        <!-- Migrate data composite modifications -->
+        <sql>
+            INSERT INTO modification_container (id, type)
+            SELECT id, 'COMPOSITE' FROM composite_modification;
+        </sql>
+
+        <!-- composite children: container_id := the composite id (== join-table id, == content id) -->
+        <sql>
+            UPDATE modification child
+            SET container_id = (
+                SELECT j.id
+                FROM composite_modification_sub_modifications j
+                WHERE j.modification_id = child.id
+            )
+            WHERE child.container_id IS NULL
+              AND EXISTS (
+                SELECT 1 FROM composite_modification_sub_modifications j
+                WHERE j.modification_id = child.id
+            );
+        </sql>
+
+        <!-- drop composite_modification_sub_modifications later for tmp backup purpose but drop FK to avoid conflicts -->
+        <dropAllForeignKeyConstraints baseTableName="composite_modification_sub_modifications" />
+    </changeSet>
+</databaseChangeLog>
+
+
+
