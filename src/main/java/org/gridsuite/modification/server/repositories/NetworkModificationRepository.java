@@ -1061,22 +1061,45 @@ public class NetworkModificationRepository {
         return modificationRepository.save(newCompositeEntity);
     }
 
+    /**
+     * Resolves a uuid to the actual composite modification it designates: either the uuid IS a
+     * composite, or it's a shared reference (ModificationReferenceEntity) pointing to one.
+     * @throws NetworkModificationException if the uuid is neither a composite nor a reference to one
+     */
+    private UUID resolveActualCompositeUuid(@NonNull UUID uuid) {
+        if (compositeModificationRepository.existsById(uuid)) {
+            return uuid;
+        }
+        ModificationEntity entity = modificationRepository.findById(uuid)
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, uuid)));
+        if (entity instanceof ModificationReferenceEntity referenceEntity) {
+            return referenceEntity.getReferenceId();
+        }
+        throw new NetworkModificationException(MOVE_MODIFICATION_ERROR,
+                String.format("Modification (%s) is neither a composite modification nor a shared reference to one", uuid));
+    }
+
     @Transactional
     public void moveSubModification(@NonNull UUID groupUuid, UUID sourceCompositeUuid, UUID targetCompositeUuid,
                                     @NonNull UUID modificationUuid, UUID beforeUuid) {
 
-        boolean sameComposite = sourceCompositeUuid != null
-                && sourceCompositeUuid.equals(targetCompositeUuid);
+        // sourceCompositeUuid/targetCompositeUuid may designate a shared reference instead of a
+        // composite directly — resolve to the actual composite they point to before any lookup.
+        UUID resolvedSourceCompositeUuid = sourceCompositeUuid != null ? resolveActualCompositeUuid(sourceCompositeUuid) : null;
+        UUID resolvedTargetCompositeUuid = targetCompositeUuid != null ? resolveActualCompositeUuid(targetCompositeUuid) : null;
+
+        boolean sameComposite = resolvedSourceCompositeUuid != null
+                && resolvedSourceCompositeUuid.equals(resolvedTargetCompositeUuid);
 
         if (sameComposite) {
-            CompositeModificationEntity composite = compositeModificationRepository.findById(sourceCompositeUuid)
+            CompositeModificationEntity composite = compositeModificationRepository.findById(resolvedSourceCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
-                            String.format(MODIFICATION_NOT_FOUND_MESSAGE, sourceCompositeUuid)));
+                            String.format(MODIFICATION_NOT_FOUND_MESSAGE, resolvedSourceCompositeUuid)));
             List<ModificationEntity> subMods = composite.getModifications();
             List<ModificationEntity> removed = removeModifications(subMods, List.of(modificationUuid));
             if (removed.isEmpty()) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
-                        String.format("Sub-modification (%s) not found in composite (%s)", modificationUuid, sourceCompositeUuid));
+                        String.format("Sub-modification (%s) not found in composite (%s)", modificationUuid, resolvedSourceCompositeUuid));
             }
             insertModifications(subMods, removed, beforeUuid);
             return;
@@ -1084,16 +1107,16 @@ public class NetworkModificationRepository {
 
         List<ModificationEntity> movedMods;
         List<ModificationEntity> notMovedMods;
-        if (sourceCompositeUuid != null) {
+        if (resolvedSourceCompositeUuid != null) {
             // moved from a composite
-            CompositeModificationEntity sourceComposite = compositeModificationRepository.findById(sourceCompositeUuid)
+            CompositeModificationEntity sourceComposite = compositeModificationRepository.findById(resolvedSourceCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
-                            String.format(MODIFICATION_NOT_FOUND_MESSAGE, sourceCompositeUuid)));
+                            String.format(MODIFICATION_NOT_FOUND_MESSAGE, resolvedSourceCompositeUuid)));
             notMovedMods = sourceComposite.getModifications();
             movedMods = removeModifications(notMovedMods, List.of(modificationUuid));
             if (movedMods.isEmpty()) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
-                        String.format("Sub-modification (%s) not found in composite (%s)", modificationUuid, sourceCompositeUuid));
+                        String.format("Sub-modification (%s) not found in composite (%s)", modificationUuid, resolvedSourceCompositeUuid));
             }
         } else {
             // moved from the root level of the network modification table
@@ -1109,20 +1132,20 @@ public class NetworkModificationRepository {
             movedMods.forEach(entity -> entity.setGroup(null));
         }
 
-        if (targetCompositeUuid != null) {
+        if (resolvedTargetCompositeUuid != null) {
             // Check if targeted composite isn't already inside modificationUuid
             ModificationEntity movingEntity = modificationRepository.findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
                             String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             if (movingEntity instanceof CompositeModificationEntity movingComposite
-                    && (movingComposite.getId().equals(targetCompositeUuid)
-                    || isInsideComposite(movingComposite, targetCompositeUuid))) {
+                    && (movingComposite.getId().equals(resolvedTargetCompositeUuid)
+                    || isInsideComposite(movingComposite, resolvedTargetCompositeUuid))) {
                 throw new NetworkModificationException(MOVE_MODIFICATION_ERROR,
-                        String.format("Moving composite (%s) into (%s) would create a cycle", modificationUuid, targetCompositeUuid));
+                        String.format("Moving composite (%s) into (%s) would create a cycle", modificationUuid, resolvedTargetCompositeUuid));
             }
-            CompositeModificationEntity targetComposite = compositeModificationRepository.findById(targetCompositeUuid)
+            CompositeModificationEntity targetComposite = compositeModificationRepository.findById(resolvedTargetCompositeUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND,
-                            String.format(MODIFICATION_NOT_FOUND_MESSAGE, targetCompositeUuid)));
+                            String.format(MODIFICATION_NOT_FOUND_MESSAGE, resolvedTargetCompositeUuid)));
             List<ModificationEntity> targetSubMods = targetComposite.getModifications();
             insertModifications(targetSubMods, movedMods, beforeUuid);
         } else {
