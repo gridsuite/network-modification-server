@@ -13,10 +13,9 @@ import lombok.NonNull;
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.BatteryModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.VoltageRegulationType;
 import org.gridsuite.modification.server.dto.DTOUtils;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
@@ -89,6 +88,48 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     })
     private BooleanModificationEmbedded reactiveCapabilityCurve;
 
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "targetV")),
+        @AttributeOverride(name = "opType", column = @Column(name = "targetvOp"))
+    })
+    private DoubleModificationEmbedded targetV;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "voltageRegulationOn")),
+        @AttributeOverride(name = "opType", column = @Column(name = "voltageRegulationOnOp"))
+    })
+    private BooleanModificationEmbedded voltageRegulationOn;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "voltageRegulationType")),
+        @AttributeOverride(name = "opType", column = @Column(name = "voltageRegulationTypeOp"))
+    })
+    private EnumModificationEmbedded<VoltageRegulationType> voltageRegulationType;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalId")),
+        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalIdOp"))
+    })
+    private StringModificationEmbedded regulatingTerminalId;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalType")),
+        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalTypeOp"))
+    })
+    private StringModificationEmbedded regulatingTerminalType;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalVlId")),
+        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalVlIdOp"))
+    })
+    private StringModificationEmbedded regulatingTerminalVlId;
+
     @ElementCollection
     @CollectionTable
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
@@ -117,6 +158,12 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
         this.stepUpTransformerX = batteryModificationInfos.getStepUpTransformerX() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getStepUpTransformerX()) : null;
         this.reactiveCapabilityCurve = batteryModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(batteryModificationInfos.getReactiveCapabilityCurve()) : null;
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(batteryModificationInfos.getReactiveCapabilityCurvePoints());
+        this.targetV = batteryModificationInfos.getTargetV() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getTargetV()) : null;
+        this.voltageRegulationOn = batteryModificationInfos.getVoltageRegulationOn() != null ? new BooleanModificationEmbedded(batteryModificationInfos.getVoltageRegulationOn()) : null;
+        this.voltageRegulationType = batteryModificationInfos.getVoltageRegulationType() != null ? new EnumModificationEmbedded<>(batteryModificationInfos.getVoltageRegulationType()) : null;
+        this.regulatingTerminalId = batteryModificationInfos.getRegulatingTerminalId() != null ? new StringModificationEmbedded(batteryModificationInfos.getRegulatingTerminalId()) : null;
+        this.regulatingTerminalType = batteryModificationInfos.getRegulatingTerminalType() != null ? new StringModificationEmbedded(batteryModificationInfos.getRegulatingTerminalType()) : null;
+        this.regulatingTerminalVlId = batteryModificationInfos.getRegulatingTerminalVlId() != null ? new StringModificationEmbedded(batteryModificationInfos.getRegulatingTerminalVlId()) : null;
     }
 
     @Override
@@ -156,6 +203,12 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .pMeasurementValidity(toAttributeModification(getPMeasurementValidity()))
                 .qMeasurementValue(toAttributeModification(getQMeasurementValue()))
                 .qMeasurementValidity(toAttributeModification(getQMeasurementValidity()))
+                .targetV(toAttributeModification(getTargetV()))
+                .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
+                .voltageRegulationType(toAttributeModification(getVoltageRegulationType()))
+                .regulatingTerminalId(toAttributeModification(getRegulatingTerminalId()))
+                .regulatingTerminalType(toAttributeModification(getRegulatingTerminalType()))
+                .regulatingTerminalVlId(toAttributeModification(getRegulatingTerminalVlId()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()

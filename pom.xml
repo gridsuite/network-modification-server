@@ -96,6 +96,13 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- TODO network-modification.version remove when included in gridsuite-dependencies -->
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-network-modification</artifactId>
+                <version>${network-modification.version}</version>
+            </dependency>
+
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
@@ -123,8 +130,6 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-network-modification</artifactId>
-            <!-- TODO network-modification.version remove when included in gridsuite-dependencies -->
-            <version>${network-modification.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
