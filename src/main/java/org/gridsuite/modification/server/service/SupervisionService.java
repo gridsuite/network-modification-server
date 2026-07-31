@@ -48,7 +48,7 @@ public class SupervisionService {
     @Transactional
     public void reindexByNetworkUuid(UUID networkUuid) {
         modificationApplicationInfosRepository.deleteAllByNetworkUuid(networkUuid);
-        modificationApplicationInfosRepository.saveAll(modificationApplicationRepository.findWithModificationAndGroupByNetworkUuid(networkUuid).stream().map(
+        modificationApplicationInfosRepository.saveAll(modificationApplicationRepository.findWithModificationByNetworkUuid(networkUuid).stream().map(
             ModificationApplicationEntity::toModificationApplicationInfos
         ).toList());
     }
