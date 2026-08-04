@@ -20,6 +20,7 @@ It provides the following capabilities:
 
 ---
 
+
 ## Technical Stack
 
 - Spring Boot (Web, Data JPA, Actuator)
@@ -27,11 +28,21 @@ It provides the following capabilities:
 - RabbitMQ via Spring Cloud Stream
 - Elasticsearch (`spring-data-elasticsearch`)
 - PowSyBl network store client (`powsybl-network-store-client`)
-- PowSyBl network modification library (`gridsuite-network-modification`)
+- [Network modification library](https://github.com/gridsuite/network-modification)
 - API documentation: OpenAPI / Swagger (`springdoc`)
 - Micrometer / Prometheus
 
 ---
+
+
+## Architecture: library vs server
+
+The [`network-modification`](https://github.com/gridsuite/network-modification) library is a **framework-agnostic Java library** that defines the DTOs and the logic to apply each modification type onto a PowSyBl `Network`. It has no Spring or HTTP dependency and can be used in any JVM project.
+
+The **network-modification-server** builds on top of this library to expose its capabilities as a REST microservice: it handles persistence (PostgreSQL), async variant builds (RabbitMQ), Elasticsearch indexation, and integration with the rest of the GridSuite platform.
+
+---
+
 
 ## Development Scripts
 
