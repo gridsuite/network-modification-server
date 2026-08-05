@@ -1015,6 +1015,7 @@ public class NetworkModificationRepository {
                 } else {
                     // apply the new composite name to the corresponding composite modification
                     compositeModification.setName(compositeToBeInserted.name());
+                    compositeModification.setDescription(compositeToBeInserted.description());
                     newCompositeModifications.add(compositeModification);
                 }
             } else {
