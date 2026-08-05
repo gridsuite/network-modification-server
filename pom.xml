@@ -51,6 +51,8 @@
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
+        <!-- TODO network-modification.version remove when included in gridsuite-dependencies -->
+        <network-modification.version>1.3.0</network-modification.version>
     </properties>
 
     <build>
@@ -92,6 +94,13 @@
                 <version>${mockwebserver3.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <!-- TODO network-modification.version remove when included in gridsuite-dependencies -->
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-network-modification</artifactId>
+                <version>${network-modification.version}</version>
             </dependency>
 
             <!-- imports -->
