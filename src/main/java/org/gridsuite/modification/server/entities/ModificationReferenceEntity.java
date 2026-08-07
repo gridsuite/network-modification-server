@@ -41,15 +41,10 @@ public class ModificationReferenceEntity extends ModificationEntity {
 
     @Override
     public ModificationReferenceInfos toModificationInfos() {
-        return ModificationReferenceInfos.builder()
-            .uuid(getId())
-            .activated(getActivated())
-            .description(getDescription())
-            .date(getDate())
-            .stashed(getStashed())
+        return toModificationInfosBuilder(ModificationReferenceInfos.builder()
             .referenceId(getReferenceId())
             .referenceType(ModificationReferenceInfos.Type.valueOf(getReferenceType()))
-            .referenceInfos(getReferenceInfos())
+            .referenceInfos(getReferenceInfos()))
             .build();
     }
 

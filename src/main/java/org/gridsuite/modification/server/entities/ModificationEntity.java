@@ -104,17 +104,21 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     }
 
     public ModificationInfos toModificationInfos() {
-        ModificationInfos modificationInfos = ModificationInfos.builder()
-            .uuid(this.id)
-            .date(this.date)
-            .stashed(this.stashed)
-            .activated(this.activated)
-            .description(this.description)
+        ModificationInfos modificationInfos = toModificationInfosBuilder(ModificationInfos.builder())
             .messageType(this.messageType)
             .messageValues(this.messageValues)
             .build();
         modificationInfos.setType(ModificationType.valueOf(this.type));
         return modificationInfos;
+    }
+
+    protected <B extends ModificationInfos.ModificationInfosBuilder<?, ?>> B toModificationInfosBuilder(B builder) {
+        builder.uuid(this.id)
+            .date(this.date)
+            .stashed(this.stashed)
+            .activated(this.activated)
+            .description(this.description);
+        return builder;
     }
 
     public void update(ModificationInfos modificationInfos) {

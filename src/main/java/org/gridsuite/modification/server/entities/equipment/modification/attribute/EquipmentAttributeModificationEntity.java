@@ -61,21 +61,16 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
 
     @Override
     public EquipmentAttributeModificationInfos toModificationInfos() {
-        return toModificationInfosBuilder().build();
+        return toEquipmentAttributeModificationInfosBuilder().build();
     }
 
-    private EquipmentAttributeModificationInfos.EquipmentAttributeModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
-        return EquipmentAttributeModificationInfos
+    private EquipmentAttributeModificationInfos.EquipmentAttributeModificationInfosBuilder<?, ?> toEquipmentAttributeModificationInfosBuilder() {
+        return toModificationInfosBuilder(EquipmentAttributeModificationInfos
             .builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
             .equipmentId(getEquipmentId())
             .equipmentAttributeName(getAttributeName())
             .equipmentAttributeValue(getAttributeValue())
-            .equipmentType(getEquipmentType());
+            .equipmentType(getEquipmentType()));
     }
 
     public static EquipmentAttributeModificationEntity<?> createAttributeEntity(EquipmentAttributeModificationInfos dto) {

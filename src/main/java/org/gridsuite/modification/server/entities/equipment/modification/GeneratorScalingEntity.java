@@ -31,16 +31,14 @@ public class GeneratorScalingEntity extends ScalingEntity {
 
     @Override
     public GeneratorScalingInfos toModificationInfos() {
-        return GeneratorScalingInfos.builder()
-                .date(getDate())
-                .uuid(getId())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
+        return toGeneratorScalingInfosBuilder().build();
+    }
+
+    private GeneratorScalingInfos.GeneratorScalingInfosBuilder<?, ?> toGeneratorScalingInfosBuilder() {
+        return toModificationInfosBuilder(GeneratorScalingInfos.builder()
                 .variationType(getVariationType())
                 .variations(getVariations().stream()
                         .map(ScalingVariationEntity::toScalingVariationInfos)
-                        .collect(Collectors.toList()))
-                .build();
+                        .collect(Collectors.toList())));
     }
 }

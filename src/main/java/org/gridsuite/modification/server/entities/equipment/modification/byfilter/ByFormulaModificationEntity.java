@@ -58,15 +58,10 @@ public class ByFormulaModificationEntity extends ModificationEntity {
     }
 
     private ByFormulaModificationInfos.ByFormulaModificationInfosBuilder<?, ?> toByFormulaModificationInfosBuilder() {
-        return ByFormulaModificationInfos.builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
+        return toModificationInfosBuilder(ByFormulaModificationInfos.builder()
                 .identifiableType(getIdentifiableType())
                 .formulaInfosList(getFormulaEntities().stream()
                         .map(FormulaEntity::toFormulaInfos)
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList())));
     }
 }

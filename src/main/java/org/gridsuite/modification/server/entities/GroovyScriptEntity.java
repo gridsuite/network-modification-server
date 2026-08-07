@@ -46,13 +46,8 @@ public class GroovyScriptEntity extends ModificationEntity {
     }
 
     private GroovyScriptInfos.GroovyScriptInfosBuilder<?, ?> toGroovyScriptInfosBuilder() {
-        return GroovyScriptInfos
+        return toModificationInfosBuilder(GroovyScriptInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
-                .script(getScript());
+                .script(getScript()));
     }
 }

@@ -111,13 +111,8 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
     }
 
     private LineAttachToVoltageLevelInfos.LineAttachToVoltageLevelInfosBuilder<?, ?> toLineAttachToVoltageLevelInfosBuilder() {
-        return LineAttachToVoltageLevelInfos
+        return toModificationInfosBuilder(LineAttachToVoltageLevelInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .lineToAttachToId(getLineToAttachToId())
                 .percent(getPercent())
                 .attachmentPointId(getAttachmentPointId())
@@ -130,6 +125,6 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
                 .newLine1Id(getNewLine1Id())
                 .newLine1Name(getNewLine1Name())
                 .newLine2Id(getNewLine2Id())
-                .newLine2Name(getNewLine2Name());
+                .newLine2Name(getNewLine2Name()));
     }
 }

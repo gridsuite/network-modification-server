@@ -63,13 +63,9 @@ public class CreateVoltageLevelTopologyEntity extends ModificationEntity {
     }
 
     private CreateVoltageLevelTopologyInfos.CreateVoltageLevelTopologyInfosBuilder<?, ?> toCreateVoltageLevelTopologyInfos() {
-        return CreateVoltageLevelTopologyInfos.builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
+        return toModificationInfosBuilder(CreateVoltageLevelTopologyInfos.builder()
                 .voltageLevelId(getVoltageLevelId())
                 .switchKinds(getSwitchKinds().stream().map(SwitchKind::valueOf).collect(Collectors.toList()))
-                .sectionCount(getSectionCount());
+                .sectionCount(getSectionCount()));
     }
 }

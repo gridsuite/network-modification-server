@@ -68,16 +68,11 @@ public class ModificationByAssignmentEntity extends ModificationEntity {
     }
 
     private ModificationByAssignmentInfos.ModificationByAssignmentInfosBuilder<?, ?> toModificationByAssignmentInfosBuilder() {
-        return ModificationByAssignmentInfos.builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
+        return toModificationInfosBuilder(ModificationByAssignmentInfos.builder()
             .equipmentType(equipmentType)
             .assignmentInfosList(assignmentEntities.stream()
                 .map(AssignmentEntity::toAssignmentInfos)
                 .toList()
-            );
+            ));
     }
 }

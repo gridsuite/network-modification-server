@@ -84,13 +84,8 @@ public class LineSplitWithVoltageLevelEntity extends ModificationEntity {
     }
 
     private LineSplitWithVoltageLevelInfos.LineSplitWithVoltageLevelInfosBuilder<?, ?> toLineSplitWithVoltageLevelInfosBuilder() {
-        return LineSplitWithVoltageLevelInfos
+        return toModificationInfosBuilder(LineSplitWithVoltageLevelInfos
             .builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
             .lineToSplitId(getLineToSplitId())
             .percent(getPercent())
             .mayNewVoltageLevelInfos(mayVoltageLevelCreation == null ? null : mayVoltageLevelCreation.toVoltageLevelCreationInfos())
@@ -99,6 +94,6 @@ public class LineSplitWithVoltageLevelEntity extends ModificationEntity {
             .newLine1Id(getNewLine1Id())
             .newLine1Name(getNewLine1Name())
             .newLine2Id(getNewLine2Id())
-            .newLine2Name(getNewLine2Name());
+            .newLine2Name(getNewLine2Name()));
     }
 }
