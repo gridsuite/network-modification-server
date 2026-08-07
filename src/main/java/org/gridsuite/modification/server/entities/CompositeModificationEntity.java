@@ -51,6 +51,7 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .description(getDescription())
                 .date(getDate())
                 .activated(getActivated())
+                .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
                 .uuid(getId())
                 .stashed(getStashed())
                 .modificationsInfos(modificationsInfos)

@@ -112,6 +112,7 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
+                .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
                 .description(getDescription())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .nominalV(IAttributeModificationEmbeddable.toAttributeModification(getNominalV()))

@@ -72,6 +72,7 @@ public class MoveVoltageLevelFeederBaysEntity extends ModificationEntity {
             .date(getDate())
             .stashed(getStashed())
             .activated(getActivated())
+            .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
             .description(getDescription())
             .voltageLevelId(voltageLevelId)
             .feederBays(moveFeederBays.stream()

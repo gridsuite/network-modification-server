@@ -74,6 +74,7 @@ public class ByFilterDeletionEntity extends ModificationEntity {
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
+                .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
                 .description(getDescription())
                 .filters(getFilters().stream()
                         .map(filter -> new FilterInfos(filter.getFilterId(), filter.getName()))

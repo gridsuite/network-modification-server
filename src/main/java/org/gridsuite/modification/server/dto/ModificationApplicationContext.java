@@ -6,12 +6,10 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import java.util.Collections;
-import java.util.Set;
 import java.util.UUID;
 
-public record ModificationApplicationContext(UUID networkUuid, String variantId, UUID reportUuid, UUID reporterId, Set<UUID> excludedModifications) {
+public record ModificationApplicationContext(UUID networkUuid, String variantId, UUID reportUuid, UUID reporterId, String rootNetworkTag) {
     public ModificationApplicationContext(UUID networkUuid, String variantId, UUID reportUuid, UUID reporterId) {
-        this(networkUuid, variantId, reportUuid, reporterId, Collections.emptySet());
+        this(networkUuid, variantId, reportUuid, reporterId, null);
     }
 }

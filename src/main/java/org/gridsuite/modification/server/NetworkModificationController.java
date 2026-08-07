@@ -291,6 +291,26 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping(value = "/network-modifications/root-network-applicability")
+    @Operation(summary = "Updates the applicability of network modifications for a root network tag")
+    @ApiResponse(responseCode = "200", description = "The applicability of the network modifications has been successfully updated")
+    public ResponseEntity<Void> updateRootNetworkApplicability(
+            @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
+            @Parameter(description = "Root network tag") @RequestParam("rootNetworkTag") String rootNetworkTag,
+            @Parameter(description = "Applicability on this root network tag") @RequestParam("activated") boolean activated) {
+        networkModificationService.updateRootNetworkApplicability(networkModificationUuids, rootNetworkTag, activated);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/groups/{groupUuid}/root-network-applicability", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get the applicability per root network tag of all the network modifications in a group, sub modifications included")
+    @ApiResponse(responseCode = "200", description = "The applicabilities were returned")
+    public ResponseEntity<Map<UUID, Map<String, Boolean>>> getRootNetworkApplicabilities(
+            @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(networkModificationService.getRootNetworkApplicabilities(groupUuid));
+    }
+
     @DeleteMapping(value = "/groups/{groupUuid}/stashed-modifications")
     @Operation(summary = "Delete the stashed modifications in a group")
     @ApiResponse(responseCode = "200", description = "Stashed modifications in the group deleted")

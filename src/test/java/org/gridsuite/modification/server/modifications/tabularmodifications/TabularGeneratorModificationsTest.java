@@ -116,13 +116,13 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         Pair<UUID, ModificationInfos> tabularWith1Modification = createTabularGeneratorModification(1);
         reset();
         ModificationInfos tabularWith1ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith1Modification.getLeft()); // Getting one tabular modification with one sub-modification
-        assertSelectCount(5); // 4 before improvements
+        assertSelectCount(6); // 4 before improvements
         assertTabularModificationsEquals(tabularWith1Modification.getRight(), tabularWith1ModificationInfos);
 
         Pair<UUID, ModificationInfos> tabularWith3Modification = createTabularGeneratorModification(3);
         reset();
         ModificationInfos tabularWith3ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith3Modification.getLeft()); // Getting one tabular modification with three sub-modifications
-        assertSelectCount(5); // 6 before improvements
+        assertSelectCount(6); // 6 before improvements
         assertTabularModificationsEquals(tabularWith3Modification.getRight(), tabularWith3ModificationInfos);
     }
 
@@ -132,7 +132,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         List<ModificationInfos> tabularModifications = ApiUtils.getGroupModifications(mockMvc, getGroupId()); // Getting two tabular modifications with respectively one and three sub-modifications
-        assertSelectCount(10); // 10 before improvements
+        assertSelectCount(12); // 10 before improvements
         assertTabularModificationsEquals(modifications.stream().map(Pair::getRight).toList(), tabularModifications);
     }
 
@@ -174,7 +174,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
-        TestUtils.assertRequestsCount(12, 9, 2, 0); // (13, 9, 2, 0) before improvements
+        TestUtils.assertRequestsCount(14, 9, 2, 0); // (13, 9, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -186,7 +186,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
         // (95, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
-        TestUtils.assertRequestsCount(20, 9, 2, 0);
+        TestUtils.assertRequestsCount(24, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -229,7 +229,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
 
-        TestUtils.assertRequestsCount(12, 9, 2, 0); // (19, 9, 2, 0) before improvements
+        TestUtils.assertRequestsCount(14, 9, 2, 0); // (19, 9, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -242,7 +242,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
         // (107, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for
         // insertions and is it reached for reactive_capability_curve_points
-        TestUtils.assertRequestsCount(20, 9, 2, 0);
+        TestUtils.assertRequestsCount(24, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -283,7 +283,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
-        TestUtils.assertRequestsCount(11, 9, 2, 0); // (14, 9, 2, 0) before improvements
+        TestUtils.assertRequestsCount(13, 9, 2, 0); // (14, 9, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -296,7 +296,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
         // (26, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for
         // insertions and is it reached for reactive_capability_curve_points
-        TestUtils.assertRequestsCount(19, 9, 2, 0);
+        TestUtils.assertRequestsCount(23, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -334,7 +334,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
-        TestUtils.assertRequestsCount(9, 8, 2, 0); // (11, 8, 2, 0) before improvements
+        TestUtils.assertRequestsCount(11, 8, 2, 0); // (11, 8, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, idsMapping);
     }
 
@@ -344,7 +344,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
-        TestUtils.assertRequestsCount(17, 8, 2, 0); // (93, 9, 1, 0) before improvements, why one additional insert ? Maybe insertion batch size limit but not sure
+        TestUtils.assertRequestsCount(21, 8, 2, 0); // (93, 9, 1, 0) before improvements, why one additional insert ? Maybe insertion batch size limit but not sure
         assertTabularModificationsEquals(modifications, idsMapping);
     }
 

@@ -203,6 +203,7 @@ public class VoltageInitModificationEntity extends ModificationEntity {
             .uuid(getId())
             .stashed(getStashed())
             .activated(getActivated())
+            .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
             .description(getDescription())
             .generators(toGeneratorsModification(generators))
             .transformers(toTransformersModification(transformers))

@@ -75,6 +75,7 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
         return ConverterStationCreationInfos.builder()
                 .stashed(getStashed())
                 .activated(getActivated())
+                .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
                 .description(getDescription())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())

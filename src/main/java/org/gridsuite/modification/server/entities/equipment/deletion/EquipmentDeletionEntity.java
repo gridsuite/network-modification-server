@@ -61,6 +61,7 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
+                .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
                 .description(getDescription())
                 .equipmentId(getEquipmentId())
                 .equipmentType(getEquipmentType());

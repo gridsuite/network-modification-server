@@ -94,6 +94,7 @@ class BuildTest {
     private static final UUID TEST_NETWORK_STOP_BUILD_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_WITH_WORKFLOW_INFOS = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
+    private static final String TEST_ROOT_NETWORK_TAG = "PH1";
     private static final UUID TEST_GROUP_ID_2 = UUID.randomUUID();
 
     private static final UUID TEST_ERROR_REPORT_ID = UUID.randomUUID();
@@ -897,7 +898,7 @@ class BuildTest {
     }
 
     @Test
-    void runBuildWithExcludedModificationsTest(final MockWebServer server) {
+    void runBuildWithNotApplicableModificationsTest(final MockWebServer server) {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(ModificationEntity.fromDTO(
@@ -910,17 +911,20 @@ class BuildTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, entities1.size());
 
-        // build node with excluded modification
+        // the second modification is not applicable on the root network being built
+        modificationRepository.updateRootNetworkApplicability(List.of(modifications.get(1).getUuid()), TEST_ROOT_NETWORK_TAG, false);
+
+        // build node on a root network the second modification is not applicable on
         BuildInfos buildInfos = BuildInfos.builder()
             .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
             .destinationVariantId(NetworkCreation.VARIANT_ID)
             .modificationGroupUuids(List.of(TEST_GROUP_ID))
             .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1, ReportMode.REPLACE)))
-            .modificationUuidsToExclude(Map.of(TEST_GROUP_ID, Set.of(modifications.get(1).getUuid())))
+            .rootNetworkTag(TEST_ROOT_NETWORK_TAG)
             .build();
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
 
-        // test that only non excluded modifications have been made on variant VARIANT_ID
+        // test that only applicable modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
         assertTrue(network.getSwitch("v1d1").isOpen());
         assertNull(network.getLoad("willBeExcludedLoad"));

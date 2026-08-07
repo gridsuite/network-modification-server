@@ -37,6 +37,7 @@ public class LoadScalingEntity extends ScalingEntity {
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
+                .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
                 .description(getDescription())
                 .variationType(getVariationType())
                 .variations(getVariations().stream()

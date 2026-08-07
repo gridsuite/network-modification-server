@@ -14,9 +14,12 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
+import org.hibernate.annotations.BatchSize;
 import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import static org.gridsuite.modification.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
 
@@ -63,6 +66,20 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     @Column(name = "description", columnDefinition = "CLOB")
     private String description;
 
+    // applicability per root network tag: a tag without an entry is applicable
+    // batched to avoid one select per modification when a whole group is loaded
+    @BatchSize(size = 100)
+    @ElementCollection
+    @CollectionTable(
+            name = "modification_root_network_applicability",
+            joinColumns = @JoinColumn(name = "modification_id"),
+            foreignKey = @ForeignKey(name = "modification_root_network_applicability_fk"),
+            indexes = { @Index(name = "modification_root_network_applicability_idx", columnList = "modification_id") }
+    )
+    @MapKeyColumn(name = "root_network_tag", length = 4)
+    @Column(name = "activated")
+    private Map<String, Boolean> applicabilityByRootNetworkTag = new HashMap<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "container_id", foreignKey = @ForeignKey(name = "modification_container_fk"))
     private AbstractModificationContainerEntity container;
@@ -99,6 +116,9 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         if (modificationInfos.getActivated() != null) {
             this.activated = modificationInfos.getActivated();
         }
+        if (modificationInfos.getApplicabilityByRootNetworkTag() != null) {
+            this.applicabilityByRootNetworkTag = new HashMap<>(modificationInfos.getApplicabilityByRootNetworkTag());
+        }
 
         assignAttributes(modificationInfos);
     }
@@ -112,6 +132,7 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
             .description(this.description)
             .messageType(this.messageType)
             .messageValues(this.messageValues)
+            .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
             .build();
         modificationInfos.setType(ModificationType.valueOf(this.type));
         return modificationInfos;
@@ -137,6 +158,14 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
 
     public UUID getContainerUuid() {
         return container == null ? null : container.getId();
+    }
+
+    /**
+     * @return a detached copy of the applicabilities, to be used when building a DTO: the persistent collection itself
+     * must not escape the session, and a DTO may be modified without touching the entity (duplication for instance).
+     */
+    public Map<String, Boolean> copyApplicabilityByRootNetworkTag() {
+        return new HashMap<>(applicabilityByRootNetworkTag);
     }
 
     public static ModificationEntity fromDTO(ModificationInfos dto) {

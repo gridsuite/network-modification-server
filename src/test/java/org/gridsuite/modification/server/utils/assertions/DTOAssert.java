@@ -11,6 +11,7 @@ import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguratio
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -38,7 +39,9 @@ public class DTOAssert<T> extends AbstractAssert<DTOAssert<T>, T> {
             .withIgnoreAllOverriddenEquals(true)                                    // For equals test, need specific tests
             .withIgnoredFieldsOfTypes(UUID.class, Date.class, Instant.class)        // For these types, need specific tests (uuid from db for example)
             // DTO builders may leave activated null while it's set to true at creation
-            .withEqualsForFieldsMatchingRegexes(DTOAssert::activationFlagsAreEqualWithDefaultValue, ".*activated");
+            .withEqualsForFieldsMatchingRegexes(DTOAssert::activationFlagsAreEqualWithDefaultValue, ".*activated")
+            // same for the applicabilities, left null by the DTO builders while an entity always has a (possibly empty) map
+            .withEqualsForFieldsMatchingRegexes(DTOAssert::applicabilitiesAreEqualWithDefaultValue, ".*applicabilityByRootNetworkTag");
         if (ignoreCollectionOrder) {
             builder.withIgnoreCollectionOrder(true);                                // For collection order test, need specific tests
         }
@@ -51,5 +54,13 @@ public class DTOAssert<T> extends AbstractAssert<DTOAssert<T>, T> {
 
     private static Object defaultActivation(Object value) {
         return value == null ? true : value;
+    }
+
+    private static boolean applicabilitiesAreEqualWithDefaultValue(Object actual, Object expected) {
+        return Objects.equals(defaultApplicabilities(actual), defaultApplicabilities(expected));
+    }
+
+    private static Object defaultApplicabilities(Object value) {
+        return value == null ? Map.of() : value;
     }
 }
