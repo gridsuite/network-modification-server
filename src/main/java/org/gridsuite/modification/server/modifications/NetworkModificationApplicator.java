@@ -99,7 +99,7 @@ public class NetworkModificationApplicator {
      */
     public CompletableFuture<NetworkModificationResult> applyModifications(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroup.modifications().stream()
-            .filter(m -> m.isApplicableOn(modificationInfosGroup.rootNetworkTag()) && !m.getStashed())
+            .filter(m -> m.isActivatedOn(modificationInfosGroup.rootNetworkTag()) && !m.getStashed())
             .map(ModificationInfos::getType)
             .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
             .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
@@ -149,7 +149,7 @@ public class NetworkModificationApplicator {
     public NetworkModificationResult applyModifications(List<ModificationApplicationGroup> modificationInfosGroups, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroups.stream()
                 .flatMap(g -> g.modifications().stream()
-                        .filter(m -> m.isApplicableOn(g.rootNetworkTag()) && !m.getStashed()))
+                        .filter(m -> m.isActivatedOn(g.rootNetworkTag()) && !m.getStashed()))
                 .map(ModificationInfos::getType)
                 .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
                 .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
@@ -202,7 +202,7 @@ public class NetworkModificationApplicator {
             reportNode = ReportNode.NO_OP;
         }
         ApplicationStatus groupApplicationStatus = modificationGroupInfos.modifications().stream()
-                .filter(m -> m.isApplicableOn(modificationGroupInfos.rootNetworkTag()))
+                .filter(m -> m.isActivatedOn(modificationGroupInfos.rootNetworkTag()))
                 .map(m -> {
                     listener.initModificationApplication(modificationGroupInfos.groupUuid(), m);
                     return apply(m, listener.getNetwork(), reportNode);

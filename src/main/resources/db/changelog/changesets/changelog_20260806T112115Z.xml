@@ -5,16 +5,11 @@
             <column name="modification_id" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="modification_root_network_applicabilityPK"/>
             </column>
-            <column name="activated" type="BOOLEAN"/>
+            <column name="applicable" type="BOOLEAN"/>
             <column name="root_network_tag" type="VARCHAR(4)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="modification_root_network_applicabilityPK"/>
             </column>
         </createTable>
-    </changeSet>
-    <changeSet author="florent (generated)" id="1786015296336-7">
-        <createIndex indexName="modification_root_network_applicability_idx" tableName="modification_root_network_applicability">
-            <column name="modification_id"/>
-        </createIndex>
     </changeSet>
     <changeSet author="florent (generated)" id="1786015296336-8">
         <addForeignKeyConstraint baseColumnNames="modification_id" baseTableName="modification_root_network_applicability" constraintName="modification_root_network_applicability_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>

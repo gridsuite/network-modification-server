@@ -297,8 +297,8 @@ public class NetworkModificationController {
     public ResponseEntity<Void> updateRootNetworkApplicability(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Root network tag") @RequestParam("rootNetworkTag") String rootNetworkTag,
-            @Parameter(description = "Applicability on this root network tag") @RequestParam("activated") boolean activated) {
-        networkModificationService.updateRootNetworkApplicability(networkModificationUuids, rootNetworkTag, activated);
+            @Parameter(description = "Applicability on this root network tag") @RequestParam("applicable") boolean applicable) {
+        networkModificationService.updateRootNetworkApplicability(networkModificationUuids, rootNetworkTag, applicable);
         return ResponseEntity.ok().build();
     }
 

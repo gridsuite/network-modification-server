@@ -15,7 +15,4 @@ import java.util.UUID;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public record ModificationApplicationGroup(UUID groupUuid, List<ModificationInfos> modifications, ReportInfos reportInfos, String rootNetworkTag) {
-    public ModificationApplicationGroup(UUID groupUuid, List<ModificationInfos> modifications, ReportInfos reportInfos) {
-        this(groupUuid, modifications, reportInfos, null);
-    }
 }

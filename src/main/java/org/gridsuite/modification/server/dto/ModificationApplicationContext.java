@@ -9,7 +9,4 @@ package org.gridsuite.modification.server.dto;
 import java.util.UUID;
 
 public record ModificationApplicationContext(UUID networkUuid, String variantId, UUID reportUuid, UUID reporterId, String rootNetworkTag) {
-    public ModificationApplicationContext(UUID networkUuid, String variantId, UUID reportUuid, UUID reporterId) {
-        this(networkUuid, variantId, reportUuid, reporterId, null);
-    }
 }

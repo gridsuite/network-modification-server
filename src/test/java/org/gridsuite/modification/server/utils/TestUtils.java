@@ -217,7 +217,7 @@ public final class TestUtils {
     }
 
     private static String createJsonPayload(Object data, UUID networkUuid, String variantId) throws JsonProcessingException {
-        ModificationApplicationContext applicationContext = new ModificationApplicationContext(networkUuid, variantId, UUID.randomUUID(), UUID.randomUUID());
+        ModificationApplicationContext applicationContext = contextOnAnyRootNetwork(networkUuid, variantId, UUID.randomUUID(), UUID.randomUUID());
         return getObjectMapper().writeValueAsString(org.springframework.data.util.Pair.of(data, List.of(applicationContext)));
     }
 
@@ -239,5 +239,19 @@ public final class TestUtils {
 
     public static NetworkModificationResult applyModificationsBlocking(NetworkModificationApplicator applicator, ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
         return applicator.applyModifications(modificationInfosGroup, networkInfos).join();
+    }
+
+    /**
+     * Builds an application group not bound to any root network: every activated modification is then applicable.
+     */
+    public static ModificationApplicationGroup groupOnAnyRootNetwork(UUID groupUuid, List<ModificationInfos> modifications, ReportInfos reportInfos) {
+        return new ModificationApplicationGroup(groupUuid, modifications, reportInfos, null);
+    }
+
+    /**
+     * Builds an application context not bound to any root network: every activated modification is then applicable.
+     */
+    public static ModificationApplicationContext contextOnAnyRootNetwork(UUID networkUuid, String variantId, UUID reportUuid, UUID reporterId) {
+        return new ModificationApplicationContext(networkUuid, variantId, reportUuid, reporterId, null);
     }
 }

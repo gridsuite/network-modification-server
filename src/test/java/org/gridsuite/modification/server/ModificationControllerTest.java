@@ -99,6 +99,8 @@ class ModificationControllerTest {
     private static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
+    private static final String ROOT_NETWORK_TAG = "PH1";
+
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String NETWORK_MODIFICATION_URI = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
 
@@ -438,6 +440,27 @@ class ModificationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk());
         assertEquals(false, modificationRepository.getModifications(TEST_GROUP_ID, true, true).getFirst().getActivated());
+    }
+
+    @Test
+    void testUpdateRootNetworkApplicability() throws Exception {
+        List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 2);
+        UUID deactivatedUuid = modifications.get(0).getUuid();
+        UUID untouchedUuid = modifications.get(1).getUuid();
+
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
+                .queryParam("uuids", deactivatedUuid.toString())
+                .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
+                .queryParam("applicable", "false")
+        ).andExpect(status().isOk());
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/root-network-applicability", TEST_GROUP_ID))
+                .andExpect(status().isOk())
+                .andReturn();
+        Map<UUID, Map<String, Boolean>> applicabilities = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicabilities.get(deactivatedUuid));
+        assertEquals(Map.of(), applicabilities.get(untouchedUuid));
     }
 
     @Test

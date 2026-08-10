@@ -71,13 +71,13 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     @BatchSize(size = 100)
     @ElementCollection
     @CollectionTable(
+            // no index on modification_id: the (modification_id, root_network_tag) primary key already covers it
             name = "modification_root_network_applicability",
             joinColumns = @JoinColumn(name = "modification_id"),
-            foreignKey = @ForeignKey(name = "modification_root_network_applicability_fk"),
-            indexes = { @Index(name = "modification_root_network_applicability_idx", columnList = "modification_id") }
+            foreignKey = @ForeignKey(name = "modification_root_network_applicability_fk")
     )
     @MapKeyColumn(name = "root_network_tag", length = 4)
-    @Column(name = "activated")
+    @Column(name = "applicable")
     private Map<String, Boolean> applicabilityByRootNetworkTag = new HashMap<>();
 
     @ManyToOne(fetch = FetchType.LAZY)

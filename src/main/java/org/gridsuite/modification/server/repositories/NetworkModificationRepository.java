@@ -146,6 +146,7 @@ public class NetworkModificationRepository {
         return saveModificationsNonTransactional(groupUuid, entities);
     }
 
+    @Transactional // Copying the modifications reads their applicabilities, which are lazily loaded
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
         // Fetch originals once, preserving order
         Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
@@ -839,15 +840,15 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean activated) {
-        modificationUuids.forEach(modificationUuid -> updateRootNetworkApplicability(getModificationEntity(modificationUuid), rootNetworkTag, activated));
+    public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable) {
+        modificationUuids.forEach(modificationUuid -> updateRootNetworkApplicability(getModificationEntity(modificationUuid), rootNetworkTag, applicable));
     }
 
-    private void updateRootNetworkApplicability(ModificationEntity entity, String rootNetworkTag, boolean activated) {
+    private void updateRootNetworkApplicability(ModificationEntity entity, String rootNetworkTag, boolean applicable) {
         ModificationEntity applicabilityHolder = getApplicabilityHolder(entity);
-        applicabilityHolder.getApplicabilityByRootNetworkTag().put(rootNetworkTag, activated);
+        applicabilityHolder.getApplicabilityByRootNetworkTag().put(rootNetworkTag, applicable);
         if (applicabilityHolder instanceof CompositeModificationEntity composite) {
-            composite.getModifications().forEach(sub -> updateRootNetworkApplicability(sub, rootNetworkTag, activated));
+            composite.getModifications().forEach(sub -> updateRootNetworkApplicability(sub, rootNetworkTag, applicable));
         }
     }
 
@@ -872,7 +873,7 @@ public class NetworkModificationRepository {
     private void collectRootNetworkApplicabilities(List<ModificationEntity> modifications, Map<UUID, Map<String, Boolean>> applicabilities) {
         modifications.forEach(modification -> {
             ModificationEntity applicabilityHolder = getApplicabilityHolder(modification);
-            applicabilities.put(modification.getId(), new HashMap<>(applicabilityHolder.getApplicabilityByRootNetworkTag()));
+            applicabilities.put(modification.getId(), applicabilityHolder.copyApplicabilityByRootNetworkTag());
             if (applicabilityHolder instanceof CompositeModificationEntity composite) {
                 collectRootNetworkApplicabilities(composite.getModifications(), applicabilities);
             }

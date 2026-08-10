@@ -13,6 +13,7 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
+import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationContainerInfos;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -58,6 +59,8 @@ class ModificationRepositoryTest {
     private static final UUID TEST_GROUP_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID_2 = UUID.fromString("5809dabf-60f8-46e5-9e58-57b03d6b1818");
     private static final UUID TEST_GROUP_ID_3 = UUID.fromString("de67bab1-f47b-4199-80a7-10bd77285675");
+    private static final String ROOT_NETWORK_TAG = "PH1";
+    private static final String OTHER_ROOT_NETWORK_TAG = "PH2";
 
     @Autowired
     private ModificationGroupRepository modificationGroupRepository;
@@ -1518,5 +1521,80 @@ class ModificationRepositoryTest {
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modificationInfos.size());
+    }
+
+    private static ModificationEntity switchModification(String equipmentId) {
+        return ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder()
+                .equipmentId(equipmentId).equipmentAttributeName("open").equipmentAttributeValue(true)
+                .equipmentType(IdentifiableType.SWITCH).build());
+    }
+
+    private UUID insertComposite(UUID targetGroupUuid, boolean shared, String... equipmentIds) {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID,
+                Arrays.stream(equipmentIds).map(ModificationRepositoryTest::switchModification).toList());
+        UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(
+                modifications.stream().map(ModificationInfos::getUuid).toList(), "composite");
+        return networkModificationRepository.insertCompositeModifications(targetGroupUuid,
+                List.of(new CompositeInfos(compositeUuid, "composite", shared, "description"))).getFirst().getUuid();
+    }
+
+    @Test
+    void testUpdateRootNetworkApplicability() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(switchModification("v1d1"), switchModification("v1d2")));
+        UUID deactivatedUuid = modifications.get(0).getUuid();
+        UUID untouchedUuid = modifications.get(1).getUuid();
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
+
+        Map<UUID, Map<String, Boolean>> applicabilities = networkModificationRepository.getRootNetworkApplicabilities(TEST_GROUP_ID);
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicabilities.get(deactivatedUuid));
+        assertEquals(Map.of(), applicabilities.get(untouchedUuid),
+                "A modification never updated holds no applicability, which means applicable everywhere");
+
+        // reactivating writes an explicit entry rather than removing it
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, true);
+        assertEquals(Map.of(ROOT_NETWORK_TAG, true),
+                networkModificationRepository.getRootNetworkApplicabilities(TEST_GROUP_ID).get(deactivatedUuid));
+    }
+
+    @Test
+    void testUpdateRootNetworkApplicabilityKeepsTagsIndependent() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(switchModification("v1d1")));
+        UUID modificationUuid = modifications.getFirst().getUuid();
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), OTHER_ROOT_NETWORK_TAG, true);
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, OTHER_ROOT_NETWORK_TAG, true),
+                networkModificationRepository.getRootNetworkApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+    }
+
+    @Test
+    void testUpdateRootNetworkApplicabilityPropagatesToCompositeSubModifications() {
+        UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), ROOT_NETWORK_TAG, false);
+
+        Map<UUID, Map<String, Boolean>> applicabilities = networkModificationRepository.getRootNetworkApplicabilities(TEST_GROUP_ID_2);
+        assertEquals(3, applicabilities.size(), "The composite and its two sub modifications are all reported");
+        applicabilities.forEach((uuid, applicabilityByTag) ->
+                assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicabilityByTag,
+                        "Updating a composite must reach its sub modifications"));
+    }
+
+    @Test
+    void testUpdateRootNetworkApplicabilityOnSharedModification() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = ((ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid)).getReferenceId();
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(referenceUuid), ROOT_NETWORK_TAG, false);
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false),
+                networkModificationRepository.getModificationInfo(sharedUuid).getApplicabilityByRootNetworkTag(),
+                "A reference has no applicability of its own: the shared modification it points to carries it");
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false),
+                networkModificationRepository.getRootNetworkApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
+                "The reference is reported with the applicability of the shared modification");
     }
 }

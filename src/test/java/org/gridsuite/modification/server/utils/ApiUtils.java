@@ -56,7 +56,7 @@ public final class ApiUtils {
     }
 
     public static Optional<NetworkModificationResult> putGroupsDuplications(MockMvc mockMvc, UUID originGroupUuid, UUID targetGroupUuid, UUID networkUuid) throws Exception {
-        ModificationApplicationContext applicationContext = new ModificationApplicationContext(networkUuid, UUID.randomUUID().toString(), UUID.randomUUID(), UUID.randomUUID());
+        ModificationApplicationContext applicationContext = TestUtils.contextOnAnyRootNetwork(networkUuid, UUID.randomUUID().toString(), UUID.randomUUID(), UUID.randomUUID());
         String bodyJson = getObjectMapper().writeValueAsString(org.springframework.data.util.Pair.of(List.of(), List.of(applicationContext)));
         ResultActions mockMvcResultActions = mockMvc.perform(
                 put("/v1/containers/{targetContainerId}", targetGroupUuid)
@@ -74,7 +74,7 @@ public final class ApiUtils {
     }
 
     public static NetworkModificationsResult putGroupsWithCopy(MockMvc mockMvc, UUID targetGroupUuid, List<UUID> modificationUuids, UUID networkUuid) throws Exception {
-        ModificationApplicationContext applicationContext = new ModificationApplicationContext(networkUuid, UUID.randomUUID().toString(), UUID.randomUUID(), UUID.randomUUID());
+        ModificationApplicationContext applicationContext = TestUtils.contextOnAnyRootNetwork(networkUuid, UUID.randomUUID().toString(), UUID.randomUUID(), UUID.randomUUID());
 
         String body = getObjectMapper().writeValueAsString(org.springframework.data.util.Pair.of(modificationUuids, List.of(applicationContext)));
 
