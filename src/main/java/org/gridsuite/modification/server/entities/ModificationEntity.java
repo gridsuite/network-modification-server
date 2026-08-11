@@ -160,10 +160,6 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         return container == null ? null : container.getId();
     }
 
-    /**
-     * @return a detached copy of the applicabilities, to be used when building a DTO: the persistent collection itself
-     * must not escape the session, and a DTO may be modified without touching the entity (duplication for instance).
-     */
     public Map<String, Boolean> copyApplicabilityByRootNetworkTag() {
         return new HashMap<>(applicabilityByRootNetworkTag);
     }

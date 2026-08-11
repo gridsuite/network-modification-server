@@ -569,7 +569,6 @@ public class NetworkModificationRepository {
         return modificationEntity.toModificationInfos();
     }
 
-    // TODO A voir si on garde comme ça ou si on fait comme Activated où on duplique 45 fois le même champ pour chaque DTO
     @Transactional(readOnly = true)
     public List<ModificationInfos> getActiveModifications(UUID groupUuid, String rootNetworkTag) {
         List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByContainerId(groupUuid);
@@ -577,8 +576,7 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return whether {@code modificationEntity} is applicable on the given root network tag, the applicability of a
-     * reference being the one of the shared modification it points to
+     * @return whether {@code modificationEntity} is applicable on the given root network tag
      */
     private boolean isApplicableOn(ModificationEntity modificationEntity, String rootNetworkTag) {
         return rootNetworkTag == null
