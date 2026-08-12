@@ -13,6 +13,7 @@ import com.powsybl.commons.PowsyblException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpStatusCodeException;
 
@@ -24,7 +25,8 @@ import java.util.Objects;
 @Slf4j
 public class NetworkModificationServerException extends PowsyblException {
     public enum Type {
-        DUPLICATION_ARGUMENT_INVALID(HttpStatus.BAD_REQUEST, "Invalid argument for duplication");
+        DUPLICATION_ARGUMENT_INVALID(HttpStatus.BAD_REQUEST, "Invalid argument for duplication"),
+        ROOT_NETWORK_TAG_TOO_LONG(HttpStatus.BAD_REQUEST, "Root network tag can not be longer than " + ModificationEntity.ROOT_NETWORK_TAG_MAX_LENGTH + " characters");
 
         public final HttpStatus status;
         private final String message;

@@ -471,6 +471,17 @@ class ModificationControllerTest {
     }
 
     @Test
+    void testUpdateRootNetworkApplicabilityWithTooLongTag() throws Exception {
+        List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
+                .queryParam("uuids", modifications.getFirst().getUuid().toString())
+                .queryParam("rootNetworkTag", "TOO_LONG")
+                .queryParam("applicable", "false")
+        ).andExpect(status().isBadRequest());
+    }
+
+    @Test
     void updateModificationDescription() throws Exception {
         MvcResult mvcResult;
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()

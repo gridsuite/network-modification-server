@@ -37,6 +37,8 @@ import static org.gridsuite.modification.NetworkModificationException.Type.MISSI
 )
 public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> {
 
+    public static final int ROOT_NETWORK_TAG_MAX_LENGTH = 4;
+
     @Id
     @Column(name = "id")
     private UUID id;
@@ -76,7 +78,7 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
             joinColumns = @JoinColumn(name = "modification_id"),
             foreignKey = @ForeignKey(name = "modification_root_network_applicability_fk")
     )
-    @MapKeyColumn(name = "root_network_tag", length = 4)
+    @MapKeyColumn(name = "root_network_tag", length = ROOT_NETWORK_TAG_MAX_LENGTH)
     @Column(name = "applicable")
     private Map<String, Boolean> applicabilityByRootNetworkTag = new HashMap<>();
 

@@ -55,6 +55,7 @@ import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
+import static org.gridsuite.modification.server.NetworkModificationServerException.Type.ROOT_NETWORK_TAG_TOO_LONG;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
 
 /**
@@ -273,6 +274,9 @@ public class NetworkModificationService {
 
     @Transactional
     public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable) {
+        if (rootNetworkTag.length() > ModificationEntity.ROOT_NETWORK_TAG_MAX_LENGTH) {
+            throw new NetworkModificationServerException(ROOT_NETWORK_TAG_TOO_LONG);
+        }
         networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
     }
 
