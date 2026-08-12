@@ -6,11 +6,9 @@
  */
 package org.gridsuite.modification.server.entities;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.hibernate.annotations.ColumnDefault;
@@ -45,6 +43,7 @@ public class CompositeModificationEntity extends ModificationEntity {
     public CompositeModificationInfos toModificationInfos() {
         List<ModificationInfos> modificationsInfos = getModifications().stream()
                 .map(ModificationEntity::toModificationInfos)
+                .map(CompositeModificationEntity::fillDisplayMessage)
                 .toList();
         return CompositeModificationInfos.builder()
                 .name(getName())
@@ -55,6 +54,13 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .stashed(getStashed())
                 .modificationsInfos(modificationsInfos)
                 .build();
+    }
+
+    @SneakyThrows
+    public static ModificationInfos fillDisplayMessage(ModificationInfos child) {
+        child.setMessageType(child.getType().name());
+        child.setMessageValues(new ObjectMapper().writeValueAsString(child.getMapMessageValues()));
+        return child;
     }
 
     protected void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
