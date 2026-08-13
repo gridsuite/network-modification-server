@@ -1032,9 +1032,10 @@ public class NetworkModificationRepository {
     }
 
     private AbstractModificationContainerEntity getContainer(ModificationContainerInfos containerInfos) {
-        AbstractModificationContainerEntity containerEntity = modificationContainerRepository.findById(containerInfos.id()).orElseGet(() -> {
+        UUID containerId = resolveContainerId(containerInfos);
+        AbstractModificationContainerEntity containerEntity = modificationContainerRepository.findById(containerId).orElseGet(() -> {
             if (ModificationContainerType.GROUP.equals(containerInfos.type())) {
-                return modificationGroupRepository.save(new ModificationGroupEntity(containerInfos.id()));
+                return modificationGroupRepository.save(new ModificationGroupEntity(containerId));
             } else {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
                     String.format("Composite modification %s not found", containerInfos.id()));
@@ -1045,6 +1046,20 @@ public class NetworkModificationRepository {
                 String.format("Container %s is of type %s, expected type : %s", containerInfos.id(), containerEntity.getType(), containerInfos.type().name()));
         }
         return containerEntity;
+    }
+
+    /**
+     * A COMPOSITE container may be designated through a modification reference: in that case the actual
+     * container is the shared composite the reference points to.
+     */
+    private UUID resolveContainerId(ModificationContainerInfos containerInfos) {
+        if (ModificationContainerType.COMPOSITE.equals(containerInfos.type())) {
+            return modificationRepository.findById(containerInfos.id())
+                    .filter(ModificationReferenceEntity.class::isInstance)
+                    .map(entity -> ((ModificationReferenceEntity) entity).getReferenceId())
+                    .orElse(containerInfos.id());
+        }
+        return containerInfos.id();
     }
 
     public ModificationContainerType getContainerType(ModificationEntity m) {
