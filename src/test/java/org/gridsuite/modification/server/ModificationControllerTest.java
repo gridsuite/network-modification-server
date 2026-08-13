@@ -2032,8 +2032,6 @@ class ModificationControllerTest {
                 .build();
         referenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(referenceInfo))).getFirst();
 
-        // Metadata are loaded through a projection stripping the subclass: the reference attributes must still
-        // be resolved, as clients need the referenceId to identify the shared element behind the reference.
         MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
