@@ -28,11 +28,13 @@ import static org.gridsuite.modification.NetworkModificationException.Type.MISSI
 @Setter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "modification")
-public class ModificationEntity {
+@Table(
+        name = "modification",
+        indexes = { @Index(name = "modification_container_idx", columnList = "container_id") }
+)
+public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
     private UUID id;
 
@@ -41,11 +43,6 @@ public class ModificationEntity {
 
     @Column(name = "date", columnDefinition = "timestamptz")
     private Instant date;
-
-    @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"))
-    @ManyToOne(fetch = FetchType.LAZY)
-    @Setter
-    private ModificationGroupEntity group;
 
     @Column(name = "stashed", columnDefinition = "boolean default false")
     private Boolean stashed = false;
@@ -65,6 +62,10 @@ public class ModificationEntity {
 
     @Column(name = "description", columnDefinition = "CLOB")
     private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "container_id", foreignKey = @ForeignKey(name = "modification_container_fk"))
+    private AbstractModificationContainerEntity container;
 
     public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues, String description) {
         this.id = id;
@@ -86,6 +87,10 @@ public class ModificationEntity {
         if (modificationInfos == null) {
             throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
         }
+        // Always mint a fresh id here. We deliberately ignore modificationInfos.getUuid(): fromDTO is also
+        // used to clone/duplicate existing modifications, and reusing the source uuid would collide. This
+        // preserves the previous @GeneratedValue behaviour (a new id on every fromDTO). isNew stays true.
+        this.id = UUID.randomUUID();
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         this.date = Instant.now().truncatedTo(ChronoUnit.MICROS);
         // Do not put this stashed status in assignAttributes, it's not part of a network modification as such.
@@ -128,6 +133,10 @@ public class ModificationEntity {
             this.setDescription(modificationInfos.getDescription());
         }
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
+    }
+
+    public UUID getContainerUuid() {
+        return container == null ? null : container.getId();
     }
 
     public static ModificationEntity fromDTO(ModificationInfos dto) {
