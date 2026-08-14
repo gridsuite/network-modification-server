@@ -6,11 +6,12 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import org.gridsuite.modification.server.entities.ModificationContainerType;
+
 import java.util.UUID;
 
 /**
- * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
- * used as a parameter for composite insertion
+ * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public record CompositeInfos(UUID id, String name, boolean isShared, String description) { }
+public record ModificationContainerInfos(UUID id, ModificationContainerType type) { }
 

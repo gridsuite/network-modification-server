@@ -332,6 +332,7 @@ public final class NetworkUtil {
         vl.newStaticVarCompensator()
             .setId(id)
             .setName(name)
+            .setRegulating(false)
             .setRegulationMode(regulationMode)
             .setVoltageSetpoint(voltageSetpoint)
             .setReactivePowerSetpoint(reactivePowerSetpoint)
