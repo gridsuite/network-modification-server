@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
@@ -145,6 +146,17 @@ public class NetworkModificationController {
                                                                 defaultValue = "true") Boolean errorOnGroupNotFound) {
         networkModificationService.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/abstract-network-modification/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get an abstract network modification")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The abstract network modifications was returned"),
+        @ApiResponse(responseCode = "404", description = "The abstract network modification was not found")
+    })
+    public ResponseEntity<AbstractModification> getAbstractNetworkModification(
+            @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid) {
+        return ResponseEntity.ok().body(networkModificationService.getNetworkModification(networkModificationUuid).toModification());
     }
 
     @PostMapping(value = "/network-modifications", params = "groupUuid", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
