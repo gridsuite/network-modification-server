@@ -143,7 +143,17 @@ public class NetworkModificationController {
     public ResponseEntity<Void> deleteModificationGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                         @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false,
                                                                 defaultValue = "true") Boolean errorOnGroupNotFound) {
-        networkModificationService.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
+        networkModificationService.deleteModificationGroups(List.of(groupUuid), errorOnGroupNotFound);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping(value = "/groups")
+    @Operation(summary = "Delete the modifications group")
+    @ApiResponse(responseCode = "200", description = "Modifications group deleted")
+    public ResponseEntity<Void> deleteModificationGroups(@Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false,
+                                                                defaultValue = "true") Boolean errorOnGroupNotFound,
+                                                         @Parameter(description = "Group UUIDs") @RequestBody List<UUID> groupUuids) {
+        networkModificationService.deleteModificationGroups(groupUuids, errorOnGroupNotFound);
         return ResponseEntity.ok().build();
     }
 
@@ -291,13 +301,24 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping(value = "/groups/stashed-modifications")
+    @Operation(summary = "Delete all the stashed modifications in all specified groups")
+    @ApiResponse(responseCode = "200", description = "All stashed modifications in all the groups are deleted")
+    public ResponseEntity<Void> deleteStashedModificationInAllGroups(
+                                                                 @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false,
+                                                                         defaultValue = "true") Boolean errorOnGroupNotFound,
+                                                                 @Parameter(description = "Group UUIDs") @RequestBody List<UUID> groupUuids) {
+        networkModificationService.deleteStashedModificationInAllGroups(groupUuids, errorOnGroupNotFound);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping(value = "/groups/{groupUuid}/stashed-modifications")
     @Operation(summary = "Delete the stashed modifications in a group")
     @ApiResponse(responseCode = "200", description = "Stashed modifications in the group deleted")
     public ResponseEntity<Void> deleteStashedModificationInGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                         @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false,
                                                                 defaultValue = "true") Boolean errorOnGroupNotFound) {
-        networkModificationService.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
+        networkModificationService.deleteStashedModificationInAllGroups(List.of(groupUuid), errorOnGroupNotFound);
         return ResponseEntity.ok().build();
     }
 
