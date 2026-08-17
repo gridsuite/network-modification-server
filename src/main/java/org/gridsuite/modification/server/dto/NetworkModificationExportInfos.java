@@ -7,10 +7,11 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.gridsuite.modification.ModificationType;
+import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.dto.ModificationInfos;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -19,14 +20,8 @@ import java.util.UUID;
 public record NetworkModificationExportInfos(
         @JsonProperty("modifications")
         List<ModificationInfos> exportedModifications,
-
-        @JsonProperty("unexported")
-        List<UnexportedModification> unexportedModifications
-) {
-
-    public record UnexportedModification(
-            UUID uuid,
-            ModificationType type
-    ) {
-    }
-}
+        @JsonProperty("filters")
+        Map<UUID, List<AbstractFilter>> exportedFilters,
+        @JsonProperty("loadFlowParameters")
+        Map<UUID, UUID> exportedLoadFlowParameters
+) { }
