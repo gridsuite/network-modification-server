@@ -9,12 +9,13 @@ package org.gridsuite.modification.server.entities;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.error.NetworkModificationException;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.error.NetworkModificationExceptionType.MOVE_MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR;
 
 /**
  * @author Hugo Marcellin {@literal <hugo.marcelin at rte-france.com>}
@@ -44,8 +45,9 @@ public class CompositeContainerEntity extends AbstractModificationContainerEntit
         for (ModificationEntity m : childrenToInsert) {
             if (m instanceof CompositeModificationEntity childToInsert
                 && childToInsert.getContent().containsOrIsContainer(getId())) {
-                throw new NetworkModificationException(MOVE_MODIFICATION_ERROR,
-                    String.format("Moving composite (%s) into (%s) would create a cycle", m.getId(), getId()));
+                throw new NetworkModificationServerException(MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR,
+                    String.format("Moving composite modification (%s) into (%s) would create a cycle", m.getId(), getId()),
+                    Map.of("compositeModificationId", m.getId(), "modificationId", getId()));
             }
         }
     }

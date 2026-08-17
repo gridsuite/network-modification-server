@@ -9,17 +9,12 @@ package org.gridsuite.modification.server.service;
 import lombok.extern.slf4j.Slf4j;
 import org.gridsuite.modification.ILoadFlowService;
 import org.gridsuite.modification.dto.LoadFlowParametersInfos;
-import org.gridsuite.modification.error.NetworkModificationException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.UUID;
-
-import static org.gridsuite.modification.error.NetworkModificationExceptionType.LOAD_FLOW_PARAMETERS_FETCH_ERROR;
 
 /**
  * @author Achour BERRAHMA <achour.berrahma at rte-france.com>
@@ -43,15 +38,6 @@ public class LoadFlowService implements ILoadFlowService {
     public LoadFlowParametersInfos getLoadFlowParametersInfos(UUID uuid) {
         String path = UriComponentsBuilder.fromPath(DELIMITER + LOADFLOW_SERVER_API_VERSION + PARAMETERS_URI)
                 .buildAndExpand(uuid).toUriString();
-        try {
-            return restTemplate.getForObject(loadFlowServerBaseUri + path, LoadFlowParametersInfos.class);
-        } catch (HttpStatusCodeException e) {
-            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-                log.error("Load flow parameters with UUID {} not found", uuid);
-                return null;
-            } else {
-                throw new NetworkModificationException(LOAD_FLOW_PARAMETERS_FETCH_ERROR, e.getMessage());
-            }
-        }
+        return restTemplate.getForObject(loadFlowServerBaseUri + path, LoadFlowParametersInfos.class);
     }
 }

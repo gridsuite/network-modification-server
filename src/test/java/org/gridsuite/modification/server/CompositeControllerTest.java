@@ -18,8 +18,6 @@ import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
-import org.gridsuite.modification.error.NetworkModificationException;
-import org.gridsuite.modification.error.NetworkModificationExceptionType;
 import org.gridsuite.modification.server.dto.ActionType;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
@@ -27,6 +25,8 @@ import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.error.ModificationBusinessErrorCode;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.repositories.CompositeModificationRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -359,8 +359,8 @@ class CompositeControllerTest {
         assertEquals(1, groupModifications.size());
         assertEquals(modificationUuidList.getFirst(), groupModifications.getFirst().getUuid());
         // duplicate has been deleted
-        assertEquals(NetworkModificationExceptionType.MODIFICATION_NOT_FOUND.getMessage() + " : " + returnedNewId, assertThrows(NetworkModificationException.class, ()
-                -> networkModificationRepository.getModificationInfo(returnedNewId)).getMessage());
+        assertEquals(ModificationBusinessErrorCode.MODIFICATION_NOT_FOUND, assertThrows(NetworkModificationServerException.class, ()
+            -> networkModificationRepository.getModificationInfo(returnedNewId)).getBusinessErrorCode());
     }
 
     @Test

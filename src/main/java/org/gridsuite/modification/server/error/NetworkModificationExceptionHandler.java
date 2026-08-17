@@ -6,13 +6,11 @@
  */
 package org.gridsuite.modification.server.error;
 
-import com.powsybl.ws.commons.error.ErrorUtils;
+import com.powsybl.ws.commons.error.AbstractBusinessExceptionHandler;
 import com.powsybl.ws.commons.error.PowsyblWsProblemDetail;
 import com.powsybl.ws.commons.error.ServerNameProvider;
 import jakarta.servlet.http.HttpServletRequest;
-import org.gridsuite.modification.error.NetworkModificationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -22,24 +20,42 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @ControllerAdvice
-public class NetworkModificationExceptionHandler {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationExceptionHandler.class);
-
-    private final ServerNameProvider serverNameProvider;
+public class NetworkModificationExceptionHandler extends AbstractBusinessExceptionHandler<NetworkModificationServerException, ModificationBusinessErrorCode> {
 
     protected NetworkModificationExceptionHandler(ServerNameProvider serverNameProvider) {
-        this.serverNameProvider = serverNameProvider;
+        super(serverNameProvider);
     }
 
-    @ExceptionHandler(NetworkModificationException.class)
-    protected ResponseEntity<PowsyblWsProblemDetail> handleNetworkModificationException(NetworkModificationException exception, HttpServletRequest request) {
-        LOGGER.warn(exception.getMessage(), exception);
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // basic handling, we do not want specific http error code for each exception
+    @Override
+    protected @NonNull ModificationBusinessErrorCode getBusinessCode(NetworkModificationServerException e) {
+        return e.getBusinessErrorCode();
+    }
 
-        PowsyblWsProblemDetail problemDetail = ErrorUtils.baseBuilder(serverNameProvider.serverName(), status, request)
-                .detail(exception.getMessage())
-                .build();
-        return ResponseEntity.status(status).body(problemDetail);
+    @Override
+    protected HttpStatus mapStatus(ModificationBusinessErrorCode modificationBusinessErrorCode) {
+        return switch (modificationBusinessErrorCode) {
+            case MODIFICATION_CONTAINER_NOT_FOUND,
+                 MODIFICATION_CONTAINER_TYPE_NOT_FOUND,
+                 MODIFICATION_NOT_FOUND,
+                 MODIFICATIONS_NOT_FOUND,
+                 NETWORK_NOT_FOUND,
+                 VARIANT_NOT_FOUND
+                 -> HttpStatus.NOT_FOUND;
+            case MODIFICATION_CONTAINER_BAD_TYPE,
+                 MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN,
+                 MODIFICATION_DELETION_ARGUMENT_ERROR,
+                 MODIFICATION_DUPLICATION_ARGUMENT_ERROR,
+                 MODIFICATION_DESCRIPTION_MISSING,
+                 MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR,
+                 VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING
+                -> HttpStatus.BAD_REQUEST;
+            default -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
+    }
+
+    @ExceptionHandler(NetworkModificationServerException.class)
+    protected ResponseEntity<PowsyblWsProblemDetail> handleNetworkModificationException(
+        NetworkModificationServerException exception, HttpServletRequest request) {
+        return super.handleDomainException(exception, request);
     }
 }

@@ -12,11 +12,14 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.LineAttachToVoltageLevelInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-import static org.gridsuite.modification.error.NetworkModificationExceptionType.LINE_ATTACH_DESCRIPTION_ERROR;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
+
+import java.util.Map;
+
+import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING;
 
 /**
  * @author Nicolas NOIR <nicolas.noir at rte-france.com>
@@ -96,7 +99,9 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
         existingVoltageLevelId = lineAttachToVoltageLevelInfos.getExistingVoltageLevelId();
         bbsOrBusId = lineAttachToVoltageLevelInfos.getBbsOrBusId();
         if (lineAttachToVoltageLevelInfos.getAttachmentLine() == null) {
-            throw new NetworkModificationException(LINE_ATTACH_DESCRIPTION_ERROR, "Missing required attachment line description");
+            throw new NetworkModificationServerException(VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING,
+                String.format("Attachment line for voltage level %s is missing", existingVoltageLevelId),
+                Map.of("voltageLevelId", existingVoltageLevelId));
         }
         lineCreation = new LineCreationEntity(lineAttachToVoltageLevelInfos.getAttachmentLine());
         newLine1Id = lineAttachToVoltageLevelInfos.getNewLine1Id();

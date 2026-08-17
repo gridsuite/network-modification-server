@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.Getter;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
@@ -26,7 +25,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.error.NetworkModificationExceptionType.MODIFICATION_ERROR;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypesInModification;
 
@@ -196,12 +194,8 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public List<AbstractBaseImpact> flushModificationApplications() {
-        try {
-            networkStoreService.flush(network); // At first
-            flushImpactedEquipments();
-        } catch (Exception e) {
-            throw new NetworkModificationException(MODIFICATION_ERROR, e);
-        }
+        networkStoreService.flush(network); // At first
+        flushImpactedEquipments();
 
         return reduceNetworkImpacts();
     }

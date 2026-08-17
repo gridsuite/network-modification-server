@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.OperationalLimitsGroup;
 import com.powsybl.iidm.network.SwitchKind;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.util.*;
 
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.*;
+import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
@@ -182,7 +184,7 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lineMissingLineJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is5xxServerError())
             .andExpect(result -> assertEquals(
-                    new NetworkModificationException(LINE_ATTACH_DESCRIPTION_ERROR, "Missing required attachment line description").getMessage(),
+                    new NetworkModificationServerException(VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING, "Missing required attachment line description").getMessage(),
                     result.getResolvedException().getMessage()));
         testNetworkModificationsCount(getGroupId(), 1);
     }

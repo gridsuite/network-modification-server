@@ -11,17 +11,19 @@ import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.loadflow.LoadFlowParameters;
 import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.error.NetworkModificationException;
-import org.gridsuite.modification.error.NetworkModificationExceptionType;
 import org.gridsuite.modification.server.service.LoadFlowService;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.client.HttpServerErrorException;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -55,9 +57,7 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
 
         // Mock for server error case
         when(loadFlowService.getLoadFlowParametersInfos(ERROR_LOADFLOW_PARAMETERS_UUID))
-                .thenThrow(new NetworkModificationException(
-                        NetworkModificationExceptionType.LOAD_FLOW_PARAMETERS_FETCH_ERROR,
-                        "Internal server error"));
+                .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error"));
     }
 
     @Override
@@ -135,14 +135,14 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
     /**
      * Test LoadFlowService.getLoadFlowParametersInfos() method for server error case
      */
+    // TODO Nothing is test here ?
     @Test
     void testGetLoadFlowParametersInfosServerError() {
-        NetworkModificationException exception = assertThrows(
-                NetworkModificationException.class,
+        HttpServerErrorException exception = assertThrows(
+            HttpServerErrorException.class,
                 () -> loadFlowService.getLoadFlowParametersInfos(ERROR_LOADFLOW_PARAMETERS_UUID)
         );
-
-        assertEquals(NetworkModificationExceptionType.LOAD_FLOW_PARAMETERS_FETCH_ERROR.getMessage() + " : Internal server error", exception.getMessage());
+        assertEquals("Internal server error", exception.getStatusText());
     }
 
     @Override
