@@ -379,8 +379,8 @@ class ModificationIndexationTest {
         /*
         Delete modification group
          */
-        networkModificationService.deleteModificationGroup(
-            groupUuid1,
+        networkModificationService.deleteModificationGroups(
+            List.of(groupUuid1),
             true
         );
 

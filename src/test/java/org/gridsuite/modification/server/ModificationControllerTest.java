@@ -94,6 +94,7 @@ class ModificationControllerTest {
     private static final UUID TEST_NETWORK_WITH_FLUSH_ERROR_ID = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_GROUP2_ID = UUID.randomUUID();
+    private static final UUID TEST_GROUP3_ID = UUID.randomUUID();
     private static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
     private static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
@@ -101,6 +102,8 @@ class ModificationControllerTest {
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String NETWORK_MODIFICATION_URI = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
+    private static final String NETWORK_MODIFICATION_URI_2 = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP2_ID;
+    private static final String NETWORK_MODIFICATION_URI_3 = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP3_ID;
 
     @Autowired
     private MockMvc mockMvc;
@@ -1575,6 +1578,100 @@ class ModificationControllerTest {
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID + "/stashed-modifications").queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, true, true).size());
         mockMvc.perform(delete("/v1/groups/" + UUID.randomUUID() + "/stashed-modifications").queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
+    }
+
+    @Test
+    void testDeleteAllStashedNetworkModifications() throws Exception {
+        MvcResult mvcResult;
+        EquipmentAttributeModificationInfos loadModificationInfos = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.LOAD)
+                .equipmentId("v1load")
+                .build();
+
+        // create some modifications with several groups
+        String modificationInfosJson = TestUtils.getJsonBody(loadModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        modificationInfosJson = TestUtils.getJsonBody(loadModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI_2).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        modificationInfosJson = TestUtils.getJsonBody(loadModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI_2).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        modificationInfosJson = TestUtils.getJsonBody(loadModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI_3).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        // check creation
+        List<ModificationInfos> modificationsGroup1 = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(1, modificationsGroup1.size());
+        List<ModificationInfos> modificationsGroup2 = modificationRepository.getModifications(TEST_GROUP2_ID, true, true);
+        assertEquals(2, modificationsGroup2.size());
+        List<ModificationInfos> modificationsGroup3 = modificationRepository.getModifications(TEST_GROUP3_ID, true, true);
+        assertEquals(1, modificationsGroup3.size());
+        String uuidString = modificationsGroup1.getFirst().getUuid().toString();
+
+        // stash
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", uuidString)
+                        .queryParam("stashed", "true"))
+                .andExpect(status().isOk());
+        String uuidString2 = modificationsGroup2.getFirst().getUuid().toString();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .queryParam("groupUuid", TEST_GROUP2_ID.toString())
+                        .queryParam("uuids", uuidString2)
+                        .queryParam("stashed", "true"))
+                .andExpect(status().isOk());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, true).size());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP2_ID, true, true, true).size());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP3_ID, true, true, true).size());
+
+        // remove
+        String body = mapper.writeValueAsString(List.of(TEST_GROUP_ID, TEST_GROUP2_ID));
+        mockMvc.perform(delete("/v1/groups/stashed-modifications").queryParam("errorOnGroupNotFound", "false")
+                .content(body)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP2_ID, true, true).size());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP3_ID, true, true).size());
+    }
+
+    @Test
+    void testDeleteSeveralGroups() throws Exception {
+        MvcResult mvcResult;
+        EquipmentAttributeModificationInfos loadModificationInfos = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.LOAD)
+                .equipmentId("v1load")
+                .build();
+
+        // create some modifications with several groups
+        String modificationInfosJson = TestUtils.getJsonBody(loadModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        modificationInfosJson = TestUtils.getJsonBody(loadModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI_2).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        modificationInfosJson = TestUtils.getJsonBody(loadModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI_3).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        // remove the first two groups
+        String body = mapper.writeValueAsString(List.of(TEST_GROUP_ID, TEST_GROUP2_ID));
+        mockMvc.perform(delete("/v1/groups").queryParam("errorOnGroupNotFound", "false")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        assertEquals(1, modificationRepository.getModificationGroupsUuids().size());
+        assertEquals(TEST_GROUP3_ID, modificationRepository.getModificationGroupsUuids().getFirst());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP3_ID, true, true).size());
     }
 
     @Test

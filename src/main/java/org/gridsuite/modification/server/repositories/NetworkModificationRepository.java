@@ -607,14 +607,19 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
+    public void deleteModificationGroup(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
         try {
-            ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-            if (!groupEntity.getModifications().isEmpty()) {
-                deleteModifications(groupEntity.getModifications().stream().filter(Objects::nonNull).toList());
+            List<ModificationGroupEntity> groupEntities = getModificationGroups(groupUuids);
+            if (groupEntities.size() != groupUuids.size()) {
+                List<UUID> notFoundGroups = groupUuids.stream().filter(uuid -> groupEntities.stream().noneMatch(groupEntity -> uuid.equals(groupEntity.getId()))).toList();
+                throw new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, notFoundGroups.toString());
+            }
+            List<ModificationEntity> modifications = groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList();
+            if (!modifications.isEmpty()) {
+                deleteModifications(modifications);
             }
             // deleting the group deletes its modification_container row (JOINED subtype delete)
-            modificationGroupRepository.delete(groupEntity);
+            modificationGroupRepository.deleteAll(groupEntities);
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
                 return;
@@ -651,6 +656,10 @@ public class NetworkModificationRepository {
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
+    }
+
+    private List<ModificationGroupEntity> getModificationGroups(List<UUID> groupUuids) {
+        return this.modificationGroupRepository.findAllById(groupUuids);
     }
 
     private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
@@ -848,9 +857,10 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
+    public void deleteStashedModificationInAllGroup(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
         try {
-            List<ModificationEntity> modifications = getModificationGroup(groupUuid).removeAllStashedModifications();
+            List<ModificationEntity> modifications = getModificationGroups(groupUuids).stream()
+                    .flatMap(group -> group.removeAllStashedModifications().stream()).collect(Collectors.toList());
             if (!modifications.isEmpty()) {
                 deleteModifications(modifications);
             }

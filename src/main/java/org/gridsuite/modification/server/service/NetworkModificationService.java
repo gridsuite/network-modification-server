@@ -230,9 +230,9 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
-        deleteIndexedModificationGroup(List.of(groupUuid));
-        networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
+    public void deleteModificationGroups(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
+        deleteIndexedModificationGroup(groupUuids);
+        networkModificationRepository.deleteModificationGroup(groupUuids, errorOnGroupNotFound);
     }
 
     private void deleteIndexedModificationGroup(List<UUID> groupUuids) {
@@ -552,8 +552,8 @@ public class NetworkModificationService {
         networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
     }
 
-    public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
-        networkModificationRepository.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
+    public void deleteStashedModificationInAllGroups(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
+        networkModificationRepository.deleteStashedModificationInAllGroup(groupUuids, errorOnGroupNotFound);
     }
 
     public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {
