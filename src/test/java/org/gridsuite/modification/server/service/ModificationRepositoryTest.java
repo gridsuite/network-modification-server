@@ -264,7 +264,8 @@ class ModificationRepositoryTest {
         assertRequestsCount(5, 0, 0, 3);
 
         // Non-existent group modification uuid
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.deleteModificationGroup(List.of(TEST_GROUP_ID), true),
+        List<UUID> notFoundGroups = List.of(TEST_GROUP_ID);
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.deleteModificationGroup(notFoundGroups, true),
                 new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
