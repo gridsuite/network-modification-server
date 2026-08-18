@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.*;
+import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.MODIFICATION_INFOS_ERROR;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testEmptyImpacts;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
@@ -159,9 +160,9 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
 
         String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isInternalServerError())
+            .andExpect(status().isBadRequest())
             .andExpect(result -> assertEquals(
-                new NetworkModificationException(EQUIPMENT_ATTRIBUTE_NAME_ERROR, "For switch status, the attribute name is only 'open'").getMessage(),
+                String.format(MODIFICATION_INFOS_ERROR.messageTemplate(), "The equipment attribute name is invalid : Incorrect value 'close' : for switch status, the attribute name is only 'open'"),
                 result.getResolvedException().getMessage()));
 
         // bad equipment attribute value
@@ -170,9 +171,10 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isInternalServerError())
+            .andExpect(status().isBadRequest())
             .andExpect(result -> assertEquals(
-                new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + Set.of(true, false)).getMessage(),
+                String.format(MODIFICATION_INFOS_ERROR.messageTemplate(),
+                    "The equipment attribute value is invalid : Incorrect value 'opened' : for switch status, the attribute values are only 'true or false'"),
                 result.getResolvedException().getMessage()));
     }
 

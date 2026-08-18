@@ -15,7 +15,6 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
 
@@ -156,8 +155,8 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
                 Constructor<? extends ModificationEntity> constructor = entityClass.getConstructor(dto.getClass());
                 return constructor.newInstance(dto);
             } catch (Exception e) {
-                if (e.getCause() instanceof NetworkModificationException networkModificationException) {
-                    throw networkModificationException;
+                if (e.getCause() instanceof NetworkModificationServerException networkModificationServerException) {
+                    throw networkModificationServerException;
                 }
                 throw new RuntimeException("Failed to map DTO to Entity", e);
             }

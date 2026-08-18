@@ -24,6 +24,7 @@ import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -308,6 +309,16 @@ public class NetworkModificationService {
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(groupUuid, modifications, applicationContexts).thenApply(results ->
             new NetworkModificationsResult(ids, results));
+    }
+
+    public void checkNetworkModification(@NonNull ModificationInfos modificationInfo) {
+        try {
+            modificationInfo.check();
+        } catch (NetworkModificationException e) {
+            throw new NetworkModificationServerException(MODIFICATION_INFOS_ERROR,
+                String.format(MODIFICATION_INFOS_ERROR.messageTemplate(), e.getMessage()),
+                Map.of("errorMessage", e.getMessage()));
+        }
     }
 
     /**

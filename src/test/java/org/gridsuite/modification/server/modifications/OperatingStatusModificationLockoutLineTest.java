@@ -26,6 +26,7 @@ import java.util.UUID;
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.FORCED_OUTAGE;
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.PLANNED_OUTAGE;
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.*;
+import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.MODIFICATION_INFOS_ERROR;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createSwitch;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -173,15 +174,15 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         modificationInfos.setAction(null);
         modificationJson = getJsonBody(modificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isInternalServerError())
+            .andExpect(status().isBadRequest())
             .andExpect(result -> assertEquals(
-                    new NetworkModificationException(OPERATING_ACTION_TYPE_EMPTY).getMessage(),
+                String.format(MODIFICATION_INFOS_ERROR.messageTemplate(), "The operating action type is empty"),
                     result.getResolvedException().getMessage()));
         // modification action not existing
         // note: should never happen in real
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson.replace("LOCKOUT", "INVALID_ACTION")).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(
-                        status().is5xxServerError());
+                        status().isBadRequest());
     }
 
     @Override

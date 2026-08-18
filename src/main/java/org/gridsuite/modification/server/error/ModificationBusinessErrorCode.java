@@ -17,12 +17,13 @@ public enum ModificationBusinessErrorCode implements BusinessErrorCode {
     MODIFICATION_CONTAINER_BAD_TYPE("modification.container.badType", "Modification container type of %s is invalid : actual type %s -> expected type %s"),
     MODIFICATION_NOT_FOUND("modification.notFound", "Modification (%s) not found"),
     MODIFICATIONS_NOT_FOUND("modifications.notFound"),
+    MODIFICATION_INFOS_ERROR("modification.infos.error", "Modification infos error : %s"),
     MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN("modification.with_group.deletion.forbidden", "Deletion forbidden : modification %s is owned by group %s"),
     MODIFICATION_DELETION_ARGUMENT_ERROR("modification.deletion.argument.error", "Modification deletion : need to specify the group or give a list of UUIDs"),
     MODIFICATION_DUPLICATION_ARGUMENT_ERROR("modification.duplication.argument.error", "Modification duplication : need to specify the group or give a list of UUIDs"),
     MODIFICATION_DESCRIPTION_MISSING("modification.description.missing"),
     MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR("modification.composite.move.cycle.error"),
-    VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING("modification.voltageLevel.attachmentLine.missing"),
+    VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING("modification.voltageLevel.attachmentLine.missing", "Attachment line for voltage level %s is missing"),
 
     NETWORK_NOT_FOUND("network.notFound", "Network %s not found"),
     VARIANT_NOT_FOUND("network.variant.notFound", "Variant %s for network %s not found");

@@ -13,7 +13,6 @@ import com.powsybl.iidm.network.OperationalLimitsGroup;
 import com.powsybl.iidm.network.SwitchKind;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
-import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,8 @@ import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
@@ -182,9 +182,9 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
         lineMissingLine.setAttachmentLine(null); // we omit a mandatory input data
         String lineMissingLineJson = getJsonBody(lineMissingLine, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineMissingLineJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is5xxServerError())
+            .andExpect(status().isBadRequest())
             .andExpect(result -> assertEquals(
-                    new NetworkModificationServerException(VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING, "Missing required attachment line description").getMessage(),
+                    String.format(VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING.messageTemplate(), lineMissingLine.getExistingVoltageLevelId()),
                     result.getResolvedException().getMessage()));
         testNetworkModificationsCount(getGroupId(), 1);
     }

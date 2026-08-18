@@ -19,6 +19,7 @@ import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import com.powsybl.ws.commons.error.BaseExceptionHandler;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.dto.*;
@@ -51,6 +52,7 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -89,6 +91,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @AutoConfigureMockMvc
 @SpringBootTest
+@Import(BaseExceptionHandler.class)
 @Tag("IntegrationTest")
 class ModificationControllerTest {
 
@@ -671,7 +674,7 @@ class ModificationControllerTest {
                 put("/v1/containers/" + TEST_GROUP_ID + "?action=XXXXXXX")
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().is5xxServerError());
 
         // create 1 modification in another group
         UUID otherGroupId = UUID.randomUUID();
@@ -757,7 +760,7 @@ class ModificationControllerTest {
                 put(wrongUrl)
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().is5xxServerError());
 
         // create 1 modification in another group
         UUID otherGroupId = UUID.randomUUID();

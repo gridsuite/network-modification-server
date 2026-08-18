@@ -100,7 +100,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
         bbsOrBusId = lineAttachToVoltageLevelInfos.getBbsOrBusId();
         if (lineAttachToVoltageLevelInfos.getAttachmentLine() == null) {
             throw new NetworkModificationServerException(VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING,
-                String.format("Attachment line for voltage level %s is missing", existingVoltageLevelId),
+                String.format(VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING.messageTemplate(), existingVoltageLevelId),
                 Map.of("voltageLevelId", existingVoltageLevelId));
         }
         lineCreation = new LineCreationEntity(lineAttachToVoltageLevelInfos.getAttachmentLine());

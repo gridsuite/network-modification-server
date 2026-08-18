@@ -15,9 +15,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.entities.EntityRegistry;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
+
 import java.lang.reflect.Constructor;
 
 /**
@@ -92,8 +93,8 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
                 Constructor<? extends EquipmentAttributeModificationEntity<?>> constructor = entityClass.getConstructor(EquipmentAttributeModificationInfos.class);
                 return constructor.newInstance(dto);
             } catch (Exception e) {
-                if (e.getCause() instanceof NetworkModificationException networkModificationException) {
-                    throw networkModificationException;
+                if (e.getCause() instanceof NetworkModificationServerException networkModificationServerException) {
+                    throw networkModificationServerException;
                 }
                 throw new RuntimeException("Failed to map DTO to Entity", e);
             }

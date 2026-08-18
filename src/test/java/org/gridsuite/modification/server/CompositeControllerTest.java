@@ -450,7 +450,7 @@ class CompositeControllerTest {
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + nonExistentUuid + "/replace")
                         .param("name", "new name")
                         .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -882,7 +882,7 @@ class CompositeControllerTest {
                         .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isBadRequest());
 
         // Case 2: recursive — move composite1 into composite3 (grandchild of composite1)
         mockMvc.perform(put("/v1/containers/{targetContainerId}", actualComposite3Uuid)
@@ -892,7 +892,7 @@ class CompositeControllerTest {
                         .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isBadRequest());
 
         // Case 3: self — move composite1 into itself
         mockMvc.perform(put("/v1/containers/{targetContainerId}", actualComposite1Uuid)
@@ -902,7 +902,7 @@ class CompositeControllerTest {
                         .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
