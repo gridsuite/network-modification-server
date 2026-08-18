@@ -21,10 +21,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.BalancesAdjustmentModificationInfos;
+import org.gridsuite.modification.dto.ByFilterDeletionInfos;
+import org.gridsuite.modification.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
-import org.gridsuite.modification.dto.EquipmentModificationInfos;
+import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
+import org.gridsuite.modification.dto.GeneratorsFilterInfos;
+import org.gridsuite.modification.dto.ModificationByAssignmentInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.dto.ScalingInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
@@ -126,18 +133,66 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public NetworkModificationExportInfos getNetworkModificationsInfosToExport(UUID groupUuid, boolean errorOnGroupNotFound) {
         List<ModificationInfos> allModifications = networkModificationRepository.getModificationsInfosToExport(List.of(groupUuid), errorOnGroupNotFound);
-        List<ModificationInfos> exportable = new ArrayList<>();
-        List<NetworkModificationExportInfos.UnexportedModification> unexported = new ArrayList<>();
-        for (ModificationInfos modification : allModifications) {
-            if (modification instanceof EquipmentModificationInfos) {
-                exportable.add(modification);
-            } else {
-                unexported.add(
-                        new NetworkModificationExportInfos.UnexportedModification(modification.getUuid(), modification.getType())
-                );
-            }
+        List<ModificationInfos> exportable = new ArrayList<>(allModifications);
+
+        Map<UUID, List<UUID>> filterUuidsByModification = new LinkedHashMap<>();
+        Map<UUID, UUID> loadFlowParametersIdByModification = new LinkedHashMap<>();
+        exportable.forEach(modification -> collectFilterAndLoadFlowParametersReferences(modification, filterUuidsByModification, loadFlowParametersIdByModification));
+
+        Set<UUID> allFilterUuids = filterUuidsByModification.values().stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        Map<UUID, AbstractFilter> filtersByUuid = allFilterUuids.isEmpty() ? Map.of()
+                : filterService.getFilters(new ArrayList<>(allFilterUuids)).stream()
+                    .collect(Collectors.toMap(AbstractFilter::getId, Function.identity()));
+        Map<UUID, List<AbstractFilter>> filtersByModification = filterUuidsByModification.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                    entry -> entry.getValue().stream().map(filtersByUuid::get).filter(Objects::nonNull).toList()));
+
+        return new NetworkModificationExportInfos(exportable, filtersByModification, loadFlowParametersIdByModification);
+    }
+
+    private void collectFilterAndLoadFlowParametersReferences(ModificationInfos modification,
+                                                               Map<UUID, List<UUID>> filterUuidsByModification,
+                                                               Map<UUID, UUID> loadFlowParametersIdByModification) {
+        List<UUID> filterUuids = new ArrayList<>();
+        if (modification instanceof ByFilterDeletionInfos byFilterDeletion) {
+            addFilterUuids(byFilterDeletion.getFilters(), FilterInfos::getId, filterUuids);
+        } else if (modification instanceof GenerationDispatchInfos generationDispatch) {
+            addFilterUuids(generationDispatch.getGeneratorsWithoutOutage(), GeneratorsFilterInfos::getId, filterUuids);
+            addFilterUuids(generationDispatch.getGeneratorsWithFixedSupply(), GeneratorsFilterInfos::getId, filterUuids);
+            orEmpty(generationDispatch.getGeneratorsFrequencyReserve())
+                    .forEach(reserve -> addFilterUuids(reserve.getGeneratorsFilters(), GeneratorsFilterInfos::getId, filterUuids));
+        } else if (modification instanceof ScalingInfos scaling) {
+            orEmpty(scaling.getVariations()).forEach(variation -> addFilterUuids(variation.getFilters(), FilterInfos::getId, filterUuids));
+        } else if (modification instanceof ModificationByAssignmentInfos byAssignment) {
+            orEmpty(byAssignment.getAssignmentInfosList()).forEach(assignment -> addFilterUuids(assignment.getFilters(), FilterInfos::getId, filterUuids));
+        } else if (modification instanceof ByFormulaModificationInfos byFormula) {
+            orEmpty(byFormula.getFormulaInfosList()).forEach(formula -> addFilterUuids(formula.getFilters(), FilterInfos::getId, filterUuids));
+        } else if (modification instanceof BalancesAdjustmentModificationInfos balancesAdjustment && balancesAdjustment.getLoadFlowParametersId() != null) {
+            loadFlowParametersIdByModification.put(modification.getUuid(), balancesAdjustment.getLoadFlowParametersId());
+        } else if (modification instanceof CompositeModificationInfos composite) {
+            orEmpty(composite.getModificationsInfos())
+                    .forEach(nested -> collectFilterAndLoadFlowParametersReferences(nested, filterUuidsByModification, loadFlowParametersIdByModification));
+        } else if (modification instanceof ModificationReferenceInfos reference && reference.getReferenceInfos() != null) {
+            collectFilterAndLoadFlowParametersReferences(reference.getReferenceInfos(), filterUuidsByModification, loadFlowParametersIdByModification);
         }
-        return new NetworkModificationExportInfos(exportable, unexported);
+        if (!filterUuids.isEmpty()) {
+            filterUuidsByModification.put(modification.getUuid(), filterUuids);
+        }
+    }
+
+    private <T> void addFilterUuids(List<T> filterLikeInfos, Function<T, UUID> idExtractor, List<UUID> filterUuids) {
+        orEmpty(filterLikeInfos).forEach(filterLikeInfo -> {
+            UUID id = idExtractor.apply(filterLikeInfo);
+            if (id != null) {
+                filterUuids.add(id);
+            }
+        });
+    }
+
+    private static <T> List<T> orEmpty(List<T> list) {
+        return list == null ? List.of() : list;
     }
 
     public List<ModificationEntity> getModificationsByUuids(List<UUID> modificationUuids) {
