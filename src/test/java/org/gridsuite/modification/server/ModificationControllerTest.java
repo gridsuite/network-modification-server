@@ -21,6 +21,9 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
+import org.gridsuite.filter.utils.EquipmentType;
+import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder;
@@ -272,16 +275,18 @@ class ModificationControllerTest {
         List<UUID> groupUuids = networkModificationService.getModificationGroups();
         assertEquals(groupUuids, List.of(TEST_GROUP_ID));
 
-        // get export modifications Infos group
+        // get export modifications Infos group: the stashed load modification is excluded,
+        // the switch and by-formula modifications are both exported (no more exportable/non-exportable split)
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications/export", TEST_GROUP_ID))
                 .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         NetworkModificationExportInfos exportInfos = mapper.readValue(resultAsString, NetworkModificationExportInfos.class);
 
-        assertEquals(1, exportInfos.exportedModifications().size());
-        assertEquals(1, exportInfos.unexportedModifications().size());
-        assertEquals(exportInfos.unexportedModifications().getFirst().type(), byFormulaModificationInfos.getType());
+        List<ModificationType> exportedTypes = exportInfos.exportedModifications().stream().map(ModificationInfos::getType).toList();
+        assertEquals(2, exportedTypes.size());
+        assertTrue(exportedTypes.contains(switchStatusModification.getType()));
+        assertTrue(exportedTypes.contains(byFormulaModificationInfos.getType()));
 
         // delete group
         mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
@@ -298,7 +303,64 @@ class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         exportInfos = mapper.readValue(resultAsString, NetworkModificationExportInfos.class);
         assertEquals(exportInfos.exportedModifications(), List.of());
-        assertEquals(exportInfos.unexportedModifications(), List.of());
+        assertEquals(exportInfos.exportedFilters(), Map.of());
+        assertEquals(exportInfos.exportedLoadFlowParameters(), Map.of());
+    }
+
+    @Test
+    void testImportNetworkModifications() throws Exception {
+        UUID targetGroupId = UUID.randomUUID();
+        UUID oldFilterId = UUID.randomUUID();
+        UUID newFilterId = UUID.randomUUID();
+        UUID oldLoadFlowParametersId = UUID.randomUUID();
+        UUID newLoadFlowParametersId = UUID.randomUUID();
+
+        FilterInfos filterInfos = FilterInfos.builder().id(oldFilterId).name("filter1").build();
+        ByFilterDeletionInfos byFilterDeletion = ByFilterDeletionInfos.builder()
+                .uuid(UUID.randomUUID())
+                .stashed(false)
+                .equipmentType(IdentifiableType.GENERATOR)
+                .filters(List.of(filterInfos))
+                .build();
+
+        BalancesAdjustmentModificationInfos balancesAdjustment = BalancesAdjustmentModificationInfos.builder()
+                .uuid(UUID.randomUUID())
+                .stashed(false)
+                .areas(List.of())
+                .loadFlowParametersId(oldLoadFlowParametersId)
+                .build();
+
+        IdentifierListFilter newFilterDefinition = IdentifierListFilter.builder()
+                .id(newFilterId)
+                .modificationDate(new Date())
+                .equipmentType(EquipmentType.GENERATOR)
+                .filterEquipmentsAttributes(List.of())
+                .build();
+
+        NetworkModificationImportInfos importInfos = new NetworkModificationImportInfos(
+                List.of(byFilterDeletion, balancesAdjustment),
+                Map.of(oldFilterId, newFilterDefinition),
+                Map.of(oldLoadFlowParametersId, newLoadFlowParametersId));
+
+        MvcResult mvcResult = mockMvc.perform(post("/v1/groups/{groupUuid}/network-modifications/import", targetGroupId)
+                        .content(mapper.writeValueAsString(importInfos))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        Map<UUID, UUID> modificationUuidMapping = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<Map<UUID, UUID>>() { });
+        assertEquals(2, modificationUuidMapping.size());
+        assertTrue(modificationUuidMapping.values().stream().noneMatch(Objects::isNull));
+
+        List<ModificationInfos> persisted = networkModificationService.getNetworkModifications(targetGroupId, false, true, false);
+        assertEquals(2, persisted.size());
+
+        ByFilterDeletionInfos persistedByFilterDeletion = (ByFilterDeletionInfos) persisted.stream()
+                .filter(ByFilterDeletionInfos.class::isInstance).findFirst().orElseThrow();
+        assertEquals(newFilterId, persistedByFilterDeletion.getFilters().getFirst().getId());
+
+        BalancesAdjustmentModificationInfos persistedBalancesAdjustment = (BalancesAdjustmentModificationInfos) persisted.stream()
+                .filter(BalancesAdjustmentModificationInfos.class::isInstance).findFirst().orElseThrow();
+        assertEquals(newLoadFlowParametersId, persistedBalancesAdjustment.getLoadFlowParametersId());
     }
 
     @Test

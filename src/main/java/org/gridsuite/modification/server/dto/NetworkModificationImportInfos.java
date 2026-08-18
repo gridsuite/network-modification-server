@@ -15,13 +15,13 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * @author Maissa Souissi <maissa.souissi at rte-france.com>
+ * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
  */
-public record NetworkModificationExportInfos(
+public record NetworkModificationImportInfos(
         @JsonProperty("modifications")
-        List<ModificationInfos> exportedModifications,
-        @JsonProperty("filters")
-        Map<UUID, List<AbstractFilter>> exportedFilters,
-        @JsonProperty("loadFlowParameters")
-        Map<UUID, UUID> exportedLoadFlowParameters
+        List<ModificationInfos> modifications,
+        @JsonProperty("filtersByOldId")
+        Map<UUID, AbstractFilter> filtersByOldId,
+        @JsonProperty("loadFlowParametersIdMapping")
+        Map<UUID, UUID> loadFlowParametersIdMapping
 ) { }
