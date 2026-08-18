@@ -68,6 +68,14 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getNetworkModificationsInfosToExport(groupUuid, errorOnGroupNotFound));
     }
 
+    @PostMapping(value = "/groups/{groupUuid}/network-modifications/import", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Re create a previously exported set of modifications, filters and load flow parameters references into a group")
+    @ApiResponse(responseCode = "200", description = "The modifications have been imported into the group")
+    public ResponseEntity<Map<UUID, UUID>> importNetworkModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                                       @RequestBody NetworkModificationImportInfos networkModificationImportInfos) {
+        return ResponseEntity.ok().body(networkModificationService.importNetworkModifications(groupUuid, networkModificationImportInfos));
+    }
+
     @GetMapping(value = "/groups/{groupUuid}/network-modifications/verify", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Check if all the modifications from a list belong to a group")
     @ApiResponse(responseCode = "200", description = "List of modifications")

@@ -55,6 +55,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -500,6 +501,59 @@ public class NetworkModificationService {
             }
             throw e;
         }
+    }
+
+    @Transactional
+    public Map<UUID, UUID> importNetworkModifications(@NonNull UUID groupUuid, @NonNull NetworkModificationImportInfos importInfos) {
+        List<ModificationInfos> modifications = importInfos.modifications();
+        Map<UUID, AbstractFilter> filtersByOldId = importInfos.filtersByOldId() == null ? Map.of() : importInfos.filtersByOldId();
+        Map<UUID, UUID> loadFlowParametersIdMapping = importInfos.loadFlowParametersIdMapping() == null ? Map.of() : importInfos.loadFlowParametersIdMapping();
+        modifications.forEach(modification -> remapFilterAndLoadFlowParametersReferences(modification, filtersByOldId, loadFlowParametersIdMapping));
+
+        List<ModificationInfos> newModifications = networkModificationRepository.saveModificationInfos(groupUuid, modifications);
+
+        Map<UUID, UUID> importedModificationMapping = new HashMap<>();
+        mapUuidsFromTwoModificationsLists(modifications, newModifications, importedModificationMapping);
+        return importedModificationMapping;
+    }
+
+    private void remapFilterAndLoadFlowParametersReferences(ModificationInfos modification,
+                                                             Map<UUID, AbstractFilter> filtersByOldId,
+                                                             Map<UUID, UUID> loadFlowParametersIdMapping) {
+        if (modification instanceof ByFilterDeletionInfos byFilterDeletion) {
+            remapFilterIds(byFilterDeletion.getFilters(), FilterInfos::getId, FilterInfos::setId, filtersByOldId);
+        } else if (modification instanceof GenerationDispatchInfos generationDispatch) {
+            remapFilterIds(generationDispatch.getGeneratorsWithoutOutage(), GeneratorsFilterInfos::getId, GeneratorsFilterInfos::setId, filtersByOldId);
+            remapFilterIds(generationDispatch.getGeneratorsWithFixedSupply(), GeneratorsFilterInfos::getId, GeneratorsFilterInfos::setId, filtersByOldId);
+            orEmpty(generationDispatch.getGeneratorsFrequencyReserve())
+                    .forEach(reserve -> remapFilterIds(reserve.getGeneratorsFilters(), GeneratorsFilterInfos::getId, GeneratorsFilterInfos::setId, filtersByOldId));
+        } else if (modification instanceof ScalingInfos scaling) {
+            orEmpty(scaling.getVariations()).forEach(variation -> remapFilterIds(variation.getFilters(), FilterInfos::getId, FilterInfos::setId, filtersByOldId));
+        } else if (modification instanceof ModificationByAssignmentInfos byAssignment) {
+            orEmpty(byAssignment.getAssignmentInfosList()).forEach(assignment -> remapFilterIds(assignment.getFilters(), FilterInfos::getId, FilterInfos::setId, filtersByOldId));
+        } else if (modification instanceof ByFormulaModificationInfos byFormula) {
+            orEmpty(byFormula.getFormulaInfosList()).forEach(formula -> remapFilterIds(formula.getFilters(), FilterInfos::getId, FilterInfos::setId, filtersByOldId));
+        } else if (modification instanceof BalancesAdjustmentModificationInfos balancesAdjustment && balancesAdjustment.getLoadFlowParametersId() != null) {
+            UUID newLoadFlowParametersId = loadFlowParametersIdMapping.get(balancesAdjustment.getLoadFlowParametersId());
+            if (newLoadFlowParametersId != null) {
+                balancesAdjustment.setLoadFlowParametersId(newLoadFlowParametersId);
+            }
+        } else if (modification instanceof CompositeModificationInfos composite) {
+            orEmpty(composite.getModificationsInfos())
+                    .forEach(nested -> remapFilterAndLoadFlowParametersReferences(nested, filtersByOldId, loadFlowParametersIdMapping));
+        } else if (modification instanceof ModificationReferenceInfos reference && reference.getReferenceInfos() != null) {
+            remapFilterAndLoadFlowParametersReferences(reference.getReferenceInfos(), filtersByOldId, loadFlowParametersIdMapping);
+        }
+    }
+
+    private <T> void remapFilterIds(List<T> filterLikeInfos, Function<T, UUID> idGetter, BiConsumer<T, UUID> idSetter, Map<UUID, AbstractFilter> filtersByOldId) {
+        orEmpty(filterLikeInfos).forEach(filterLikeInfo -> {
+            UUID oldId = idGetter.apply(filterLikeInfo);
+            AbstractFilter newFilter = oldId == null ? null : filtersByOldId.get(oldId);
+            if (newFilter != null) {
+                idSetter.accept(filterLikeInfo, newFilter.getId());
+            }
+        });
     }
 
     private List<ModificationInfos> getNestedModifications(ModificationInfos modificationInfos) {
