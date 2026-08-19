@@ -1955,11 +1955,59 @@ class ModificationControllerTest {
                 .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        Map<UUID, UUID> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<ReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
-        assertEquals(1, referencesData.size());
-        assertTrue(referencesData.containsKey(referencedLoadModificationInfo.getUuid()));
-        assertNull(referencesData.get(referencedLoadModificationInfo.getUuid()));
+        // both references share the same referencedLoadModificationInfo target, but are kept as distinct entries
+        assertEquals(2, referencesData.size());
+        assertTrue(referencesData.stream().noneMatch(r -> r.modificationUuid().equals(nonReferenceModificationUuid)));
+        for (UUID referenceModificationUuid : List.of(activeReferenceInfo.getUuid(), stashedReferenceInfo.getUuid())) {
+            ReferenceData reference = referencesData.stream()
+                    .filter(r -> r.modificationUuid().equals(referenceModificationUuid))
+                    .findFirst().orElseThrow();
+            assertEquals(referencedLoadModificationInfo.getUuid(), reference.referenceId());
+            assertNull(reference.containerId());
+        }
+    }
+
+    @Test
+    void testGetReferencesWithSharedReference() throws Exception {
+        // Two distinct modifications referencing the very same shared element: getReferences must return
+        // both occurrences instead of collapsing them into a single entry (regression test)
+        ModificationInfos referencedLoadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+        referencedLoadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(referencedLoadModificationInfo))).getFirst();
+
+        ModificationInfos firstReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(referencedLoadModificationInfo.getUuid())
+                .referenceInfos(referencedLoadModificationInfo)
+                .stashed(false)
+                .build();
+        firstReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(firstReferenceInfo))).getFirst();
+
+        ModificationInfos secondReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(referencedLoadModificationInfo.getUuid())
+                .referenceInfos(referencedLoadModificationInfo)
+                .stashed(false)
+                .build();
+        secondReferenceInfo = modificationRepository.saveModifications(TEST_GROUP2_ID, List.of(ModificationEntity.fromDTO(secondReferenceInfo))).getFirst();
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/references")
+                        .queryParam("uuids",
+                                firstReferenceInfo.getUuid().toString(),
+                                secondReferenceInfo.getUuid().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        List<ReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        assertEquals(2, referencesData.size());
+        UUID sharedReferenceId = referencedLoadModificationInfo.getUuid();
+        UUID firstReferenceUuid = firstReferenceInfo.getUuid();
+        UUID secondReferenceUuid = secondReferenceInfo.getUuid();
+        assertTrue(referencesData.stream().anyMatch(r -> r.modificationUuid().equals(firstReferenceUuid) && r.referenceId().equals(sharedReferenceId)));
+        assertTrue(referencesData.stream().anyMatch(r -> r.modificationUuid().equals(secondReferenceUuid) && r.referenceId().equals(sharedReferenceId)));
     }
 
     @Test
@@ -1978,16 +2026,16 @@ class ModificationControllerTest {
                 .referenceInfos(referencedLoadModificationInfo)
                 .stashed(false)
                 .build();
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(activeReferenceInfo)));
+        activeReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(activeReferenceInfo))).getFirst();
 
-        // Create a stashed reference in the tested group: it must be ignored
+        // Create a stashed reference in the tested group: it must also be returned, as its own entry
         ModificationInfos stashedReferenceInfo = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
                 .referenceId(referencedLoadModificationInfo.getUuid())
                 .referenceInfos(referencedLoadModificationInfo)
                 .stashed(true)
                 .build();
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(stashedReferenceInfo)));
+        stashedReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(stashedReferenceInfo))).getFirst();
 
         // Create an active reference in another group: it must not be returned for TEST_GROUP_ID
         ModificationInfos otherGroupReferencedLoadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoadOther", "nameLoadOther", "1.1", LoadType.UNDEFINED);
@@ -2009,11 +2057,18 @@ class ModificationControllerTest {
                 .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        Map<UUID, UUID> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<ReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
-        assertEquals(1, referencesData.size());
-        assertTrue(referencesData.containsKey(referencedLoadModificationInfo.getUuid()));
-        assertNull(referencesData.get(referencedLoadModificationInfo.getUuid()));
-        assertFalse(referencesData.containsKey(otherGroupReferencedLoadModificationInfo.getUuid()));
+        // both the active and the stashed reference of the tested group are returned, as distinct entries
+        assertEquals(2, referencesData.size());
+        for (UUID referenceModificationUuid : List.of(activeReferenceInfo.getUuid(), stashedReferenceInfo.getUuid())) {
+            ReferenceData reference = referencesData.stream()
+                    .filter(r -> r.modificationUuid().equals(referenceModificationUuid))
+                    .findFirst().orElseThrow();
+            assertEquals(referencedLoadModificationInfo.getUuid(), reference.referenceId());
+            assertNull(reference.containerId());
+        }
+        UUID otherGroupReferencedLoadModificationUuid = otherGroupReferencedLoadModificationInfo.getUuid();
+        assertTrue(referencesData.stream().noneMatch(r -> r.referenceId().equals(otherGroupReferencedLoadModificationUuid)));
     }
 }
