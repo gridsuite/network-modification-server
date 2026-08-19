@@ -20,18 +20,18 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.NetworkModificationServerException;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
@@ -54,8 +54,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.apache.commons.collections4.SetUtils.emptyIfNull;
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
+import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
 
 /**
@@ -163,7 +162,9 @@ public class NetworkModificationService {
         );
 
         if (!childrenUuids.containsAll(modificationUuids)) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+            throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
+                String.format("Some of these modifications %s (to be verified) were not found", modificationUuids),
+                Map.of("ids", modificationUuids));
         }
     }
 
@@ -249,7 +250,7 @@ public class NetworkModificationService {
         try {
             network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
         } catch (PowsyblException e) {
-            throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
+            throw new NetworkModificationServerException(NETWORK_NOT_FOUND, String.format(NETWORK_NOT_FOUND.messageTemplate(), networkUuid), Map.of("networkId", networkUuid));
         }
         boolean isVariantPresent = true;
         if (variantId != null) {
@@ -310,6 +311,16 @@ public class NetworkModificationService {
             new NetworkModificationsResult(ids, results));
     }
 
+    public void checkNetworkModification(@NonNull ModificationInfos modificationInfo) {
+        try {
+            modificationInfo.check();
+        } catch (NetworkModificationException e) {
+            throw new NetworkModificationServerException(MODIFICATION_INFOS_ERROR,
+                String.format(MODIFICATION_INFOS_ERROR.messageTemplate(), e.getMessage()),
+                Map.of("errorMessage", e.getMessage()));
+        }
+    }
+
     /**
      * Apply modifications on several networks
      */
@@ -342,14 +353,16 @@ public class NetworkModificationService {
             network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
             network.addListener(new NetworkVariantsListener(network, networkUuid, equipmentInfosService));
         } catch (PowsyblException e) {
-            throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
+            throw new NetworkModificationServerException(NETWORK_NOT_FOUND, NETWORK_NOT_FOUND.messageTemplate(), Map.of("networkId", networkUuid));
         }
         String startingVariant = StringUtils.isBlank(originVariantId) ? VariantManagerConstants.INITIAL_VARIANT_ID : originVariantId;
         try {
             network.getVariantManager().cloneVariant(startingVariant, destinationVariantId, true);  // cloning variant
             network.getVariantManager().setWorkingVariant(destinationVariantId);  // set current variant to destination variant
         } catch (PowsyblException e) {
-            throw new NetworkModificationException(VARIANT_NOT_FOUND, startingVariant);
+            throw new NetworkModificationServerException(VARIANT_NOT_FOUND,
+                String.format(VARIANT_NOT_FOUND.messageTemplate(), destinationVariantId, networkUuid),
+                Map.of("variantId", destinationVariantId, "networkId", networkUuid));
         }
         return network;
     }
@@ -363,8 +376,8 @@ public class NetworkModificationService {
                 List<ModificationInfos> modifications = List.of();
                 try {
                     modifications = networkModificationRepository.getActiveModifications(groupUuid, emptyIfNull(modificationsToExclude));
-                } catch (NetworkModificationException e) {
-                    if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+                } catch (NetworkModificationServerException e) {
+                    if (e.getBusinessErrorCode() != MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
                         throw e;
                     }
                 }
@@ -398,7 +411,9 @@ public class NetworkModificationService {
 
     public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+            throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
+                String.format("Some of these modifications %s (to be deleted) were not found", modificationsUuids),
+                Map.of("ids", modificationsUuids));
         }
     }
 
@@ -439,8 +454,8 @@ public class NetworkModificationService {
             mapUuidsFromTwoModificationsLists(modificationToDuplicateInfos, newModifications, duplicateModificationMapping);
 
             return duplicateModificationMapping;
-        } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+        } catch (NetworkModificationServerException e) {
+            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
                 return Map.of();
             }
             throw e;
@@ -494,7 +509,7 @@ public class NetworkModificationService {
     public CompletableFuture<NetworkModificationsResult> duplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids,
             @NonNull List<ModificationApplicationContext> applicationContexts) {
         if (originGroupUuid != null && !modificationsUuids.isEmpty()) { // Duplicate modifications from a group or from a list only
-            throw new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID);
+            throw new NetworkModificationServerException(MODIFICATION_DUPLICATION_ARGUMENT_ERROR, MODIFICATION_DUPLICATION_ARGUMENT_ERROR.messageTemplate());
         }
         List<ModificationInfos> duplicateModifications = networkModificationRepository.saveDuplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids);
         List<UUID> ids = duplicateModifications.stream().map(ModificationInfos::getUuid).toList();
