@@ -553,6 +553,11 @@ public class NetworkModificationService {
         return networkModificationRepository.createNetworkCompositeModification(modificationUuids, name);
     }
 
+    @Transactional
+    public UUID extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
+        return networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name);
+    }
+
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {
         return networkModificationRepository.duplicateCompositeModifications(sourceModificationUuids);
     }

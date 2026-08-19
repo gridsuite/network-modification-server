@@ -1043,6 +1043,51 @@ public class NetworkModificationRepository {
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
+    /**
+     * Takes a composite modification out of its group so that it can be stored as an element in the directory server,
+     * and puts a reference to it at the very same place in the group.
+     * @param groupUuid group owning the composite modification
+     * @param modificationUuid uuid of the composite modification to share
+     * @param name name given to the shared composite modification, null to keep the current one
+     * @return the uuid of the extracted composite modification, now standalone
+     */
+    @Transactional
+    public UUID extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
+        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
+        ModificationEntity modificationEntity = getModificationEntity(modificationUuid);
+        if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
+            String expectedType = ModificationType.COMPOSITE_MODIFICATION.name();
+            throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
+                String.format(MODIFICATION_BAD_TYPE.messageTemplate(), modificationUuid, modificationEntity.getType(), expectedType),
+                Map.of("modificationId", modificationUuid.toString(), "modificationType", modificationEntity.getType(), "expectedModificationType", expectedType));
+        }
+        if (!groupUuid.equals(modificationEntity.getContainerUuid())) {
+            throw new NetworkModificationServerException(MODIFICATION_NOT_FOUND,
+                String.format("Modification %s is not owned by group %s", modificationUuid, groupUuid),
+                Map.of("modificationId", modificationUuid + " (group = " + groupUuid + ")"));
+        }
+
+        ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
+            .referenceId(modificationUuid)
+            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referenceInfos(loadCompositeModificationMetadata(compositeEntity, null))
+            .build();
+        ModificationEntity referenceEntity = ModificationEntity.fromDTO(referenceInfos);
+
+        // the reference takes the place - and the order - of the shared composite modification
+        groupEntity.addModification(referenceEntity, compositeEntity.getModificationsOrder());
+        groupEntity.removeModifications(List.of(modificationUuid));
+        compositeEntity.setContainer(null);
+        compositeEntity.setModificationsOrder(0);
+        if (name != null) {
+            compositeModificationRepository.renameCompositeModification(compositeEntity, name);
+        }
+
+        modificationRepository.save(referenceEntity);
+        modificationRepository.save(compositeEntity);
+        return modificationUuid;
+    }
+
     private AbstractModificationContainerEntity getContainer(ModificationContainerInfos containerInfos) {
         AbstractModificationContainerEntity containerEntity = modificationContainerRepository.findById(containerInfos.id()).orElseGet(() -> {
             if (ModificationContainerType.GROUP.equals(containerInfos.type())) {
