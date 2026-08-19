@@ -151,7 +151,7 @@ public class NetworkModificationController {
     @GetMapping(value = "/abstract-network-modification/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get an abstract network modification")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "The abstract network modifications was returned"),
+        @ApiResponse(responseCode = "200", description = "The abstract network modification was returned"),
         @ApiResponse(responseCode = "404", description = "The abstract network modification was not found")
     })
     public ResponseEntity<AbstractModification> getAbstractNetworkModification(
