@@ -75,6 +75,7 @@ public class NetworkModificationRepository {
     private final ModificationApplicationInfosService modificationApplicationInfosService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationRepository.class);
+    private static final String MODIFICATION_ID = "modificationId";
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
@@ -123,7 +124,7 @@ public class NetworkModificationRepository {
     }
 
     private NetworkModificationServerException getModificationNotFoundException(String modificationId) {
-        return new NetworkModificationServerException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND.messageTemplate(), modificationId), Map.of("modificationId", modificationId));
+        return new NetworkModificationServerException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND.messageTemplate(), modificationId), Map.of(MODIFICATION_ID, modificationId));
     }
 
     @Transactional // To have all the delete in the same transaction (atomic)
@@ -648,7 +649,7 @@ public class NetworkModificationRepository {
             if (optionalModificationWithGroup.isPresent()) {
                 throw new NetworkModificationServerException(MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN,
                     String.format(MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN.messageTemplate(), optionalModificationWithGroup.get().getId(), optionalModificationWithGroup.get().getContainerUuid()),
-                    Map.of("modificationId", optionalModificationWithGroup.get().getId(), "groupId", optionalModificationWithGroup.get().getContainerUuid()));
+                    Map.of(MODIFICATION_ID, optionalModificationWithGroup.get().getId(), "groupId", optionalModificationWithGroup.get().getContainerUuid()));
             }
         } else {
             throw new NetworkModificationServerException(MODIFICATION_DELETION_ARGUMENT_ERROR, MODIFICATION_DELETION_ARGUMENT_ERROR.messageTemplate());
@@ -1059,12 +1060,12 @@ public class NetworkModificationRepository {
             String expectedType = ModificationType.COMPOSITE_MODIFICATION.name();
             throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
                 String.format(MODIFICATION_BAD_TYPE.messageTemplate(), modificationUuid, modificationEntity.getType(), expectedType),
-                Map.of("modificationId", modificationUuid.toString(), "modificationType", modificationEntity.getType(), "expectedModificationType", expectedType));
+                Map.of(MODIFICATION_ID, modificationUuid.toString(), "modificationType", modificationEntity.getType(), "expectedModificationType", expectedType));
         }
         if (!groupUuid.equals(modificationEntity.getContainerUuid())) {
             throw new NetworkModificationServerException(MODIFICATION_NOT_FOUND,
                 String.format("Modification %s is not owned by group %s", modificationUuid, groupUuid),
-                Map.of("modificationId", modificationUuid + " (group = " + groupUuid + ")"));
+                Map.of(MODIFICATION_ID, modificationUuid + " (group = " + groupUuid + ")"));
         }
 
         ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
