@@ -297,26 +297,22 @@ class CompositeControllerTest {
                 status().isOk());
         UUID compositeInGroupUuid = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).getLast().getUuid();
 
-        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeInGroupUuid + "/share")
+        mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeInGroupUuid + "/share")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("name", "shared composite"))
-                .andExpect(status().isOk())
-                .andReturn();
-        UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+                .andExpect(status().isOk());
 
-        // the composite modification is shared as it was, keeping its own uuid
-        assertEquals(compositeInGroupUuid, sharedCompositeUuid);
-
-        // and a reference to it took its place in the group
+        // the composite modification is shared as it was, keeping its own uuid, and a reference to it took its place
+        // in the group
         List<ModificationInfos> newModificationList = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(modificationsNumber + 1, newModificationList.size());
 
         ModificationReferenceInfos reference = assertInstanceOf(ModificationReferenceInfos.class, newModificationList.getLast());
-        assertEquals(sharedCompositeUuid, reference.getReferenceId());
+        assertEquals(compositeInGroupUuid, reference.getReferenceId());
         assertEquals(ModificationReferenceInfos.Type.BASIC, reference.getReferenceType());
 
         CompositeModificationInfos sharedComposite = assertInstanceOf(CompositeModificationInfos.class, reference.getReferenceInfos());
-        assertEquals(sharedCompositeUuid, sharedComposite.getUuid());
+        assertEquals(compositeInGroupUuid, sharedComposite.getUuid());
         assertEquals("shared composite", sharedComposite.getName());
         checkCompositeModificationContent(sharedComposite.getModificationsInfos());
 

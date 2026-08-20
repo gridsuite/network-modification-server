@@ -1046,14 +1046,14 @@ public class NetworkModificationRepository {
 
     /**
      * Takes a composite modification out of its group so that it can be stored as an element in the directory server,
-     * and puts a reference to it at the very same place in the group.
+     * and puts a reference to it at the very same place in the group. The composite modification keeps the same uuid,
+     * only its container changes.
      * @param groupUuid group owning the composite modification
      * @param modificationUuid uuid of the composite modification to share
      * @param name name given to the shared composite modification, null to keep the current one
-     * @return the uuid of the extracted composite modification, now standalone
      */
     @Transactional
-    public UUID extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
+    public void extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
         ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
         ModificationEntity modificationEntity = getModificationEntity(modificationUuid);
         if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
@@ -1086,7 +1086,6 @@ public class NetworkModificationRepository {
 
         modificationRepository.save(referenceEntity);
         modificationRepository.save(compositeEntity);
-        return modificationUuid;
     }
 
     private AbstractModificationContainerEntity getContainer(ModificationContainerInfos containerInfos) {
