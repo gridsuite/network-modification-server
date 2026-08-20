@@ -2068,7 +2068,7 @@ class ModificationControllerTest {
         ModificationInfos savedModification = modificationRepository.saveModifications(TEST_GROUP_ID,
                 List.of(ModificationEntity.fromDTO(modificationInfos))).getFirst();
 
-        MvcResult mvcResult = mockMvc.perform(get("/v1/abstract-network-modification/{modificationUuid}", savedModification.getUuid())
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/{modificationUuid}/standalone", savedModification.getUuid())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
@@ -2081,12 +2081,11 @@ class ModificationControllerTest {
     @Test
     void testGetNetworkModificationNotFound() throws Exception {
         UUID notFoundUuid = UUID.randomUUID();
-        String expectedErrorMessage = new NetworkModificationException(MODIFICATION_NOT_FOUND, notFoundUuid.toString()).getMessage();
-
-        MvcResult mvcResult = mockMvc.perform(get("/v1/abstract-network-modification/{modificationUuid}", notFoundUuid))
+        String expectedErrorMessage = String.format(MODIFICATION_NOT_FOUND.messageTemplate(), notFoundUuid);
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/{modificationUuid}/standalone", notFoundUuid))
                 .andExpect(status().isNotFound())
                 .andReturn();
 
-        assertEquals(expectedErrorMessage, mvcResult.getResponse().getContentAsString());
+        assertThat(mvcResult.getResponse().getContentAsString()).contains(expectedErrorMessage);
     }
 }
