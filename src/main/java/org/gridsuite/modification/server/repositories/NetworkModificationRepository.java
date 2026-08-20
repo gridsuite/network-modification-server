@@ -1065,7 +1065,7 @@ public class NetworkModificationRepository {
         if (!groupUuid.equals(modificationEntity.getContainerUuid())) {
             throw new NetworkModificationServerException(MODIFICATION_NOT_FOUND,
                 String.format("Modification %s is not owned by group %s", modificationUuid, groupUuid),
-                Map.of(MODIFICATION_ID, modificationUuid + " (group = " + groupUuid + ")"));
+                Map.of(MODIFICATION_ID, modificationUuid, "groupId", groupUuid));
         }
 
         ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
