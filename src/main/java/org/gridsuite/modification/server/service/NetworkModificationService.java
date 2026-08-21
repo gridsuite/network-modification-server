@@ -395,7 +395,6 @@ public class NetworkModificationService {
 
         PreloadingStrategy preloadingStrategy = modificationGroupsInfos.stream().map(ModificationApplicationGroup::modifications)
             .flatMap(Collection::stream)
-            .filter(m -> m.isActivatedOn(buildInfos.getRootNetworkTag()))
             .map(ModificationInfos::getType)
             .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
             .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
