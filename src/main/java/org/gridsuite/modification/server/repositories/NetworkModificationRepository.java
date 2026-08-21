@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
@@ -26,6 +25,7 @@ import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE;
 
@@ -72,8 +72,6 @@ public class NetworkModificationRepository {
     private final CompositeContainerRepository compositeContainerRepository;
 
     private final ModificationApplicationInfosService modificationApplicationInfosService;
-
-    private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationRepository.class);
 
@@ -115,6 +113,16 @@ public class NetworkModificationRepository {
         this.compositeContainerRepository = compositeContainerRepository;
         this.modificationContainerRepository = modificationContainerRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
+    }
+
+    private NetworkModificationServerException getModificationContainerNotFoundException(String containerId, ModificationContainerType containerType) {
+        return new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND,
+            String.format(MODIFICATION_CONTAINER_NOT_FOUND.messageTemplate(), containerId, containerType.name()),
+            Map.of("containerId", containerId, "containerType", containerType.name()));
+    }
+
+    private NetworkModificationServerException getModificationNotFoundException(String modificationId) {
+        return new NetworkModificationServerException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND.messageTemplate(), modificationId), Map.of("modificationId", modificationId));
     }
 
     @Transactional // To have all the delete in the same transaction (atomic)
@@ -173,7 +181,7 @@ public class NetworkModificationRepository {
 
     public void replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<UUID> modificationUuids) {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
+                .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
 
         // Fetch originals once, preserving order
         Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
@@ -197,7 +205,7 @@ public class NetworkModificationRepository {
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
+                .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
         if (name != null) {
             compositeModificationRepository.renameCompositeModification(compositeEntity, name);
         }
@@ -345,8 +353,8 @@ public class NetworkModificationRepository {
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean onlyStashed) {
         try {
             return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsInfos(List.of(groupUuid), onlyStashed);
-        } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+        } catch (NetworkModificationServerException e) {
+            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND && !errorOnGroupNotFound) {
                 return List.of();
             }
             throw e;
@@ -535,7 +543,7 @@ public class NetworkModificationRepository {
     private ModificationInfos loadModificationReference(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof ModificationReferenceEntity referenceEntity) {
             ModificationEntity referencedEntity = modificationRepository.findAllByIdIn(List.of(referenceEntity.getReferenceId())).stream().findFirst()
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, referenceEntity.getReferenceId())));
+                .orElseThrow(() -> getModificationNotFoundException(referenceEntity.getReferenceId() + " (referenced modification)"));
             ModificationReferenceInfos modificationReferenceInfos = referenceEntity.toModificationInfos();
             ModificationInfos refInfos = toModificationsInfosOptimized(referencedEntity);
 
@@ -549,7 +557,7 @@ public class NetworkModificationRepository {
         } else {
             ModificationEntity referencedEntity = modificationRepository.findReferencedModificationMetadataByReferenceId(modificationEntity.getId());
             if (referencedEntity == null) {
-                throw new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()));
+                throw getModificationNotFoundException(modificationEntity.getId() + " (referenced modification)");
             }
             ModificationInfos modificationInfos = modificationEntity.toModificationInfos();
             modificationInfos.setMessageType(referencedEntity.getMessageType());
@@ -624,8 +632,8 @@ public class NetworkModificationRepository {
             return groupUuids.stream().flatMap(this::getModificationEntityStream)
                     .filter(modification -> !modification.getStashed())
                     .map(this::toModificationsInfosOptimized).toList();
-        } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+        } catch (NetworkModificationServerException e) {
+            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND && !errorOnGroupNotFound) {
                 return List.of();
             }
             throw e;
@@ -640,7 +648,7 @@ public class NetworkModificationRepository {
     public ModificationEntity getModificationEntity(UUID modificationUuid) {
         return modificationRepository
                 .findById(modificationUuid)
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()));
+                .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
     }
 
     @Transactional
@@ -652,8 +660,8 @@ public class NetworkModificationRepository {
             }
             // deleting the group deletes its modification_container row (JOINED subtype delete)
             modificationGroupRepository.delete(groupEntity);
-        } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+        } catch (NetworkModificationServerException e) {
+            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND && !errorOnGroupNotFound) {
                 return;
             }
             throw e;
@@ -675,11 +683,12 @@ public class NetworkModificationRepository {
             modifications = modificationRepository.findAllById(uuids);
             Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getContainer() != null && m.getContainer().isGroup()).findFirst();
             if (optionalModificationWithGroup.isPresent()) {
-                throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, String.format("%s is owned by group %s",
-                        optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getContainerUuid()));
+                throw new NetworkModificationServerException(MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN,
+                    String.format(MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN.messageTemplate(), optionalModificationWithGroup.get().getId(), optionalModificationWithGroup.get().getContainerUuid()),
+                    Map.of("modificationId", optionalModificationWithGroup.get().getId(), "groupId", optionalModificationWithGroup.get().getContainerUuid()));
             }
         } else {
-            throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, "need to specify the group or give a list of UUIDs");
+            throw new NetworkModificationServerException(MODIFICATION_DELETION_ARGUMENT_ERROR, MODIFICATION_DELETION_ARGUMENT_ERROR.messageTemplate());
         }
         int count = modifications.size();
         deleteModifications(modifications);
@@ -687,7 +696,8 @@ public class NetworkModificationRepository {
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
-        return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
+        return this.modificationGroupRepository.findById(groupUuid)
+            .orElseThrow(() -> getModificationContainerNotFoundException(groupUuid.toString(), ModificationContainerType.GROUP));
     }
 
     private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
@@ -802,7 +812,7 @@ public class NetworkModificationRepository {
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
+                    .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
             modificationEntity.setStashed(true);
             modificationEntity.setModificationsOrder(stashModificationOrder);
             modificationEntities.add(modificationEntity);
@@ -831,7 +841,9 @@ public class NetworkModificationRepository {
         int modificationOrder = unstashedSize;
         List<ModificationEntity> modifications = modificationRepository.findAllByIdInReverse(modificationUuids);
         if (modifications.size() != modificationUuids.size()) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+            throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
+                String.format("Some of these modifications %s (to be restored) were not found", modificationUuids),
+                Map.of("ids", modificationUuids));
         }
         for (ModificationEntity modification : modifications) {
             modification.setStashed(false);
@@ -845,7 +857,7 @@ public class NetworkModificationRepository {
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
+                    .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
             if (metadata.getDescription() != null) {
                 modificationEntity.setDescription(metadata.getDescription());
             }
@@ -913,8 +925,8 @@ public class NetworkModificationRepository {
             if (!modifications.isEmpty()) {
                 deleteModifications(modifications);
             }
-        } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+        } catch (NetworkModificationServerException e) {
+            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND && !errorOnGroupNotFound) {
                 return;
             }
             throw e;
@@ -1095,13 +1107,13 @@ public class NetworkModificationRepository {
             if (ModificationContainerType.GROUP.equals(containerInfos.type())) {
                 return modificationGroupRepository.save(new ModificationGroupEntity(containerInfos.id()));
             } else {
-                throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
-                    String.format("Composite modification %s not found", containerInfos.id()));
+                throw getModificationContainerNotFoundException(containerInfos.id().toString(), containerInfos.type());
             }
         });
         if (!containerInfos.type().name().equals(containerEntity.getType())) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
-                String.format("Container %s is of type %s, expected type : %s", containerInfos.id(), containerEntity.getType(), containerInfos.type().name()));
+            throw new NetworkModificationServerException(MODIFICATION_CONTAINER_BAD_TYPE,
+                String.format(MODIFICATION_CONTAINER_BAD_TYPE.messageTemplate(), containerInfos.id(), containerEntity.getType(), containerInfos.type().name()),
+                Map.of("containerId", containerInfos.id(), "containerType", containerEntity.getType(), "expectedContainerType", containerInfos.type().name()));
         }
         return containerEntity;
     }
@@ -1109,8 +1121,9 @@ public class NetworkModificationRepository {
     public ModificationContainerType getContainerType(ModificationEntity m) {
         ModificationContainerType containerType = modificationContainerRepository.getTypeById(m.getContainerUuid());
         if (containerType == null) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
-                    String.format("No modification container found for id %s", m.getContainerUuid()));
+            throw new NetworkModificationServerException(MODIFICATION_CONTAINER_TYPE_NOT_FOUND,
+                String.format(MODIFICATION_CONTAINER_TYPE_NOT_FOUND.messageTemplate(), m.getId()),
+                Map.of("containerId", m.getId()));
         }
         return containerType;
     }

@@ -8,20 +8,25 @@ package org.gridsuite.modification.server.entities;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.hibernate.annotations.BatchSize;
+
 import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import static org.gridsuite.modification.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
+
+import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.MODIFICATION_DESCRIPTION_MISSING;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -104,7 +109,7 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
 
     protected ModificationEntity(ModificationInfos modificationInfos) {
         if (modificationInfos == null) {
-            throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
+            throw new NetworkModificationServerException(MODIFICATION_DESCRIPTION_MISSING);
         }
         // Always mint a fresh id here. We deliberately ignore modificationInfos.getUuid(): fromDTO is also
         // used to clone/duplicate existing modifications, and reusing the source uuid would collide. This
@@ -177,6 +182,9 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
                 Constructor<? extends ModificationEntity> constructor = entityClass.getConstructor(dto.getClass());
                 return constructor.newInstance(dto);
             } catch (Exception e) {
+                if (e.getCause() instanceof NetworkModificationServerException networkModificationServerException) {
+                    throw networkModificationServerException;
+                }
                 throw new RuntimeException("Failed to map DTO to Entity", e);
             }
         } else {

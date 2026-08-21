@@ -14,7 +14,6 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -26,6 +25,8 @@ import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.error.ModificationBusinessErrorCode;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.repositories.CompositeModificationRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -54,8 +55,8 @@ import static org.gridsuite.modification.server.utils.NetworkCreation.VARIANT_ID
 import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -358,8 +359,8 @@ class CompositeControllerTest {
         assertEquals(1, groupModifications.size());
         assertEquals(modificationUuidList.getFirst(), groupModifications.getFirst().getUuid());
         // duplicate has been deleted
-        assertEquals("MODIFICATION_NOT_FOUND : " + returnedNewId, assertThrows(NetworkModificationException.class, ()
-                -> networkModificationRepository.getModificationInfo(returnedNewId)).getMessage());
+        assertEquals(ModificationBusinessErrorCode.MODIFICATION_NOT_FOUND, assertThrows(NetworkModificationServerException.class, ()
+            -> networkModificationRepository.getModificationInfo(returnedNewId)).getBusinessErrorCode());
     }
 
     @Test
@@ -881,7 +882,7 @@ class CompositeControllerTest {
                         .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isBadRequest());
 
         // Case 2: recursive — move composite1 into composite3 (grandchild of composite1)
         mockMvc.perform(put("/v1/containers/{targetContainerId}", actualComposite3Uuid)
@@ -891,7 +892,7 @@ class CompositeControllerTest {
                         .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isBadRequest());
 
         // Case 3: self — move composite1 into itself
         mockMvc.perform(put("/v1/containers/{targetContainerId}", actualComposite1Uuid)
@@ -901,7 +902,7 @@ class CompositeControllerTest {
                         .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
                         .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
