@@ -41,9 +41,21 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.container.id = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
     List<ModificationEntity> findAllByContainerId(@Param("containerId") UUID containerId, @Param("stashed") Boolean stashed);
 
-    // the applicability per root network tag is not resolved here: it is filtered when applying the modifications
-    @Query(value = "SELECT m FROM ModificationEntity m WHERE m.container.id = ?1 AND m.stashed = false AND m.activated = true order by m.modificationsOrder")
-    List<ModificationEntity> findAllActiveModificationsByContainerId(UUID containerId);
+    /**
+     * @return the modifications of the container that are applied on the given root network tag, that is the activated
+     * ones the tag does not deactivate. A reference is resolved to the shared modification carrying the applicability.
+     */
+    @Query("""
+            SELECT m FROM ModificationEntity m
+            WHERE m.container.id = :containerId AND m.stashed = false AND m.activated = true
+              AND (:rootNetworkTag IS NULL OR NOT EXISTS (
+                  SELECT 1 FROM ModificationEntity holder JOIN holder.applicabilityByRootNetworkTag a
+                  WHERE holder.id = COALESCE((SELECT r.referenceId FROM ModificationReferenceEntity r WHERE r.id = m.id), m.id)
+                    AND KEY(a) = :rootNetworkTag AND VALUE(a) = false))
+            ORDER BY m.modificationsOrder
+            """)
+    List<ModificationEntity> findAllActiveModificationsByContainerId(@Param("containerId") UUID containerId,
+                                                                    @Param("rootNetworkTag") String rootNetworkTag);
 
     @Query(value = "SELECT new ModificationEntity(m.id, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
     List<ModificationEntity> findMetadataIn(List<UUID> uuids);

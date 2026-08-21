@@ -609,7 +609,7 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationInfos> getActiveModifications(UUID groupUuid, String rootNetworkTag) {
-        List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByContainerId(groupUuid);
+        List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByContainerId(groupUuid, rootNetworkTag);
         return modificationsEntities.stream().map(m -> toModificationsInfosOptimized(m, rootNetworkTag, true)).toList();
     }
 
@@ -1082,6 +1082,7 @@ public class NetworkModificationRepository {
             CompositeModificationInfos compositeModification = (CompositeModificationInfos) getModificationEntity(compositeToBeInserted.id()).toModificationInfos();
             if (compositeModification != null) {
                 if (compositeToBeInserted.isShared()) {
+                    // inserting a shared composite modification means that we create a new reference to it
                     ModificationReferenceInfos newModificationReference = ModificationReferenceInfos.builder()
                             .referenceId(compositeToBeInserted.id())
                             .referenceType(ModificationReferenceInfos.Type.BASIC)

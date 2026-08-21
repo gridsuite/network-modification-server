@@ -1603,4 +1603,40 @@ class ModificationRepositoryTest {
         assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
                 "The reference is reported with the applicability of the shared modification");
     }
+
+    @Test
+    void testGetActiveModificationsLeavesOutWhatTheTagDeactivates() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(switchModification("v1d1"), switchModification("v1d2")));
+        UUID deactivatedUuid = modifications.get(0).getUuid();
+        UUID keptUuid = modifications.get(1).getUuid();
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
+
+        assertEquals(List.of(keptUuid), activeModificationUuids(TEST_GROUP_ID, ROOT_NETWORK_TAG),
+                "A modification the tag deactivates is excluded from active modifications");
+        assertEquals(List.of(deactivatedUuid, keptUuid), activeModificationUuids(TEST_GROUP_ID, OTHER_ROOT_NETWORK_TAG),
+                "Only an explicit false entry for the tag leaves a modification out, and this tag has none");
+        assertEquals(List.of(deactivatedUuid, keptUuid), activeModificationUuids(TEST_GROUP_ID, null),
+                "Without a root network context the applicabilities are ignored");
+    }
+
+    @Test
+    void testGetActiveModificationsFiltersAReferenceOnItsSharedModification() {
+        // inserting a composite as shared puts a reference to it in the group, not a copy of it
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = ((ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid)).getReferenceId();
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), ROOT_NETWORK_TAG, false);
+
+        assertEquals(List.of(), activeModificationUuids(TEST_GROUP_ID_2, ROOT_NETWORK_TAG),
+                "Deactivating the shared modification also deactivate the reference, which holds no applicability of its own");
+        assertEquals(List.of(referenceUuid), activeModificationUuids(TEST_GROUP_ID_2, OTHER_ROOT_NETWORK_TAG),
+                "Only an explicit false entry on the shared modification leaves the reference out, and this tag has none");
+    }
+
+    private List<UUID> activeModificationUuids(UUID groupUuid, String rootNetworkTag) {
+        return networkModificationRepository.getActiveModifications(groupUuid, rootNetworkTag).stream()
+                .map(ModificationInfos::getUuid).toList();
+    }
 }
