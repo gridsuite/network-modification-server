@@ -159,6 +159,8 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getStandaloneNetworkModification(networkModificationUuid));
     }
 
+    // This endpoint's implementation might have an issue with the number of modifications that can be requested at once.
+    // If this issue ever occurs, it might be necessary to change this into a POST endpoint with RequestBody instead of RequestParam for the list of UUIDs.
     @GetMapping(value = "/network-modifications/standalone", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get an abstract network modification")
     @ApiResponses(value = {
