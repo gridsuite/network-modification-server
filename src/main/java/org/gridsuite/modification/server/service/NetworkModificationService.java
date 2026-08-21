@@ -85,8 +85,6 @@ public class NetworkModificationService {
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
     static final String DELETED_EQUIPMENT_IDS = "deletedEquipmentIds.fullascii";
-    static final String MODIFICATION_LIST_SIZE_MISMATCH_ERROR =
-            "Error while mapping two modifications list with each other : both lists have different sizes";
     private final ModificationRepository modificationRepository;
     private static final int PAGE_MAX_SIZE = 500;
 
@@ -442,48 +440,14 @@ public class NetworkModificationService {
                         result));
     }
 
-    /**
-     * @return a mapping between the uuids of the duplicated modifications and the uuid of the new modifications
-     */
-    public Map<UUID, UUID> duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
+    public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
         try {
             List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
-            List<ModificationInfos> newModifications = networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationToDuplicateInfos);
-
-            Map<UUID, UUID> duplicateModificationMapping = new HashMap<>();
-            mapUuidsFromTwoModificationsLists(modificationToDuplicateInfos, newModifications, duplicateModificationMapping);
-
-            return duplicateModificationMapping;
+            networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationToDuplicateInfos);
         } catch (NetworkModificationServerException e) {
-            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
-                return Map.of();
+            if (e.getBusinessErrorCode() != MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
+                throw e;
             }
-            throw e;
-        }
-    }
-
-    private List<ModificationInfos> getNestedModifications(ModificationInfos modificationInfos) {
-        return modificationInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null
-                ? composite.getModificationsInfos()
-                : List.of();
-    }
-
-    /**
-     * recursively map the uuids from two lists of modifications, including those inside the composite modifications
-     */
-    void mapUuidsFromTwoModificationsLists(
-            List<ModificationInfos> modificationsList1,
-            List<ModificationInfos> modificationsList2,
-            Map<UUID, UUID> modificationsMapping) {
-        if (modificationsList1.size() != modificationsList2.size()) {
-            throw new IllegalArgumentException(MODIFICATION_LIST_SIZE_MISMATCH_ERROR);
-        }
-        for (int i = 0; i < modificationsList1.size(); i++) {
-            modificationsMapping.put(modificationsList1.get(i).getUuid(), modificationsList2.get(i).getUuid());
-            mapUuidsFromTwoModificationsLists(
-                    getNestedModifications(modificationsList1.get(i)),
-                    getNestedModifications(modificationsList2.get(i)),
-                    modificationsMapping);
         }
     }
 
