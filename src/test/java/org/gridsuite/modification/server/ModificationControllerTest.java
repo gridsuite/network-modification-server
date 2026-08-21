@@ -2064,11 +2064,11 @@ class ModificationControllerTest {
 
     @ParameterizedTest
     @MethodSource("provideModificationInfos")
-    void testGetEquipmentAttributeModificationShouldReturnExpected(ModificationInfos modificationInfos) throws Exception {
+    void testGetStandaloneNetworkModificationShouldReturnExpected(ModificationInfos modificationInfos) throws Exception {
         ModificationInfos savedModification = modificationRepository.saveModifications(TEST_GROUP_ID,
                 List.of(ModificationEntity.fromDTO(modificationInfos))).getFirst();
 
-        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/{modificationUuid}/standalone", savedModification.getUuid())
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone/{modificationUuid}", savedModification.getUuid())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
@@ -2079,10 +2079,92 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testGetNetworkModificationNotFound() throws Exception {
+    void testGetStandaloneNetworkModificationNotFound() throws Exception {
         UUID notFoundUuid = UUID.randomUUID();
         String expectedErrorMessage = String.format(MODIFICATION_NOT_FOUND.messageTemplate(), notFoundUuid);
-        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/{modificationUuid}/standalone", notFoundUuid))
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone/{modificationUuid}", notFoundUuid))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        assertThat(mvcResult.getResponse().getContentAsString()).contains(expectedErrorMessage);
+    }
+
+    @Test
+    void testStandaloneNetworkModificationsShouldReturnExpected() throws Exception {
+        EquipmentAttributeModificationInfos equipmentAttributeModification = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .build();
+        LoadCreationInfos loadCreationModification = ModificationCreation.getCreationLoad(
+                "v1",
+                "idLoad",
+                "nameLoad",
+                "1.1",
+                LoadType.UNDEFINED);
+        List<ModificationInfos> savedModificationInfos = modificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(ModificationEntity.fromDTO(equipmentAttributeModification), ModificationEntity.fromDTO(loadCreationModification)));
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone")
+                        .param("uuids", savedModificationInfos.getFirst().getUuid().toString(), savedModificationInfos.getLast().getUuid().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        TypeReference<HashMap<UUID, AbstractModification>> typeRef = new TypeReference<HashMap<UUID, AbstractModification>>() { };
+        HashMap<UUID, AbstractModification> actualModifications = mapper.readValue(mvcResult.getResponse().getContentAsString(), typeRef);
+        assertThat(actualModifications).containsAllEntriesOf(savedModificationInfos.stream().collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification)));
+    }
+
+    @Test
+    void testStandaloneNetworkModificationsButNoErrorsWhenMissingModificationShouldReturnExpected() throws Exception {
+        EquipmentAttributeModificationInfos equipmentAttributeModification = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .build();
+        LoadCreationInfos loadCreationModification = ModificationCreation.getCreationLoad(
+                "v1",
+                "idLoad",
+                "nameLoad",
+                "1.1",
+                LoadType.UNDEFINED);
+        UUID nonExistentModificationUuid = UUID.randomUUID();
+        List<ModificationInfos> savedModificationInfos = modificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(ModificationEntity.fromDTO(equipmentAttributeModification), ModificationEntity.fromDTO(loadCreationModification)));
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone")
+                        .param("uuids", savedModificationInfos.getFirst().getUuid().toString(), savedModificationInfos.getLast().getUuid().toString(), nonExistentModificationUuid.toString())
+                        .param("errorOnModificationNotFound", "false")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        TypeReference<HashMap<UUID, AbstractModification>> typeRef = new TypeReference<>() { };
+        HashMap<UUID, AbstractModification> actualModifications = mapper.readValue(mvcResult.getResponse().getContentAsString(), typeRef);
+        assertThat(actualModifications).containsAllEntriesOf(savedModificationInfos.stream().collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification)))
+                .doesNotContainKey(nonExistentModificationUuid);
+    }
+
+    @Test
+    void testStandaloneNetworkModificationsNotFound() throws Exception {
+        EquipmentAttributeModificationInfos equipmentAttributeModification = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .build();
+        UUID nonExistentModificationUuid = UUID.randomUUID();
+        List<ModificationInfos> savedModificationInfos = modificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(ModificationEntity.fromDTO(equipmentAttributeModification)));
+        String expectedErrorMessage = String.format("Some of these modifications %s were not found", List.of(savedModificationInfos.getFirst().getUuid(), nonExistentModificationUuid));
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone")
+                        .param("uuids", savedModificationInfos.getFirst().getUuid().toString(), nonExistentModificationUuid.toString())
+                        .param("errorOnModificationNotFound", "true")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andReturn();
 

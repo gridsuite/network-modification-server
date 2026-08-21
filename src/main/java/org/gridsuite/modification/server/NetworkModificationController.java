@@ -148,15 +148,28 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping(value = "/network-modifications/{uuid}/standalone", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/network-modifications/standalone/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get an standalone network modification")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The standalone network modification was returned"),
+        @ApiResponse(responseCode = "404", description = "The standalone network modification was not found")
+    })
+    public ResponseEntity<AbstractModification> getStandaloneNetworkModification(
+            @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid) {
+        return ResponseEntity.ok().body(networkModificationService.getStandaloneNetworkModification(networkModificationUuid));
+    }
+
+    @GetMapping(value = "/network-modifications/standalone", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get an abstract network modification")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "The standalone network modification was returned"),
         @ApiResponse(responseCode = "404", description = "The standalone network modification was not found")
     })
-    public ResponseEntity<AbstractModification> getAbstractNetworkModification(
-            @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid) {
-        return ResponseEntity.ok().body(networkModificationService.getNetworkModification(networkModificationUuid).toModification());
+    public ResponseEntity<Map<UUID, AbstractModification>> getAbstractNetworkModifications(
+        @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
+        @Parameter(description = "Return 404 if at least one modification is not found") @RequestParam(value = "errorOnModificationNotFound",
+                required = false, defaultValue = "true") boolean errorOnModificationNotFound) {
+        return ResponseEntity.ok().body(networkModificationService.getStandaloneNetworkModifications(networkModificationUuids, errorOnModificationNotFound));
     }
 
     @PostMapping(value = "/network-modifications", params = "groupUuid", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
