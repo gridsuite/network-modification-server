@@ -184,6 +184,32 @@ class NetworkModificationServiceTest {
         assertEquals(List.of(compositeUuid), modificationRepository.findAllChildrenUuids(compositeUuid));
     }
 
+    @Test
+    void shouldFindParentCompositeOnlyForModificationsNestedInAComposite() {
+        UUID groupUuid = UUID.randomUUID();
+        CompositeModificationInfos compositeModificationInfos = compositeModification(
+                UUID.randomUUID(),
+                List.of(dummyModification(UUID.randomUUID()))
+        );
+
+        List<ModificationInfos> saved = networkModificationRepository.saveModifications(
+                groupUuid, List.of(
+                        ModificationEntity.fromDTO(compositeModificationInfos),
+                        ModificationEntity.fromDTO(dummyModification(UUID.randomUUID()))
+                ));
+        CompositeModificationInfos savedComposite = (CompositeModificationInfos) saved.get(0);
+        UUID compositeUuid = savedComposite.getUuid();
+        UUID nestedChildUuid = savedComposite.getModificationsInfos().get(0).getUuid();
+        UUID directGroupChildUuid = saved.get(1).getUuid();
+
+        Map<UUID, UUID> parentComposites = networkModificationService.findModificationParentComposites(
+                List.of(nestedChildUuid, directGroupChildUuid));
+
+        assertEquals(1, parentComposites.size());
+        assertEquals(compositeUuid, parentComposites.get(nestedChildUuid));
+        assertFalse(parentComposites.containsKey(directGroupChildUuid));
+    }
+
     private static LoadModificationInfos dummyModification(UUID uuid) {
         return LoadModificationInfos.builder()
                 .equipmentId("dummyEquipmentId")
