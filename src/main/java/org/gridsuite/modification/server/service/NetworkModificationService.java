@@ -278,6 +278,22 @@ public class NetworkModificationService {
         return networkModificationRepository.getReferences(modificationUuids);
     }
 
+    /**
+     * @return uuid of the composite currently containing the given modification, null if it is a direct child of a group
+     */
+    @Transactional(readOnly = true)
+    public UUID findModificationParentCompositeUuid(@NonNull UUID modificationUuid) {
+        return modificationRepository.findCompositeContainerIdByModificationId(modificationUuid);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, UUID> findModificationParentComposites(@NonNull List<UUID> modificationUuids) {
+        return modificationRepository.findCompositeContainerIdsByModificationIds(modificationUuids).stream()
+                .collect(Collectors.toMap(
+                        row -> UUID.fromString((String) row[0]),
+                        row -> UUID.fromString((String) row[1])));
+    }
+
     @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         for (UUID modificationUuid : modificationUuids) {

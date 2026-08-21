@@ -124,13 +124,16 @@ public class NetworkModificationController {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                             "container types are required for MOVE");
                 }
+                List<UUID> modificationUuidsToMove = modificationContextInfos.getFirst();
+                List<ModificationApplicationContext> applicationContexts = modificationContextInfos.getSecond();
+                ModificationContainerInfos targetContainerInfos = new ModificationContainerInfos(targetContainerId, targetContainerType);
+
                 yield networkModificationService.moveModifications(
                     new ModificationContainerInfos(sourceContainerId == null ? targetContainerId : sourceContainerId, sourceContainerType),
-                    new ModificationContainerInfos(targetContainerId, targetContainerType),
-
+                        targetContainerInfos,
                     beforeModificationUuid,
-                        modificationContextInfos.getFirst(),
-                        modificationContextInfos.getSecond(),
+                        modificationUuidsToMove,
+                        applicationContexts,
                         canApply
                 ).thenApply(ResponseEntity.ok()::body);
             }
@@ -259,6 +262,20 @@ public class NetworkModificationController {
         List<ReferenceData> referencesData = networkModificationService.getReferences(networkModificationUuids);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(referencesData);
+    }
+
+    /**
+     * @return modification uuid -> uuid of the composite currently containing it; modifications sitting directly
+     * under a group (or not found) have no entry, letting the caller resolve the ambiguous case (unlike
+     * {@link #getReferences}, this works for any modification, not just references)
+     */
+    @GetMapping(value = "/network-modifications/parent-composites", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "For each given network modification, find the composite currently containing it")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The parent composites were returned")})
+    public ResponseEntity<Map<UUID, UUID>> getParentComposites(
+            @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(networkModificationService.findModificationParentComposites(networkModificationUuids));
     }
 
     /**
