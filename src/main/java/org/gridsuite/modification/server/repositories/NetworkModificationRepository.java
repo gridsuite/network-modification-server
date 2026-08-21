@@ -17,6 +17,7 @@ import org.gridsuite.modification.dto.tabular.LimitSetsTabularModificationInfos;
 import org.gridsuite.modification.dto.tabular.TabularBaseInfos;
 import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
+import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationContainerInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
@@ -606,6 +607,28 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
         return toModificationsInfosOptimized(getModificationEntity(modificationUuid));
+    }
+
+    @Transactional(readOnly = true)
+    public AbstractModification getStandaloneNetworkModification(UUID modificationUuid) {
+        return toModificationsInfosOptimized(getModificationEntity(modificationUuid)).toModification();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, AbstractModification> getStandaloneNetworkModifications(List<UUID> modificationUuids, boolean errorOnModificationNotFound) {
+        return getModificationEntities(modificationUuids, errorOnModificationNotFound).stream()
+                .map(this::toModificationsInfosOptimized)
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification));
+    }
+
+    public List<ModificationEntity> getModificationEntities(List<UUID> modificationUuids, boolean errorOnModificationNotFound) {
+        List<ModificationEntity> foundModifications = modificationRepository.findAllById(modificationUuids);
+        if (errorOnModificationNotFound && foundModifications.size() != modificationUuids.size()) {
+            throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
+                    String.format("Some of these modifications %s were not found", modificationUuids),
+                    Map.of("ids", modificationUuids));
+        }
+        return foundModifications;
     }
 
     public ModificationEntity getModificationEntity(UUID modificationUuid) {
