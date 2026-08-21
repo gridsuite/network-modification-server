@@ -237,7 +237,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(3, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         getEquipmentAttributeModification(modifEntity1.getId());
@@ -305,7 +305,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(3, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -386,7 +386,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(3, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -436,7 +436,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(3, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -1473,7 +1473,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(3, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -1538,6 +1538,15 @@ class ModificationRepositoryTest {
                 List.of(new CompositeInfos(compositeUuid, "composite", shared, "description"))).getFirst().getUuid();
     }
 
+    /**
+     * Reads the applicability of the modifications of a group the way the front end does: through the metadata,
+     * where every modification carries its own.
+     */
+    private Map<UUID, Map<String, Boolean>> getApplicabilities(UUID groupUuid) {
+        return networkModificationRepository.getModifications(groupUuid, true, true).stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::getApplicabilityByRootNetworkTag));
+    }
+
     @Test
     void testUpdateRootNetworkApplicability() {
         List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID,
@@ -1547,15 +1556,14 @@ class ModificationRepositoryTest {
 
         networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
 
-        Map<UUID, Map<String, Boolean>> applicabilities = networkModificationRepository.getRootNetworkApplicabilities(TEST_GROUP_ID);
+        Map<UUID, Map<String, Boolean>> applicabilities = getApplicabilities(TEST_GROUP_ID);
         assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicabilities.get(deactivatedUuid));
         assertEquals(Map.of(), applicabilities.get(untouchedUuid),
                 "A modification never updated holds no applicability, which means applicable everywhere");
 
         // reactivating writes an explicit entry rather than removing it
         networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, true);
-        assertEquals(Map.of(ROOT_NETWORK_TAG, true),
-                networkModificationRepository.getRootNetworkApplicabilities(TEST_GROUP_ID).get(deactivatedUuid));
+        assertEquals(Map.of(ROOT_NETWORK_TAG, true), getApplicabilities(TEST_GROUP_ID).get(deactivatedUuid));
     }
 
     @Test
@@ -1567,7 +1575,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), OTHER_ROOT_NETWORK_TAG, true);
 
         assertEquals(Map.of(ROOT_NETWORK_TAG, false, OTHER_ROOT_NETWORK_TAG, true),
-                networkModificationRepository.getRootNetworkApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+                getApplicabilities(TEST_GROUP_ID).get(modificationUuid));
     }
 
     @Test
@@ -1576,10 +1584,11 @@ class ModificationRepositoryTest {
 
         networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), ROOT_NETWORK_TAG, false);
 
-        Map<UUID, Map<String, Boolean>> applicabilities = networkModificationRepository.getRootNetworkApplicabilities(TEST_GROUP_ID_2);
-        assertEquals(3, applicabilities.size(), "The composite and its two sub modifications are all reported");
-        applicabilities.forEach((uuid, applicabilityByTag) ->
-                assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicabilityByTag,
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(compositeUuid));
+        CompositeModificationInfos composite = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(compositeUuid);
+        assertEquals(2, composite.getModificationsInfos().size());
+        composite.getModificationsInfos().forEach(subModification ->
+                assertEquals(Map.of(ROOT_NETWORK_TAG, false), subModification.getApplicabilityByRootNetworkTag(),
                         "Updating a composite must reach its sub modifications"));
     }
 
@@ -1593,8 +1602,7 @@ class ModificationRepositoryTest {
         assertEquals(Map.of(ROOT_NETWORK_TAG, false),
                 networkModificationRepository.getModificationInfo(sharedUuid).getApplicabilityByRootNetworkTag(),
                 "A reference has no applicability of its own: the shared modification it points to carries it");
-        assertEquals(Map.of(ROOT_NETWORK_TAG, false),
-                networkModificationRepository.getRootNetworkApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
                 "The reference is reported with the applicability of the shared modification");
     }
 }

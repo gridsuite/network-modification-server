@@ -302,15 +302,6 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping(value = "/groups/{groupUuid}/root-network-applicability", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get the applicability per root network tag of all the network modifications in a group, sub modifications included")
-    @ApiResponse(responseCode = "200", description = "The applicabilities were returned")
-    public ResponseEntity<Map<UUID, Map<String, Boolean>>> getRootNetworkApplicabilities(
-            @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(networkModificationService.getRootNetworkApplicabilities(groupUuid));
-    }
-
     @DeleteMapping(value = "/groups/{groupUuid}/stashed-modifications")
     @Operation(summary = "Delete the stashed modifications in a group")
     @ApiResponse(responseCode = "200", description = "Stashed modifications in the group deleted")

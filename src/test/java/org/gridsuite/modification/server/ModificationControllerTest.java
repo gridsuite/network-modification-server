@@ -461,12 +461,15 @@ class ModificationControllerTest {
                 .queryParam("applicable", "false")
         ).andExpect(status().isOk());
 
-        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/root-network-applicability", TEST_GROUP_ID))
+        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID))
                 .andExpect(status().isOk())
                 .andReturn();
-        Map<UUID, Map<String, Boolean>> applicabilities = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<ModificationInfos> metadata = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        Map<UUID, Map<String, Boolean>> applicabilities = metadata.stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::getApplicabilityByRootNetworkTag));
 
-        assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicabilities.get(deactivatedUuid));
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicabilities.get(deactivatedUuid),
+                "The applicability comes with the modifications themselves, no separate fetch needed");
         assertEquals(Map.of(), applicabilities.get(untouchedUuid));
     }
 

@@ -280,11 +280,6 @@ public class NetworkModificationService {
         networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
     }
 
-    @Transactional(readOnly = true)
-    public Map<UUID, Map<String, Boolean>> getRootNetworkApplicabilities(@NonNull UUID groupUuid) {
-        return networkModificationRepository.getRootNetworkApplicabilities(groupUuid);
-    }
-
     @Transactional
     public Map<UUID, UUID> getReferences(@NonNull List<UUID> modificationUuids) {
         return networkModificationRepository.getReferences(modificationUuids);

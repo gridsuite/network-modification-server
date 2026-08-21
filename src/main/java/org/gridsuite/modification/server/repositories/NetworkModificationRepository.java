@@ -360,9 +360,10 @@ public class NetworkModificationRepository {
                 : modificationRepository.findAllBaseByContainerId(groupId);
         // TODO : move depth handling in specific code for composite
         Map<UUID, Integer> depths = batchCompositeDepths(base);
+        Map<UUID, Map<String, Boolean>> applicabilities = batchApplicabilities(base);
         return base.stream()
                 .filter(m -> !onlyStashed || m.getStashed())
-                .map(m -> toModificationMetadataInfos(m, depths))
+                .map(m -> toModificationMetadataInfos(m, depths, applicabilities))
                 .toList();
     }
 
@@ -372,6 +373,22 @@ public class NetworkModificationRepository {
                 .map(ModificationEntity::getId)
                 .toList();
         return getCompositesMaxDepthMap(compositeIds);
+    }
+
+    /**
+     * @return the applicability per root network tag of each modification.
+     * A reference gets the applicability of the shared modification it points to, which the query resolves.
+     */
+    private Map<UUID, Map<String, Boolean>> batchApplicabilities(Collection<ModificationEntity> entities) {
+        List<UUID> uuids = entities.stream().map(ModificationEntity::getId).toList();
+        if (uuids.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, Map<String, Boolean>> applicabilities = new HashMap<>();
+        modificationRepository.findApplicabilitiesByIdIn(uuids).forEach(applicability ->
+            applicabilities.computeIfAbsent((UUID) applicability[0], _ -> new HashMap<>())
+                .put((String) applicability[1], (Boolean) applicability[2]));
+        return applicabilities;
     }
 
     private List<EquipmentModificationEntity> reorderModifications(List<? extends EquipmentModificationEntity> modifications, List<UUID> subModificationsOrderedUuids) {
@@ -564,6 +581,14 @@ public class NetworkModificationRepository {
         return modificationEntity.toModificationInfos();
     }
 
+    private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Map<UUID, Integer> depths,
+                                                          Map<UUID, Map<String, Boolean>> applicabilities) {
+        ModificationInfos modificationInfos = toModificationMetadataInfos(modificationEntity, depths);
+        // the entity comes from a projection, which drops the applicability: it is set back from the batch read
+        modificationInfos.setApplicabilityByRootNetworkTag(new HashMap<>(applicabilities.getOrDefault(modificationEntity.getId(), Map.of())));
+        return modificationInfos;
+    }
+
     private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Map<UUID, Integer> depths) {
         if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
             return loadCompositeModificationMetadata(modificationEntity, depths.get(modificationEntity.getId()));
@@ -701,11 +726,12 @@ public class NetworkModificationRepository {
         Map<UUID, ModificationEntity> entitiesById = modificationRepository.findBaseDataByIdIn(networkModificationsUuids).stream()
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
         Map<UUID, Integer> depths = batchCompositeDepths(entitiesById.values());
-        return new ArrayList<>(networkModificationsUuids.stream()
+        Map<UUID, Map<String, Boolean>> applicabilities = batchApplicabilities(entitiesById.values());
+        return networkModificationsUuids.stream()
                 .map(entitiesById::get)
                 .filter(Objects::nonNull)
-                .map(m -> toModificationMetadataInfos(m, depths))
-                .toList());
+                .map(m -> toModificationMetadataInfos(m, depths, applicabilities))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Transactional(readOnly = true)
@@ -861,26 +887,6 @@ public class NetworkModificationRepository {
      */
     private ModificationEntity getApplicabilityHolder(ModificationEntity entity) {
         return entity instanceof ModificationReferenceEntity reference ? getModificationEntity(reference.getReferenceId()) : entity;
-    }
-
-    /**
-     * @return the applicability per root network tag of every modification of the group, sub modifications included
-     */
-    @Transactional(readOnly = true)
-    public Map<UUID, Map<String, Boolean>> getRootNetworkApplicabilities(UUID groupUuid) {
-        Map<UUID, Map<String, Boolean>> applicabilities = new HashMap<>();
-        collectRootNetworkApplicabilities(modificationRepository.findAllByContainer(groupUuid), applicabilities);
-        return applicabilities;
-    }
-
-    private void collectRootNetworkApplicabilities(List<ModificationEntity> modifications, Map<UUID, Map<String, Boolean>> applicabilities) {
-        modifications.forEach(modification -> {
-            ModificationEntity applicabilityHolder = getApplicabilityHolder(modification);
-            applicabilities.put(modification.getId(), applicabilityHolder.copyApplicabilityByRootNetworkTag());
-            if (applicabilityHolder instanceof CompositeModificationEntity composite) {
-                collectRootNetworkApplicabilities(composite.getModifications(), applicabilities);
-            }
-        });
     }
 
     @Transactional

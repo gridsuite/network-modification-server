@@ -58,6 +58,19 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder")
     List<ModificationEntity> findAllByIdIn(List<UUID> uuids);
 
+    /**
+     * @return one row per applicability entry: the modification id, the root network tag and whether it is applicable.
+     * A reference has no applicability of its own, so it is resolved to the shared modification it points to.
+     */
+    @Query("""
+            SELECT m.id, KEY(a), VALUE(a)
+            FROM ModificationEntity m, ModificationEntity holder
+            JOIN holder.applicabilityByRootNetworkTag a
+            WHERE m.id IN (:uuids)
+              AND holder.id = COALESCE((SELECT r.referenceId FROM ModificationReferenceEntity r WHERE r.id = m.id), m.id)
+            """)
+    List<Object[]> findApplicabilitiesByIdIn(@Param("uuids") Collection<UUID> uuids);
+
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder desc")
     List<ModificationEntity> findAllByIdInReverse(List<UUID> uuids);
 
