@@ -292,29 +292,14 @@ public class NetworkModificationController {
     }
 
     /**
-     * @return modification uuid -> uuid of the composite currently containing it; modifications sitting directly
-     * under a group (or not found) have no entry, letting the caller resolve the ambiguous case (unlike
-     * {@link #getReferences}, this works for any modification, not just references)
-     */
-    @GetMapping(value = "/network-modifications/parent-composites", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "For each given network modification, find the composite currently containing it")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The parent composites were returned")})
-    public ResponseEntity<Map<UUID, UUID>> getParentComposites(
-            @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids) {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(networkModificationService.findModificationParentComposites(networkModificationUuids));
-    }
-
-    /**
-     * filters out the netmods which are not references and returns one entry per modification-reference found in the group
+     * filters out the netmods which are not references and returns the references data as :
+     * referenced element uuid -> container of the reference (uuid of the composite if there is one, null if it is at the root level)
      */
     @GetMapping(value = "/groups/{groupUuid}/references", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Fetches references data of all the network modifications in a group, including in the composites' submodifications")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references data were returned")})
     public ResponseEntity<List<ReferenceData>> getAllReferencesDataFromGroup(
             @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        // TODO GRD-4785 : for now shared modification are only at the root level and can't be inside composites,
-        // but when it will be the case a specific function will have to be done in order to fetch recursively all the references inside the composites and only return uuids
         List<UUID> netModUuids = networkModificationService.getNetworkModifications(groupUuid, true, false, false)
                 .stream().map(ModificationInfos::getUuid)
                 .toList();

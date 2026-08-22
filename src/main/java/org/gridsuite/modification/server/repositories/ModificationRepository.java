@@ -88,7 +88,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     /**
      * @return one [modification id, composite container id] row per modification actually nested in a composite;
-     * modifications sitting directly under a group have no row (left as "absent" for the caller to interpret)
+     * modifications sitting directly under a group have no row
      */
     @Query(value = """
             SELECT CAST(m.id AS VARCHAR), CAST(m.container_id AS VARCHAR)
