@@ -1639,6 +1639,23 @@ class ModificationRepositoryTest {
     }
 
     @Test
+    void testGetActiveModificationsLeavesOutTheChildrenOfADeactivatedComposite() {
+        UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), ROOT_NETWORK_TAG, false);
+        CompositeModificationInfos composite = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(compositeUuid);
+        UUID childUuid = composite.getModificationsInfos().getFirst().getUuid();
+
+        // we activate a child while the composite remains deactivated
+        networkModificationRepository.updateRootNetworkApplicability(List.of(childUuid), ROOT_NETWORK_TAG, true);
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, true),
+                networkModificationRepository.getModificationInfo(childUuid).getApplicabilityByRootNetworkTag(),
+                "Taken on its own the child is applicable on the tag");
+        assertEquals(List.of(), activeModificationUuids(TEST_GROUP_ID_2, ROOT_NETWORK_TAG),
+                "A deactivated composite automatically deactivate its children whatever their own applicability is");
+    }
+
+    @Test
     void testRenameRootNetworkTagMovesTheApplicabilityOfTheGroupModifications() {
         List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID_3,
                 List.of(switchModification("v1d1"), switchModification("v1d2")));
