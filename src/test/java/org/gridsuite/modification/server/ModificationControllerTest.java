@@ -108,6 +108,7 @@ class ModificationControllerTest {
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String ROOT_NETWORK_TAG = "PH1";
+    private static final String RENAMED_ROOT_NETWORK_TAG = "PH2";
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String NETWORK_MODIFICATION_URI = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
@@ -478,16 +479,46 @@ class ModificationControllerTest {
                 .queryParam("applicable", "false")
         ).andExpect(status().isOk());
 
-        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID))
-                .andExpect(status().isOk())
-                .andReturn();
-        List<ModificationInfos> metadata = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        Map<UUID, Map<String, Boolean>> applicabilities = metadata.stream()
-                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::getApplicabilityByRootNetworkTag));
+        Map<UUID, Map<String, Boolean>> applicabilities = readApplicabilities(TEST_GROUP_ID);
 
         assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicabilities.get(deactivatedUuid),
                 "The applicability comes with the modifications themselves, no separate fetch needed");
         assertEquals(Map.of(), applicabilities.get(untouchedUuid));
+    }
+
+    private Map<UUID, Map<String, Boolean>> readApplicabilities(UUID groupUuid) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", groupUuid))
+                .andExpect(status().isOk())
+                .andReturn();
+        List<ModificationInfos> metadata = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        return metadata.stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::getApplicabilityByRootNetworkTag));
+    }
+
+    @Test
+    void testRenameAndDeleteRootNetworkTag() throws Exception {
+        List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID modificationUuid = modifications.getFirst().getUuid();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
+                .queryParam("uuids", modificationUuid.toString())
+                .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
+                .queryParam("applicable", "false")
+        ).andExpect(status().isOk());
+
+        // renaming the root network tag carries along what it deactivates
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-tag")
+                .queryParam("groupUuids", TEST_GROUP_ID.toString())
+                .queryParam("oldTag", ROOT_NETWORK_TAG)
+                .queryParam("newTag", RENAMED_ROOT_NETWORK_TAG)
+        ).andExpect(status().isOk());
+        assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+
+        // and deleting the root network takes its tag away
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE + "/root-network-tag")
+                .queryParam("groupUuids", TEST_GROUP_ID.toString())
+                .queryParam("rootNetworkTags", RENAMED_ROOT_NETWORK_TAG)
+        ).andExpect(status().isOk());
+        assertEquals(Map.of(), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
     }
 
     @Test

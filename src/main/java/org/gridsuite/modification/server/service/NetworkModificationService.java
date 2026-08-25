@@ -274,12 +274,27 @@ public class NetworkModificationService {
 
     @Transactional
     public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable) {
+        assertRootNetworkTagFits(rootNetworkTag);
+        networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
+    }
+
+    @Transactional
+    public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag) {
+        assertRootNetworkTagFits(newTag);
+        networkModificationRepository.renameRootNetworkTag(groupUuids, oldTag, newTag);
+    }
+
+    @Transactional
+    public void deleteRootNetworkTags(@NonNull List<UUID> groupUuids, @NonNull List<String> rootNetworkTags) {
+        networkModificationRepository.deleteRootNetworkTags(groupUuids, rootNetworkTags);
+    }
+
+    private static void assertRootNetworkTagFits(String rootNetworkTag) {
         if (rootNetworkTag.length() > ModificationEntity.ROOT_NETWORK_TAG_MAX_LENGTH) {
             throw new NetworkModificationServerException(ROOT_NETWORK_TAG_TOO_LONG,
                     String.format(ROOT_NETWORK_TAG_TOO_LONG.messageTemplate(), ModificationEntity.ROOT_NETWORK_TAG_MAX_LENGTH),
                     Map.of("maxLength", ModificationEntity.ROOT_NETWORK_TAG_MAX_LENGTH));
         }
-        networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
     }
 
     @Transactional

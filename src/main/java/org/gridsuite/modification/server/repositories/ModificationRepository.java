@@ -10,6 +10,7 @@ import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -82,6 +83,65 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
               AND holder.id = COALESCE((SELECT r.referenceId FROM ModificationReferenceEntity r WHERE r.id = m.id), m.id)
             """)
     List<Object[]> findApplicabilitiesByIdIn(@Param("uuids") Collection<UUID> uuids);
+
+    /**
+     * @return every modification held by the given containers, the content of their composites included.
+     */
+    @NativeQuery("""
+        WITH RECURSIVE descendants(id) AS (
+            SELECT m.id FROM modification m WHERE m.container_id IN (:containerIds)
+            UNION ALL
+            SELECT m.id FROM modification m JOIN descendants d ON m.container_id = d.id
+        )
+        SELECT CAST(id AS VARCHAR) FROM descendants
+        """)
+    List<UUID> findAllDescendantModificationIdsByContainerIds(@Param("containerIds") Collection<UUID> containerIds);
+
+    /**
+     * @return the shared modifications the references among {@code ids} point to, deduplicated: several references
+     * may well point to the same one.
+     */
+    @Query("SELECT DISTINCT r.referenceId FROM ModificationReferenceEntity r WHERE r.id IN :ids")
+    List<UUID> findReferencedModificationIds(@Param("ids") Collection<UUID> ids);
+
+    /**
+     * Copies the applicability of {@code fromTag} to {@code toTag}, skipping the modifications that already have an
+     * entry for {@code toTag}.
+     */
+    @Modifying
+    @NativeQuery("""
+        INSERT INTO modification_root_network_applicability (modification_id, root_network_tag, applicable)
+        SELECT a.modification_id, :toTag, a.applicable
+          FROM modification_root_network_applicability a
+         WHERE a.modification_id IN (:ids) AND a.root_network_tag = :fromTag
+           AND NOT EXISTS (SELECT 1 FROM modification_root_network_applicability b
+                            WHERE b.modification_id = a.modification_id AND b.root_network_tag = :toTag)
+        """)
+    void copyRootNetworkApplicability(@Param("ids") Collection<UUID> ids, @Param("fromTag") String fromTag, @Param("toTag") String toTag);
+
+    /**
+     * Deletes the {@code toTag} entries of the given modifications, restricted to those also holding a
+     * {@code fromTag} entry. Useful to prepare renaming with {@link #renameRootNetworkApplicability}.
+     */
+    @Modifying
+    @NativeQuery("""
+        DELETE FROM modification_root_network_applicability a
+         WHERE a.modification_id IN (:ids) AND a.root_network_tag = :toTag
+           AND EXISTS (SELECT 1 FROM modification_root_network_applicability b
+                        WHERE b.modification_id = a.modification_id AND b.root_network_tag = :fromTag)
+        """)
+    void deleteRootNetworkApplicabilitiesTakenOverBy(@Param("ids") Collection<UUID> ids, @Param("fromTag") String fromTag, @Param("toTag") String toTag);
+
+    @Modifying
+    @NativeQuery("""
+        UPDATE modification_root_network_applicability SET root_network_tag = :toTag
+         WHERE modification_id IN (:ids) AND root_network_tag = :fromTag
+        """)
+    void renameRootNetworkApplicability(@Param("ids") Collection<UUID> ids, @Param("fromTag") String fromTag, @Param("toTag") String toTag);
+
+    @Modifying
+    @NativeQuery("DELETE FROM modification_root_network_applicability WHERE modification_id IN (:ids) AND root_network_tag IN (:tags)")
+    void deleteRootNetworkApplicabilities(@Param("ids") Collection<UUID> ids, @Param("tags") Collection<String> tags);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder desc")
     List<ModificationEntity> findAllByIdInReverse(List<UUID> uuids);

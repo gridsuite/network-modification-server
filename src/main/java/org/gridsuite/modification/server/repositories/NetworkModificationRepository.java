@@ -901,6 +901,66 @@ public class NetworkModificationRepository {
         return entity instanceof ModificationReferenceEntity reference ? getModificationEntity(reference.getReferenceId()) : entity;
     }
 
+    /**
+     * Moves the applicability entries of {@code oldTag} to {@code newTag} for the modifications of the given groups.
+     * A modification a group owns is really renamed, the new tag taking over any entry that was left under its name.
+     * A reference holds no applicability of its own: it lives on the shared modification it points to, which other
+     * groups reference too and may still be using the old tag for a root network of their own. There the new tag is
+     * therefore only added, no renaming or removing, and an entry it already has is reused rather than overwritten.
+     */
+    @Transactional
+    public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag) {
+        List<UUID> ownedUuids = getContainedModificationUuids(groupUuids);
+        if (ownedUuids.isEmpty()) {
+            return;
+        }
+        List<UUID> sharedUuids = getSharedApplicabilityHolderUuids(ownedUuids);
+        if (!sharedUuids.isEmpty()) {
+            modificationRepository.copyRootNetworkApplicability(sharedUuids, oldTag, newTag);
+        }
+        modificationRepository.deleteRootNetworkApplicabilitiesTakenOverBy(ownedUuids, oldTag, newTag);
+        modificationRepository.renameRootNetworkApplicability(ownedUuids, oldTag, newTag);
+    }
+
+    /**
+     * Drops the applicability entries of {@code tags} for the modifications the given groups own.
+     * The references themselves are included, but the deletion finds nothing of theirs since they hold no applicability.
+     * Their applicability comes from the shared modifications they reference to, and we don't touch it.
+     */
+    @Transactional
+    public void deleteRootNetworkTags(@NonNull List<UUID> groupUuids, @NonNull List<String> tags) {
+        if (tags.isEmpty()) {
+            return;
+        }
+        List<UUID> ownedUuids = getContainedModificationUuids(groupUuids);
+        if (!ownedUuids.isEmpty()) {
+            modificationRepository.deleteRootNetworkApplicabilities(ownedUuids, tags);
+        }
+    }
+
+    private List<UUID> getContainedModificationUuids(List<UUID> containerUuids) {
+        return containerUuids.isEmpty() ? List.of() : modificationRepository.findAllDescendantModificationIdsByContainerIds(containerUuids);
+    }
+
+    /**
+     * @return the shared modifications carrying the applicability of the references among {@code modificationUuids},
+     * the content of each one included. Recursively check the nested shared modification if there are.
+     */
+    private List<UUID> getSharedApplicabilityHolderUuids(List<UUID> modificationUuids) {
+        Set<UUID> holderUuids = new LinkedHashSet<>();
+        List<UUID> uuidsToResolve = modificationUuids;
+        while (!uuidsToResolve.isEmpty()) {
+            List<UUID> referencedUuids = modificationRepository.findReferencedModificationIds(uuidsToResolve).stream()
+                    .filter(referencedUuid -> !holderUuids.contains(referencedUuid))
+                    .toList();
+            holderUuids.addAll(referencedUuids);
+            // next: check the nested modifications
+            uuidsToResolve = getContainedModificationUuids(referencedUuids);
+            holderUuids.addAll(uuidsToResolve);
+        }
+        return List.copyOf(holderUuids);
+    }
+
     @Transactional
     public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         ModificationEntity entity = getModificationEntity(modificationUuid);
