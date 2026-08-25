@@ -25,6 +25,7 @@ import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.error.NetworkModificationException;
+import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -223,6 +224,16 @@ public class NetworkModificationService {
             checkGenerationDispatchFilters(generationDispatchInfos);
         }
         return modificationInfos;
+    }
+
+    @Transactional(readOnly = true)
+    public AbstractModification getStandaloneNetworkModification(UUID networkModificationUuid) {
+        return networkModificationRepository.getStandaloneNetworkModification(networkModificationUuid);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, AbstractModification> getStandaloneNetworkModifications(List<UUID> networkModificationUuids, boolean errorOnModificationNotFound) {
+        return networkModificationRepository.getStandaloneNetworkModifications(networkModificationUuids, errorOnModificationNotFound);
     }
 
     public Integer getNetworkModificationsCount(UUID groupUuid, boolean stashed) {

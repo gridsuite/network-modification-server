@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
@@ -145,6 +146,32 @@ public class NetworkModificationController {
                                                                 defaultValue = "true") Boolean errorOnGroupNotFound) {
         networkModificationService.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/network-modifications/standalone/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get an standalone network modification")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The standalone network modification was returned"),
+        @ApiResponse(responseCode = "404", description = "The standalone network modification was not found")
+    })
+    public ResponseEntity<AbstractModification> getStandaloneNetworkModification(
+            @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid) {
+        return ResponseEntity.ok().body(networkModificationService.getStandaloneNetworkModification(networkModificationUuid));
+    }
+
+    // This endpoint's implementation might have an issue with the number of modifications that can be requested at once.
+    // If this issue ever occurs, it might be necessary to change this into a POST endpoint with RequestBody instead of RequestParam for the list of UUIDs.
+    @GetMapping(value = "/network-modifications/standalone", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get an abstract network modification")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The standalone network modification was returned"),
+        @ApiResponse(responseCode = "404", description = "The standalone network modification was not found")
+    })
+    public ResponseEntity<Map<UUID, AbstractModification>> getAbstractNetworkModifications(
+        @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
+        @Parameter(description = "Return 404 if at least one modification is not found") @RequestParam(value = "errorOnModificationNotFound",
+                required = false, defaultValue = "true") boolean errorOnModificationNotFound) {
+        return ResponseEntity.ok().body(networkModificationService.getStandaloneNetworkModifications(networkModificationUuids, errorOnModificationNotFound));
     }
 
     @PostMapping(value = "/network-modifications", params = "groupUuid", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
