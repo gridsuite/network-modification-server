@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -56,6 +57,8 @@ public class NetworkModificationApplicator {
 
     @Getter private final FilterService filterService;
 
+    private final FilterLoader filterLoader;
+
     @Getter private final LoadFlowService loadFlowService;
 
     private final LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
@@ -72,7 +75,7 @@ public class NetworkModificationApplicator {
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ModificationApplicationInfosService applicationInfosService,
-                                         ReportService reportService, FilterService filterService,
+                                         ReportService reportService, FilterService filterService, FilterLoader filterLoader,
                                          LoadFlowService loadFlowService,
                                          NetworkModificationObserver networkModificationObserver,
                                          LargeNetworkModificationExecutionService largeNetworkModificationExecutionService) {
@@ -81,6 +84,7 @@ public class NetworkModificationApplicator {
         this.applicationInfosService = applicationInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
+        this.filterLoader = filterLoader;
         this.loadFlowService = loadFlowService;
         this.networkModificationObserver = networkModificationObserver;
         this.largeNetworkModificationExecutionService = largeNetworkModificationExecutionService;
@@ -196,6 +200,7 @@ public class NetworkModificationApplicator {
             UUID reporterId = modificationGroupInfos.reportInfos().getNodeUuid();
             reportNode = ReportNode.newRootReportNode()
                     .withAllResourceBundlesFromClasspath()
+                    .withLocale(Locale.ENGLISH)
                     .withMessageTemplate("network.modification.server.nodeUuid")
                     .withUntypedValue("nodeUuid", reporterId.toString())
                     .build();
@@ -223,7 +228,7 @@ public class NetworkModificationApplicator {
     private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode) {
         ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
         try {
-            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode));
+            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(filterLoader), network, subReportNode));
         } catch (Exception e) {
             handleException(subReportNode, e);
         }

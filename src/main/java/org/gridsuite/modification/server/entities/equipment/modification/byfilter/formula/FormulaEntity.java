@@ -11,8 +11,8 @@ import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.byfilter.formula.FormulaInfos;
-import org.gridsuite.modification.dto.byfilter.formula.Operator;
-import org.gridsuite.modification.dto.byfilter.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.modifications.data.assignment.Operator;
+import org.gridsuite.modification.modifications.data.assignment.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
 
