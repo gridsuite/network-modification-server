@@ -275,13 +275,25 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
+    public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos, @NonNull String userId) {
         networkModificationRepository.updateModification(modificationUuid, modificationInfos);
-    }
+        // notify directory-server only for ancestor composites that are actually shared (i.e. referenced
+        // from elsewhere) - directory-server relays to study-server for those (see NotificationService.emitElementUpdated)
+        List<UUID> ancestorCompositeUuids = networkModificationRepository.findAncestorCompositeUuids(modificationUuid);
+        List<UUID> referencedAncestorCompositeUuids = ancestorCompositeUuids.stream()
+                .filter(compositeUuid ->
+                        !networkModificationRepository.getReferencesByElementUuid(compositeUuid).isEmpty())
+                .toList();
+
+        referencedAncestorCompositeUuids.forEach(compositeUuid ->
+                notificationService.emitElementUpdated(compositeUuid, userId));    }
 
     @Transactional
-    public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
+    public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
         networkModificationRepository.updateNetworkModificationMetadata(modificationUuids, metadata);
+        //List<UUID> ancestorCompositeUuids = networkModificationRepository.findAncestorCompositeUuids(modificationUuids.getFirst());
+        //ancestorCompositeUuids.forEach(compositeUuid -> notificationService.emitElementUpdated(compositeUuid, userId));
+
     }
 
     @Transactional

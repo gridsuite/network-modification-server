@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.repositories;
 
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationReferenceEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.NativeQuery;
@@ -108,6 +109,10 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) " +
             "from ModificationEntity m WHERE m.id = (select r.referenceId from ModificationReferenceEntity r WHERE r.id = ?1)")
     ModificationEntity findReferencedModificationMetadataByReferenceId(UUID uuid);
+
+    // return all the modification-references pointing at a given element (e.g. a composite shared from directory-server)
+    @Query("SELECT r FROM ModificationReferenceEntity r WHERE r.referenceId = :elementUuid")
+    List<ModificationReferenceEntity> findAllByReferenceId(@Param("elementUuid") UUID elementUuid);
 
     @Query(value = "SELECT cast(operational_limits_groups_id AS VARCHAR) FROM line_modification_operational_limits_groups WHERE branch_id IN ?1", nativeQuery = true)
     List<UUID> findLineModificationOpLimitsGroupsIdsByBranchIds(List<UUID> uuids);

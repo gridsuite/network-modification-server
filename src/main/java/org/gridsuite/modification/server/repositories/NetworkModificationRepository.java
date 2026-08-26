@@ -772,6 +772,32 @@ public class NetworkModificationRepository {
     }
 
     /**
+     * @return ancestor composite modification uuids, closest first; empty if the modification is a
+     *         direct child of a group (not nested in any composite)
+     */
+    @Transactional(readOnly = true)
+    public List<UUID> findAncestorCompositeUuids(@NonNull UUID modificationUuid) {
+        List<UUID> ancestors = new ArrayList<>();
+        Set<UUID> visited = new HashSet<>();
+        UUID currentContainerId = modificationRepository.findById(modificationUuid)
+                .map(ModificationEntity::getContainerUuid)
+                .orElse(null);
+
+        while (currentContainerId != null && visited.add(currentContainerId)) {
+            ModificationContainerType containerType = modificationContainerRepository.getTypeById(currentContainerId);
+            if (containerType != ModificationContainerType.COMPOSITE) {
+                break; // reached a GROUP (a study node's own modifications) : top of the tree
+            }
+            ancestors.add(currentContainerId);
+            // the composite container shares its id with the CompositeModificationEntity that owns it
+            currentContainerId = modificationRepository.findById(currentContainerId)
+                    .map(ModificationEntity::getContainerUuid)
+                    .orElse(null);
+        }
+        return ancestors;
+    }
+
+    /**
      * @return ReferenceData : modification and elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
@@ -786,6 +812,18 @@ public class NetworkModificationRepository {
         });
 
         return references;
+    }
+
+    /**
+     * @return one ReferenceData per modification-reference pointing at {@code elementUuid} (e.g. a
+     * composite shared from directory-server), empty if nothing references it
+     */
+    @Transactional(readOnly = true)
+    public List<ReferenceData> getReferencesByElementUuid(@NonNull UUID elementUuid) {
+        return modificationRepository.findAllByReferenceId(elementUuid).stream()
+                .map(reference -> new ReferenceData(reference.getId(), reference.getReferenceId(),
+                        modificationRepository.findCompositeContainerIdByModificationId(reference.getId())))
+                .toList();
     }
 
     @Transactional
@@ -1083,7 +1121,8 @@ public class NetworkModificationRepository {
 
     /**
      * A COMPOSITE container may be designated through a modification reference: in that case the actual
-     * container is the shared composite the reference points to.
+     * container is the shared composite the reference points to. quand ona une composite sous une ref et on veut drag and drop cette composite en dehors
+     * la ref , on a l'id composite :
      */
     private UUID resolveContainerId(ModificationContainerInfos containerInfos) {
         if (ModificationContainerType.COMPOSITE.equals(containerInfos.type())) {
