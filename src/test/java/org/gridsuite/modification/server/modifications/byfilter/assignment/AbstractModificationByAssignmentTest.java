@@ -11,23 +11,26 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
+import lombok.SneakyThrows;
 import org.gridsuite.filter.utils.EquipmentType;
+import org.gridsuite.filter.wip.Filter;
+import org.gridsuite.filter.wip.IdentifierListFilter;
 import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.ModificationByAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
-import org.gridsuite.modification.dto.byfilter.assignment.DataType;
 import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.PropertyAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.equipmentfield.PropertyField;
+import org.gridsuite.modification.modifications.data.assignment.DataType;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
+import org.gridsuite.modification.server.service.FilterLoader;
 import org.gridsuite.modification.server.service.FilterService;
+import org.gridsuite.modification.server.utils.FilterStub;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.StubbedFilterRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -60,16 +63,14 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
     protected static final UUID FILTER_ID_5 = UUID.randomUUID();
     protected static final UUID FILTER_ID_6 = UUID.randomUUID();
     protected static final UUID FILTER_WITH_ALL_WRONG_IDS = UUID.randomUUID();
-    protected static final UUID FILTER_WITH_ONE_WRONG_ID = UUID.randomUUID();
     protected final FilterInfos filter1 = new FilterInfos(FILTER_ID_1, "filter1");
     protected final FilterInfos filter2 = new FilterInfos(FILTER_ID_2, "filter2");
     protected final FilterInfos filter3 = new FilterInfos(FILTER_ID_3, "filter3");
     protected final FilterInfos filter4 = new FilterInfos(FILTER_ID_4, "filter4");
     protected final FilterInfos filter5 = new FilterInfos(FILTER_ID_5, "filter5");
     protected final FilterInfos filter6 = new FilterInfos(FILTER_ID_6, "filter6");
-    protected final FilterInfos filterWithOneWrongId = new FilterInfos(FILTER_WITH_ONE_WRONG_ID, "filterWithOneWrongId");
 
-    protected static final String PATH = "/v1/filters/metadata";
+    protected static final String PATH = "/v1/standalone-filters";
 
     @Override
     protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
@@ -79,6 +80,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
     @BeforeEach
     public void specificSetUp() {
         FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
+        FilterLoader.setFilterServerBaseUri(wireMockServer.baseUrl());
         getNetwork().getVariantManager().setWorkingVariant("variant_1");
         createEquipments();
     }
@@ -104,82 +106,52 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
         checkCreationApplicationStatus(List.of(assignmentWithNoEditedField), NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
     }
 
-    protected void checkCreateWithWarning(List<AssignmentInfos<?>> assignments, List<IdentifierListFilterEquipmentAttributes> existingEquipmentList) throws Exception {
-        AbstractFilter filter = getFilterEquipments(FILTER_WITH_ONE_WRONG_ID, existingEquipmentList);
+    protected void checkCreateWithStatus(List<AssignmentInfos<?>> assignments, List<FilterStub> filterEquipments,
+                                         NetworkModificationResult.ApplicationStatus applicationStatus) throws Exception {
+        UUID stubId = stubStandaloneFilters(filterEquipments);
 
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ONE_WRONG_ID))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        checkCreationApplicationStatus(assignments, applicationStatus);
 
-        checkCreationApplicationStatus(assignments, NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
-
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(List.of(FILTER_WITH_ONE_WRONG_ID)), false);
-    }
-
-    protected void checkCreateWithError(List<AssignmentInfos<?>> assignments, List<AbstractFilter> filterEquipments) throws Exception {
-        String filterIds = filterEquipments.stream()
-                .map(AbstractFilter::getId)
-                .map(UUID::toString)
-                .collect(Collectors.joining(","));
-
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + filterIds))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(filterEquipments))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
-
-        checkCreationApplicationStatus(assignments, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
-
-        wireMockUtils.verifyGetRequest(stubId,
-                PATH,
-                handleQueryParams(filterEquipments.stream().map(AbstractFilter::getId).toList()),
-                false);
+        verifyStandaloneFiltersRequest(stubId, filterEquipments.stream().map(FilterStub::id).toList());
     }
 
     @Test
     public void testModificationWithAllWrongEquipmentIds() throws Exception {
-        AbstractFilter filter = getFilterEquipments(FILTER_WITH_ALL_WRONG_IDS, List.of());
+        FilterStub filter = createFilterStub(FILTER_WITH_ALL_WRONG_IDS, Set.of());
 
         List<AssignmentInfos<?>> assignmentsWithWrongFilter = getAssignmentInfos().stream()
                 .peek(assignmentInfos -> assignmentInfos.setFilters(List.of(new FilterInfos(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId"))))
                 .toList();
 
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ALL_WRONG_IDS))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        UUID stubId = stubStandaloneFilters(List.of(filter));
 
-        checkCreationApplicationStatus(assignmentsWithWrongFilter, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+        checkCreationApplicationStatus(assignmentsWithWrongFilter, NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(List.of(FILTER_WITH_ALL_WRONG_IDS)), false);
+        verifyStandaloneFiltersRequest(stubId, List.of(FILTER_WITH_ALL_WRONG_IDS), getAssignmentInfos().size());
     }
 
     @Test
     @Override
     public void testCreate() throws Exception {
-        List<AbstractFilter> filters = getTestFilters();
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + ".{2,}"))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(filters))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        List<StubbedFilterRequest> stubs = stubStandaloneFilterRequests(getAssignmentInfos().stream()
+                .map(assignment -> assignment.getFilters().stream().map(FilterInfos::getId).toList())
+                .toList());
 
         super.testCreate();
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).toList()), false);
+        verifyStandaloneFiltersRequests(stubs);
     }
 
     @Test
     @Override
     public void testCopy() throws Exception {
-        List<AbstractFilter> filters = getTestFilters();
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + ".{2,}"))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(filters))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        List<StubbedFilterRequest> stubs = stubStandaloneFilterRequests(getAssignmentInfos().stream()
+                .map(assignment -> assignment.getFilters().stream().map(FilterInfos::getId).toList())
+                .toList());
 
         super.testCopy();
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).toList()), false);
+        verifyStandaloneFiltersRequests(stubs);
     }
 
     protected void checkCreationApplicationStatus(List<? extends AssignmentInfos<?>> assignmentInfos,
@@ -226,30 +198,64 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
                 .build();
     }
 
-    protected IdentifierListFilterEquipmentAttributes getIdentifiableAttributes(String id, Double distributionKey) {
-        return new IdentifierListFilterEquipmentAttributes(id, distributionKey);
+    protected FilterStub createFilterStub(UUID filterID, Collection<String> equipmentIds) {
+        return new FilterStub(filterID, equipmentFilter(Set.copyOf(equipmentIds)));
     }
 
-    protected AbstractFilter getFilterEquipments(UUID filterID, List<IdentifierListFilterEquipmentAttributes> identifiableAttributes) {
-        return IdentifierListFilter.builder().id(filterID).modificationDate(new Date()).equipmentType(getEquipmentType())
-            .filterEquipmentsAttributes(identifiableAttributes)
-            .build();
+    protected Filter equipmentFilter(Set<String> equipmentIds) {
+        return IdentifierListFilter.builder()
+                .equipmentType(getEquipmentType())
+                .equipmentIds(equipmentIds)
+                .build();
+    }
+
+    private List<StubbedFilterRequest> stubStandaloneFilterRequests(List<List<UUID>> filterIdsList) {
+        Map<List<UUID>, Integer> requestCounts = new LinkedHashMap<>();
+        filterIdsList.forEach(filterIds -> requestCounts.merge(filterIds, 1, Integer::sum));
+
+        Map<UUID, Filter> filtersById = getFilterMapping().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> equipmentFilter(entry.getValue())));
+
+        List<StubbedFilterRequest> stubbedFilterRequests = new ArrayList<>();
+        for (Map.Entry<List<UUID>, Integer> requestCount : requestCounts.entrySet()) {
+            List<FilterStub> filterStubs = requestCount.getKey().stream()
+                    .map(filterId -> new FilterStub(filterId, Objects.requireNonNull(filtersById.get(filterId))))
+                    .toList();
+            stubbedFilterRequests.add(new StubbedFilterRequest(stubStandaloneFilters(filterStubs), requestCount.getKey(), requestCount.getValue()));
+        }
+        return stubbedFilterRequests;
+    }
+
+    @SneakyThrows
+    protected UUID stubStandaloneFilters(List<FilterStub> filterStubs) {
+        List<UUID> filterIds = filterStubs.stream().map(FilterStub::id).toList();
+        String filterIdsQueryParam = filterIds.stream().map(UUID::toString).collect(Collectors.joining(","));
+        return wireMockServer.stubFor(WireMock.get(WireMock.urlPathEqualTo(PATH))
+                .withQueryParam("ids", WireMock.equalTo(filterIdsQueryParam))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(filterStubs.stream().map(FilterStub::filter).toList()))
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+    }
+
+    protected void verifyStandaloneFiltersRequest(UUID stubId, List<UUID> filterIds) {
+        verifyStandaloneFiltersRequest(stubId, filterIds, 1);
+    }
+
+    protected void verifyStandaloneFiltersRequest(UUID stubId, List<UUID> filterIds, int nbRequests) {
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filterIds), false, nbRequests);
+    }
+
+    private void verifyStandaloneFiltersRequests(List<StubbedFilterRequest> stubs) {
+        stubs.forEach(stub -> wireMockUtils.verifyGetRequest(stub.stubId(), PATH, handleQueryParams(stub.filterIds()), false, stub.requestCount()));
     }
 
     protected Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
-        return Map.of("ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
-    }
-
-    protected String getPath(boolean isRegexPath) {
-        if (isRegexPath) {
-            return "/v1/filters/metadata\\?ids=";
-        }
-        return "/v1/filters/metadata?ids=";
+        return Map.of("ids", WireMock.equalTo(filterIds.stream().map(UUID::toString).collect(Collectors.joining(","))));
     }
 
     protected abstract void createEquipments();
 
-    protected abstract List<AbstractFilter> getTestFilters();
+    protected abstract Map<UUID, Set<String>> getFilterMapping();
 
     protected List<AssignmentInfos<?>> getAssignmentInfos() {
         PropertyAssignmentInfos spyAssignmentInfos = spy(PropertyAssignmentInfos.builder()

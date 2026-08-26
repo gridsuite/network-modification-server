@@ -44,9 +44,13 @@ public class FilterLoader implements org.gridsuite.filter.wip.FilterLoader {
 
     @Override
     public List<Filter> getNewFilters(List<UUID> filtersUuids) {
-        var ids = !filtersUuids.isEmpty() ? "?ids=" + filtersUuids.stream().map(UUID::toString).collect(Collectors.joining(",")) : "";
-        //TODO: fix path
-        String path = UriComponentsBuilder.fromPath(DELIMITER + FILTER_SERVER_API_VERSION + "/standalone-filters" + ids)
+        if (filtersUuids == null || filtersUuids.isEmpty()) {
+            return List.of();
+        }
+        String path = UriComponentsBuilder.fromPath(DELIMITER
+                        + FILTER_SERVER_API_VERSION
+                        + "/standalone-filters?ids="
+                        + filtersUuids.stream().map(UUID::toString).collect(Collectors.joining(",")))
                 .buildAndExpand()
                 .toUriString();
         return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null, new ParameterizedTypeReference<List<Filter>>() { }).getBody();
