@@ -1082,8 +1082,8 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * A COMPOSITE container may be designated through a modification reference: in that case the actual
-     * container is the shared composite the reference points to.
+     * A COMPOSITE container may be designated through a modification reference, in the ModificationContainerInfos dto:
+     * in that case the actual container is the shared composite the reference points to.
      */
     private UUID resolveContainerId(ModificationContainerInfos containerInfos) {
         if (ModificationContainerType.COMPOSITE.equals(containerInfos.type())) {

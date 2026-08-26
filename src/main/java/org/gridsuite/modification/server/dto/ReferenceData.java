@@ -14,7 +14,7 @@ import java.util.UUID;
  * @param modificationUuid uuid of the modification-reference itself
  * @param referenceId uuid of the referenced shared composite in directory-server
  * @param containerId uuid of the composite containing the reference, null if the modification-reference is at the root level
- * @author RTE
+ * @author Maissa Souissi <maissa.souissi at rte-france.com>
  */
 public record ReferenceData(UUID modificationUuid, UUID referenceId, UUID containerId) {
 }
