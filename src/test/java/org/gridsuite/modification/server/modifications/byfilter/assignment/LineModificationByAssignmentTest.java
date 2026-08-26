@@ -9,9 +9,6 @@ package org.gridsuite.modification.server.modifications.byfilter.assignment;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
@@ -19,8 +16,10 @@ import org.gridsuite.modification.dto.byfilter.assignment.IntegerAssignmentInfos
 import org.gridsuite.modification.dto.byfilter.assignment.StringAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.equipmentfield.LineField;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLine;
 import static org.junit.jupiter.api.Assertions.*;
@@ -70,37 +69,16 @@ public class LineModificationByAssignmentTest extends AbstractModificationByAssi
             "line_6", 23, ConnectablePosition.Direction.BOTTOM);
     }
 
+    private static final Map<UUID, Set<String>> FILTER_MAPPING = Map.of(
+            FILTER_ID_1, Set.of(LINE_ID_1, LINE_ID_2),
+            FILTER_ID_2, Set.of(LINE_ID_1, LINE_ID_3),
+            FILTER_ID_3, Set.of(LINE_ID_4, LINE_ID_5),
+            FILTER_ID_4, Set.of(LINE_ID_4, LINE_ID_6)
+    );
+
     @Override
-    protected List<AbstractFilter> getTestFilters() {
-        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1)
-            .modificationDate(new Date()).equipmentType(EquipmentType.LINE)
-            .filterEquipmentsAttributes(List.of(
-                new IdentifierListFilterEquipmentAttributes(LINE_ID_1, 1.0),
-                new IdentifierListFilterEquipmentAttributes(LINE_ID_2, 2.0)
-            )).build();
-
-        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2)
-            .modificationDate(new Date()).equipmentType(EquipmentType.LINE)
-            .filterEquipmentsAttributes(List.of(
-                new IdentifierListFilterEquipmentAttributes(LINE_ID_1, 1.0),
-                new IdentifierListFilterEquipmentAttributes(LINE_ID_3, 2.0)
-            )).build();
-
-        IdentifierListFilter filter3 = IdentifierListFilter.builder().id(FILTER_ID_3)
-            .modificationDate(new Date()).equipmentType(EquipmentType.LINE)
-            .filterEquipmentsAttributes(List.of(
-                new IdentifierListFilterEquipmentAttributes(LINE_ID_4, 5.0),
-                new IdentifierListFilterEquipmentAttributes(LINE_ID_5, 6.0)
-            )).build();
-
-        IdentifierListFilter filter4 = IdentifierListFilter.builder().id(FILTER_ID_4)
-            .modificationDate(new Date()).equipmentType(EquipmentType.LINE)
-            .filterEquipmentsAttributes(List.of(
-                new IdentifierListFilterEquipmentAttributes(LINE_ID_4, 5.0),
-                new IdentifierListFilterEquipmentAttributes(LINE_ID_6, 7.0)
-            )).build();
-
-        return List.of(filter1, filter2, filter3, filter4);
+    protected Map<UUID, Set<String>> getFilterMapping() {
+        return FILTER_MAPPING;
     }
 
     @Override
