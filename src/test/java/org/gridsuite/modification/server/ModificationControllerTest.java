@@ -478,6 +478,7 @@ class ModificationControllerTest {
                 .queryParam("uuids", uuidString)
                 .content(mapper.writeValueAsString(metadata))
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("userId", "userId")
         ).andExpect(status().isOk());
         assertEquals(false, modificationRepository.getModifications(TEST_GROUP_ID, true, true).getFirst().getActivated());
     }
@@ -512,6 +513,7 @@ class ModificationControllerTest {
                         .queryParam("uuids", uuidString)
                         .content(mapper.writeValueAsString(metadata))
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId")
                 ).andExpect(status().isOk());
 
         assertEquals("new description", modificationRepository.getModifications(TEST_GROUP_ID, true, true).getFirst().getDescription());

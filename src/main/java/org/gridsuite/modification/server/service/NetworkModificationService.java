@@ -277,16 +277,13 @@ public class NetworkModificationService {
     @Transactional
     public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos, @NonNull String userId) {
         networkModificationRepository.updateModification(modificationUuid, modificationInfos);
-        // notify directory-server only for ancestor composites that are actually shared (i.e. referenced
-        // from elsewhere) - directory-server relays to study-server for those (see NotificationService.emitElementUpdated)
+        // notify directory-server for every ancestor composite, closest first - directory-server decides
+        // on its own whether each composite is actually shared and relays to study-server accordingly
+        // (see NotificationService.emitElementUpdated)
         List<UUID> ancestorCompositeUuids = networkModificationRepository.findAncestorCompositeUuids(modificationUuid);
-        List<UUID> referencedAncestorCompositeUuids = ancestorCompositeUuids.stream()
-                .filter(compositeUuid ->
-                        !networkModificationRepository.getReferencesByElementUuid(compositeUuid).isEmpty())
-                .toList();
-
-        referencedAncestorCompositeUuids.forEach(compositeUuid ->
-                notificationService.emitElementUpdated(compositeUuid, userId));    }
+        ancestorCompositeUuids.forEach(compositeUuid ->
+                notificationService.emitElementUpdated(compositeUuid, userId));
+    }
 
     @Transactional
     public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
@@ -304,6 +301,14 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public Map<UUID, UUID> findModificationParentComposites(@NonNull List<UUID> modificationUuids) {
         return modificationRepository.findCompositeContainerIdsByModificationIds(modificationUuids).stream()
+                .collect(Collectors.toMap(
+                        row -> UUID.fromString((String) row[0]),
+                        row -> UUID.fromString((String) row[1])));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, UUID> findModificationRootGroups(@NonNull List<UUID> modificationUuids) {
+        return modificationRepository.findRootGroupIdsByModificationIds(modificationUuids).stream()
                 .collect(Collectors.toMap(
                         row -> UUID.fromString((String) row[0]),
                         row -> UUID.fromString((String) row[1])));
