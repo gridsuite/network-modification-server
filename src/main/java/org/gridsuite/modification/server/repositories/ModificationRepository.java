@@ -172,6 +172,18 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
             """, nativeQuery = true)
     UUID findCompositeContainerIdByModificationId(@Param("uuid") UUID uuid);
 
+    /**
+     * @return one [modification id, composite container id] row per modification actually nested in a composite;
+     * modifications sitting directly under a group have no row
+     */
+    @Query(value = """
+            SELECT CAST(m.id AS VARCHAR), CAST(m.container_id AS VARCHAR)
+              FROM modification m
+              JOIN modification_container c ON c.type = 'COMPOSITE' AND c.id = m.container_id
+             WHERE m.id IN :uuids
+            """, nativeQuery = true)
+    List<Object[]> findCompositeContainerIdsByModificationIds(@Param("uuids") Collection<UUID> uuids);
+
     @Query("""
           SELECT COUNT(m) FROM ModificationEntity m
           WHERE m.container.id = :containerId AND m.stashed = :stashed
