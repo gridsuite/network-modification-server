@@ -1120,9 +1120,8 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * A COMPOSITE container may be designated through a modification reference: in that case the actual
-     * container is the shared composite the reference points to. quand ona une composite sous une ref et on veut drag and drop cette composite en dehors
-     * la ref , on a l'id composite :
+     * A COMPOSITE container may be designated through a modification reference, in the ModificationContainerInfos dto:
+     * in that case the actual container is the shared composite the reference points to.
      */
     private UUID resolveContainerId(ModificationContainerInfos containerInfos) {
         if (ModificationContainerType.COMPOSITE.equals(containerInfos.type())) {
