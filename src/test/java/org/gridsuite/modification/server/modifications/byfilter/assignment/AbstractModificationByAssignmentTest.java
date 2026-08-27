@@ -31,6 +31,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import java.util.*;
+import java.util.stream.Collectors;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -101,7 +103,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractByFilterTest
 
         checkCreationApplicationStatus(assignments, applicationStatus);
 
-        verifyStandaloneFiltersRequest(stubId, filterEquipments.stream().map(FilterStub::id).toList());
+        verifyStandaloneFiltersRequest(stubId, filterEquipments.stream().map(FilterStub::id).collect(Collectors.toSet()));
     }
 
     @Test
@@ -116,7 +118,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractByFilterTest
 
         checkCreationApplicationStatus(assignmentsWithWrongFilter, NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
 
-        verifyStandaloneFiltersRequest(stubId, List.of(FILTER_WITH_ALL_WRONG_IDS), getAssignmentInfos().size());
+        verifyStandaloneFiltersRequest(stubId, Set.of(FILTER_WITH_ALL_WRONG_IDS), getAssignmentInfos().size());
     }
 
     @Test
