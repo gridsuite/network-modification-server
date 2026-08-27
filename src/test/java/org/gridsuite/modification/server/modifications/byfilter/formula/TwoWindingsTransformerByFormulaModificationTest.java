@@ -29,7 +29,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
     @Test
     void testModifyTwtWithError() throws Exception {
         // Test modifying ratio tab changer field when ratio tab changer is null
-        FilterStub filter = getFilterEquipments(FILTER_ID_4, List.of(TWT_ID_4, TWT_ID_6));
+        FilterStub filter = createFilterStub(FILTER_ID_4, List.of(TWT_ID_4, TWT_ID_6));
         FormulaInfos formulaInfos = FormulaInfos.builder()
                 .filters(List.of(filter4))
                 .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name()).build())
@@ -44,7 +44,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
 
         // Test modifying phase tab changer field when phase tab changer is null
-        FilterStub filter2 = getFilterEquipments(FILTER_ID_1, List.of(TWT_ID_1, TWT_ID_2));
+        FilterStub filter2 = createFilterStub(FILTER_ID_1, List.of(TWT_ID_1, TWT_ID_2));
         FormulaInfos formulaInfos2 = FormulaInfos.builder()
                 .filters(List.of(filter1))
                 .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name()).build())
@@ -61,7 +61,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
 
     @Test
     void testDivisionByZero() throws Exception {
-        FilterStub filter = getFilterEquipments(FILTER_ID_4, List.of(TWT_ID_4, TWT_ID_6));
+        FilterStub filter = createFilterStub(FILTER_ID_4, List.of(TWT_ID_4, TWT_ID_6));
 
         UUID stubId = stubStandaloneFilters(List.of(filter));
 
@@ -82,8 +82,8 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
 
     @Test
     void testModifyTwtWithWarning() throws Exception {
-        FilterStub filterTwt1 = getFilterEquipments(FILTER_ID_1, List.of(TWT_ID_1, TWT_ID_2));
-        FilterStub filterTwt2 = getFilterEquipments(FILTER_ID_4, List.of(TWT_ID_4, TWT_ID_6));
+        FilterStub filterTwt1 = createFilterStub(FILTER_ID_1, List.of(TWT_ID_1, TWT_ID_2));
+        FilterStub filterTwt2 = createFilterStub(FILTER_ID_4, List.of(TWT_ID_4, TWT_ID_6));
 
         UUID stubId = stubStandaloneFilters(List.of(filterTwt1, filterTwt2));
 

@@ -7,13 +7,7 @@
 package org.gridsuite.modification.server.modifications.byfilter.formula;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.matching.StringValuePattern;
-import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.filter.wip.Filter;
-import org.gridsuite.filter.wip.IdentifierListFilter;
 import org.gridsuite.modification.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.byfilter.formula.FormulaInfos;
@@ -22,7 +16,7 @@ import org.gridsuite.modification.modifications.data.assignment.ReferenceFieldOr
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
-import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
+import org.gridsuite.modification.server.modifications.byfilter.AbstractByFilterTest;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.FilterStub;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -30,12 +24,10 @@ import org.gridsuite.modification.server.utils.StubbedFilterRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import java.util.*;
-import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -49,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
 @Tag("IntegrationTest")
-abstract class AbstractByFormulaModificationTest extends AbstractNetworkModificationTest {
+abstract class AbstractByFormulaModificationTest extends AbstractByFilterTest {
     protected static final UUID FILTER_ID_1 = UUID.randomUUID();
     protected static final UUID FILTER_ID_2 = UUID.randomUUID();
     protected static final UUID FILTER_ID_3 = UUID.randomUUID();
@@ -121,7 +113,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
 
     @Test
     public void testModificationWithAllWrongEquipmentIds() throws Exception {
-        FilterStub filter = getFilterEquipments(FILTER_WITH_ALL_WRONG_IDS, Set.of());
+        FilterStub filter = createFilterStub(FILTER_WITH_ALL_WRONG_IDS, Set.of());
 
         List<FormulaInfos> formulaInfos = getFormulaInfos().stream()
                 .peek(formula -> formula.setFilters(List.of(new FilterInfos(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId"))))
@@ -201,56 +193,6 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
                 .build();
     }
 
-    protected FilterStub getFilterEquipments(UUID filterID, Collection<String> equipmentIds) {
-        return new FilterStub(filterID, equipmentFilter(Set.copyOf(equipmentIds)));
-    }
-
-    protected Filter equipmentFilter(Set<String> equipmentIds) {
-        return IdentifierListFilter.builder()
-                .equipmentType(getEquipmentType())
-                .equipmentIds(equipmentIds)
-                .build();
-    }
-
-    private List<StubbedFilterRequest> stubStandaloneFilterRequests(List<List<UUID>> filterIdsList) throws Exception {
-        Map<List<UUID>, Integer> requestCounts = new LinkedHashMap<>();
-        filterIdsList.forEach(filterIds -> requestCounts.merge(filterIds, 1, Integer::sum));
-
-        Map<UUID, Filter> filtersById = getFilterMapping().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> equipmentFilter(entry.getValue())));
-
-        List<StubbedFilterRequest> stubbedFilterRequests = new ArrayList<>();
-        for (Map.Entry<List<UUID>, Integer> requestCount : requestCounts.entrySet()) {
-            List<FilterStub> filterStubs = requestCount.getKey().stream()
-                    .map(filterId -> new FilterStub(filterId, Objects.requireNonNull(filtersById.get(filterId))))
-                    .toList();
-            stubbedFilterRequests.add(new StubbedFilterRequest(stubStandaloneFilters(filterStubs), requestCount.getKey(), requestCount.getValue()));
-        }
-        return stubbedFilterRequests;
-    }
-
-    protected UUID stubStandaloneFilters(List<FilterStub> filterStubs) throws Exception {
-        List<UUID> filterIds = filterStubs.stream().map(FilterStub::id).toList();
-        String filterIdsQueryParam = filterIds.stream().map(UUID::toString).collect(Collectors.joining(","));
-        return wireMockServer.stubFor(WireMock.get(WireMock.urlPathEqualTo(PATH))
-                .withQueryParam("ids", WireMock.equalTo(filterIdsQueryParam))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(filterStubs.stream().map(FilterStub::filter).toList()))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
-    }
-
-    protected void verifyStandaloneFiltersRequest(UUID stubId, List<UUID> filterIds) {
-        verifyStandaloneFiltersRequest(stubId, filterIds, 1);
-    }
-
-    protected void verifyStandaloneFiltersRequest(UUID stubId, List<UUID> filterIds, int nbRequests) {
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filterIds), false, nbRequests);
-    }
-
-    private void verifyStandaloneFiltersRequests(List<StubbedFilterRequest> stubs) {
-        stubs.forEach(stub -> wireMockUtils.verifyGetRequest(stub.stubId(), PATH, handleQueryParams(stub.filterIds()), false, stub.requestCount()));
-    }
-
     protected FormulaInfos getFormulaInfo(String editedField,
                                 List<FilterInfos> filters,
                                 Operator operator,
@@ -265,19 +207,9 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
                 .build();
     }
 
-    protected Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
-        return Map.of("ids", WireMock.equalTo(filterIds.stream().map(UUID::toString).collect(Collectors.joining(","))));
-    }
-
     protected abstract void createEquipments();
-
-    protected abstract Map<UUID, Set<String>> getFilterMapping();
 
     protected abstract List<FormulaInfos> getFormulaInfos();
 
     protected abstract List<FormulaInfos> getUpdatedFormulaInfos();
-
-    protected abstract IdentifiableType getIdentifiableType();
-
-    protected abstract EquipmentType getEquipmentType();
 }
