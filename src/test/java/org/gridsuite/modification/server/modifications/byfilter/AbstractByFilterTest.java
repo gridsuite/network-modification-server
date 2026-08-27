@@ -21,6 +21,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -48,14 +49,14 @@ public abstract class AbstractByFilterTest extends AbstractNetworkModificationTe
     }
 
     protected List<StubbedFilterRequest> stubStandaloneFilterRequests(List<List<UUID>> filterIdsList) {
-        Map<List<UUID>, Integer> requestCounts = new LinkedHashMap<>();
-        filterIdsList.forEach(filterIds -> requestCounts.merge(filterIds, 1, Integer::sum));
+        Map<Set<UUID>, Integer> requestCounts = new LinkedHashMap<>();
+        filterIdsList.forEach(filterIds -> requestCounts.merge(filterIds.stream().collect(Collectors.toSet()), 1, Integer::sum));
 
         Map<UUID, Filter> filtersById = getFilterMapping().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> equipmentFilter(entry.getValue())));
 
         List<StubbedFilterRequest> stubbedFilterRequests = new ArrayList<>();
-        for (Map.Entry<List<UUID>, Integer> requestCount : requestCounts.entrySet()) {
+        for (Map.Entry<Set<UUID>, Integer> requestCount : requestCounts.entrySet()) {
             List<FilterStub> filterStubs = requestCount.getKey().stream()
                     .map(filterId -> new FilterStub(filterId, Objects.requireNonNull(filtersById.get(filterId))))
                     .toList();
@@ -67,19 +68,18 @@ public abstract class AbstractByFilterTest extends AbstractNetworkModificationTe
     @SneakyThrows
     protected UUID stubStandaloneFilters(List<FilterStub> filterStubs) {
         List<UUID> filterIds = filterStubs.stream().map(FilterStub::id).toList();
-        String filterIdsQueryParam = filterIds.stream().map(UUID::toString).collect(Collectors.joining(","));
         return wireMockServer.stubFor(WireMock.get(WireMock.urlPathEqualTo(PATH))
-                .withQueryParam("ids", WireMock.equalTo(filterIdsQueryParam))
+                .withQueryParam("ids", equalToCommaSeparatedIdsIgnoringOrder(filterIds))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filterStubs.stream().map(FilterStub::filter).toList()))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
     }
 
-    protected void verifyStandaloneFiltersRequest(UUID stubId, List<UUID> filterIds) {
+    protected void verifyStandaloneFiltersRequest(UUID stubId, Set<UUID> filterIds) {
         verifyStandaloneFiltersRequest(stubId, filterIds, 1);
     }
 
-    protected void verifyStandaloneFiltersRequest(UUID stubId, List<UUID> filterIds, int nbRequests) {
+    protected void verifyStandaloneFiltersRequest(UUID stubId, Set<UUID> filterIds, int nbRequests) {
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filterIds), false, nbRequests);
     }
 
@@ -87,7 +87,26 @@ public abstract class AbstractByFilterTest extends AbstractNetworkModificationTe
         stubs.forEach(stub -> wireMockUtils.verifyGetRequest(stub.stubId(), PATH, handleQueryParams(stub.filterIds()), false, stub.requestCount()));
     }
 
-    protected Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
-        return Map.of("ids", WireMock.equalTo(filterIds.stream().map(UUID::toString).collect(Collectors.joining(","))));
+    protected Map<String, StringValuePattern> handleQueryParams(Set<UUID> filterIds) {
+        return Map.of("ids", equalToCommaSeparatedIdsIgnoringOrder(filterIds));
+    }
+
+    protected StringValuePattern equalToCommaSeparatedIdsIgnoringOrder(Collection<UUID> filterIds) {
+        Set<String> expectedIds = filterIds.stream()
+                .map(UUID::toString)
+                .collect(Collectors.toSet());
+
+        if (expectedIds.isEmpty()) {
+            return WireMock.equalTo("");
+        }
+
+        String allowedIds = expectedIds.stream()
+                .map(Pattern::quote)
+                .collect(Collectors.joining("|"));
+        String expectedIdsLookaheads = expectedIds.stream()
+                .map(id -> "(?=.*(?:^|,)" + Pattern.quote(id) + "(?:,|$))")
+                .collect(Collectors.joining());
+
+        return WireMock.matching("^" + expectedIdsLookaheads + "(?:" + allowedIds + ")(?:,(?:" + allowedIds + ")){" + (expectedIds.size() - 1) + "}$");
     }
 }

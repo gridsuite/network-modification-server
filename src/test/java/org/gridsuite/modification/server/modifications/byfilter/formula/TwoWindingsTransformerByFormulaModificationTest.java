@@ -77,7 +77,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
         checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfos2)).build(),
                 NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
 
-        verifyStandaloneFiltersRequest(stubId, List.of(FILTER_ID_4));
+        verifyStandaloneFiltersRequest(stubId, Set.of(FILTER_ID_4));
     }
 
     @Test
@@ -108,7 +108,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
 
-        verifyStandaloneFiltersRequest(stubId, List.of(FILTER_ID_1, FILTER_ID_4));
+        verifyStandaloneFiltersRequest(stubId, Set.of(FILTER_ID_1, FILTER_ID_4));
     }
 
     @Override

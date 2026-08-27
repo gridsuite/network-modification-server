@@ -86,7 +86,7 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
 
-        verifyStandaloneFiltersRequest(stubId, List.of(FILTER_ID_1, FILTER_ID_4));
+        verifyStandaloneFiltersRequest(stubId, Set.of(FILTER_ID_1, FILTER_ID_4));
     }
 
     @Override

@@ -7,11 +7,11 @@
 
 package org.gridsuite.modification.server.utils;
 
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
-public record StubbedFilterRequest(UUID stubId, List<UUID> filterIds, int requestCount) {
+public record StubbedFilterRequest(UUID stubId, Set<UUID> filterIds, int requestCount) {
 }
