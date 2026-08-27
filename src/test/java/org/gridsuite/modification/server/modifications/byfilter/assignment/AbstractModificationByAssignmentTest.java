@@ -19,6 +19,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.byfilter.AbstractByFilterTest;
+import org.gridsuite.modification.server.modifications.byfilter.AbstractByFilterTest;
 import org.gridsuite.modification.server.service.FilterLoader;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.FilterStub;
