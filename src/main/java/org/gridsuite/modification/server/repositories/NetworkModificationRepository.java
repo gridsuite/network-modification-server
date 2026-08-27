@@ -1083,9 +1083,6 @@ public class NetworkModificationRepository {
         if (name != null) {
             compositeModificationRepository.renameCompositeModification(compositeEntity, name);
         }
-
-        modificationRepository.save(referenceEntity);
-        modificationRepository.save(compositeEntity);
     }
 
     private AbstractModificationContainerEntity getContainer(ModificationContainerInfos containerInfos) {
