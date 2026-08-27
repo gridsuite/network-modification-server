@@ -285,8 +285,16 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public Map<UUID, UUID> getReferences(@NonNull List<UUID> modificationUuids) {
+    public List<ReferenceData> getReferences(@NonNull List<UUID> modificationUuids) {
         return networkModificationRepository.getReferences(modificationUuids);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, UUID> findModificationParentComposites(@NonNull List<UUID> modificationUuids) {
+        return modificationRepository.findCompositeContainerIdsByModificationIds(modificationUuids).stream()
+                .collect(Collectors.toMap(
+                        row -> UUID.fromString((String) row[0]),
+                        row -> UUID.fromString((String) row[1])));
     }
 
     @Transactional
