@@ -46,7 +46,7 @@ class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTe
 
     @Test
     void testWithNullReferenceFieldOrValue() throws Exception {
-        FilterStub filterEquipments = getFilterEquipments(FILTER_ID_1, List.of(GENERATOR_ID_1));
+        FilterStub filterEquipments = createFilterStub(FILTER_ID_1, List.of(GENERATOR_ID_1));
 
         FormulaInfos formulaInfos = FormulaInfos.builder()
                 .filters(List.of(new FilterInfos(FILTER_ID_1, "filter1")))
