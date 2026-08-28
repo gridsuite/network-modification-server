@@ -18,12 +18,17 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.MODIFICATION_DESCRIPTION_MISSING;
@@ -73,19 +78,14 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     @Column(name = "description", columnDefinition = "CLOB")
     private String description;
 
-    // applicability per root network tag: a tag without an entry is applicable
-    // batched to avoid one select per modification when a whole group is loaded
+    // applicability per root network tag: a tag without an entry is applicable.
+    // Batched to avoid one select per modification when a whole group is loaded, and deleted by the database:
+    // cascading it here would make hibernate load the applicabilities of every modification just to delete them.
+    // An entry is never removed from this list, dropping one is only done in sql: see deleteRootNetworkApplicabilities.
     @BatchSize(size = 100)
-    @ElementCollection
-    @CollectionTable(
-            // no index on modification_id: the (modification_id, root_network_tag) primary key already covers it
-            name = "modification_root_network_applicability",
-            joinColumns = @JoinColumn(name = "modification_id"),
-            foreignKey = @ForeignKey(name = "modification_root_network_applicability_fk")
-    )
-    @MapKeyColumn(name = "root_network_tag", length = ROOT_NETWORK_TAG_MAX_LENGTH)
-    @Column(name = "applicable")
-    private Map<String, Boolean> applicabilityByRootNetworkTag = new HashMap<>();
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OneToMany(mappedBy = "modification", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<ModificationRootNetworkApplicabilityEntity> applicabilities = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "container_id", foreignKey = @ForeignKey(name = "modification_container_fk"))
@@ -124,7 +124,7 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
             this.activated = modificationInfos.getActivated();
         }
         if (modificationInfos.getApplicabilityByRootNetworkTag() != null) {
-            this.applicabilityByRootNetworkTag = new HashMap<>(modificationInfos.getApplicabilityByRootNetworkTag());
+            modificationInfos.getApplicabilityByRootNetworkTag().forEach(this::setApplicability);
         }
 
         assignAttributes(modificationInfos);
@@ -168,7 +168,26 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     }
 
     public Map<String, Boolean> copyApplicabilityByRootNetworkTag() {
-        return new HashMap<>(applicabilityByRootNetworkTag);
+        Map<String, Boolean> applicabilityByRootNetworkTag = new HashMap<>();
+        applicabilities.forEach(applicability ->
+            applicabilityByRootNetworkTag.put(applicability.getRootNetworkTag(), applicability.getApplicable()));
+        return applicabilityByRootNetworkTag;
+    }
+
+    public Boolean getApplicability(String rootNetworkTag) {
+        return findApplicability(rootNetworkTag).map(ModificationRootNetworkApplicabilityEntity::getApplicable).orElse(null);
+    }
+
+    public void setApplicability(String rootNetworkTag, Boolean applicable) {
+        findApplicability(rootNetworkTag).ifPresentOrElse(
+            applicability -> applicability.setApplicable(applicable),
+            () -> applicabilities.add(new ModificationRootNetworkApplicabilityEntity(this, rootNetworkTag, applicable)));
+    }
+
+    private Optional<ModificationRootNetworkApplicabilityEntity> findApplicability(String rootNetworkTag) {
+        return applicabilities.stream()
+            .filter(applicability -> applicability.getRootNetworkTag().equals(rootNetworkTag))
+            .findFirst();
     }
 
     public static ModificationEntity fromDTO(ModificationInfos dto) {

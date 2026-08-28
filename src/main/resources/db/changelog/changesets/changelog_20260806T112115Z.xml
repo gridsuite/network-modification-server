@@ -12,6 +12,6 @@
         </createTable>
     </changeSet>
     <changeSet author="florent (generated)" id="1786015296336-8">
-        <addForeignKeyConstraint baseColumnNames="modification_id" baseTableName="modification_root_network_applicability" constraintName="modification_root_network_applicability_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="modification_id" baseTableName="modification_root_network_applicability" constraintName="modification_root_network_applicability_fk" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
 </databaseChangeLog>

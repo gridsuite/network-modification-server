@@ -48,11 +48,11 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      */
     @Query("""
             SELECT m FROM ModificationEntity m
+            LEFT JOIN ModificationRootNetworkApplicabilityEntity a
+                   ON a.modification.id = COALESCE(TREAT(m AS ModificationReferenceEntity).referenceId, m.id)
+                  AND a.rootNetworkTag = :rootNetworkTag
             WHERE m.container.id = :containerId AND m.stashed = false AND m.activated = true
-              AND (:rootNetworkTag IS NULL OR NOT EXISTS (
-                  SELECT 1 FROM ModificationEntity holder JOIN holder.applicabilityByRootNetworkTag a
-                  WHERE holder.id = COALESCE((SELECT r.referenceId FROM ModificationReferenceEntity r WHERE r.id = m.id), m.id)
-                    AND KEY(a) = :rootNetworkTag AND VALUE(a) = false))
+              AND COALESCE(a.applicable, true) = true
             ORDER BY m.modificationsOrder
             """)
     List<ModificationEntity> findAllActiveModificationsByContainerId(@Param("containerId") UUID containerId,
@@ -76,11 +76,11 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      * A reference has no applicability of its own, so it is resolved to the shared modification it points to.
      */
     @Query("""
-            SELECT m.id, KEY(a), VALUE(a)
-            FROM ModificationEntity m, ModificationEntity holder
-            JOIN holder.applicabilityByRootNetworkTag a
+            SELECT m.id, a.rootNetworkTag, a.applicable
+            FROM ModificationEntity m
+            LEFT JOIN ModificationReferenceEntity r ON r.id = m.id
+            JOIN ModificationRootNetworkApplicabilityEntity a ON a.modification.id = COALESCE(r.referenceId, m.id)
             WHERE m.id IN (:uuids)
-              AND holder.id = COALESCE((SELECT r.referenceId FROM ModificationReferenceEntity r WHERE r.id = m.id), m.id)
             """)
     List<Object[]> findApplicabilitiesByIdIn(@Param("uuids") Collection<UUID> uuids);
 

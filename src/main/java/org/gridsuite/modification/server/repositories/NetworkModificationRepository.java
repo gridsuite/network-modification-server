@@ -620,7 +620,7 @@ public class NetworkModificationRepository {
      */
     private boolean isApplicableOn(ModificationEntity modificationEntity, String rootNetworkTag) {
         return rootNetworkTag == null
-            || !Boolean.FALSE.equals(getApplicabilityHolder(modificationEntity).getApplicabilityByRootNetworkTag().get(rootNetworkTag));
+            || !Boolean.FALSE.equals(getApplicabilityHolder(modificationEntity).getApplicability(rootNetworkTag));
     }
 
     private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
@@ -903,12 +903,13 @@ public class NetworkModificationRepository {
 
     @Transactional
     public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable) {
-        modificationUuids.forEach(modificationUuid -> updateRootNetworkApplicability(getModificationEntity(modificationUuid), rootNetworkTag, applicable));
+        getApplicabilityHolders(getModificationEntities(modificationUuids, true))
+            .forEach(entity -> updateRootNetworkApplicability(entity, rootNetworkTag, applicable));
     }
 
     private void updateRootNetworkApplicability(ModificationEntity entity, String rootNetworkTag, boolean applicable) {
         ModificationEntity applicabilityHolder = getApplicabilityHolder(entity);
-        applicabilityHolder.getApplicabilityByRootNetworkTag().put(rootNetworkTag, applicable);
+        applicabilityHolder.setApplicability(rootNetworkTag, applicable);
         if (applicabilityHolder instanceof CompositeModificationEntity composite) {
             composite.getModifications().forEach(sub -> updateRootNetworkApplicability(sub, rootNetworkTag, applicable));
         }
@@ -920,6 +921,25 @@ public class NetworkModificationRepository {
      */
     private ModificationEntity getApplicabilityHolder(ModificationEntity entity) {
         return entity instanceof ModificationReferenceEntity reference ? getModificationEntity(reference.getReferenceId()) : entity;
+    }
+
+    /**
+     * @return for each of the given entities, itself or, when it is a reference, the modification carrying the applicabilities
+     */
+    private List<ModificationEntity> getApplicabilityHolders(List<ModificationEntity> entities) {
+        List<UUID> referencedUuids = entities.stream()
+            .filter(ModificationReferenceEntity.class::isInstance)
+            .map(entity -> ((ModificationReferenceEntity) entity).getReferenceId())
+            .distinct()
+            .toList();
+        if (referencedUuids.isEmpty()) {
+            return entities;
+        }
+        Map<UUID, ModificationEntity> holdersByUuid = getModificationEntities(referencedUuids, true).stream()
+            .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+        return entities.stream()
+            .map(entity -> entity instanceof ModificationReferenceEntity reference ? holdersByUuid.get(reference.getReferenceId()) : entity)
+            .toList();
     }
 
     /**
