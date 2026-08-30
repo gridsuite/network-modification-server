@@ -306,6 +306,7 @@ public class NetworkModificationService {
                         row -> UUID.fromString((String) row[1])));
     }
 
+<<<<<<< HEAD
     @Transactional(readOnly = true)
     public Map<UUID, UUID> findModificationRootGroups(@NonNull List<UUID> modificationUuids) {
         return modificationRepository.findRootGroupIdsByModificationIds(modificationUuids).stream()
@@ -314,6 +315,8 @@ public class NetworkModificationService {
                         row -> UUID.fromString((String) row[1])));
     }
 
+=======
+>>>>>>> a1c0947b (reference modif actions (#869))
     @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         for (UUID modificationUuid : modificationUuids) {

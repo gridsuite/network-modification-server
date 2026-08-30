@@ -133,6 +133,7 @@ public class CompositeController {
                 .body(networkModificationService.findModificationParentComposites(networkModificationUuids));
     }
 
+<<<<<<< HEAD
     /**
      * @return modification uuid -> uuid of the top-level group ultimately containing it, walking up through as
      * many nested composite modifications as needed; modifications not reachable from any group have no entry
@@ -146,6 +147,8 @@ public class CompositeController {
                 .body(networkModificationService.findModificationRootGroups(networkModificationUuids));
     }
 
+=======
+>>>>>>> a1c0947b (reference modif actions (#869))
     @PutMapping(value = "/{uuid}/replace", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Replaces all the network modifications inside a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})

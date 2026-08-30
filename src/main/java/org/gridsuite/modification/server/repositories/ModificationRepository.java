@@ -99,6 +99,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
             """, nativeQuery = true)
     List<Object[]> findCompositeContainerIdsByModificationIds(@Param("uuids") Collection<UUID> uuids);
 
+<<<<<<< HEAD
     /**
      * Walks up from each given modification, through as many nested composite modifications as needed, to the
      * top-level group that ultimately contains it.
@@ -122,6 +123,8 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
             """, nativeQuery = true)
     List<Object[]> findRootGroupIdsByModificationIds(@Param("uuids") Collection<UUID> uuids);
 
+=======
+>>>>>>> a1c0947b (reference modif actions (#869))
     @Query("""
           SELECT COUNT(m) FROM ModificationEntity m
           WHERE m.container.id = :containerId AND m.stashed = :stashed

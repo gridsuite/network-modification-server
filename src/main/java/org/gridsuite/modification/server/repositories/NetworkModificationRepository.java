@@ -772,6 +772,7 @@ public class NetworkModificationRepository {
     }
 
     /**
+<<<<<<< HEAD
      * @return ancestor composite modification uuids, closest first; empty if the modification is a
      *         direct child of a group (not nested in any composite)
      */
@@ -798,6 +799,8 @@ public class NetworkModificationRepository {
     }
 
     /**
+=======
+>>>>>>> a1c0947b (reference modif actions (#869))
      * @return ReferenceData : modification and elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional

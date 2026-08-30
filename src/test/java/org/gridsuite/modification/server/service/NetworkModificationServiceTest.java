@@ -210,6 +210,7 @@ class NetworkModificationServiceTest {
         assertFalse(parentComposites.containsKey(directGroupChildUuid));
     }
 
+<<<<<<< HEAD
     @Test
     void shouldFindRootGroupForDirectAndNestedModifications() {
         UUID groupUuid = UUID.randomUUID();
@@ -255,6 +256,8 @@ class NetworkModificationServiceTest {
         assertEquals(groupUuid, rootGroups.get(leafUuid));
     }
 
+=======
+>>>>>>> a1c0947b (reference modif actions (#869))
     private static LoadModificationInfos dummyModification(UUID uuid) {
         return LoadModificationInfos.builder()
                 .equipmentId("dummyEquipmentId")
