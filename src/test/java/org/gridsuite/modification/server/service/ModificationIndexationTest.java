@@ -22,6 +22,7 @@ import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicati
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosRepository;
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
+import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
@@ -253,13 +254,14 @@ class ModificationIndexationTest {
         Move this modification to group 2, variant 2
          */
         UUID groupUuid2 = UUID.randomUUID();
+        modificationRepository.saveModifications(groupUuid2, List.of()); // create empty target group so getContainerType resolves it
         NetworkModificationsResult modificationsResult = networkModificationService.moveModifications(
-            groupUuid2,
-            groupUuid1,
-            null,
-            modifications.stream().map(ModificationInfos::getUuid).toList(),
-            List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID())),
-            true
+                new ModificationContainerInfos(groupUuid1, ModificationContainerType.GROUP),
+                new ModificationContainerInfos(groupUuid2, ModificationContainerType.GROUP),
+                null,
+                modifications.stream().map(ModificationInfos::getUuid).toList(),
+                List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID())),
+                true
         ).join();
 
         /*
@@ -298,7 +300,8 @@ class ModificationIndexationTest {
 
         // Create the composite modification to pass later to ?action=insert
         UUID compositeUuid = networkModificationService.createNetworkCompositeModification(
-                modifications.stream().map(ModificationInfos::getUuid).toList()
+                modifications.stream().map(ModificationInfos::getUuid).toList(),
+                "composite name"
         );
 
         // Need to remove the listener created in the last modifications application
@@ -308,8 +311,8 @@ class ModificationIndexationTest {
         Split this composite and insert the contained modifications to group 2, variant 2
          */
         UUID groupUuid2 = UUID.randomUUID();
-        Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos = Pair.of(
-                List.of(Pair.of(compositeUuid, "")),
+        Pair<List<CompositeInfos>, List<ModificationApplicationContext>> modificationContextInfos = Pair.of(
+                List.of(new CompositeInfos(compositeUuid, "", false, "description")),
                 List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
         );
         NetworkModificationsResult modificationsResult = networkModificationService.splitCompositeModifications(
@@ -545,7 +548,8 @@ class ModificationIndexationTest {
 
             UUID groupUuid = UUID.randomUUID();
             List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationModificationInfos)));
-            NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos), networkInfos);
+            NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos),
+                    networkInfos);
             assertNotNull(result);
 
             assertEquals(1, modificationRepository.getModifications(groupUuid, true, true).size());

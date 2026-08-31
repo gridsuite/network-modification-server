@@ -15,7 +15,7 @@ import org.gridsuite.modification.ModificationType;
 import java.util.UUID;
 
 /**
- * @author David Braquart <david.braquart@rte-france.com>
+ * @author David Braquart <david.braquart at rte-france.com>
  */
 @Getter
 @NoArgsConstructor

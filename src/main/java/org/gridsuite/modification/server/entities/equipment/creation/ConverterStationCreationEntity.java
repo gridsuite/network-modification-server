@@ -15,7 +15,6 @@ import org.gridsuite.modification.dto.ConverterStationCreationInfos;
 import org.gridsuite.modification.server.dto.DTOUtils;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable.toEmbeddablePoints;
 
@@ -29,10 +28,6 @@ import static org.gridsuite.modification.server.entities.equipment.creation.Reac
 @Entity
 @Table(name = "converterStationCreation")
 public class ConverterStationCreationEntity extends InjectionCreationEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
-    private UUID id;
 
     @Column
     private Float lossFactor;
@@ -53,7 +48,8 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
     private Double voltageSetpoint;
 
     @ElementCollection
-    @CollectionTable(name = "converter_station_creation_rcc_points", indexes = @Index(name = "converter_station_creation_rcc_points_entity_id_idx", columnList = "converter_station_creation_entity_id"))
+    @CollectionTable(name = "converter_station_creation_rcc_points",
+            indexes = @Index(name = "converter_station_creation_rcc_points_entity_id_idx", columnList = "converter_station_creation_entity_id"))
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
 
     @Column

@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -50,7 +51,7 @@ public class CompositeController {
     public CompletableFuture<ResponseEntity<NetworkModificationsResult>> insertCompositeModifications(
             @Parameter(description = "updated group UUID, where modifications are inserted") @PathVariable("groupUuid") UUID targetGroupUuid,
             @Parameter(description = "Insertion method", required = true) @RequestParam(value = "action") CompositeModificationAction action,
-            @RequestBody Pair<List<Pair<UUID, String>>, List<ModificationApplicationContext>> modificationContextInfos) {
+            @RequestBody Pair<List<CompositeInfos>, List<ModificationApplicationContext>> modificationContextInfos) {
         return switch (action) {
             case SPLIT -> networkModificationService.splitCompositeModifications(
                             targetGroupUuid,
@@ -61,21 +62,6 @@ public class CompositeController {
                             modificationContextInfos
                     ).thenApply(ResponseEntity.ok()::body);
         };
-    }
-
-    @PutMapping(value = "/groups/{groupUuid}/sub-modifications/{modificationUuid}",
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Move a sub-modification within or between composites, or to/from root level")
-    @ApiResponse(responseCode = "200", description = "The sub-modification has been moved.")
-    public ResponseEntity<Void> moveSubModification(
-            @Parameter(description = "Group UUID of the target node") @PathVariable("groupUuid") UUID groupUuid,
-            @Parameter(description = "UUID of the sub-modification to move") @PathVariable("modificationUuid") UUID modificationUuid,
-            @Parameter(description = "Source composite UUID, empty when moving from root level") @RequestParam(value = "sourceCompositeUuid", required = false) UUID sourceCompositeUuid,
-            @Parameter(description = "Target composite UUID, empty when moving to root level") @RequestParam(value = "targetCompositeUuid", required = false) UUID targetCompositeUuid,
-            @Parameter(description = "Insert before this UUID, empty means append at end") @RequestParam(value = "beforeUuid", required = false) UUID beforeUuid) {
-        networkModificationService.moveSubModification(
-                groupUuid, sourceCompositeUuid, targetCompositeUuid, modificationUuid, beforeUuid);
-        return ResponseEntity.ok().build();
     }
 
     @PostMapping(value = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -91,15 +77,18 @@ public class CompositeController {
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})
-    public ResponseEntity<UUID> createNetworkCompositeModification(@RequestBody List<UUID> modificationUuids) {
-        return ResponseEntity.ok().body(networkModificationService.createNetworkCompositeModification(modificationUuids));
+    public ResponseEntity<UUID> createNetworkCompositeModification(@Parameter(description = "Composite modifications name", required = true) @RequestParam("name") String name,
+                                                                   @RequestBody List<UUID> modificationUuids) {
+        return ResponseEntity.ok().body(networkModificationService.createNetworkCompositeModification(modificationUuids, name));
     }
 
     @GetMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the list of all the network modifications inside a list of composite modifications")
     @ApiResponse(responseCode = "200", description = "Map of modifications inside the composite modifications for each composite")
-    public ResponseEntity<Map<UUID, List<ModificationInfos>>> getNetworkModificationsFromComposite(@Parameter(description = "Composite modifications uuids list") @RequestParam("uuids") List<UUID> compositeModificationUuids,
-                                                                                        @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false, defaultValue = "true") Boolean onlyMetadata) {
+    public ResponseEntity<Map<UUID,
+            List<ModificationInfos>>> getNetworkModificationsFromComposite(@Parameter(description = "Composite modifications uuids list") @RequestParam("uuids") List<UUID> compositeModificationUuids,
+                                                                                        @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false,
+                                                                                                defaultValue = "true") Boolean onlyMetadata) {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(networkModificationService.getNetworkModificationsFromComposite(compositeModificationUuids, onlyMetadata)
@@ -123,9 +112,34 @@ public class CompositeController {
     @PutMapping(value = "/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Update a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
-    public ResponseEntity<Void> updateNetworkCompositeModification(@PathVariable("uuid") UUID compositeModificationUuid,
-                                                                   @RequestBody List<UUID> modificationUuids) {
-        networkModificationService.updateCompositeModification(compositeModificationUuid, modificationUuids);
+    public ResponseEntity<Void> updateNetworkCompositeModification(
+            @PathVariable("uuid") UUID compositeModificationUuid,
+            @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name) {
+        networkModificationService.updateCompositeModification(compositeModificationUuid, name);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * @return modification uuid -> uuid of the composite currently containing it; modifications sitting directly
+     * under a group (or not found) have no entry, letting the caller resolve the ambiguous case (unlike
+     * network-modification-server's /network-modifications/references, this works for any modification, not just references)
+     */
+    @GetMapping(value = "/parent-composites", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "For each given network modification, find the composite currently containing it")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The parent composites were returned")})
+    public ResponseEntity<Map<UUID, UUID>> getParentComposites(
+            @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(networkModificationService.findModificationParentComposites(networkModificationUuids));
+    }
+
+    @PutMapping(value = "/{uuid}/replace", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Replaces all the network modifications inside a network composite modification")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
+    public ResponseEntity<Void> replaceNetworkCompositeModification(@PathVariable("uuid") UUID compositeModificationUuid,
+                                                                    @Parameter(description = "New composite name") @RequestParam(value = "name") String name,
+                                                                    @RequestBody List<UUID> modificationUuids) {
+        networkModificationService.replaceCompositeModification(compositeModificationUuid, name, modificationUuids);
         return ResponseEntity.ok().build();
     }
 }

@@ -35,8 +35,9 @@ public class CreateVoltageLevelTopologyEntity extends ModificationEntity {
     private Integer sectionCount;
 
     @ElementCollection
-    @CollectionTable(name = "create_voltage_level_topology_switch_kinds", indexes = @Index(name = "create_voltage_level_topology_switch_kinds_entity_id_idx", columnList = "create_voltage_level_topology_id"),
-        joinColumns = @JoinColumn(name = "create_voltage_level_topology_id", foreignKey = @ForeignKey(name = "create_voltage_level_topology_switch_kinds")))
+    @CollectionTable(name = "create_voltage_level_topology_switch_kinds",
+            indexes = @Index(name = "create_voltage_level_topology_switch_kinds_entity_id_idx", columnList = "create_voltage_level_topology_id"),
+            joinColumns = @JoinColumn(name = "create_voltage_level_topology_id", foreignKey = @ForeignKey(name = "create_voltage_level_topology_switch_kinds")))
     private List<String> switchKinds;
 
     @Override
@@ -63,12 +64,12 @@ public class CreateVoltageLevelTopologyEntity extends ModificationEntity {
 
     private CreateVoltageLevelTopologyInfos.CreateVoltageLevelTopologyInfosBuilder<?, ?> toCreateVoltageLevelTopologyInfos() {
         return CreateVoltageLevelTopologyInfos.builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .voltageLevelId(getVoltageLevelId())
-            .switchKinds(getSwitchKinds().stream().map(SwitchKind::valueOf).collect(Collectors.toList()))
-            .sectionCount(getSectionCount());
+                .uuid(getId())
+                .date(getDate())
+                .stashed(getStashed())
+                .activated(getActivated())
+                .voltageLevelId(getVoltageLevelId())
+                .switchKinds(getSwitchKinds().stream().map(SwitchKind::valueOf).collect(Collectors.toList()))
+                .sectionCount(getSectionCount());
     }
 }

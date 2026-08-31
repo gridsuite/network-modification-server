@@ -6,10 +6,9 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import com.powsybl.iidm.network.SwitchKind;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-
-import com.powsybl.iidm.network.SwitchKind;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

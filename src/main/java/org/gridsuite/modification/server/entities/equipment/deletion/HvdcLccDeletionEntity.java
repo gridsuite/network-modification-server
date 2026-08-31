@@ -6,17 +6,16 @@
  */
 package org.gridsuite.modification.server.entities.equipment.deletion;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import jakarta.persistence.*;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.dto.AbstractEquipmentDeletionInfos;
 import org.gridsuite.modification.dto.HvdcLccDeletionInfos;
 import org.gridsuite.modification.dto.HvdcLccDeletionInfos.ShuntCompensatorInfos;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>

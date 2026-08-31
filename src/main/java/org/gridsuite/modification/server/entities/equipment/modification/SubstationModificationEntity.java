@@ -7,13 +7,12 @@
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import com.powsybl.iidm.network.Country;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.springframework.util.CollectionUtils;
 import org.gridsuite.modification.dto.*;
-
-import jakarta.persistence.*;
+import org.springframework.util.CollectionUtils;
 
 @NoArgsConstructor
 @Getter

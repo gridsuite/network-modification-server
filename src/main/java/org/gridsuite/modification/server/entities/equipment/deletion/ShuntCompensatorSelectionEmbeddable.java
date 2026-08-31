@@ -6,11 +6,10 @@
  */
 package org.gridsuite.modification.server.entities.equipment.deletion;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import jakarta.persistence.*;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>

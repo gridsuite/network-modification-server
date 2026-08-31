@@ -36,7 +36,7 @@ public class LineSegmentEntity {
     private String segmentTypeId;
 
     @Column(name = "segment_distance_value")
-    private Integer segmentDistanceValue;
+    private Double segmentDistanceValue;
 
     @Column(name = "area")
     private String area;

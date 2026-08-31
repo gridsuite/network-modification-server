@@ -6,13 +6,12 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.TapChangerType;
 import org.gridsuite.modification.dto.TapChangerStepCreationInfos;
-
-import jakarta.persistence.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,14 +52,16 @@ public class TapChangerStepCreationEmbeddable {
     public static List<TapChangerStepCreationEmbeddable> toEmbeddableRatioTapChangerSteps(List<TapChangerStepCreationInfos> tapChangerSteps) {
         return tapChangerSteps == null ? null :
                 tapChangerSteps.stream()
-                        .map(tapChangerStep -> new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, tapChangerStep.getIndex(), tapChangerStep.getRho(), tapChangerStep.getR(), tapChangerStep.getX(), tapChangerStep.getG(), tapChangerStep.getB(), null))
+                        .map(tapChangerStep -> new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, tapChangerStep.getIndex(), tapChangerStep.getRho(), tapChangerStep.getR(), tapChangerStep
+                                .getX(), tapChangerStep.getG(), tapChangerStep.getB(), null))
                         .collect(Collectors.toList());
     }
 
     public static List<TapChangerStepCreationEmbeddable> toEmbeddablePhaseTapChangerSteps(List<TapChangerStepCreationInfos> tapChangerSteps) {
         return tapChangerSteps == null ? null :
                 tapChangerSteps.stream()
-                        .map(tapChangerStep -> new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, tapChangerStep.getIndex(), tapChangerStep.getRho(), tapChangerStep.getR(), tapChangerStep.getX(), tapChangerStep.getG(), tapChangerStep.getB(), tapChangerStep.getAlpha()))
+                        .map(tapChangerStep -> new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, tapChangerStep.getIndex(), tapChangerStep.getRho(), tapChangerStep.getR(), tapChangerStep
+                                .getX(), tapChangerStep.getG(), tapChangerStep.getB(), tapChangerStep.getAlpha()))
                         .collect(Collectors.toList());
     }
 

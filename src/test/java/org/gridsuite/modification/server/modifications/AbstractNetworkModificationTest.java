@@ -72,8 +72,8 @@ public abstract class AbstractNetworkModificationTest {
     protected static final UUID TEST_GROUP_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
-    private static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
-    private static final String URI_NETWORK_MODIF_COPY = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
+    public static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
+    private static final String URI_NETWORK_MODIF_COPY = "/v1/containers/" + TEST_GROUP_ID + "?action=COPY";
 
     @Autowired
     protected MockMvc mockMvc;

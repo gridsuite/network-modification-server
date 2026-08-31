@@ -8,20 +8,22 @@ package org.gridsuite.modification.server.entities;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
-import lombok.*;
-
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 
 import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
+import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.MODIFICATION_DESCRIPTION_MISSING;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -31,11 +33,13 @@ import static org.gridsuite.modification.NetworkModificationException.Type.MISSI
 @Setter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "modification")
-public class ModificationEntity {
+@Table(
+        name = "modification",
+        indexes = { @Index(name = "modification_container_idx", columnList = "container_id") }
+)
+public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
     private UUID id;
 
@@ -44,11 +48,6 @@ public class ModificationEntity {
 
     @Column(name = "date", columnDefinition = "timestamptz")
     private Instant date;
-
-    @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"))
-    @ManyToOne(fetch = FetchType.LAZY)
-    @Setter
-    private ModificationGroupEntity group;
 
     @Column(name = "stashed", columnDefinition = "boolean default false")
     private Boolean stashed = false;
@@ -69,6 +68,10 @@ public class ModificationEntity {
     @Column(name = "description", columnDefinition = "CLOB")
     private String description;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "container_id", foreignKey = @ForeignKey(name = "modification_container_fk"))
+    private AbstractModificationContainerEntity container;
+
     public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues, String description) {
         this.id = id;
         this.type = type;
@@ -87,8 +90,12 @@ public class ModificationEntity {
 
     protected ModificationEntity(ModificationInfos modificationInfos) {
         if (modificationInfos == null) {
-            throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
+            throw new NetworkModificationServerException(MODIFICATION_DESCRIPTION_MISSING);
         }
+        // Always mint a fresh id here. We deliberately ignore modificationInfos.getUuid(): fromDTO is also
+        // used to clone/duplicate existing modifications, and reusing the source uuid would collide. This
+        // preserves the previous @GeneratedValue behaviour (a new id on every fromDTO). isNew stays true.
+        this.id = UUID.randomUUID();
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         this.date = Instant.now().truncatedTo(ChronoUnit.MICROS);
         // Do not put this stashed status in assignAttributes, it's not part of a network modification as such.
@@ -133,6 +140,10 @@ public class ModificationEntity {
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
     }
 
+    public UUID getContainerUuid() {
+        return container == null ? null : container.getId();
+    }
+
     public static ModificationEntity fromDTO(ModificationInfos dto) {
         if (dto instanceof EquipmentAttributeModificationInfos infos) {
             return EquipmentAttributeModificationEntity.createAttributeEntity(infos);
@@ -144,6 +155,9 @@ public class ModificationEntity {
                 Constructor<? extends ModificationEntity> constructor = entityClass.getConstructor(dto.getClass());
                 return constructor.newInstance(dto);
             } catch (Exception e) {
+                if (e.getCause() instanceof NetworkModificationServerException networkModificationServerException) {
+                    throw networkModificationServerException;
+                }
                 throw new RuntimeException("Failed to map DTO to Entity", e);
             }
         } else {

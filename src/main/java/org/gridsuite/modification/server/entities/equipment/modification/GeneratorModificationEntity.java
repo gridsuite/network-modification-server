@@ -24,7 +24,6 @@ import java.util.List;
 import static org.gridsuite.modification.server.entities.equipment.modification.ReactiveCapabilityCurveModificationEmbeddable.toEmbeddablePoints;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
-
 /**
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
  */
@@ -226,7 +225,8 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         this.targetQ = generatorModificationInfos.getTargetQ() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getTargetQ()) : null;
         this.voltageRegulationOn = generatorModificationInfos.getVoltageRegulationOn() != null ? new BooleanModificationEmbedded(generatorModificationInfos.getVoltageRegulationOn()) : null;
         this.targetV = generatorModificationInfos.getTargetV() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getTargetV()) : null;
-        this.plannedActivePowerSetPoint = generatorModificationInfos.getPlannedActivePowerSetPoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getPlannedActivePowerSetPoint()) : null;
+        this.plannedActivePowerSetPoint = generatorModificationInfos.getPlannedActivePowerSetPoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getPlannedActivePowerSetPoint(
+                )) : null;
         this.marginalCost = generatorModificationInfos.getMarginalCost() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMarginalCost()) : null;
         this.plannedOutageRate = generatorModificationInfos.getPlannedOutageRate() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getPlannedOutageRate()) : null;
         this.forcedOutageRate = generatorModificationInfos.getForcedOutageRate() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getForcedOutageRate()) : null;
@@ -241,7 +241,8 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         this.regulatingTerminalType = generatorModificationInfos.getRegulatingTerminalType() != null ? new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalType()) : null;
         this.regulatingTerminalVlId = generatorModificationInfos.getRegulatingTerminalVlId() != null ? new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalVlId()) : null;
         this.qPercent = generatorModificationInfos.getQPercent() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getQPercent()) : null;
-        this.reactiveCapabilityCurve = generatorModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(generatorModificationInfos.getReactiveCapabilityCurve()) : null;
+        this.reactiveCapabilityCurve = generatorModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(generatorModificationInfos.getReactiveCapabilityCurve())
+                : null;
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(generatorModificationInfos.getReactiveCapabilityCurvePoints());
     }
 

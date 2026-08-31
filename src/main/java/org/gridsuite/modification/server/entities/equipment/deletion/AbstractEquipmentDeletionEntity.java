@@ -7,9 +7,8 @@
 package org.gridsuite.modification.server.entities.equipment.deletion;
 
 import jakarta.persistence.*;
-import java.util.UUID;
-
 import org.gridsuite.modification.dto.AbstractEquipmentDeletionInfos;
+import java.util.UUID;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>

@@ -27,7 +27,6 @@ import org.gridsuite.modification.server.service.ReportService;
 import org.junit.platform.commons.util.StringUtils;
 import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
-import org.springframework.data.util.Pair;
 import org.springframework.test.web.servlet.*;
 
 import java.io.IOException;
@@ -82,6 +81,7 @@ public final class TestUtils {
         });
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public static void assertQueuesEmptyThenClear(List<String> destinations, OutputDestination output) {
         try {
             destinations.forEach(destination -> assertNull(output.receive(TIMEOUT, destination), "Should not be any messages in queue " + destination));
@@ -92,6 +92,7 @@ public final class TestUtils {
         }
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public static void assertServerRequestsEmptyThenShutdown(MockWebServer server) throws UncheckedInterruptedException, IOException {
         Set<String> httpRequest = null;
         try {
@@ -207,7 +208,8 @@ public final class TestUtils {
 
     public static void assertWiremockServerRequestsEmptyThenShutdown(WireMockServer wireMockServer) throws UncheckedInterruptedException, IOException {
         try {
-            wireMockServer.checkForUnmatchedRequests(); // requests no matched ? (it returns an exception if a request was not matched by wireMock, but does not complain if it was not verified by 'verify')
+            wireMockServer.checkForUnmatchedRequests();
+            // requests no matched ? (it returns an exception if a request was not matched by wireMock, but does not complain if it was not verified by 'verify')
             assertEquals(0, wireMockServer.findAll(WireMock.anyRequestedFor(WireMock.anyUrl())).size()); // requests no verified ?
         } finally {
             wireMockServer.shutdown();
@@ -227,7 +229,7 @@ public final class TestUtils {
         return createJsonPayload(uuids, networkUuid, variantId);
     }
 
-    public static String getJsonBodyModificationCompositeInfos(List<Pair<UUID, String>> modifs, UUID networkUuid, String variantId) throws JsonProcessingException {
+    public static String getJsonBodyModificationCompositeInfos(List<CompositeInfos> modifs, UUID networkUuid, String variantId) throws JsonProcessingException {
         return createJsonPayload(modifs, networkUuid, variantId);
     }
 
