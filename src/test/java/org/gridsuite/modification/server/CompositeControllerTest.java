@@ -266,6 +266,7 @@ class CompositeControllerTest {
         );
         assertEquals(compositeModificationUuid, insertedReference.getReferenceId());
         assertEquals(ModificationReferenceInfos.Type.BASIC, insertedReference.getReferenceType());
+        assertEquals("description", insertedReference.getDescription());
 
         CompositeModificationInfos referencedComposite = assertInstanceOf(
                 CompositeModificationInfos.class,

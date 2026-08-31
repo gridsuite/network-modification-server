@@ -1048,6 +1048,7 @@ public class NetworkModificationRepository {
                             .referenceId(compositeToBeInserted.id())
                             .referenceType(ModificationReferenceInfos.Type.BASIC)
                             .referenceInfos(compositeModification)
+                            .description(compositeToBeInserted.description())
                             .build();
                     newCompositeModifications.add(newModificationReference);
                 } else {
