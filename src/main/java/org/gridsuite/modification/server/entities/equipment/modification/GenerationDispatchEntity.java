@@ -165,7 +165,6 @@ public class GenerationDispatchEntity extends ModificationEntity {
                 .uuid(getId())
                 .stashed(getStashed())
                 .activated(getActivated())
-                .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
                 .description(getDescription())
                 .lossCoefficient(getLossCoefficient())
                 .defaultOutageRate(getDefaultOutageRate())

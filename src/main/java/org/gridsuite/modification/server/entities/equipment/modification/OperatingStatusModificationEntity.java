@@ -54,7 +54,6 @@ public class OperatingStatusModificationEntity extends EquipmentModificationEnti
             .date(getDate())
             .stashed(getStashed())
             .activated(getActivated())
-            .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
             .equipmentId(getEquipmentId())
             .action(getAction())
             .energizedVoltageLevelId(getEnergizedVoltageLevelId());

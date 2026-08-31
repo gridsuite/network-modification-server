@@ -63,7 +63,6 @@ public class ByFormulaModificationEntity extends ModificationEntity {
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
-                .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
                 .description(getDescription())
                 .identifiableType(getIdentifiableType())
                 .formulaInfosList(getFormulaEntities().stream()

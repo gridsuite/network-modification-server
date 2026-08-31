@@ -122,7 +122,6 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
-                .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
                 .description(getDescription())
                 .lineToAttachToId(getLineToAttachToId())
                 .percent(getPercent())

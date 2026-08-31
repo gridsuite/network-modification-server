@@ -78,7 +78,6 @@ public class TabularModificationsEntity extends ModificationEntity {
                 .uuid(getId())
                 .stashed(getStashed())
                 .activated(getActivated())
-                .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
                 .description(getDescription())
                 .modificationType(modificationType)
                 .modifications(modificationsInfos)

@@ -17,7 +17,6 @@ import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
-import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -25,9 +24,7 @@ import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -78,11 +75,10 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     @Column(name = "description", columnDefinition = "CLOB")
     private String description;
 
-    // applicability per root network tag: a tag without an entry is applicable.
-    // Batched to avoid one select per modification when a whole group is loaded, and deleted by the database:
-    // cascading it here would make hibernate load the applicabilities of every modification just to delete them.
-    // An entry is never removed from this list, dropping one is only done in sql: see deleteRootNetworkApplicabilities.
-    @BatchSize(size = 100)
+    // Applicability per root network tag: a tag without an entry is applicable.
+    // Deletion is left to the database: cascading it here would make hibernate load the applicabilities of every
+    // modification just to delete them. An entry is never removed from this list either, dropping one is only done
+    // in sql: see deleteRootNetworkApplicabilities.
     @OnDelete(action = OnDeleteAction.CASCADE)
     @OneToMany(mappedBy = "modification", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<ModificationRootNetworkApplicabilityEntity> applicabilities = new ArrayList<>();
@@ -139,7 +135,6 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
             .description(this.description)
             .messageType(this.messageType)
             .messageValues(this.messageValues)
-            .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
             .build();
         modificationInfos.setType(ModificationType.valueOf(this.type));
         return modificationInfos;
@@ -165,17 +160,6 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
 
     public UUID getContainerUuid() {
         return container == null ? null : container.getId();
-    }
-
-    public Map<String, Boolean> copyApplicabilityByRootNetworkTag() {
-        Map<String, Boolean> applicabilityByRootNetworkTag = new HashMap<>();
-        applicabilities.forEach(applicability ->
-            applicabilityByRootNetworkTag.put(applicability.getRootNetworkTag(), applicability.getApplicable()));
-        return applicabilityByRootNetworkTag;
-    }
-
-    public Boolean getApplicability(String rootNetworkTag) {
-        return findApplicability(rootNetworkTag).map(ModificationRootNetworkApplicabilityEntity::getApplicable).orElse(null);
     }
 
     public void setApplicability(String rootNetworkTag, Boolean applicable) {

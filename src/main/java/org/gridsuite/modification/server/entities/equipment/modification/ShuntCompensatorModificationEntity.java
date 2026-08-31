@@ -105,7 +105,6 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
-                .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
                 .description(getDescription())
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))

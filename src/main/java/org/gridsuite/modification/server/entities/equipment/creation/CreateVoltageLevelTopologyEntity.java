@@ -68,7 +68,6 @@ public class CreateVoltageLevelTopologyEntity extends ModificationEntity {
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
-                .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
                 .voltageLevelId(getVoltageLevelId())
                 .switchKinds(getSwitchKinds().stream().map(SwitchKind::valueOf).collect(Collectors.toList()))
                 .sectionCount(getSectionCount());

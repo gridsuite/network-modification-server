@@ -64,7 +64,6 @@ public class CreateCouplingDeviceEntity extends ModificationEntity {
             .date(getDate())
             .stashed(getStashed())
             .activated(getActivated())
-            .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
             .description(getDescription())
             .voltageLevelId(getVoltageLevelId())
             .couplingDeviceInfos(CouplingDeviceInfos.builder()

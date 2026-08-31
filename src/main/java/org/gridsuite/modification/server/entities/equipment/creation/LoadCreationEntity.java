@@ -63,7 +63,6 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .date(getDate())
             .stashed(getStashed())
             .activated(getActivated())
-            .applicabilityByRootNetworkTag(copyApplicabilityByRootNetworkTag())
             .description(getDescription())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())

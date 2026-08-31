@@ -72,6 +72,12 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<ModificationEntity> findAllByIdIn(List<UUID> uuids);
 
     /**
+     * @return the given modifications, their applicabilities loaded with them
+     */
+    @EntityGraph(attributePaths = "applicabilities", type = EntityGraph.EntityGraphType.LOAD)
+    List<ModificationEntity> findAllWithApplicabilitiesByIdIn(Collection<UUID> uuids);
+
+    /**
      * @return one row per applicability entry: the modification id, the root network tag and whether it is applicable.
      * A reference has no applicability of its own, so it is resolved to the shared modification it points to.
      */
