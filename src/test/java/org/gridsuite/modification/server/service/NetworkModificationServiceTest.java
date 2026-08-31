@@ -210,6 +210,51 @@ class NetworkModificationServiceTest {
         assertFalse(parentComposites.containsKey(directGroupChildUuid));
     }
 
+    @Test
+    void shouldFindRootGroupForDirectAndNestedModifications() {
+        UUID groupUuid = UUID.randomUUID();
+        CompositeModificationInfos compositeModificationInfos = compositeModification(
+                UUID.randomUUID(),
+                List.of(dummyModification(UUID.randomUUID()))
+        );
+
+        List<ModificationInfos> saved = networkModificationRepository.saveModifications(
+                groupUuid, List.of(
+                        ModificationEntity.fromDTO(compositeModificationInfos),
+                        ModificationEntity.fromDTO(dummyModification(UUID.randomUUID()))
+                ));
+        CompositeModificationInfos savedComposite = (CompositeModificationInfos) saved.get(0);
+        UUID compositeUuid = savedComposite.getUuid();
+        UUID nestedChildUuid = savedComposite.getModificationsInfos().get(0).getUuid();
+        UUID directGroupChildUuid = saved.get(1).getUuid();
+
+        Map<UUID, UUID> rootGroups = networkModificationService.findModificationRootGroups(
+                List.of(nestedChildUuid, directGroupChildUuid, compositeUuid));
+
+        assertEquals(3, rootGroups.size());
+        assertEquals(groupUuid, rootGroups.get(nestedChildUuid));
+        assertEquals(groupUuid, rootGroups.get(directGroupChildUuid));
+        assertEquals(groupUuid, rootGroups.get(compositeUuid));
+    }
+
+    @Test
+    void shouldFindRootGroupThroughNestedComposites() {
+        UUID groupUuid = UUID.randomUUID();
+        CompositeModificationInfos innerComposite = compositeModification(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
+        CompositeModificationInfos outerComposite = compositeModification(UUID.randomUUID(), List.of((ModificationInfos) innerComposite));
+
+        List<ModificationInfos> saved = networkModificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(outerComposite)));
+        // fromDTO always mints fresh ids, so read the actual persisted ids back rather than assume the DTO's survive
+        CompositeModificationInfos savedOuterComposite = (CompositeModificationInfos) saved.get(0);
+        CompositeModificationInfos savedInnerComposite = (CompositeModificationInfos) savedOuterComposite.getModificationsInfos().get(0);
+        UUID leafUuid = savedInnerComposite.getModificationsInfos().get(0).getUuid();
+
+        Map<UUID, UUID> rootGroups = networkModificationService.findModificationRootGroups(List.of(leafUuid));
+
+        assertEquals(1, rootGroups.size());
+        assertEquals(groupUuid, rootGroups.get(leafUuid));
+    }
+
     private static LoadModificationInfos dummyModification(UUID uuid) {
         return LoadModificationInfos.builder()
                 .equipmentId("dummyEquipmentId")
