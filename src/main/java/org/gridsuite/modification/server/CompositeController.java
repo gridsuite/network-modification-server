@@ -130,6 +130,20 @@ public class CompositeController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * @return modification uuid -> uuid of the composite currently containing it; modifications sitting directly
+     * under a group (or not found) have no entry, letting the caller resolve the ambiguous case (unlike
+     * network-modification-server's /network-modifications/references, this works for any modification, not just references)
+     */
+    @GetMapping(value = "/parent-composites", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "For each given network modification, find the composite currently containing it")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The parent composites were returned")})
+    public ResponseEntity<Map<UUID, UUID>> getParentComposites(
+            @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(networkModificationService.findModificationParentComposites(networkModificationUuids));
+    }
+
     @PutMapping(value = "/{uuid}/replace", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Replaces all the network modifications inside a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})

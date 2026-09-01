@@ -25,6 +25,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder;
 import org.gridsuite.modification.error.NetworkModificationException;
+import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -48,6 +49,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -63,6 +67,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.ModificationType.LINE_MODIFICATION;
@@ -79,8 +84,7 @@ import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -178,6 +182,27 @@ class ModificationControllerTest {
         // clean DB
         modificationRepository.deleteAll();
         equipmentInfosService.deleteAll();
+    }
+
+    private static Stream<Arguments> provideModificationInfos() {
+        return Stream.of(
+                Arguments.of(EquipmentAttributeModificationInfos.builder()
+                        .equipmentType(IdentifiableType.SWITCH)
+                        .equipmentAttributeName("open")
+                        .equipmentAttributeValue(true)
+                        .equipmentId("v1b1")
+                        .build()
+                ),
+                Arguments.of(ModificationCreation.getCreationLoad(
+                        "v1",
+                        "idLoad",
+                        "nameLoad",
+                        "1.1",
+                        LoadType.UNDEFINED)),
+                Arguments.of(GroovyScriptInfos.builder()
+                        .script("network.getGenerator('idGenerator').targetP=10")
+                        .build())
+        );
     }
 
     private boolean existTombstonedEquipmentInfos(String equipmentId, UUID networkUuid, String variantId) {
@@ -1975,11 +2000,59 @@ class ModificationControllerTest {
                 .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        Map<UUID, UUID> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<ReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
-        assertEquals(1, referencesData.size());
-        assertTrue(referencesData.containsKey(referencedLoadModificationInfo.getUuid()));
-        assertNull(referencesData.get(referencedLoadModificationInfo.getUuid()));
+        // both references share the same referencedLoadModificationInfo target, but are kept as distinct entries
+        assertEquals(2, referencesData.size());
+        assertTrue(referencesData.stream().noneMatch(r -> r.modificationUuid().equals(nonReferenceModificationUuid)));
+        for (UUID referenceModificationUuid : List.of(activeReferenceInfo.getUuid(), stashedReferenceInfo.getUuid())) {
+            ReferenceData reference = referencesData.stream()
+                    .filter(r -> r.modificationUuid().equals(referenceModificationUuid))
+                    .findFirst().orElseThrow();
+            assertEquals(referencedLoadModificationInfo.getUuid(), reference.referenceId());
+            assertNull(reference.containerId());
+        }
+    }
+
+    @Test
+    void testGetReferencesWithSharedReference() throws Exception {
+        // Two distinct modifications referencing the very same shared element: getReferences must return
+        // both occurrences instead of collapsing them into a single entry (regression test)
+        ModificationInfos referencedLoadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+        referencedLoadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(referencedLoadModificationInfo))).getFirst();
+
+        ModificationInfos firstReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(referencedLoadModificationInfo.getUuid())
+                .referenceInfos(referencedLoadModificationInfo)
+                .stashed(false)
+                .build();
+        firstReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(firstReferenceInfo))).getFirst();
+
+        ModificationInfos secondReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(referencedLoadModificationInfo.getUuid())
+                .referenceInfos(referencedLoadModificationInfo)
+                .stashed(false)
+                .build();
+        secondReferenceInfo = modificationRepository.saveModifications(TEST_GROUP2_ID, List.of(ModificationEntity.fromDTO(secondReferenceInfo))).getFirst();
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/references")
+                        .queryParam("uuids",
+                                firstReferenceInfo.getUuid().toString(),
+                                secondReferenceInfo.getUuid().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        List<ReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        assertEquals(2, referencesData.size());
+        UUID sharedReferenceId = referencedLoadModificationInfo.getUuid();
+        UUID firstReferenceUuid = firstReferenceInfo.getUuid();
+        UUID secondReferenceUuid = secondReferenceInfo.getUuid();
+        assertTrue(referencesData.stream().anyMatch(r -> r.modificationUuid().equals(firstReferenceUuid) && r.referenceId().equals(sharedReferenceId)));
+        assertTrue(referencesData.stream().anyMatch(r -> r.modificationUuid().equals(secondReferenceUuid) && r.referenceId().equals(sharedReferenceId)));
     }
 
     @Test
@@ -1998,16 +2071,16 @@ class ModificationControllerTest {
                 .referenceInfos(referencedLoadModificationInfo)
                 .stashed(false)
                 .build();
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(activeReferenceInfo)));
+        activeReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(activeReferenceInfo))).getFirst();
 
-        // Create a stashed reference in the tested group: it must be ignored
+        // Create a stashed reference in the tested group: it must also be returned, as its own entry
         ModificationInfos stashedReferenceInfo = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
                 .referenceId(referencedLoadModificationInfo.getUuid())
                 .referenceInfos(referencedLoadModificationInfo)
                 .stashed(true)
                 .build();
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(stashedReferenceInfo)));
+        stashedReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(stashedReferenceInfo))).getFirst();
 
         // Create an active reference in another group: it must not be returned for TEST_GROUP_ID
         ModificationInfos otherGroupReferencedLoadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoadOther", "nameLoadOther", "1.1", LoadType.UNDEFINED);
@@ -2029,11 +2102,127 @@ class ModificationControllerTest {
                 .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        Map<UUID, UUID> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<ReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
-        assertEquals(1, referencesData.size());
-        assertTrue(referencesData.containsKey(referencedLoadModificationInfo.getUuid()));
-        assertNull(referencesData.get(referencedLoadModificationInfo.getUuid()));
-        assertFalse(referencesData.containsKey(otherGroupReferencedLoadModificationInfo.getUuid()));
+        // both the active and the stashed reference of the tested group are returned, as distinct entries
+        assertEquals(2, referencesData.size());
+        for (UUID referenceModificationUuid : List.of(activeReferenceInfo.getUuid(), stashedReferenceInfo.getUuid())) {
+            ReferenceData reference = referencesData.stream()
+                    .filter(r -> r.modificationUuid().equals(referenceModificationUuid))
+                    .findFirst().orElseThrow();
+            assertEquals(referencedLoadModificationInfo.getUuid(), reference.referenceId());
+            assertNull(reference.containerId());
+        }
+        UUID otherGroupReferencedLoadModificationUuid = otherGroupReferencedLoadModificationInfo.getUuid();
+        assertTrue(referencesData.stream().noneMatch(r -> r.referenceId().equals(otherGroupReferencedLoadModificationUuid)));
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideModificationInfos")
+    void testGetStandaloneNetworkModificationShouldReturnExpected(ModificationInfos modificationInfos) throws Exception {
+        ModificationInfos savedModification = modificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(ModificationEntity.fromDTO(modificationInfos))).getFirst();
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone/{modificationUuid}", savedModification.getUuid())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        AbstractModification actualModification = mapper.readValue(mvcResult.getResponse().getContentAsString(), AbstractModification.class);
+
+        assertThat(actualModification).isEqualTo(modificationInfos.toModification());
+    }
+
+    @Test
+    void testGetStandaloneNetworkModificationNotFound() throws Exception {
+        UUID notFoundUuid = UUID.randomUUID();
+        String expectedErrorMessage = String.format(MODIFICATION_NOT_FOUND.messageTemplate(), notFoundUuid);
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone/{modificationUuid}", notFoundUuid))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        assertThat(mvcResult.getResponse().getContentAsString()).contains(expectedErrorMessage);
+    }
+
+    @Test
+    void testStandaloneNetworkModificationsShouldReturnExpected() throws Exception {
+        EquipmentAttributeModificationInfos equipmentAttributeModification = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .build();
+        LoadCreationInfos loadCreationModification = ModificationCreation.getCreationLoad(
+                "v1",
+                "idLoad",
+                "nameLoad",
+                "1.1",
+                LoadType.UNDEFINED);
+        List<ModificationInfos> savedModificationInfos = modificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(ModificationEntity.fromDTO(equipmentAttributeModification), ModificationEntity.fromDTO(loadCreationModification)));
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone")
+                        .param("uuids", savedModificationInfos.getFirst().getUuid().toString(), savedModificationInfos.getLast().getUuid().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        TypeReference<HashMap<UUID, AbstractModification>> typeRef = new TypeReference<HashMap<UUID, AbstractModification>>() { };
+        HashMap<UUID, AbstractModification> actualModifications = mapper.readValue(mvcResult.getResponse().getContentAsString(), typeRef);
+        assertThat(actualModifications).containsAllEntriesOf(savedModificationInfos.stream().collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification)));
+    }
+
+    @Test
+    void testStandaloneNetworkModificationsButNoErrorsWhenMissingModificationShouldReturnExpected() throws Exception {
+        EquipmentAttributeModificationInfos equipmentAttributeModification = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .build();
+        LoadCreationInfos loadCreationModification = ModificationCreation.getCreationLoad(
+                "v1",
+                "idLoad",
+                "nameLoad",
+                "1.1",
+                LoadType.UNDEFINED);
+        UUID nonExistentModificationUuid = UUID.randomUUID();
+        List<ModificationInfos> savedModificationInfos = modificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(ModificationEntity.fromDTO(equipmentAttributeModification), ModificationEntity.fromDTO(loadCreationModification)));
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone")
+                        .param("uuids", savedModificationInfos.getFirst().getUuid().toString(), savedModificationInfos.getLast().getUuid().toString(), nonExistentModificationUuid.toString())
+                        .param("errorOnModificationNotFound", "false")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        TypeReference<HashMap<UUID, AbstractModification>> typeRef = new TypeReference<>() { };
+        HashMap<UUID, AbstractModification> actualModifications = mapper.readValue(mvcResult.getResponse().getContentAsString(), typeRef);
+        assertThat(actualModifications).containsAllEntriesOf(savedModificationInfos.stream().collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification)))
+                .doesNotContainKey(nonExistentModificationUuid);
+    }
+
+    @Test
+    void testStandaloneNetworkModificationsNotFound() throws Exception {
+        EquipmentAttributeModificationInfos equipmentAttributeModification = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .build();
+        UUID nonExistentModificationUuid = UUID.randomUUID();
+        List<ModificationInfos> savedModificationInfos = modificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(ModificationEntity.fromDTO(equipmentAttributeModification)));
+        String expectedErrorMessage = String.format("Some of these modifications %s were not found", List.of(savedModificationInfos.getFirst().getUuid(), nonExistentModificationUuid));
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone")
+                        .param("uuids", savedModificationInfos.getFirst().getUuid().toString(), nonExistentModificationUuid.toString())
+                        .param("errorOnModificationNotFound", "true")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        assertThat(mvcResult.getResponse().getContentAsString()).contains(expectedErrorMessage);
     }
 }

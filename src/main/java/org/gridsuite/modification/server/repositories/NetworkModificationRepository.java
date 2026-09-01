@@ -17,9 +17,11 @@ import org.gridsuite.modification.dto.tabular.LimitSetsTabularModificationInfos;
 import org.gridsuite.modification.dto.tabular.TabularBaseInfos;
 import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
+import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationContainerInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
+import org.gridsuite.modification.server.dto.ReferenceData;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
@@ -609,6 +611,28 @@ public class NetworkModificationRepository {
         return toModificationsInfosOptimized(getModificationEntity(modificationUuid));
     }
 
+    @Transactional(readOnly = true)
+    public AbstractModification getStandaloneNetworkModification(UUID modificationUuid) {
+        return toModificationsInfosOptimized(getModificationEntity(modificationUuid)).toModification();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, AbstractModification> getStandaloneNetworkModifications(List<UUID> modificationUuids, boolean errorOnModificationNotFound) {
+        return getModificationEntities(modificationUuids, errorOnModificationNotFound).stream()
+                .map(this::toModificationsInfosOptimized)
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification));
+    }
+
+    public List<ModificationEntity> getModificationEntities(List<UUID> modificationUuids, boolean errorOnModificationNotFound) {
+        List<ModificationEntity> foundModifications = modificationRepository.findAllById(modificationUuids);
+        if (errorOnModificationNotFound && foundModifications.size() != modificationUuids.size()) {
+            throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
+                    String.format("Some of these modifications %s were not found", modificationUuids),
+                    Map.of("ids", modificationUuids));
+        }
+        return foundModifications;
+    }
+
     public ModificationEntity getModificationEntity(UUID modificationUuid) {
         return modificationRepository
                 .findById(modificationUuid)
@@ -749,19 +773,16 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
+     * @return ReferenceData : modification and elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
-    public Map<UUID, UUID> getReferences(@NonNull List<UUID> modificationUuids) {
-        Map<UUID, UUID> references = new HashMap<>();
-
+    public List<ReferenceData> getReferences(@NonNull List<UUID> modificationUuids) {
         List<ModificationEntity> modificationEntities = this.modificationRepository.findAllByIdIn(modificationUuids);
-
-        // TODO GRD-4785 : for now shared modification are only at the root level and can't be inside composites, so the composite uuid is set to null
-        // but when it will be the case a specific function will have to be done in order to fetch the composite containing the modificationReference (if there is one)
+        List<ReferenceData> references = new ArrayList<>(List.of());
         modificationEntities.forEach(modificationEntity -> {
             if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {
-                references.putIfAbsent(modificationReference.getReferenceId(), null);
+                UUID containerId = modificationRepository.findCompositeContainerIdByModificationId(modificationEntity.getId());
+                references.add(new ReferenceData(modificationEntity.getId(), modificationReference.getReferenceId(), containerId));
             }
         });
 
@@ -1086,9 +1107,10 @@ public class NetworkModificationRepository {
     }
 
     private AbstractModificationContainerEntity getContainer(ModificationContainerInfos containerInfos) {
-        AbstractModificationContainerEntity containerEntity = modificationContainerRepository.findById(containerInfos.id()).orElseGet(() -> {
+        UUID containerId = resolveContainerId(containerInfos);
+        AbstractModificationContainerEntity containerEntity = modificationContainerRepository.findById(containerId).orElseGet(() -> {
             if (ModificationContainerType.GROUP.equals(containerInfos.type())) {
-                return modificationGroupRepository.save(new ModificationGroupEntity(containerInfos.id()));
+                return modificationGroupRepository.save(new ModificationGroupEntity(containerId));
             } else {
                 throw getModificationContainerNotFoundException(containerInfos.id().toString(), containerInfos.type());
             }
@@ -1099,6 +1121,20 @@ public class NetworkModificationRepository {
                 Map.of("containerId", containerInfos.id(), "containerType", containerEntity.getType(), "expectedContainerType", containerInfos.type().name()));
         }
         return containerEntity;
+    }
+
+    /**
+     * A COMPOSITE container may be designated through a modification reference, in the ModificationContainerInfos dto:
+     * in that case the actual container is the shared composite the reference points to.
+     */
+    private UUID resolveContainerId(ModificationContainerInfos containerInfos) {
+        if (ModificationContainerType.COMPOSITE.equals(containerInfos.type())) {
+            return modificationRepository.findById(containerInfos.id())
+                    .filter(ModificationReferenceEntity.class::isInstance)
+                    .map(entity -> ((ModificationReferenceEntity) entity).getReferenceId())
+                    .orElse(containerInfos.id());
+        }
+        return containerInfos.id();
     }
 
     public ModificationContainerType getContainerType(ModificationEntity m) {
