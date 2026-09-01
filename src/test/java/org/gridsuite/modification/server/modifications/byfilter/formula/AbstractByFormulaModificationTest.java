@@ -58,8 +58,6 @@ abstract class AbstractByFormulaModificationTest extends AbstractByFilterTest {
     protected final FilterInfos filter5 = new FilterInfos(FILTER_ID_5, "filter5");
     protected final FilterInfos filter6 = new FilterInfos(FILTER_ID_6, "filter6");
 
-    protected static final String PATH = "/v1/standalone-filters";
-
     @Override
     protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
         assertThat(impacts).containsExactly(createCollectionElementImpact(getIdentifiableType()));

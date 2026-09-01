@@ -27,36 +27,49 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
     private static final String TWT_ID_6 = "twt6";
 
     @Test
-    void testModifyTwtWithError() throws Exception {
-        // Test modifying ratio tab changer field when ratio tab changer is null
-        FilterStub filter = createFilterStub(FILTER_ID_4, List.of(TWT_ID_4, TWT_ID_6));
+    void testModificationNotAppliedOnPhaseTapIfNotPresent() throws Exception {
+        FilterStub filterTwt1 = createFilterStub(FILTER_ID_1, List.of(TWT_ID_1, TWT_ID_2));
+        FilterStub filterTwt2 = createFilterStub(FILTER_ID_4, List.of(TWT_ID_4, TWT_ID_6));
+
         FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filter4))
-                .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name()).build())
-                .fieldOrValue1(ReferenceFieldOrValue.builder().value(1.).build())
-                .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
-                .operator(Operator.ADDITION)
-                .build();
-
-        checkCreateWithStatus(List.of(formulaInfos), List.of(filter), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
-
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
-
-        // Test modifying phase tab changer field when phase tab changer is null
-        FilterStub filter2 = createFilterStub(FILTER_ID_1, List.of(TWT_ID_1, TWT_ID_2));
-        FormulaInfos formulaInfos2 = FormulaInfos.builder()
-                .filters(List.of(filter1))
+                .filters(List.of(filter1, filter4))
                 .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name()).build())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(1.).build())
                 .editedField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name())
                 .operator(Operator.ADDITION)
                 .build();
 
-        checkCreateWithStatus(List.of(formulaInfos2), List.of(filter2), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+        checkCreateWithStatus(List.of(formulaInfos), List.of(filterTwt1, filterTwt2), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
 
+        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getPhaseTapChanger());
+        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getPhaseTapChanger());
+        assertEquals(3, getNetwork().getTwoWindingsTransformer(TWT_ID_4).getPhaseTapChanger().getTapPosition());
+        assertEquals(2, getNetwork().getTwoWindingsTransformer(TWT_ID_6).getPhaseTapChanger().getTapPosition());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getPhaseTapChanger());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getPhaseTapChanger());
+    }
+
+    @Test
+    void testModificationNotAppliedOnRatioTapIfNotPresent() throws Exception {
+        FilterStub filterTwt1 = createFilterStub(FILTER_ID_1, List.of(TWT_ID_1, TWT_ID_2));
+        FilterStub filterTwt2 = createFilterStub(FILTER_ID_4, List.of(TWT_ID_4, TWT_ID_6));
+
+        FormulaInfos formulaInfos = FormulaInfos.builder()
+                .filters(List.of(filter1, filter4))
+                .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name()).build())
+                .fieldOrValue1(ReferenceFieldOrValue.builder().value(1.).build())
+                .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
+                .operator(Operator.ADDITION)
+                .build();
+
+        checkCreateWithStatus(List.of(formulaInfos), List.of(filterTwt1, filterTwt2), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+
+        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger());
+        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger());
+        assertEquals(2, getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger().getTapPosition());
+        assertEquals(5, getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger().getTapPosition());
+        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
+        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
     }
 
     @Test

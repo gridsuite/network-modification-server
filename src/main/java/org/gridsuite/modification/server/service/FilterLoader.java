@@ -16,7 +16,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * @author joris mancini <joris.mancini_externe at rte-france.com>
@@ -43,14 +42,14 @@ public class FilterLoader implements org.gridsuite.filter.wip.FilterLoader {
     }
 
     @Override
-    public List<Filter> getNewFilters(List<UUID> filtersUuids) {
+    public List<Filter> load(List<UUID> filtersUuids) {
         if (filtersUuids == null || filtersUuids.isEmpty()) {
             return List.of();
         }
         String path = UriComponentsBuilder.fromPath(DELIMITER
                         + FILTER_SERVER_API_VERSION
-                        + "/standalone-filters?ids="
-                        + filtersUuids.stream().map(UUID::toString).collect(Collectors.joining(",")))
+                        + "/standalone-filters")
+                .queryParam("ids", filtersUuids)
                 .buildAndExpand()
                 .toUriString();
         return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null, new ParameterizedTypeReference<List<Filter>>() { }).getBody();

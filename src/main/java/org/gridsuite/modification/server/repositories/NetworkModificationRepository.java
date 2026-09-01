@@ -98,7 +98,8 @@ public class NetworkModificationRepository {
                                          CompositeModificationRepository compositeModificationRepository,
                                          CompositeContainerRepository compositeContainerRepository,
                                          ModificationContainerRepository modificationContainerRepository,
-                                         ModificationApplicationInfosService modificationApplicationInfosService, FilterLoader filterLoader) {
+                                         ModificationApplicationInfosService modificationApplicationInfosService,
+                                         FilterLoader filterLoader) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
         this.generatorCreationRepository = generatorCreationRepository;

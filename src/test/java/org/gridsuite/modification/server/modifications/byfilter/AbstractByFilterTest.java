@@ -8,7 +8,7 @@
 package org.gridsuite.modification.server.modifications.byfilter;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.matching.StringValuePattern;
+import com.github.tomakehurst.wiremock.matching.MultiValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import lombok.SneakyThrows;
 import org.gridsuite.filter.utils.EquipmentType;
@@ -21,7 +21,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -69,7 +68,7 @@ public abstract class AbstractByFilterTest extends AbstractNetworkModificationTe
     protected UUID stubStandaloneFilters(List<FilterStub> filterStubs) {
         List<UUID> filterIds = filterStubs.stream().map(FilterStub::id).toList();
         return wireMockServer.stubFor(WireMock.get(WireMock.urlPathEqualTo(PATH))
-                .withQueryParam("ids", equalToCommaSeparatedIdsIgnoringOrder(filterIds))
+                .withQueryParam("ids", havingExactlyIdsIgnoringOrder(filterIds))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filterStubs.stream().map(FilterStub::filter).toList()))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
@@ -80,33 +79,19 @@ public abstract class AbstractByFilterTest extends AbstractNetworkModificationTe
     }
 
     protected void verifyStandaloneFiltersRequest(UUID stubId, Set<UUID> filterIds, int nbRequests) {
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filterIds), false, nbRequests);
+        wireMockUtils.verifyGetRequest(stubId, PATH, "ids", havingExactlyIdsIgnoringOrder(filterIds), false, nbRequests);
     }
 
     protected void verifyStandaloneFiltersRequests(List<StubbedFilterRequest> stubs) {
-        stubs.forEach(stub -> wireMockUtils.verifyGetRequest(stub.stubId(), PATH, handleQueryParams(stub.filterIds()), false, stub.requestCount()));
+        stubs.forEach(stub -> wireMockUtils.verifyGetRequest(
+                stub.stubId(), PATH, "ids", havingExactlyIdsIgnoringOrder(stub.filterIds()), false, stub.requestCount()));
     }
 
-    protected Map<String, StringValuePattern> handleQueryParams(Set<UUID> filterIds) {
-        return Map.of("ids", equalToCommaSeparatedIdsIgnoringOrder(filterIds));
-    }
-
-    protected StringValuePattern equalToCommaSeparatedIdsIgnoringOrder(Collection<UUID> filterIds) {
-        Set<String> expectedIds = filterIds.stream()
+    protected MultiValuePattern havingExactlyIdsIgnoringOrder(Collection<UUID> filterIds) {
+        String[] expectedIds = filterIds.stream()
                 .map(UUID::toString)
-                .collect(Collectors.toSet());
-
-        if (expectedIds.isEmpty()) {
-            return WireMock.equalTo("");
-        }
-
-        String allowedIds = expectedIds.stream()
-                .map(Pattern::quote)
-                .collect(Collectors.joining("|"));
-        String expectedIdsLookaheads = expectedIds.stream()
-                .map(id -> "(?=.*(?:^|,)" + Pattern.quote(id) + "(?:,|$))")
-                .collect(Collectors.joining());
-
-        return WireMock.matching("^" + expectedIdsLookaheads + "(?:" + allowedIds + ")(?:,(?:" + allowedIds + ")){" + (expectedIds.size() - 1) + "}$");
+                .distinct()
+                .toArray(String[]::new);
+        return WireMock.havingExactly(expectedIds);
     }
 }
