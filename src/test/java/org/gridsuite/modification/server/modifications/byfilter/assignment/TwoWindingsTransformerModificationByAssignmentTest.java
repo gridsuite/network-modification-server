@@ -36,36 +36,32 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
     private static final String TWT_ID_6 = "twt6";
 
     @Test
-    void testModifyTwtWithError() throws Exception {
-        // Test modifying ratio tab changer field when ratio tab changer is null
-        FilterStub filter = createFilterStub(FILTER_ID_4, List.of(TWT_ID_4, TWT_ID_6));
-        DoubleAssignmentInfos assignmentInfos = DoubleAssignmentInfos.builder()
-                .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
-                .value(1.)
-                .filters(List.of(filter4))
-                .build();
+    void testModificationNotAppliedOnPhaseTapIfNotPresent() throws Exception {
+        FilterStub filterTwt1 = createFilterStub(FILTER_ID_1, List.of(TWT_ID_1, TWT_ID_2));
+        FilterStub filterTwt2 = createFilterStub(FILTER_ID_4, List.of(TWT_ID_4, TWT_ID_6));
 
-        checkCreateWithStatus(List.of(assignmentInfos), List.of(filter), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+        UUID stubId = stubStandaloneFilters(List.of(filterTwt1, filterTwt2));
 
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
-
-        // Test modifying phase tab changer field when phase tab changer is null
-        FilterStub filter2 = createFilterStub(FILTER_ID_1, List.of(TWT_ID_1, TWT_ID_2));
-        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
+        IntegerAssignmentInfos assignmentInfos = IntegerAssignmentInfos.builder()
+                .filters(List.of(filter1, filter4))
                 .editedField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name())
-                .value(1.)
-                .filters(List.of(filter1))
+                .value(4)
                 .build();
 
-        checkCreateWithStatus(List.of(assignmentInfos2), List.of(filter2), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+        checkCreationApplicationStatus(List.of(assignmentInfos), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
 
+        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getPhaseTapChanger());
+        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getPhaseTapChanger());
+        assertEquals(4, getNetwork().getTwoWindingsTransformer(TWT_ID_4).getPhaseTapChanger().getTapPosition());
+        assertEquals(4, getNetwork().getTwoWindingsTransformer(TWT_ID_6).getPhaseTapChanger().getTapPosition());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getPhaseTapChanger());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getPhaseTapChanger());
+
+        verifyStandaloneFiltersRequest(stubId, Set.of(FILTER_ID_1, FILTER_ID_4));
     }
 
     @Test
-    void testModifyTwtWithWarning() throws Exception {
+    void testModificationNotAppliedOnRatioTapIfNotPresent() throws Exception {
         FilterStub filterTwt1 = createFilterStub(FILTER_ID_1, List.of(TWT_ID_1, TWT_ID_2));
         FilterStub filterTwt2 = createFilterStub(FILTER_ID_4, List.of(TWT_ID_4, TWT_ID_6));
 
