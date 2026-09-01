@@ -277,10 +277,8 @@ public class NetworkModificationService {
     @Transactional
     public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos, @NonNull String userId) {
         networkModificationRepository.updateModification(modificationUuid, modificationInfos);
-        // notify directory-server for every ancestor composite, closest first - directory-server decides
-        // on its own whether each composite is actually shared and relays to study-server accordingly
-        // (see NotificationService.emitElementUpdated)
-        List<UUID> ancestorCompositeUuids = networkModificationRepository.findAncestorCompositeUuids(modificationUuid);
+        // Notify directory-server once per ancestor composite (closest first)
+         List<UUID> ancestorCompositeUuids = networkModificationRepository.findAncestorCompositeUuids(modificationUuid);
         ancestorCompositeUuids.forEach(compositeUuid ->
                 notificationService.emitElementUpdated(compositeUuid, userId));
     }

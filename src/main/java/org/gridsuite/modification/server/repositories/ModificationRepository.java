@@ -100,8 +100,10 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<Object[]> findCompositeContainerIdsByModificationIds(@Param("uuids") Collection<UUID> uuids);
 
     /**
-     * Walks up from each given modification, through as many nested composite modifications as needed, to the
-     * top-level group that ultimately contains it.
+     * For each given modification, walks up the {@code container_id} chain (a modification may live in a
+     * COMPOSITE that is itself nested in another container) until it reaches the enclosing GROUP.
+     * Modifications sitting directly in a group are resolved in one step.
+     *
      * @return one [modification id, root group id] row per given modification uuid that is actually reachable
      * from a group; ids not found (deleted, or orphaned from any group) have no row
      */
