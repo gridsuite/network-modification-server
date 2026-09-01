@@ -14,6 +14,7 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.CompositeInfos;
+import org.gridsuite.modification.server.dto.ModificationApplicability;
 import org.gridsuite.modification.server.dto.ModificationContainerInfos;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -1585,10 +1586,9 @@ class ModificationRepositoryTest {
 
         CompositeModificationInfos composite = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(compositeUuid);
         UUID copyUuid = composite.getModificationsInfos().getFirst().getUuid();
-        List<Object[]> applicabilities = modificationRepository.findApplicabilitiesByIdIn(List.of(copyUuid));
-        assertEquals(1, applicabilities.size(), "The copy carries the applicability of the modification it was made from");
-        assertEquals(ROOT_NETWORK_TAG, applicabilities.getFirst()[1]);
-        assertEquals(false, applicabilities.getFirst()[2]);
+        assertEquals(List.of(new ModificationApplicability(copyUuid, ROOT_NETWORK_TAG, false)),
+                modificationRepository.findApplicabilitiesByIdIn(List.of(copyUuid)),
+                "The copy carries the applicability of the modification it was made from");
     }
 
     @Test
@@ -1687,6 +1687,23 @@ class ModificationRepositoryTest {
                 "Taken on its own the child is applicable on the tag");
         assertEquals(List.of(), activeModificationUuids(TEST_GROUP_ID_2, ROOT_NETWORK_TAG),
                 "A deactivated composite automatically deactivate its children whatever their own applicability is");
+    }
+
+    @Test
+    void testGetActiveModificationsLeavesOutWhatTheTagDeactivatesInsideAComposite() {
+        insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        List<UUID> contentUuids = activeCompositeContentUuids(TEST_GROUP_ID_2, null);
+        UUID deactivatedUuid = contentUuids.getFirst();
+        UUID keptUuid = contentUuids.get(1);
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
+
+        assertEquals(List.of(keptUuid), activeCompositeContentUuids(TEST_GROUP_ID_2, ROOT_NETWORK_TAG),
+                "A modification the tag deactivates is dropped from the composite holding it");
+        assertEquals(contentUuids, activeCompositeContentUuids(TEST_GROUP_ID_2, OTHER_ROOT_NETWORK_TAG),
+                "Only an explicit false entry for the tag drops a modification, and this tag has none");
+        assertEquals(contentUuids, activeCompositeContentUuids(TEST_GROUP_ID_2, null),
+                "Without a root network context the applicabilities are ignored");
     }
 
     @Test
@@ -1850,6 +1867,12 @@ class ModificationRepositoryTest {
                 "The deleted root networks take their own applicabilities away, and only those");
         assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
                 "Another group may name a root network with that very tag, so a shared modification is never cleaned");
+    }
+
+    private List<UUID> activeCompositeContentUuids(UUID groupUuid, String rootNetworkTag) {
+        CompositeModificationInfos composite = (CompositeModificationInfos) networkModificationRepository
+                .getActiveModifications(groupUuid, rootNetworkTag).getFirst();
+        return composite.getModificationsInfos().stream().map(ModificationInfos::getUuid).toList();
     }
 
     private List<UUID> activeModificationUuids(UUID groupUuid, String rootNetworkTag) {

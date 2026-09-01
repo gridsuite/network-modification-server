@@ -78,7 +78,7 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     // Applicability per root network tag: a tag without an entry is applicable.
     // Deletion is left to the database: cascading it here would make hibernate load the applicabilities of every
     // modification just to delete them. An entry is never removed from this list either, dropping one is only done
-    // in sql: see deleteRootNetworkApplicabilities.
+    // manually in SQL: see deleteRootNetworkApplicabilities.
     @OnDelete(action = OnDeleteAction.CASCADE)
     @OneToMany(mappedBy = "modification", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<ModificationRootNetworkApplicabilityEntity> applicabilities = new ArrayList<>();

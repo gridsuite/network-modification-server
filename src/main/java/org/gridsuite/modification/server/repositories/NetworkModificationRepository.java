@@ -404,8 +404,8 @@ public class NetworkModificationRepository {
         }
         Map<UUID, Map<String, Boolean>> applicabilities = new HashMap<>();
         modificationRepository.findApplicabilitiesByIdIn(uuids).forEach(applicability ->
-            applicabilities.computeIfAbsent((UUID) applicability[0], _ -> new HashMap<>())
-                .put((String) applicability[1], (Boolean) applicability[2]));
+            applicabilities.computeIfAbsent(applicability.modificationId(), _ -> new HashMap<>())
+                .put(applicability.rootNetworkTag(), applicability.applicable()));
         return applicabilities;
     }
 
@@ -595,8 +595,7 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * Drops from a composite the modifications the tag deactivates, reading the applicabilities
-     * {@link #setApplicabilities} has just filled in.
+     * Drops the nested modifications the tag deactivates.
      */
     private static void removeModificationsDeactivatedBy(ModificationInfos modificationInfos, String rootNetworkTag) {
         if (modificationInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
@@ -608,8 +607,7 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return what a modification holds and carries an applicability of its own: the content of a composite or of a
-     * tabular, and the shared modification a reference points to
+     * @return what a modification holds: the content of a composite or of a tabular, and the shared modification a reference points to
      */
     private static List<ModificationInfos> contentOf(ModificationInfos modificationInfos) {
         if (modificationInfos instanceof CompositeModificationInfos composite) {
@@ -1021,10 +1019,8 @@ public class NetworkModificationRepository {
 
     /**
      * Moves the applicability entries of {@code oldTag} to {@code newTag} for the modifications of the given groups.
-     * A modification a group owns is really renamed, the new tag taking over any entry that was left under its name.
-     * A reference holds no applicability of its own: it lives on the shared modification it points to, which other
-     * groups reference too and may still be using the old tag for a root network of their own. There the new tag is
-     * therefore only added, no renaming or removing, and an entry it already has is reused rather than overwritten.
+     * A modification a group owns is renamed; a shared one, which other groups may still use the old tag for, only
+     * gets the new tag added.
      */
     @Transactional
     public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag) {
@@ -1041,9 +1037,8 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * Drops the applicability entries of {@code tags} for the modifications the given groups own.
-     * The references themselves are included, but the deletion finds nothing of theirs since they hold no applicability.
-     * Their applicability comes from the shared modifications they reference to, and we don't touch it.
+     * Drops the applicability entries of {@code tags} for the modifications the given groups own. A shared
+     * modification is left alone: another group may still name a root network with one of those tags.
      */
     @Transactional
     public void deleteRootNetworkTags(@NonNull List<UUID> groupUuids, @NonNull List<String> tags) {

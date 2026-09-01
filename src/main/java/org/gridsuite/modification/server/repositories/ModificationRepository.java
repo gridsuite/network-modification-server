@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.repositories;
 
+import org.gridsuite.modification.server.dto.ModificationApplicability;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -82,24 +83,24 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      * A reference has no applicability of its own, so it is resolved to the shared modification it points to.
      */
     @Query("""
-            SELECT m.id, a.rootNetworkTag, a.applicable
+            SELECT new org.gridsuite.modification.server.dto.ModificationApplicability(m.id, a.rootNetworkTag, a.applicable)
             FROM ModificationEntity m
-            LEFT JOIN ModificationReferenceEntity r ON r.id = m.id
-            JOIN ModificationRootNetworkApplicabilityEntity a ON a.modification.id = COALESCE(r.referenceId, m.id)
+            JOIN ModificationRootNetworkApplicabilityEntity a
+                 ON a.modification.id = COALESCE(TREAT(m AS ModificationReferenceEntity).referenceId, m.id)
             WHERE m.id IN (:uuids)
             """)
-    List<Object[]> findApplicabilitiesByIdIn(@Param("uuids") Collection<UUID> uuids);
+    List<ModificationApplicability> findApplicabilitiesByIdIn(@Param("uuids") Collection<UUID> uuids);
 
     /**
      * @return every modification held by the given containers, the content of their composites included.
      */
-    @NativeQuery("""
-        WITH RECURSIVE descendants(id) AS (
-            SELECT m.id FROM modification m WHERE m.container_id IN (:containerIds)
+    @Query("""
+        WITH descendants AS (
+            SELECT m.id AS id FROM ModificationEntity m WHERE m.container.id IN (:containerIds)
             UNION ALL
-            SELECT m.id FROM modification m JOIN descendants d ON m.container_id = d.id
+            SELECT m.id AS id FROM ModificationEntity m JOIN descendants d ON m.container.id = d.id
         )
-        SELECT CAST(id AS VARCHAR) FROM descendants
+        SELECT d.id FROM descendants d
         """)
     List<UUID> findAllDescendantModificationIdsByContainerIds(@Param("containerIds") Collection<UUID> containerIds);
 
@@ -115,13 +116,13 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      * entry for {@code toTag}.
      */
     @Modifying
-    @NativeQuery("""
-        INSERT INTO modification_root_network_applicability (modification_id, root_network_tag, applicable)
-        SELECT a.modification_id, :toTag, a.applicable
-          FROM modification_root_network_applicability a
-         WHERE a.modification_id IN (:ids) AND a.root_network_tag = :fromTag
-           AND NOT EXISTS (SELECT 1 FROM modification_root_network_applicability b
-                            WHERE b.modification_id = a.modification_id AND b.root_network_tag = :toTag)
+    @Query("""
+        INSERT INTO ModificationRootNetworkApplicabilityEntity (modification, rootNetworkTag, applicable)
+        SELECT a.modification, :toTag, a.applicable
+          FROM ModificationRootNetworkApplicabilityEntity a
+         WHERE a.modification.id IN (:ids) AND a.rootNetworkTag = :fromTag
+           AND NOT EXISTS (SELECT 1 FROM ModificationRootNetworkApplicabilityEntity b
+                            WHERE b.modification = a.modification AND b.rootNetworkTag = :toTag)
         """)
     void copyRootNetworkApplicability(@Param("ids") Collection<UUID> ids, @Param("fromTag") String fromTag, @Param("toTag") String toTag);
 
@@ -130,23 +131,23 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      * {@code fromTag} entry. Useful to prepare renaming with {@link #renameRootNetworkApplicability}.
      */
     @Modifying
-    @NativeQuery("""
-        DELETE FROM modification_root_network_applicability a
-         WHERE a.modification_id IN (:ids) AND a.root_network_tag = :toTag
-           AND EXISTS (SELECT 1 FROM modification_root_network_applicability b
-                        WHERE b.modification_id = a.modification_id AND b.root_network_tag = :fromTag)
+    @Query("""
+        DELETE FROM ModificationRootNetworkApplicabilityEntity a
+         WHERE a.modification.id IN (:ids) AND a.rootNetworkTag = :toTag
+           AND EXISTS (SELECT 1 FROM ModificationRootNetworkApplicabilityEntity b
+                        WHERE b.modification = a.modification AND b.rootNetworkTag = :fromTag)
         """)
     void deleteRootNetworkApplicabilitiesTakenOverBy(@Param("ids") Collection<UUID> ids, @Param("fromTag") String fromTag, @Param("toTag") String toTag);
 
     @Modifying
-    @NativeQuery("""
-        UPDATE modification_root_network_applicability SET root_network_tag = :toTag
-         WHERE modification_id IN (:ids) AND root_network_tag = :fromTag
+    @Query("""
+        UPDATE ModificationRootNetworkApplicabilityEntity a SET a.rootNetworkTag = :toTag
+         WHERE a.modification.id IN (:ids) AND a.rootNetworkTag = :fromTag
         """)
     void renameRootNetworkApplicability(@Param("ids") Collection<UUID> ids, @Param("fromTag") String fromTag, @Param("toTag") String toTag);
 
     @Modifying
-    @NativeQuery("DELETE FROM modification_root_network_applicability WHERE modification_id IN (:ids) AND root_network_tag IN (:tags)")
+    @Query("DELETE FROM ModificationRootNetworkApplicabilityEntity a WHERE a.modification.id IN (:ids) AND a.rootNetworkTag IN (:tags)")
     void deleteRootNetworkApplicabilities(@Param("ids") Collection<UUID> ids, @Param("tags") Collection<String> tags);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder desc")
