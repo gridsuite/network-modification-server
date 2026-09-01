@@ -278,7 +278,7 @@ public class NetworkModificationService {
     public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos, @NonNull String userId) {
         networkModificationRepository.updateModification(modificationUuid, modificationInfos);
         // Notify directory-server once per ancestor composite (closest first)
-         List<UUID> ancestorCompositeUuids = networkModificationRepository.findAncestorCompositeUuids(modificationUuid);
+        List<UUID> ancestorCompositeUuids = networkModificationRepository.findAncestorCompositeUuids(modificationUuid);
         ancestorCompositeUuids.forEach(compositeUuid ->
                 notificationService.emitElementUpdated(compositeUuid, userId));
     }
