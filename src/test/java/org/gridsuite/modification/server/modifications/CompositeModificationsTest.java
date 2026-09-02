@@ -103,7 +103,7 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         mockMvc.perform(get("/v1/network-modifications/{uuid}", modificationUuid)).andExpectAll(
                 status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
-        assertSelectCount(7);
+        assertSelectCount(8);
 
         SQLStatementCountValidator.reset();
         mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))

@@ -39,6 +39,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
@@ -243,7 +244,8 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         getEquipmentAttributeModification(modifEntity1.getId());
-        assertRequestsCount(1, 0, 0, 0);
+        // the modification itself, then the applicabilities of the tree it may hold
+        assertRequestsCount(2, 0, 0, 0);
 
         // Non-existent modification uuid
         assertThrows(NetworkModificationServerException.class, () -> getEquipmentAttributeModification(TEST_GROUP_ID),
@@ -1693,7 +1695,7 @@ class ModificationRepositoryTest {
     void testGetActiveModificationsLeavesOutWhatTheTagDeactivatesInsideAComposite() {
         insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
         List<UUID> contentUuids = activeCompositeContentUuids(TEST_GROUP_ID_2, null);
-        UUID deactivatedUuid = contentUuids.getFirst();
+        UUID deactivatedUuid = contentUuids.get(0);
         UUID keptUuid = contentUuids.get(1);
 
         networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
@@ -1787,6 +1789,101 @@ class ModificationRepositoryTest {
 
         assertEquals(Map.of(OTHER_ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_3).get(modificationUuid),
                 "On a modification the study owns the tag is really renamed: if an entry already exists under the new name, it is replaced");
+    }
+
+    /**
+     * <pre>
+     * composite                  (no entry)
+     * ├── inner composite        (no entry)
+     * │   ├── v1d1               false
+     * │   ├── v1d2               true
+     * │   └── v1d3               (no entry)
+     * ├── v2d1                   false
+     * ├── v2d2                   true
+     * └── v2d3                   (no entry)
+     * </pre>
+     * Both levels hold the three states a tag can be in: set to false, set to true, and no entry at all.
+     *
+     * @return the composite holding that tree
+     */
+    private UUID compositeWithEveryApplicabilityCase() {
+        UUID innerUuid = insertComposite(TEST_GROUP_ID_3, false, "v1d1", "v1d2", "v1d3");
+        List<UUID> siblingUuids = networkModificationRepository.saveModifications(TEST_GROUP_ID_3,
+                List.of(switchModification("v2d1"), switchModification("v2d2"), switchModification("v2d3")))
+                .stream().map(ModificationInfos::getUuid).toList();
+        UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(
+                Stream.concat(Stream.of(innerUuid), siblingUuids.stream()).toList(), "source");
+
+        List<UUID> contentUuids = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeUuid))
+                .stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> innerUuids = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(contentUuids.get(0)))
+                .stream().map(ModificationInfos::getUuid).toList();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(innerUuids.get(0)), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(innerUuids.get(1)), ROOT_NETWORK_TAG, true);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(1)), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(2)), ROOT_NETWORK_TAG, true);
+
+        assertEquals(List.of(Map.of(), Map.of(ROOT_NETWORK_TAG, false), Map.of(ROOT_NETWORK_TAG, true), Map.of(),
+                        Map.of(ROOT_NETWORK_TAG, false), Map.of(ROOT_NETWORK_TAG, true), Map.of()),
+                applicabilitiesInDepth(compositeUuid), "the tree the copy has to carry over");
+        return compositeUuid;
+    }
+
+    @Test
+    void testExportingACompositeKeepsTheApplicabilitiesOfItsWholeTree() {
+        UUID sourceUuid = compositeWithEveryApplicabilityCase();
+
+        UUID exportedUuid = networkModificationRepository.createNetworkCompositeModification(List.of(sourceUuid), "exported");
+
+        assertEquals(applicabilitiesInDepth(sourceUuid), applicabilitiesInDepth(exportedUuid),
+                "Exporting a composite carries the applicabilities of everything it holds, however deep");
+    }
+
+    @Test
+    void testInsertingACompositeKeepsTheApplicabilitiesOfItsWholeTree() {
+        UUID sourceUuid = compositeWithEveryApplicabilityCase();
+
+        UUID insertedUuid = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID,
+                List.of(new CompositeInfos(sourceUuid, "composite", false, "description"))).getFirst().getUuid();
+
+        assertEquals(applicabilitiesInDepth(sourceUuid), applicabilitiesInDepth(insertedUuid),
+                "Inserting a composite carries the applicabilities of everything it holds, however deep");
+    }
+
+    @Test
+    void testReadingASharedModificationCarriesTheApplicabilitiesOfItsContent() {
+        UUID sharedUuid = compositeWithEveryApplicabilityCase();
+
+        UUID referenceUuid = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID_2,
+                List.of(new CompositeInfos(sharedUuid, "composite", true, "description"))).getFirst().getUuid();
+
+        ModificationReferenceInfos reference = (ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid);
+
+        assertEquals(applicabilitiesInDepth(sharedUuid), applicabilitiesInDepth(reference.getReferenceInfos()),
+                "Reading a shared modification carries the applicabilities of its whole tree, an empty one rather than a null where the tag says nothing");
+    }
+
+    /**
+     * @return the applicabilities of everything a modification holds, depth first, the order the content is read in
+     */
+    private List<Map<String, Boolean>> applicabilitiesInDepth(UUID containerUuid) {
+        return networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(containerUuid)).stream()
+                .flatMap(content -> Stream.concat(Stream.of(content.getApplicabilityByRootNetworkTag()),
+                        applicabilitiesInDepth(content.getUuid()).stream()))
+                .toList();
+    }
+
+    /**
+     * @return the same, but from the DTO instead of the database (references do not hold applicabilities)
+     */
+    private static List<Map<String, Boolean>> applicabilitiesInDepth(ModificationInfos modificationInfos) {
+        if (!(modificationInfos instanceof CompositeModificationInfos composite)) {
+            return List.of();
+        }
+        return composite.getModificationsInfos().stream()
+                .flatMap(content -> Stream.concat(Stream.of(content.getApplicabilityByRootNetworkTag()),
+                        applicabilitiesInDepth(content).stream()))
+                .toList();
     }
 
     @Test

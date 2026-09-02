@@ -703,6 +703,10 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
+        return addApplicabilities(List.of(toModificationInfo(modificationUuid))).getFirst();
+    }
+
+    private ModificationInfos toModificationInfo(UUID modificationUuid) {
         return toModificationsInfosOptimized(getModificationEntity(modificationUuid));
     }
 
@@ -866,7 +870,7 @@ public class NetworkModificationRepository {
             List<UUID> foundEntities = modificationRepository.findAllByContainer(uuid).stream().map(ModificationEntity::getId).toList();
             List<ModificationInfos> orderedModifications = foundEntities
                     .stream()
-                    .map(this::getModificationInfo)
+                    .map(this::toModificationInfo)
                     .toList();
             entities.addAll(orderedModifications);
         }
@@ -1272,6 +1276,8 @@ public class NetworkModificationRepository {
                 LOGGER.error("Could not find composite modification with uuid {} to apply its name {}", compositeToBeInserted.id(), compositeToBeInserted.name());
             }
         }
+        // references do not hold applicabilities
+        addApplicabilities(newCompositeModifications.stream().filter(CompositeModificationInfos.class::isInstance).toList());
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }

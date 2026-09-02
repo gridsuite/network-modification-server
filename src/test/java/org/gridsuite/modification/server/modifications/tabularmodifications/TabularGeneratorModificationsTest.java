@@ -116,13 +116,13 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         Pair<UUID, ModificationInfos> tabularWith1Modification = createTabularGeneratorModification(1);
         reset();
         ModificationInfos tabularWith1ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith1Modification.getLeft()); // Getting one tabular modification with one sub-modification
-        assertSelectCount(5);
+        assertSelectCount(6);
         assertTabularModificationsEquals(tabularWith1Modification.getRight(), tabularWith1ModificationInfos);
 
         Pair<UUID, ModificationInfos> tabularWith3Modification = createTabularGeneratorModification(3);
         reset();
         ModificationInfos tabularWith3ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith3Modification.getLeft()); // Getting one tabular modification with three sub-modifications
-        assertSelectCount(5);
+        assertSelectCount(6);
         assertTabularModificationsEquals(tabularWith3Modification.getRight(), tabularWith3ModificationInfos);
     }
 
