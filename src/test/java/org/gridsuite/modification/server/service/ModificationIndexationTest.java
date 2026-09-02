@@ -300,7 +300,7 @@ class ModificationIndexationTest {
 
         // Create the composite modification to pass later to ?action=insert
         UUID compositeUuid = networkModificationService.createNetworkCompositeModification(
-                modifications.stream().map(ModificationInfos::getUuid).toList(),
+                modifications.stream().map(m -> new CompositeModificationContentInfos(m.getUuid(), null)).toList(),
                 "composite name"
         );
 

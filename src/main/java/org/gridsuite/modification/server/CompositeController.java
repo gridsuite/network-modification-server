@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.CompositeInfos;
+import org.gridsuite.modification.server.dto.CompositeModificationContentInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -78,8 +79,8 @@ public class CompositeController {
     @Operation(summary = "Create a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})
     public ResponseEntity<UUID> createNetworkCompositeModification(@Parameter(description = "Composite modifications name", required = true) @RequestParam("name") String name,
-                                                                   @RequestBody List<UUID> modificationUuids) {
-        return ResponseEntity.ok().body(networkModificationService.createNetworkCompositeModification(modificationUuids, name));
+                                                                   @RequestBody List<CompositeModificationContentInfos> contents) {
+        return ResponseEntity.ok().body(networkModificationService.createNetworkCompositeModification(contents, name));
     }
 
     @GetMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -138,8 +139,8 @@ public class CompositeController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
     public ResponseEntity<Void> replaceNetworkCompositeModification(@PathVariable("uuid") UUID compositeModificationUuid,
                                                                     @Parameter(description = "New composite name") @RequestParam(value = "name") String name,
-                                                                    @RequestBody List<UUID> modificationUuids) {
-        networkModificationService.replaceCompositeModification(compositeModificationUuid, name, modificationUuids);
+                                                                    @RequestBody List<CompositeModificationContentInfos> contents) {
+        networkModificationService.replaceCompositeModification(compositeModificationUuid, name, contents);
         return ResponseEntity.ok().build();
     }
 }

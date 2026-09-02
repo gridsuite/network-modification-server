@@ -19,6 +19,7 @@ import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.CompositeInfos;
+import org.gridsuite.modification.server.dto.CompositeModificationContentInfos;
 import org.gridsuite.modification.server.dto.ModificationContainerInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.dto.ReferenceData;
@@ -157,18 +158,8 @@ public class NetworkModificationRepository {
         return saveModificationsNonTransactional(groupUuid, entities);
     }
 
-    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
-        // Fetch originals once, preserving order
-        Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .collect(Collectors.toMap(
-                        ModificationEntity::getId,
-                        e -> ModificationEntity.fromDTO(toModificationsInfosOptimized(e))
-                ));
-        // Reorder clones to match caller-specified order
-        List<ModificationEntity> copyEntities = modificationUuids.stream()
-                .map(cloneByUuid::get)
-                .filter(Objects::nonNull)
-                .toList();
+    public UUID createNetworkCompositeModification(@NonNull List<CompositeModificationContentInfos> contents, @NonNull String name) {
+        List<ModificationEntity> copyEntities = cloneModificationsForComposite(contents);
 
         //TODO : separate creation and copy
         if (copyEntities.size() == 1 && copyEntities.getFirst() instanceof CompositeModificationEntity single) {
@@ -181,28 +172,48 @@ public class NetworkModificationRepository {
         return modificationRepository.save(compositeEntity).getId();
     }
 
-    public void replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<UUID> modificationUuids) {
+    public void replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<CompositeModificationContentInfos> contents) {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
 
-        // Fetch originals once, preserving order
-        Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .collect(Collectors.toMap(
-                        ModificationEntity::getId,
-                        e -> ModificationEntity.fromDTO(toModificationsInfosOptimized(e))
-                ));
+        List<ModificationEntity> copyEntities = cloneModificationsForComposite(contents);
 
         //Delete previously held modifications
         deleteModifications(compositeEntity.getModifications());
 
-        // Reorder clones to match caller-specified order
-        List<ModificationEntity> copyEntities = modificationUuids.stream()
-                .map(cloneByUuid::get)
-                .filter(Objects::nonNull)
-                .toList();
         deleteCompositeChildrenSubtree(List.of(compositeEntity));
         compositeEntity.setModifications(copyEntities);
         compositeModificationRepository.renameCompositeModification(compositeEntity, name);
+    }
+
+    /**
+     * Clone each selected modification so it can be stored inside a composite, keeping the caller-specified
+     * order and duplicates (the same uuid may appear twice, e.g. two references resolved to the same shared
+     * composite): each occurrence gets its own fresh clone. When {@code content.description()} is provided it
+     * overrides the clone's description - this carries a selected reference's description onto the copy of the
+     * composite it points to, since that description lives on the reference, not on the composite.
+     */
+    private List<ModificationEntity> cloneModificationsForComposite(List<CompositeModificationContentInfos> contents) {
+        List<UUID> modificationUuids = contents.stream().map(CompositeModificationContentInfos::modificationUuid).toList();
+        // Fetch and convert each distinct original only once
+        Map<UUID, ModificationInfos> infosByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, this::toModificationsInfosOptimized));
+
+        // Build one fresh clone per requested occurrence, keeping order and duplicates
+        return contents.stream()
+                .map(content -> {
+                    ModificationInfos infos = infosByUuid.get(content.modificationUuid());
+                    if (infos == null) {
+                        return null;
+                    }
+                    ModificationEntity clone = ModificationEntity.fromDTO(infos);
+                    if (content.description() != null && !content.description().isBlank()) {
+                        clone.setDescription(content.description());
+                    }
+                    return clone;
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
