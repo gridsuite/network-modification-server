@@ -59,6 +59,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -977,6 +978,120 @@ class CompositeControllerTest {
         List<ModificationInfos> children = ((CompositeModificationInfos) resultInfos).getModificationsInfos();
         assertEquals(2, children.size());
         children.forEach(child -> assertFalse(child instanceof CompositeModificationInfos));
+    }
+
+    @Test
+    void testGetParentComposites() throws Exception {
+        // Create 3 root-level modifications and assemble the first 2 into a composite (which stays in the group)
+        List<ModificationInfos> rootMods = createSomeSwitchModifications(TEST_GROUP_ID, 3);
+        List<UUID> rootModUuids = rootMods.stream().map(ModificationInfos::getUuid).toList();
+        UUID directGroupChildUuid = rootModUuids.get(2);
+
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
+                        .content(mapper.writeValueAsString(rootModUuids.subList(0, 2)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // the assembled modifications keep their uuids and are now nested inside the composite
+        List<UUID> nestedChildUuids = mapper.readValue(
+                        mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", compositeUuid))
+                                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
+                        new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
+                .get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
+        assertEquals(2, nestedChildUuids.size());
+
+        UUID unknownUuid = UUID.randomUUID();
+        mvcResult = mockMvc.perform(get(URI_COMPOSITE_NETWORK_MODIF_BASE + "/parent-composites")
+                        .queryParam("uuids", nestedChildUuids.get(0).toString())
+                        .queryParam("uuids", nestedChildUuids.get(1).toString())
+                        .queryParam("uuids", directGroupChildUuid.toString())
+                        .queryParam("uuids", compositeUuid.toString())
+                        .queryParam("uuids", unknownUuid.toString()))
+                .andExpect(status().isOk()).andReturn();
+        Map<UUID, UUID> parentComposites = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // only the modifications actually nested in a composite have an entry
+        assertEquals(2, parentComposites.size());
+        assertEquals(compositeUuid, parentComposites.get(nestedChildUuids.get(0)));
+        assertEquals(compositeUuid, parentComposites.get(nestedChildUuids.get(1)));
+        assertFalse(parentComposites.containsKey(directGroupChildUuid));
+        assertFalse(parentComposites.containsKey(compositeUuid));
+        assertFalse(parentComposites.containsKey(unknownUuid));
+    }
+
+    @Test
+    void testGetParentCompositesWithNoMatch() throws Exception {
+        mockMvc.perform(get(URI_COMPOSITE_NETWORK_MODIF_BASE + "/parent-composites")
+                        .queryParam("uuids", UUID.randomUUID().toString()))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{}"));
+    }
+
+    @Test
+    void testGetRootGroups() throws Exception {
+        UUID directGroupChildUuid = createSomeSwitchModifications(TEST_GROUP_ID, 1).getFirst().getUuid();
+
+        // Build a standalone outer composite nesting an inner composite nesting a leaf, then insert it into the group
+        List<ModificationInfos> compositeLeafs = createSomeSwitchModifications(TEST_GROUP2_ID, 2);
+        UUID innerLeafUuid = compositeLeafs.get(0).getUuid();
+        UUID outerLeafUuid = compositeLeafs.get(1).getUuid();
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "inner composite")
+                        .content(mapper.writeValueAsString(List.of(innerLeafUuid))).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID innerCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "outer composite")
+                        .content(mapper.writeValueAsString(List.of(innerCompositeUuid, outerLeafUuid))).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID outerCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        runRequestAsync(mockMvc,
+                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/{groupUuid}?action=INSERT", TEST_GROUP_ID)
+                        .content(getJsonBodyModificationCompositeToBeInserted(
+                                List.of(new CompositeInfos(outerCompositeUuid, "outer composite", false, "description"))))
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+
+        // INSERT places a copy of the composite in the group; walk down from it to the leaf nested two composites deep
+        UUID outerCompositeInGroupUuid = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).stream()
+                .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
+        UUID actualInnerCompositeUuid = mapper.readValue(
+                        mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", outerCompositeInGroupUuid))
+                                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
+                        new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
+                .get(outerCompositeInGroupUuid).stream()
+                .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
+        UUID deeplyNestedLeafUuid = mapper.readValue(
+                        mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", actualInnerCompositeUuid))
+                                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
+                        new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
+                .get(actualInnerCompositeUuid).getFirst().getUuid();
+
+        UUID unknownUuid = UUID.randomUUID();
+        mvcResult = mockMvc.perform(get(URI_COMPOSITE_NETWORK_MODIF_BASE + "/root-groups")
+                        .queryParam("uuids", deeplyNestedLeafUuid.toString())
+                        .queryParam("uuids", directGroupChildUuid.toString())
+                        .queryParam("uuids", outerCompositeInGroupUuid.toString())
+                        .queryParam("uuids", unknownUuid.toString()))
+                .andExpect(status().isOk()).andReturn();
+        Map<UUID, UUID> rootGroups = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        assertEquals(3, rootGroups.size());
+        // resolved by walking up through both nested composites
+        assertEquals(TEST_GROUP_ID, rootGroups.get(deeplyNestedLeafUuid));
+        assertEquals(TEST_GROUP_ID, rootGroups.get(directGroupChildUuid));
+        assertEquals(TEST_GROUP_ID, rootGroups.get(outerCompositeInGroupUuid));
+        // a modification not reachable from any group has no entry
+        assertFalse(rootGroups.containsKey(unknownUuid));
+    }
+
+    @Test
+    void testGetRootGroupsWithNoMatch() throws Exception {
+        mockMvc.perform(get(URI_COMPOSITE_NETWORK_MODIF_BASE + "/root-groups")
+                        .queryParam("uuids", UUID.randomUUID().toString()))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{}"));
     }
 
     private static void assertContiguousOrder(List<ModificationEntity> modifications) {
