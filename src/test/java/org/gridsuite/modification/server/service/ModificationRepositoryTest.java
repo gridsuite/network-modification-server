@@ -1543,6 +1543,13 @@ class ModificationRepositoryTest {
     }
 
     /**
+     * @return the shared modification a reference points to, the one carrying the applicabilities
+     */
+    private UUID sharedModificationOf(UUID referenceUuid) {
+        return ((ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid)).getReferenceId();
+    }
+
+    /**
      * Reads the applicability of the modifications of a group the way the front end does: through the metadata,
      * where every modification carries its own.
      */
@@ -1635,7 +1642,7 @@ class ModificationRepositoryTest {
     @Test
     void testUpdateRootNetworkApplicabilityOnSharedModification() {
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
-        UUID sharedUuid = ((ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid)).getReferenceId();
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
 
         networkModificationRepository.updateRootNetworkApplicability(List.of(referenceUuid), ROOT_NETWORK_TAG, false);
 
@@ -1666,7 +1673,7 @@ class ModificationRepositoryTest {
     void testGetActiveModificationsFiltersAReferenceOnItsSharedModification() {
         // inserting a composite as shared puts a reference to it in the group, not a copy of it
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
-        UUID sharedUuid = ((ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid)).getReferenceId();
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
 
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), ROOT_NETWORK_TAG, false);
 
@@ -1745,24 +1752,9 @@ class ModificationRepositoryTest {
     }
 
     @Test
-    void testRenameRootNetworkTagReachesTheContentOfAComposite() {
-        UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
-        networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), ROOT_NETWORK_TAG, false);
-
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
-
-        assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(compositeUuid));
-        Map<UUID, Map<String, Boolean>> applicabilitiesByModifications = getApplicabilitiesByModificationsInside(compositeUuid);
-        assertEquals(2, applicabilitiesByModifications.size());
-        applicabilitiesByModifications.values().forEach(applicability ->
-                assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), applicability,
-                        "A composite propagates its applicability to its content, so the rename must reach it too"));
-    }
-
-    @Test
     void testRenameRootNetworkTagOnlyAddsToASharedModification() {
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
-        UUID sharedUuid = ((ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid)).getReferenceId();
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
         networkModificationRepository.updateRootNetworkApplicability(List.of(referenceUuid), ROOT_NETWORK_TAG, false);
 
         networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
@@ -1893,6 +1885,18 @@ class ModificationRepositoryTest {
     }
 
     @Test
+    void testInsertingACompositeAsSharedCarriesTheApplicabilityOfTheModificationItPointsTo() {
+        UUID sharedUuid = insertComposite(TEST_GROUP_ID_3, false, "v1d1", "v1d2");
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), ROOT_NETWORK_TAG, false);
+
+        List<ModificationInfos> inserted = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID,
+                List.of(new CompositeInfos(sharedUuid, "composite", true, "description")));
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), inserted.getFirst().getApplicabilityByRootNetworkTag(),
+                "A reference holds no applicability of its own, so it is returned with the one of the modification it points to");
+    }
+
+    @Test
     void testReadingASharedModificationCarriesTheApplicabilitiesOfItsContent() {
         UUID sharedUuid = compositeWithEveryApplicabilityCase();
 
@@ -1978,7 +1982,7 @@ class ModificationRepositoryTest {
     @Test
     void testRenameRootNetworkTagReusesAnEntryTheSharedModificationAlreadyHas() {
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
-        UUID sharedUuid = ((ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid)).getReferenceId();
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), ROOT_NETWORK_TAG, false);
         // another group already named a root network of its own with the tag this one is being renamed to
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), RENAMED_ROOT_NETWORK_TAG, true);

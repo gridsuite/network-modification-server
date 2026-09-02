@@ -95,6 +95,7 @@ class BuildTest {
     private static final UUID TEST_NETWORK_WITH_WORKFLOW_INFOS = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final String TEST_ROOT_NETWORK_TAG = "PH1";
+    private static final String OTHER_ROOT_NETWORK_TAG = "PH2";
     private static final UUID TEST_GROUP_ID_2 = UUID.randomUUID();
 
     private static final UUID TEST_ERROR_REPORT_ID = UUID.randomUUID();
@@ -1054,6 +1055,31 @@ class BuildTest {
     }
 
     /**
+     * The same modifications are applied once per root network, each with its own tag, so what one of them leaves out
+     * has to stay available to the next.
+     */
+    @Test
+    void applyingOnARootNetworkLeavesTheModificationsAvailableToTheNext(final MockWebServer server) {
+        Network deactivatingNetwork = NetworkCreation.create(TEST_NETWORK_ID, true);
+        Network otherNetwork = NetworkCreation.create(TEST_NETWORK_ID, true);
+        List<ModificationInfos> inserted = insertCompositeCoveringEveryApplicabilityCase();
+
+        applyOnRootNetwork(inserted, TEST_ROOT_NETWORK_TAG, deactivatingNetwork);
+        applyOnRootNetwork(inserted, OTHER_ROOT_NETWORK_TAG, otherNetwork);
+
+        assertFalse(deactivatingNetwork.getSwitch("v2d1").isOpen(), "The modification the tag deactivates is left out");
+        assertTrue(otherNetwork.getSwitch("v2d1").isOpen(),
+                "The other root network names no tag the modifications carry an entry for, so they all apply");
+        assertTrue(TestUtils.getRequestsDone(2, server).stream().allMatch(r -> r.matches("/v1/reports/.*")));
+    }
+
+    private void applyOnRootNetwork(List<ModificationInfos> modifications, String rootNetworkTag, Network appliedNetwork) {
+        TestUtils.applyModificationsBlocking(networkModificationApplicator,
+                new ModificationApplicationGroup(TEST_GROUP_ID, modifications, new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), rootNetworkTag),
+                new NetworkInfos(appliedNetwork, TEST_NETWORK_ID, true));
+    }
+
+    /**
      * A build leaves out what the tag deactivates before applying anything, but a copy is applied right after it is
      * saved, on the tree as it stands. The composite itself is applicable here: only its content is deactivated.
      */
@@ -1062,9 +1088,7 @@ class BuildTest {
         Network appliedNetwork = NetworkCreation.create(TEST_NETWORK_ID, true);
         List<ModificationInfos> inserted = insertCompositeCoveringEveryApplicabilityCase();
 
-        TestUtils.applyModificationsBlocking(networkModificationApplicator,
-                new ModificationApplicationGroup(TEST_GROUP_ID, inserted, new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), TEST_ROOT_NETWORK_TAG),
-                new NetworkInfos(appliedNetwork, TEST_NETWORK_ID, true));
+        applyOnRootNetwork(inserted, TEST_ROOT_NETWORK_TAG, appliedNetwork);
 
         assertOnlyTheContentTheTagAllowsIsApplied(appliedNetwork);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));

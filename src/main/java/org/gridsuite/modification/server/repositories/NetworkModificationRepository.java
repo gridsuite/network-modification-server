@@ -656,6 +656,7 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationInfos> getActiveModifications(UUID groupUuid, String rootNetworkTag) {
+        // the applicator filters on the tag again: this only avoids loading the modifications it would drop
         List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByContainerId(groupUuid, rootNetworkTag);
         return addApplicabilities(modificationsEntities.stream().map(this::toModificationsInfosOptimized).toList());
     }
