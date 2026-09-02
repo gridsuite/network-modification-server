@@ -77,6 +77,7 @@ public class NetworkModificationRepository {
     private final ModificationApplicationInfosService modificationApplicationInfosService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationRepository.class);
+    private static final String MODIFICATION_ID = "modificationId";
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
@@ -125,7 +126,7 @@ public class NetworkModificationRepository {
     }
 
     private NetworkModificationServerException getModificationNotFoundException(String modificationId) {
-        return new NetworkModificationServerException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND.messageTemplate(), modificationId), Map.of("modificationId", modificationId));
+        return new NetworkModificationServerException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND.messageTemplate(), modificationId), Map.of(MODIFICATION_ID, modificationId));
     }
 
     @Transactional // To have all the delete in the same transaction (atomic)
@@ -672,7 +673,7 @@ public class NetworkModificationRepository {
             if (optionalModificationWithGroup.isPresent()) {
                 throw new NetworkModificationServerException(MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN,
                     String.format(MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN.messageTemplate(), optionalModificationWithGroup.get().getId(), optionalModificationWithGroup.get().getContainerUuid()),
-                    Map.of("modificationId", optionalModificationWithGroup.get().getId(), "groupId", optionalModificationWithGroup.get().getContainerUuid()));
+                    Map.of(MODIFICATION_ID, optionalModificationWithGroup.get().getId(), "groupId", optionalModificationWithGroup.get().getContainerUuid()));
             }
         } else {
             throw new NetworkModificationServerException(MODIFICATION_DELETION_ARGUMENT_ERROR, MODIFICATION_DELETION_ARGUMENT_ERROR.messageTemplate());
@@ -1062,6 +1063,47 @@ public class NetworkModificationRepository {
         }
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
+    }
+
+    /**
+     * Takes a composite modification out of its group so that it can be stored as an element in the directory server,
+     * and puts a reference to it at the very same place in the group. The composite modification keeps the same uuid,
+     * only its container changes.
+     * @param groupUuid group owning the composite modification
+     * @param modificationUuid uuid of the composite modification to share
+     * @param name name given to the shared composite modification, null to keep the current one
+     */
+    @Transactional
+    public void extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
+        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
+        ModificationEntity modificationEntity = getModificationEntity(modificationUuid);
+        if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
+            String expectedType = ModificationType.COMPOSITE_MODIFICATION.name();
+            throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
+                String.format(MODIFICATION_BAD_TYPE.messageTemplate(), modificationUuid, modificationEntity.getType(), expectedType),
+                Map.of(MODIFICATION_ID, modificationUuid.toString(), "modificationType", modificationEntity.getType(), "expectedModificationType", expectedType));
+        }
+        if (!groupUuid.equals(modificationEntity.getContainerUuid())) {
+            throw new NetworkModificationServerException(MODIFICATION_NOT_FOUND,
+                String.format("Modification %s is not owned by group %s", modificationUuid, groupUuid),
+                Map.of(MODIFICATION_ID, modificationUuid, "groupId", groupUuid));
+        }
+
+        ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
+            .referenceId(modificationUuid)
+            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referenceInfos(loadCompositeModificationMetadata(compositeEntity, null))
+            .build();
+        ModificationEntity referenceEntity = ModificationEntity.fromDTO(referenceInfos);
+
+        // the reference takes the place - and the order - of the shared composite modification
+        groupEntity.addModification(referenceEntity, compositeEntity.getModificationsOrder());
+        groupEntity.removeModifications(List.of(modificationUuid));
+        compositeEntity.setContainer(null);
+        compositeEntity.setModificationsOrder(0);
+        if (name != null) {
+            compositeModificationRepository.renameCompositeModification(compositeEntity, name);
+        }
     }
 
     private AbstractModificationContainerEntity getContainer(ModificationContainerInfos containerInfos) {
