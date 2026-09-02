@@ -1008,6 +1008,68 @@ class BuildTest {
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
     }
 
+    private static EquipmentAttributeModificationInfos switchOpening(String equipmentId) {
+        return EquipmentAttributeModificationInfos.builder().equipmentId(equipmentId).equipmentAttributeName("open")
+                .equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build();
+    }
+
+    private List<ModificationInfos> insertCompositeCoveringEveryApplicabilityCase() {
+        List<ModificationInfos> sources = modificationRepository.saveModifications(TEST_GROUP_ID_2, List.of(
+                ModificationEntity.fromDTO(switchOpening("v1d1")),
+                ModificationEntity.fromDTO(switchOpening("v2d1")),
+                ModificationEntity.fromDTO(switchOpening("v2d2"))));
+        UUID sourceUuid = modificationRepository.createNetworkCompositeModification(
+                sources.stream().map(ModificationInfos::getUuid).toList(), "source");
+        // set on the source: the copy carries the applicabilities over, and is applied as it is returned
+        List<UUID> contentUuids = modificationRepository.getBasicNetworkModificationsFromComposite(List.of(sourceUuid))
+                .stream().map(ModificationInfos::getUuid).toList();
+        modificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(1)), TEST_ROOT_NETWORK_TAG, false);
+        modificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(2)), TEST_ROOT_NETWORK_TAG, true);
+        return modificationRepository.insertCompositeModifications(TEST_GROUP_ID,
+                List.of(new CompositeInfos(sourceUuid, "composite", false, "description")));
+    }
+
+    private static void assertOnlyTheContentTheTagAllowsIsApplied(Network appliedNetwork) {
+        assertTrue(appliedNetwork.getSwitch("v1d1").isOpen(), "The content the tag says nothing about is applied");
+        assertFalse(appliedNetwork.getSwitch("v2d1").isOpen(), "The content the tag deactivates is left out");
+        assertTrue(appliedNetwork.getSwitch("v2d2").isOpen(), "The content the tag activates is applied");
+    }
+
+    @Test
+    void runBuildLeavesOutTheCompositeContentTheRootNetworkDeactivates(final MockWebServer server) {
+        insertCompositeCoveringEveryApplicabilityCase();
+
+        BuildInfos buildInfos = BuildInfos.builder()
+            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .destinationVariantId(NetworkCreation.VARIANT_ID)
+            .modificationGroupUuids(List.of(TEST_GROUP_ID))
+            .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1, ReportMode.REPLACE)))
+            .rootNetworkTag(TEST_ROOT_NETWORK_TAG)
+            .build();
+        networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
+
+        network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
+        assertOnlyTheContentTheTagAllowsIsApplied(network);
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
+    }
+
+    /**
+     * A build leaves out what the tag deactivates before applying anything, but a copy is applied right after it is
+     * saved, on the tree as it stands. The composite itself is applicable here: only its content is deactivated.
+     */
+    @Test
+    void applyingACompositeLeavesOutTheContentTheRootNetworkDeactivates(final MockWebServer server) {
+        Network appliedNetwork = NetworkCreation.create(TEST_NETWORK_ID, true);
+        List<ModificationInfos> inserted = insertCompositeCoveringEveryApplicabilityCase();
+
+        TestUtils.applyModificationsBlocking(networkModificationApplicator,
+                new ModificationApplicationGroup(TEST_GROUP_ID, inserted, new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), TEST_ROOT_NETWORK_TAG),
+                new NetworkInfos(appliedNetwork, TEST_NETWORK_ID, true));
+
+        assertOnlyTheContentTheTagAllowsIsApplied(appliedNetwork);
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
+    }
+
     @Test
     void testApplyModificationWithErrors(final MockWebServer server) {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);

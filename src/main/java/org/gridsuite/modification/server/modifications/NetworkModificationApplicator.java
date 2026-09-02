@@ -205,7 +205,7 @@ public class NetworkModificationApplicator {
                 .filter(m -> m.isActivatedOn(modificationGroupInfos.rootNetworkTag()))
                 .map(m -> {
                     listener.initModificationApplication(modificationGroupInfos.groupUuid(), m);
-                    return apply(m, listener.getNetwork(), reportNode);
+                    return apply(m, listener.getNetwork(), reportNode, modificationGroupInfos.rootNetworkTag());
                 })
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
@@ -219,22 +219,22 @@ public class NetworkModificationApplicator {
         return groupApplicationStatus;
     }
 
-    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode) {
+    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode, String rootNetworkTag) {
         ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
         try {
-            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode));
+            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode, rootNetworkTag));
         } catch (Exception e) {
             handleException(subReportNode, e);
         }
         return getApplicationStatus(reportNode);
     }
 
-    private void apply(AbstractModification modification, Network network, ReportNode subReportNode) {
+    private void apply(AbstractModification modification, Network network, ReportNode subReportNode, String rootNetworkTag) {
         // check input data but don't change the network
         modification.check(network);
 
         // init application context
-        modification.initApplicationContext(this.filterService, this.loadFlowService);
+        modification.initApplicationContext(this.filterService, this.loadFlowService, rootNetworkTag);
 
         // apply all changes on the network
         modification.apply(network, getNamingStrategy(), subReportNode);

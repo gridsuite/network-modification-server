@@ -600,18 +600,6 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * Drops the nested modifications the tag deactivates.
-     */
-    private static void removeModificationsDeactivatedBy(ModificationInfos modificationInfos, String rootNetworkTag) {
-        if (modificationInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
-            composite.setModificationsInfos(composite.getModificationsInfos().stream()
-                .filter(content -> isApplicableOn(content.getApplicabilityByRootNetworkTag(), rootNetworkTag))
-                .toList());
-        }
-        contentOf(modificationInfos).forEach(content -> removeModificationsDeactivatedBy(content, rootNetworkTag));
-    }
-
-    /**
      * @return what a modification holds that carries an applicability of its own: the content of a composite, and the
      * shared modification a reference points to. The content of a tabular is left out, applicabilities never reach it.
      */
@@ -623,15 +611,6 @@ public class NetworkModificationRepository {
             return List.of(reference.getReferenceInfos());
         }
         return List.of();
-    }
-
-    /**
-     * @return whether the applicabilities of a modification let it apply on the given root network tag
-     */
-    private static boolean isApplicableOn(Map<String, Boolean> applicabilityByRootNetworkTag, String rootNetworkTag) {
-        return rootNetworkTag == null
-            || applicabilityByRootNetworkTag == null
-            || !Boolean.FALSE.equals(applicabilityByRootNetworkTag.get(rootNetworkTag));
     }
 
     private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity) {
@@ -678,11 +657,7 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public List<ModificationInfos> getActiveModifications(UUID groupUuid, String rootNetworkTag) {
         List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByContainerId(groupUuid, rootNetworkTag);
-        List<ModificationInfos> modificationsInfos = addApplicabilities(modificationsEntities.stream()
-                .map(this::toModificationsInfosOptimized).toList());
-        // the query leaves out what the tag deactivates in the group, including for nested modifications
-        modificationsInfos.forEach(infos -> removeModificationsDeactivatedBy(infos, rootNetworkTag));
-        return modificationsInfos;
+        return addApplicabilities(modificationsEntities.stream().map(this::toModificationsInfosOptimized).toList());
     }
 
     private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {

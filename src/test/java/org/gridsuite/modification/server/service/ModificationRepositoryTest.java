@@ -1692,20 +1692,18 @@ class ModificationRepositoryTest {
     }
 
     @Test
-    void testGetActiveModificationsLeavesOutWhatTheTagDeactivatesInsideAComposite() {
+    void testGetActiveModificationsCarriesTheApplicabilitiesOfACompositeContent() {
         insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
         List<UUID> contentUuids = activeCompositeContentUuids(TEST_GROUP_ID_2, null);
         UUID deactivatedUuid = contentUuids.get(0);
-        UUID keptUuid = contentUuids.get(1);
 
         networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
 
-        assertEquals(List.of(keptUuid), activeCompositeContentUuids(TEST_GROUP_ID_2, ROOT_NETWORK_TAG),
-                "A modification the tag deactivates is dropped from the composite holding it");
-        assertEquals(contentUuids, activeCompositeContentUuids(TEST_GROUP_ID_2, OTHER_ROOT_NETWORK_TAG),
-                "Only an explicit false entry for the tag drops a modification, and this tag has none");
-        assertEquals(contentUuids, activeCompositeContentUuids(TEST_GROUP_ID_2, null),
-                "Without a root network context the applicabilities are ignored");
+        CompositeModificationInfos composite = (CompositeModificationInfos) networkModificationRepository
+                .getActiveModifications(TEST_GROUP_ID_2, ROOT_NETWORK_TAG).getFirst();
+
+        assertEquals(contentUuids, composite.getModificationsInfos().stream().map(ModificationInfos::getUuid).toList());
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), composite.getModificationsInfos().getFirst().getApplicabilityByRootNetworkTag());
     }
 
     @Test
