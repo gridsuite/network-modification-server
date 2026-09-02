@@ -572,8 +572,7 @@ public class NetworkModificationRepository {
 
     /**
      * Reads the applicability of the given modifications and of everything they hold in one query, and fills them
-     * with it. What a save, a copy or a move returns goes through here too: those modifications are handed straight
-     * to the applicator, which drops the ones the root network tag deactivates, and reads that from the dto.
+     * with it.
      *
      *  @return the modifications it was given, filled with their applicabilities
      */
