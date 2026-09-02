@@ -148,7 +148,7 @@ public class NetworkModificationRepository {
     public List<ModificationInfos> saveModificationInfos(@NonNull UUID groupUuid, List<ModificationInfos> modifications) {
         List<ModificationEntity> entities = saveModificationInfosNonTransactional(groupUuid, modifications);
         // We can't return input modifications directly because it wouldn't have the IDs coming from the saved entities
-        return entities.stream().map(ModificationEntity::toModificationInfos).toList();
+        return addApplicabilities(entities.stream().map(ModificationEntity::toModificationInfos).toList());
     }
 
     private List<ModificationEntity> saveModificationInfosNonTransactional(@NonNull UUID groupUuid, List<ModificationInfos> modifications) {
@@ -240,8 +240,8 @@ public class NetworkModificationRepository {
         AbstractModificationContainerEntity sourceContainer = getContainer(sourceContainerInfos);
         AbstractModificationContainerEntity targetContainer = getContainer(targetContainerInfos);
         moveSubModificationsToGroup(sourceContainer, modificationUuids);
-        return moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid)
-            .stream().map(this::toModificationsInfosOptimized).toList();
+        return addApplicabilities(moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid)
+            .stream().map(this::toModificationsInfosOptimized).toList());
     }
 
     @Transactional
@@ -572,7 +572,8 @@ public class NetworkModificationRepository {
 
     /**
      * Reads the applicability of the given modifications and of everything they hold in one query, and fills them
-     * with it.
+     * with it. What a save, a copy or a move returns goes through here too: those modifications are handed straight
+     * to the applicator, which drops the ones the root network tag deactivates, and reads that from the dto.
      *
      *  @return the modifications it was given, filled with their applicabilities
      */
@@ -1239,7 +1240,7 @@ public class NetworkModificationRepository {
                 modificationsUuids);
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
         // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
-        return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
+        return addApplicabilities(newEntities.stream().map(ModificationEntity::toModificationInfos).toList());
     }
 
     @Transactional
@@ -1247,7 +1248,7 @@ public class NetworkModificationRepository {
         List<ModificationInfos> modificationInfos = getModificationsInfosInsideCompositesNonTransactional(compositesUuids);
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
         // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
-        return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
+        return addApplicabilities(newEntities.stream().map(ModificationEntity::toModificationInfos).toList());
     }
 
     @Transactional
@@ -1279,7 +1280,7 @@ public class NetworkModificationRepository {
         // references do not hold applicabilities
         addApplicabilities(newCompositeModifications.stream().filter(CompositeModificationInfos.class::isInstance).toList());
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
-        return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
+        return addApplicabilities(newEntities.stream().map(ModificationEntity::toModificationInfos).toList());
     }
 
     private AbstractModificationContainerEntity getContainer(ModificationContainerInfos containerInfos) {

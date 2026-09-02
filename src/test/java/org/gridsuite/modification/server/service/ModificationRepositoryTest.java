@@ -565,7 +565,7 @@ class ModificationRepositoryTest {
 
         List<ModificationInfos> modifications = List.of(groovyScriptEntity1, groovyScriptEntity2, groovyScriptEntity3, groovyScriptEntity4, groovyScriptEntity5, tabularModificationEntity);
         networkModificationRepository.saveModificationInfos(TEST_GROUP_ID, modifications);
-        assertRequestsCount(2, 8, 0, 0);
+        assertRequestsCount(3, 8, 0, 0);
 
         var modificationOriginal = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
 
@@ -1848,6 +1848,50 @@ class ModificationRepositoryTest {
 
         assertEquals(applicabilitiesInDepth(sourceUuid), applicabilitiesInDepth(insertedUuid),
                 "Inserting a composite carries the applicabilities of everything it holds, however deep");
+    }
+
+    /**
+     * What a save, a copy or a move returns is handed straight to the applicator, which drops the modifications the
+     * root network tag deactivates. It reads that from the dto, so a modification returned without its
+     * applicabilities would be applied on a root network it is deactivated on.
+     */
+    @Test
+    void testTheModificationsReturnedForApplicationCarryTheirApplicabilities() {
+        ModificationInfos created = EquipmentAttributeModificationInfos.builder()
+                .equipmentId("v3d1").equipmentAttributeName("open").equipmentAttributeValue(true)
+                .equipmentType(IdentifiableType.SWITCH).build();
+        created.setApplicabilityByRootNetworkTag(Map.of(ROOT_NETWORK_TAG, false));
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false),
+                networkModificationRepository.saveModificationInfos(TEST_GROUP_ID, List.of(created)).getFirst()
+                        .getApplicabilityByRootNetworkTag(),
+                "Saving a modification returns it with the applicabilities it was given");
+
+        UUID sourceUuid = compositeWithEveryApplicabilityCase();
+
+        List<ModificationInfos> inserted = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID,
+                List.of(new CompositeInfos(sourceUuid, "composite", false, "description")));
+        assertEquals(applicabilitiesInDepth(inserted.getFirst().getUuid()), applicabilitiesInDepth(inserted.getFirst()),
+                "Inserting a composite returns it with the applicabilities it was given");
+
+        List<ModificationInfos> duplicated = networkModificationRepository.saveDuplicateModifications(
+                TEST_GROUP_ID_2, null, List.of(inserted.getFirst().getUuid()));
+        assertEquals(applicabilitiesInDepth(duplicated.getFirst().getUuid()), applicabilitiesInDepth(duplicated.getFirst()),
+                "Duplicating a composite returns it with the applicabilities it was given");
+
+        List<Map<String, Boolean>> contentApplicabilities = List.of(
+            Map.of(), Map.of(ROOT_NETWORK_TAG, false), Map.of(ROOT_NETWORK_TAG, true), Map.of());
+
+        List<ModificationInfos> extracted = networkModificationRepository.extractModificationsFromCompositesAndSave(
+                TEST_GROUP_ID_3, List.of(inserted.getFirst().getUuid()));
+        assertEquals(contentApplicabilities, extracted.stream().map(ModificationInfos::getApplicabilityByRootNetworkTag).toList(),
+                "Splitting a composite returns its content with the applicabilities it was given");
+
+        List<ModificationInfos> moved = networkModificationRepository.moveModificationsFromGroup(
+                new ModificationContainerInfos(TEST_GROUP_ID_3, ModificationContainerType.GROUP),
+                new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
+                extracted.stream().map(ModificationInfos::getUuid).toList(), null);
+        assertEquals(contentApplicabilities, moved.stream().map(ModificationInfos::getApplicabilityByRootNetworkTag).toList(),
+                "Moving modifications returns them with the applicabilities they keep");
     }
 
     @Test
