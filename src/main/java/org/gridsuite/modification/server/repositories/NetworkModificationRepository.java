@@ -607,14 +607,12 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return what a modification holds: the content of a composite or of a tabular, and the shared modification a reference points to
+     * @return what a modification holds that carries an applicability of its own: the content of a composite, and the
+     * shared modification a reference points to. The content of a tabular is left out, applicabilities never reach it.
      */
     private static List<ModificationInfos> contentOf(ModificationInfos modificationInfos) {
         if (modificationInfos instanceof CompositeModificationInfos composite) {
             return composite.getModificationsInfos() == null ? List.of() : composite.getModificationsInfos();
-        }
-        if (modificationInfos instanceof TabularBaseInfos tabular) {
-            return tabular.getModifications() == null ? List.of() : tabular.getModifications();
         }
         if (modificationInfos instanceof ModificationReferenceInfos reference && reference.getReferenceInfos() != null) {
             return List.of(reference.getReferenceInfos());
