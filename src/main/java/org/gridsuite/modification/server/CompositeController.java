@@ -83,6 +83,17 @@ public class CompositeController {
         return ResponseEntity.ok().body(networkModificationService.createNetworkCompositeModification(contents, name));
     }
 
+    @PostMapping(value = "/{uuid}/share")
+    @Operation(summary = "Extract a composite modification from its group, replacing it by a reference to it")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been extracted")})
+    public ResponseEntity<Void> extractCompositeModificationToShare(
+            @PathVariable("uuid") UUID compositeModificationUuid,
+            @Parameter(description = "Group owning the composite modification", required = true) @RequestParam("groupUuid") UUID groupUuid,
+            @Parameter(description = "New name of the shared composite modification") @RequestParam(value = "name", required = false) String name) {
+        networkModificationService.extractCompositeModificationToShare(groupUuid, compositeModificationUuid, name);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the list of all the network modifications inside a list of composite modifications")
     @ApiResponse(responseCode = "200", description = "Map of modifications inside the composite modifications for each composite")
