@@ -1230,6 +1230,7 @@ class ModificationRepositoryTest {
     @Test
     void testVoltageInitModification() {
         var voltageInitModificationEntity = ModificationEntity.fromDTO(VoltageInitModificationInfos.builder()
+            .batteries(List.of())// TODO à remplir
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G1")

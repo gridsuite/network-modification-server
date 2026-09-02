@@ -1504,6 +1504,7 @@ class ModificationControllerTest {
         // Create the modification
         VoltageInitModificationInfos modificationsInfos1 = VoltageInitModificationInfos.builder()
             .stashed(false)
+            .batteries(List.of())// TODO à remplir
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G1")
