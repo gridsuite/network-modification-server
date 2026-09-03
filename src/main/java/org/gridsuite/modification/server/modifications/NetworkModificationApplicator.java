@@ -220,14 +220,30 @@ public class NetworkModificationApplicator {
         return groupApplicationStatus;
     }
 
+    record ModificationAndReport(AbstractModification modification, ReportNode subReportNode) { }
+
     private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode) {
-        ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
-        try {
-            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode));
-        } catch (Exception e) {
-            handleException(subReportNode, e);
+        ModificationAndReport modificationAndReport = toModification(modificationInfos, reportNode);
+        if (modificationAndReport != null) {
+            try {
+                networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationAndReport.modification, network, modificationAndReport.subReportNode));
+            } catch (Exception e) {
+                handleException(modificationAndReport.subReportNode, e);
+            }
+            return getApplicationStatus(modificationAndReport.subReportNode);
         }
         return getApplicationStatus(reportNode);
+    }
+
+    private ModificationAndReport toModification(ModificationInfos modificationInfos, ReportNode reportNode) {
+        try {
+            AbstractModification modification = modificationInfos.toModification();
+            ReportNode subReportNode = modification.createSubReportNode(reportNode);
+            return new ModificationAndReport(modification, subReportNode);
+        } catch (Exception e) {
+            handleException(reportNode, e);
+            return null;
+        }
     }
 
     private void apply(AbstractModification modification, Network network, ReportNode subReportNode) {
