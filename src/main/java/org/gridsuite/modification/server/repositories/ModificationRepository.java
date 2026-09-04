@@ -53,7 +53,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
                    ON a.modification.id = COALESCE(TREAT(m AS ModificationReferenceEntity).referenceId, m.id)
                   AND a.rootNetworkTag = :rootNetworkTag
             WHERE m.container.id = :containerId AND m.stashed = false AND m.activated = true
-              AND COALESCE(a.applicable, true) = true
+              AND COALESCE(a.applicable, true)
             ORDER BY m.modificationsOrder
             """)
     List<ModificationEntity> findAllActiveModificationsByContainerId(@Param("containerId") UUID containerId,

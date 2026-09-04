@@ -407,7 +407,6 @@ class ModificationControllerTest {
                 .equipmentAttributeName("open")
                 .equipmentAttributeValue(true)
                 .equipmentId("v1b1")
-                .stashed(false)
                 .build();
         String switchStatusModificationInfosJson = TestUtils.getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
@@ -441,7 +440,6 @@ class ModificationControllerTest {
                 .equipmentAttributeName("open")
                 .equipmentAttributeValue(true)
                 .equipmentId("v1b1")
-                .stashed(false)
                 .build();
         String switchStatusModificationInfosJson = TestUtils.getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
@@ -530,7 +528,7 @@ class ModificationControllerTest {
                 .queryParam("applicable", "false")
         ).andExpect(status().isOk());
 
-        // renaming the root network tag carries along what it deactivates
+        // renaming the root network tag carries along its applicabilities
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-tag")
                 .queryParam("groupUuids", TEST_GROUP_ID.toString())
                 .queryParam("oldTag", ROOT_NETWORK_TAG)
@@ -538,7 +536,7 @@ class ModificationControllerTest {
         ).andExpect(status().isOk());
         assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
 
-        // and deleting the root network takes its tag away
+        // and dropping the tag takes its applicabilities away
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE + "/root-network-tag")
                 .queryParam("groupUuids", TEST_GROUP_ID.toString())
                 .queryParam("rootNetworkTags", RENAMED_ROOT_NETWORK_TAG)

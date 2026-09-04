@@ -1062,10 +1062,10 @@ class BuildTest {
     void applyingOnARootNetworkLeavesTheModificationsAvailableToTheNext(final MockWebServer server) {
         Network deactivatingNetwork = NetworkCreation.create(TEST_NETWORK_ID, true);
         Network otherNetwork = NetworkCreation.create(TEST_NETWORK_ID, true);
-        List<ModificationInfos> inserted = insertCompositeCoveringEveryApplicabilityCase();
+        List<ModificationInfos> composites = insertCompositeCoveringEveryApplicabilityCase();
 
-        applyOnRootNetwork(inserted, TEST_ROOT_NETWORK_TAG, deactivatingNetwork);
-        applyOnRootNetwork(inserted, OTHER_ROOT_NETWORK_TAG, otherNetwork);
+        applyOnRootNetwork(composites, TEST_ROOT_NETWORK_TAG, deactivatingNetwork);
+        applyOnRootNetwork(composites, OTHER_ROOT_NETWORK_TAG, otherNetwork);
 
         assertFalse(deactivatingNetwork.getSwitch("v2d1").isOpen(), "The modification the tag deactivates is left out");
         assertTrue(otherNetwork.getSwitch("v2d1").isOpen(),
@@ -1085,12 +1085,12 @@ class BuildTest {
      */
     @Test
     void applyingACompositeLeavesOutTheContentTheRootNetworkDeactivates(final MockWebServer server) {
-        Network appliedNetwork = NetworkCreation.create(TEST_NETWORK_ID, true);
-        List<ModificationInfos> inserted = insertCompositeCoveringEveryApplicabilityCase();
+        Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
+        List<ModificationInfos> composites = insertCompositeCoveringEveryApplicabilityCase();
 
-        applyOnRootNetwork(inserted, TEST_ROOT_NETWORK_TAG, appliedNetwork);
+        applyOnRootNetwork(composites, TEST_ROOT_NETWORK_TAG, network);
 
-        assertOnlyTheContentTheTagAllowsIsApplied(appliedNetwork);
+        assertOnlyTheContentTheTagAllowsIsApplied(network);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
     }
 
