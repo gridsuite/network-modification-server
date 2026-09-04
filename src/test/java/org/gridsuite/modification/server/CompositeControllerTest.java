@@ -30,6 +30,7 @@ import org.gridsuite.modification.server.error.NetworkModificationServerExceptio
 import org.gridsuite.modification.server.repositories.CompositeModificationRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.service.NotificationService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
@@ -37,6 +38,7 @@ import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearc
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -44,6 +46,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -57,6 +60,9 @@ import static org.gridsuite.modification.server.utils.assertions.Assertions.asse
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -66,9 +72,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @AutoConfigureMockMvc
 @SpringBootTest
+@ContextConfigurationWithTestChannel
 @DisableElasticsearch
 class CompositeControllerTest {
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
+    private static final String TEST_USER_ID = "userId";
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_GROUP2_ID = UUID.randomUUID();
     private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/network-composite-modifications";
@@ -97,6 +105,9 @@ class CompositeControllerTest {
 
     @MockitoBean
     private NetworkStoreService networkStoreService;
+
+    @MockitoSpyBean
+    private NotificationService notificationService;
 
     private Network network;
 
@@ -745,6 +756,75 @@ class CompositeControllerTest {
         assertContiguousOrder(modificationRepository.findAllByContainerId(TEST_GROUP_ID, false));
         assertContiguousOrder(modificationRepository.findAllByContainer(firstCompositeUuid));
         assertContiguousOrder(modificationRepository.findAllByContainer(twodepthCompositeUuid));
+
+        // ---- 3. editing the leaf nested 2 levels deep must notify directory-server (via the generic
+        // elementUpdated notification) for each ancestor composite, closest first - directory-server
+        // decides on its own whether either composite is actually shared and relays to study-server
+        UUID deeplyNestedLeafUuid = originalRootModUuids.get(0);
+        EquipmentAttributeModificationInfos leafUpdate = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentId("v1b1")
+                .equipmentAttributeValue(true)
+                .build();
+        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + deeplyNestedLeafUuid)
+                        .content(mapper.writeValueAsString(leafUpdate))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        InOrder inOrder = inOrder(notificationService);
+        inOrder.verify(notificationService).emitElementUpdated(twodepthCompositeUuid, TEST_USER_ID);
+        inOrder.verify(notificationService).emitElementUpdated(firstCompositeUuid, TEST_USER_ID);
+    }
+
+    @Test
+    void testUpdateNetworkModificationInsideCompositeNotifiesDirectoryServer() throws Exception {
+        // Create a switch modification directly in the group, then assemble it into a composite
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID leafUuid = modificationList.getFirst().getUuid();
+
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
+                        .content(mapper.writeValueAsString(List.of(leafUuid)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Editing the leaf while it is nested in the composite must notify directory-server
+        EquipmentAttributeModificationInfos leafUpdate = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentId("v1b1")
+                .equipmentAttributeValue(true)
+                .build();
+        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + leafUuid)
+                        .content(mapper.writeValueAsString(leafUpdate))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        verify(notificationService).emitElementUpdated(compositeUuid, TEST_USER_ID);
+    }
+
+    @Test
+    void testUpdateRootLevelNetworkModificationDoesNotNotifyDirectoryServer() throws Exception {
+        // A modification sitting directly under a group is not nested in any composite : nothing to notify
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID leafUuid = modificationList.getFirst().getUuid();
+
+        EquipmentAttributeModificationInfos leafUpdate = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentId("v1b1")
+                .equipmentAttributeValue(true)
+                .build();
+        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + leafUuid)
+                        .content(mapper.writeValueAsString(leafUpdate))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        verifyNoInteractions(notificationService);
     }
 
     @Test

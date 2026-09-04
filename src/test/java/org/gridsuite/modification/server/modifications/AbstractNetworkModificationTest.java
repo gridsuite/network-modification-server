@@ -209,7 +209,8 @@ public abstract class AbstractNetworkModificationTest {
 
         String modificationToUpdateJson = mapper.writeValueAsString(modificationToUpdate);
 
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
                 .andExpect(status().isOk());
 
         // TODO Need a test for substations impacted

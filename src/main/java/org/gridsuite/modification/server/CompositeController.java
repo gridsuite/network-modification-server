@@ -144,6 +144,19 @@ public class CompositeController {
                 .body(networkModificationService.findModificationParentComposites(networkModificationUuids));
     }
 
+    /**
+     * @return modification uuid -> uuid of the top-level group ultimately containing it, walking up through as
+     * many nested composite modifications as needed; modifications not reachable from any group have no entry
+     */
+    @GetMapping(value = "/root-groups", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "For each given network modification, find the top-level group ultimately containing it")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The root groups were returned")})
+    public ResponseEntity<Map<UUID, UUID>> getRootGroups(
+            @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(networkModificationService.findModificationRootGroups(networkModificationUuids));
+    }
+
     @PutMapping(value = "/{uuid}/replace", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Replaces all the network modifications inside a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
