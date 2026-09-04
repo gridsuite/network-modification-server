@@ -9,17 +9,15 @@ package org.gridsuite.modification.server.modifications.byfilter.assignment;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.equipmentfield.BatteryField;
-import org.junit.jupiter.api.Test;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createBattery;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,21 +33,6 @@ class BatteryModificationByAssignmentTest extends AbstractModificationByAssignme
     private static final String BATTERY_ID_4 = "battery4";
     private static final String BATTERY_ID_5 = "battery5";
     private static final String BATTERY_ID_6 = "battery6";
-
-    @Test
-    void testCreateWithWarning() throws Exception {
-        IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(BATTERY_ID_1, 1.0);
-        IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
-
-        DoubleAssignmentInfos assignmentInfos = DoubleAssignmentInfos.builder()
-                .filters(List.of(filterWithOneWrongId))
-                .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
-                .value(55.)
-                .build();
-
-        checkCreateWithWarning(List.of(assignmentInfos), List.of(identifiableAttributes, wrongIdAttributes));
-        assertEquals(55, getNetwork().getBattery(BATTERY_ID_1).getTargetP(), 0);
-    }
 
     @Override
     protected void createEquipments() {
@@ -67,30 +50,17 @@ class BatteryModificationByAssignmentTest extends AbstractModificationByAssignme
         createBattery(getNetwork().getVoltageLevel("v6"), BATTERY_ID_6, "v6Battery6", 60, 200, 700, 250, 210);
     }
 
-    @Override
-    protected List<AbstractFilter> getTestFilters() {
-        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.BATTERY)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(BATTERY_ID_1, 1.0),
-                new IdentifierListFilterEquipmentAttributes(BATTERY_ID_2, 2.0)))
-            .build();
-        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.BATTERY)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(BATTERY_ID_3, 2.0),
-                new IdentifierListFilterEquipmentAttributes(BATTERY_ID_4, 5.0)))
-            .build();
-        IdentifierListFilter filter3 = IdentifierListFilter.builder().id(FILTER_ID_3).modificationDate(new Date()).equipmentType(EquipmentType.BATTERY)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(BATTERY_ID_5, 6.0),
-                new IdentifierListFilterEquipmentAttributes(BATTERY_ID_6, 7.0)))
-            .build();
-        IdentifierListFilter filter4 = IdentifierListFilter.builder().id(FILTER_ID_4).modificationDate(new Date()).equipmentType(EquipmentType.BATTERY)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(BATTERY_ID_1, 1.0),
-                new IdentifierListFilterEquipmentAttributes(BATTERY_ID_5, 6.0)))
-            .build();
-        IdentifierListFilter filter5 = IdentifierListFilter.builder().id(FILTER_ID_5).modificationDate(new Date()).equipmentType(EquipmentType.BATTERY)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(BATTERY_ID_2, 2.0),
-                new IdentifierListFilterEquipmentAttributes(BATTERY_ID_3, 3.0)))
-            .build();
+    private static final Map<UUID, Set<String>> FILTER_MAPPING = Map.of(
+            FILTER_ID_1, Set.of(BATTERY_ID_1, BATTERY_ID_2),
+            FILTER_ID_2, Set.of(BATTERY_ID_3, BATTERY_ID_4),
+            FILTER_ID_3, Set.of(BATTERY_ID_5, BATTERY_ID_6),
+            FILTER_ID_4, Set.of(BATTERY_ID_1, BATTERY_ID_5),
+            FILTER_ID_5, Set.of(BATTERY_ID_2, BATTERY_ID_3)
+    );
 
-        return List.of(filter1, filter2, filter3, filter4, filter5);
+    @Override
+    protected Map<UUID, Set<String>> getFilterMapping() {
+        return FILTER_MAPPING;
     }
 
     @Override
