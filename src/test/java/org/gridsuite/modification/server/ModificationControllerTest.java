@@ -22,6 +22,7 @@ import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.ws.commons.error.BaseExceptionHandler;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder;
 import org.gridsuite.modification.error.NetworkModificationException;
@@ -2297,5 +2298,36 @@ class ModificationControllerTest {
                 .andReturn();
 
         assertThat(mvcResult.getResponse().getContentAsString()).contains(expectedErrorMessage);
+    }
+
+    @Test
+    void testGetModificationReferenceMetadata() throws Exception {
+        // Create a referenced modification, not owned by the tested group
+        ModificationInfos referencedLoadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+        referencedLoadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(referencedLoadModificationInfo))).getFirst();
+
+        ModificationInfos referenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(referencedLoadModificationInfo.getUuid())
+                .referenceInfos(referencedLoadModificationInfo)
+                .stashed(false)
+                .build();
+        referenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(referenceInfo))).getFirst();
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<ModificationInfos> modifications = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, modifications.size());
+        assertInstanceOf(ModificationReferenceInfos.class, modifications.getFirst());
+        ModificationReferenceInfos referenceMetadata = (ModificationReferenceInfos) modifications.getFirst();
+        assertEquals(referenceInfo.getUuid(), referenceMetadata.getUuid());
+        assertEquals(ModificationType.MODIFICATION_REFERENCE, referenceMetadata.getType());
+        assertEquals(referencedLoadModificationInfo.getUuid(), referenceMetadata.getReferenceId());
+        // the label of a reference is the one of the modification it points to
+        assertEquals(ModificationType.LOAD_CREATION.name(), referenceMetadata.getMessageType());
+        assertTrue(referenceMetadata.getMessageValues().contains("idLoad"));
     }
 }
