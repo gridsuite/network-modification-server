@@ -6,23 +6,30 @@
  */
 package org.gridsuite.modification.server.service;
 
+import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationApplicationContext;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.service.NetworkModificationService.MODIFICATION_LIST_SIZE_MISMATCH_ERROR;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
@@ -38,6 +45,9 @@ class NetworkModificationServiceTest {
 
     @Autowired
     private ModificationRepository modificationRepository;
+
+    @MockitoBean
+    private NetworkStoreService networkStoreService;
 
     @Test
     void shouldMapUuidsFromTwoModificationsLists() {
@@ -208,6 +218,27 @@ class NetworkModificationServiceTest {
         assertEquals(1, parentComposites.size());
         assertEquals(compositeUuid, parentComposites.get(nestedChildUuid));
         assertFalse(parentComposites.containsKey(directGroupChildUuid));
+    }
+
+    @Test
+    void shouldNotApplyModificationsWhenNetworkDoesNotExist() {
+        UUID networkUuid = UUID.randomUUID();
+        UUID targetGroupUuid = UUID.randomUUID();
+        List<ModificationInfos> saved = networkModificationRepository.saveModifications(
+                UUID.randomUUID(), List.of(ModificationEntity.fromDTO(dummyModification(UUID.randomUUID()))));
+
+        when(networkStoreService.networkExists(any(UUID.class))).thenReturn(false);
+
+        NetworkModificationsResult result = networkModificationService.duplicateModifications(
+                targetGroupUuid,
+                null,
+                saved.stream().map(ModificationInfos::getUuid).toList(),
+                List.of(new ModificationApplicationContext(networkUuid, "variant", UUID.randomUUID(), UUID.randomUUID(), Set.of()))
+        ).join();
+
+        assertEquals(1, result.modificationUuids().size());
+        assertEquals(1, result.modificationResults().size());
+        assertTrue(result.modificationResults().get(0).isEmpty());
     }
 
     private static LoadModificationInfos dummyModification(UUID uuid) {

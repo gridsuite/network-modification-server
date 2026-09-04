@@ -95,6 +95,7 @@ class ModificationIndexationTest {
         when(networkInfos.getNetwork()).thenReturn(network);
         when(networkInfos.getNetworkUuuid()).thenReturn(networkUuid);
         when(networkStoreService.getNetwork(eq(networkInfos.getNetworkUuuid()), any(PreloadingStrategy.class))).thenReturn(network);
+        when(networkStoreService.networkExists(any(UUID.class))).thenReturn(true);
     }
 
     @AfterEach
