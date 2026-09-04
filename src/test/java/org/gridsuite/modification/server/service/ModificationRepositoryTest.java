@@ -1230,6 +1230,7 @@ class ModificationRepositoryTest {
     @Test
     void testVoltageInitModification() {
         var voltageInitModificationEntity = ModificationEntity.fromDTO(VoltageInitModificationInfos.builder()
+            .batteries(List.of())// TODO à remplir
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G1")
@@ -1314,7 +1315,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity.getId()));
-        assertRequestsCount(4, 0, 0, 8);
+        assertRequestsCount(4, 0, 0, 9);
 
         SQLStatementCountValidator.reset();
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());

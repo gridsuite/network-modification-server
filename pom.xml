@@ -57,7 +57,8 @@
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
-        <network-modification.version>1.7.0</network-modification.version>
+        <!-- TODO network-modification.version remove when included in gridsuite-dependencies -->
+        <network-modification.version>1.8.0-SNAPSHOT</network-modification.version>
     </properties>
 
     <build>
