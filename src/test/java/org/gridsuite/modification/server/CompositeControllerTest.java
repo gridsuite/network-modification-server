@@ -20,7 +20,6 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.dto.ActionType;
 import org.gridsuite.modification.server.dto.CompositeInfos;
-import org.gridsuite.modification.server.dto.CompositeModificationContentInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
@@ -279,7 +278,7 @@ class CompositeControllerTest {
 
     @Test
     void testCreateCompositeFromMultiSelectionStoresSelectedReferenceAsCopyKeepingItsDescription() throws Exception {
-        // 1. a shared composite S (its own modification-level description stays null - it lives on the directory)
+        // 1. a shared composite S
         List<ModificationInfos> switchMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "shared S")
                         .content(mapper.writeValueAsString(switchMods.stream().map(ModificationInfos::getUuid).toList()))
@@ -287,21 +286,29 @@ class CompositeControllerTest {
                 .andExpect(status().isOk()).andReturn();
         UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
+        // 2. share S into the study group as a reference carrying its own description
+        runRequestAsync(mockMvc, put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP_ID + "?action=INSERT")
+                .content(getJsonBodyModificationCompositeToBeInserted(
+                        List.of(new CompositeInfos(sharedCompositeUuid, "shared S", true, "ref description"))))
+                .contentType(MediaType.APPLICATION_JSON), status().isOk());
+        ModificationReferenceInfos referenceInGroup = (ModificationReferenceInfos) networkModificationRepository
+                .getModifications(TEST_GROUP_ID, false, true).stream()
+                .filter(ModificationReferenceInfos.class::isInstance).findFirst().orElseThrow();
+
         List<ModificationInfos> plainMods = createSomeSwitchModifications(TEST_GROUP2_ID, 1);
 
-        // 2. multi-selection [reference resolved to S with its description, plain modification] -> new wrapping composite.
-        //    explore-server resolves a selected reference to the composite it points to and passes the reference's
-        //    own description, so the composite is stored as a plain copy (not a pointing link) that keeps that description.
-        List<CompositeModificationContentInfos> contents = List.of(
-                new CompositeModificationContentInfos(sharedCompositeUuid, "ref description"),
-                new CompositeModificationContentInfos(plainMods.getFirst().getUuid(), null));
+        // 3. multi-selection [the reference node in the tree, a plain modification] -> new wrapping composite.
+        //    network-modification-server itself resolves the selected reference to the composite it points to and
+        //    reuses the reference's own description, so the composite is stored as a plain copy (not a pointing
+        //    link) that keeps that description.
+        List<UUID> selection = List.of(referenceInGroup.getUuid(), plainMods.getFirst().getUuid());
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "wrapping composite")
-                        .content(mapper.writeValueAsString(contents)).contentType(MediaType.APPLICATION_JSON))
+                        .content(mapper.writeValueAsString(selection)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID wrappingCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
-        // 3. the wrapping composite has no description of its own; the resolved element is a COMPOSITE copy (not a
-        //    reference) carrying the passed description
+        // 4. the wrapping composite has no description of its own; the resolved element is a COMPOSITE copy (not a
+        //    reference) carrying the reference's description
         CompositeModificationInfos wrappingComposite = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(wrappingCompositeUuid);
         assertNull(wrappingComposite.getDescription());
         ModificationInfos nestedComposite = wrappingComposite.getModificationsInfos().stream()
@@ -309,14 +316,15 @@ class CompositeControllerTest {
         assertFalse(nestedComposite instanceof ModificationReferenceInfos, "the selected reference must be stored as a copy, not a link");
         assertEquals("ref description", nestedComposite.getDescription());
 
-        // 4. re-import the wrapping composite into a study group -> user description on top, copy keeps "ref description"
-        runRequestAsync(mockMvc, put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP_ID + "?action=INSERT")
+        // 5. re-import the wrapping composite into another group -> user description on top, copy keeps "ref description"
+        UUID otherGroup = UUID.randomUUID();
+        runRequestAsync(mockMvc, put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + otherGroup + "?action=INSERT")
                 .content(getJsonBodyModificationCompositeToBeInserted(
                         List.of(new CompositeInfos(wrappingCompositeUuid, "wrapping composite", false, "user description"))))
                 .contentType(MediaType.APPLICATION_JSON), status().isOk());
         CompositeModificationInfos reimported = (CompositeModificationInfos) networkModificationRepository
-                .getModifications(TEST_GROUP_ID, false, true).stream()
-                .filter(m -> m.getType().equals(COMPOSITE_MODIFICATION)).reduce((a, b) -> b).orElseThrow();
+                .getModifications(otherGroup, false, true).stream()
+                .filter(m -> m.getType().equals(COMPOSITE_MODIFICATION)).findFirst().orElseThrow();
         assertEquals("user description", reimported.getDescription());
         ModificationInfos reimportedNestedComposite = reimported.getModificationsInfos().stream()
                 .filter(m -> m.getType().equals(COMPOSITE_MODIFICATION)).findFirst().orElseThrow();
@@ -355,13 +363,12 @@ class CompositeControllerTest {
         assertEquals("composite description", compositeInGroup.getDescription());
         assertEquals("ref description", referenceInGroup.getDescription());
 
-        // multi-selection -> create wrapper "Both". Frontend passes each element's description; the reference is
-        // resolved to S with its description.
-        List<CompositeModificationContentInfos> contents = List.of(
-                new CompositeModificationContentInfos(sUuid, "ref description"),
-                new CompositeModificationContentInfos(compositeInGroup.getUuid(), "composite description"));
+        // multi-selection -> create wrapper "Both": network-modification-server resolves the reference to S and
+        // reuses each selected element's own description (the reference's for S, the composite's own for C2) -
+        // no need for the caller to resolve anything or pass descriptions explicitly.
+        List<UUID> selection = List.of(referenceInGroup.getUuid(), compositeInGroup.getUuid());
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "Both")
-                        .content(mapper.writeValueAsString(contents)).contentType(MediaType.APPLICATION_JSON))
+                        .content(mapper.writeValueAsString(selection)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID bothUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
