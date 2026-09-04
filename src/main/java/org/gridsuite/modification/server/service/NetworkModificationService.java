@@ -297,6 +297,14 @@ public class NetworkModificationService {
                         row -> UUID.fromString((String) row[1])));
     }
 
+    @Transactional(readOnly = true)
+    public Map<UUID, UUID> findModificationRootGroups(@NonNull List<UUID> modificationUuids) {
+        return modificationRepository.findRootGroupIdsByModificationIds(modificationUuids).stream()
+                .collect(Collectors.toMap(
+                        row -> UUID.fromString((String) row[0]),
+                        row -> UUID.fromString((String) row[1])));
+    }
+
     @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         for (UUID modificationUuid : modificationUuids) {
