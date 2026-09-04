@@ -541,10 +541,16 @@ public class NetworkModificationRepository {
             if (referencedEntity == null) {
                 throw getModificationNotFoundException(modificationEntity.getId() + " (referenced modification)");
             }
-            ModificationInfos modificationInfos = modificationEntity.toModificationInfos();
-            modificationInfos.setMessageType(referencedEntity.getMessageType());
-            modificationInfos.setMessageValues(referencedEntity.getMessageValues());
-            return modificationInfos;
+            return ModificationReferenceInfos.builder()
+                .uuid(modificationEntity.getId())
+                .date(modificationEntity.getDate())
+                .stashed(modificationEntity.getStashed())
+                .activated(modificationEntity.getActivated())
+                .description(modificationEntity.getDescription())
+                .messageType(referencedEntity.getMessageType())
+                .messageValues(referencedEntity.getMessageValues())
+                .referenceId(referencedEntity.getId())
+                .build();
         }
     }
 
