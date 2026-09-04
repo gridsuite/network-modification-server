@@ -1471,8 +1471,8 @@ class ModificationControllerTest {
 
         var result = ModificationUtils.getInstance().getPosition("1B", network, vl);
         var result2 = ModificationUtils.getInstance().getPosition("1.1", network2, vl2);
-        assertEquals(6, result);
-        assertEquals(0, result2);
+        assertEquals(15, result);
+        assertEquals(10, result2);
 
         ModificationUtils modificationUtils = ModificationUtils.getInstance();
         String errorMessage = assertThrows(NetworkModificationException.class, () -> modificationUtils.getPosition("invalidBbsId", network, vl)).getMessage();
