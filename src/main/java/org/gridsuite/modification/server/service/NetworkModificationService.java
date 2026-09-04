@@ -25,6 +25,7 @@ import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.error.NetworkModificationException;
+import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -224,6 +225,16 @@ public class NetworkModificationService {
         return modificationInfos;
     }
 
+    @Transactional(readOnly = true)
+    public AbstractModification getStandaloneNetworkModification(UUID networkModificationUuid) {
+        return networkModificationRepository.getStandaloneNetworkModification(networkModificationUuid);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, AbstractModification> getStandaloneNetworkModifications(List<UUID> networkModificationUuids, boolean errorOnModificationNotFound) {
+        return networkModificationRepository.getStandaloneNetworkModifications(networkModificationUuids, errorOnModificationNotFound);
+    }
+
     public Integer getNetworkModificationsCount(UUID groupUuid, boolean stashed) {
         return networkModificationRepository.getModificationsCount(groupUuid, stashed);
     }
@@ -272,8 +283,16 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public Map<UUID, UUID> getReferences(@NonNull List<UUID> modificationUuids) {
+    public List<ReferenceData> getReferences(@NonNull List<UUID> modificationUuids) {
         return networkModificationRepository.getReferences(modificationUuids);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, UUID> findModificationParentComposites(@NonNull List<UUID> modificationUuids) {
+        return modificationRepository.findCompositeContainerIdsByModificationIds(modificationUuids).stream()
+                .collect(Collectors.toMap(
+                        row -> UUID.fromString((String) row[0]),
+                        row -> UUID.fromString((String) row[1])));
     }
 
     @Transactional
@@ -515,6 +534,11 @@ public class NetworkModificationService {
     @Transactional
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
         return networkModificationRepository.createNetworkCompositeModification(modificationUuids, name);
+    }
+
+    @Transactional
+    public void extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
+        networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {

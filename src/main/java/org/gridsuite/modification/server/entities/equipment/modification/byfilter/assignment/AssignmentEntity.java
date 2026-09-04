@@ -11,7 +11,6 @@ import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.dto.FilterInfos;
-import org.gridsuite.modification.dto.byfilter.DataType;
 import org.gridsuite.modification.dto.byfilter.assignment.*;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;

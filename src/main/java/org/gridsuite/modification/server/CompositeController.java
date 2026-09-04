@@ -82,6 +82,17 @@ public class CompositeController {
         return ResponseEntity.ok().body(networkModificationService.createNetworkCompositeModification(modificationUuids, name));
     }
 
+    @PostMapping(value = "/{uuid}/share")
+    @Operation(summary = "Extract a composite modification from its group, replacing it by a reference to it")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been extracted")})
+    public ResponseEntity<Void> extractCompositeModificationToShare(
+            @PathVariable("uuid") UUID compositeModificationUuid,
+            @Parameter(description = "Group owning the composite modification", required = true) @RequestParam("groupUuid") UUID groupUuid,
+            @Parameter(description = "New name of the shared composite modification") @RequestParam(value = "name", required = false) String name) {
+        networkModificationService.extractCompositeModificationToShare(groupUuid, compositeModificationUuid, name);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the list of all the network modifications inside a list of composite modifications")
     @ApiResponse(responseCode = "200", description = "Map of modifications inside the composite modifications for each composite")
@@ -117,6 +128,20 @@ public class CompositeController {
             @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name) {
         networkModificationService.updateCompositeModification(compositeModificationUuid, name);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * @return modification uuid -> uuid of the composite currently containing it; modifications sitting directly
+     * under a group (or not found) have no entry, letting the caller resolve the ambiguous case (unlike
+     * network-modification-server's /network-modifications/references, this works for any modification, not just references)
+     */
+    @GetMapping(value = "/parent-composites", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "For each given network modification, find the composite currently containing it")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The parent composites were returned")})
+    public ResponseEntity<Map<UUID, UUID>> getParentComposites(
+            @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(networkModificationService.findModificationParentComposites(networkModificationUuids));
     }
 
     @PutMapping(value = "/{uuid}/replace", consumes = MediaType.APPLICATION_JSON_VALUE)

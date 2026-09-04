@@ -12,6 +12,7 @@ import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
+import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.ModificationContainerInfos;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -1516,5 +1517,84 @@ class ModificationRepositoryTest {
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modificationInfos.size());
+    }
+
+    @Test
+    void testGetStandaloneNetworkModificationReturnsExpected() {
+        ModificationEntity modification = ModificationEntity.fromDTO(CreateCouplingDeviceInfos.builder()
+                .couplingDeviceInfos(CouplingDeviceInfos.builder()
+                        .busbarSectionId1("bbs1")
+                        .busbarSectionId2("bbs2")
+                        .build())
+                .build());
+        List<ModificationInfos> savedModificationInfos = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modification));
+
+        AbstractModification standaloneNetworkModification = networkModificationRepository.getStandaloneNetworkModification(savedModificationInfos.getFirst().getUuid());
+
+        assertThat(standaloneNetworkModification).isEqualTo(savedModificationInfos.getFirst().toModification());
+    }
+
+    @Test
+    void testGetNonExistentStandaloneNetworkModificationThrowsException() {
+        UUID nonExistingUuid = UUID.randomUUID();
+
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getStandaloneNetworkModification(nonExistingUuid));
+    }
+
+    @Test
+    void testGetStandaloneNetworkModificationsReturnsExpected() {
+        ModificationEntity modificationOne = ModificationEntity.fromDTO(CreateCouplingDeviceInfos.builder()
+                .couplingDeviceInfos(CouplingDeviceInfos.builder()
+                        .busbarSectionId1("bbs1")
+                        .busbarSectionId2("bbs2")
+                        .build())
+                .build());
+        ModificationEntity modificationTwo = ModificationEntity.fromDTO(StaticVarCompensatorCreationInfos.builder()
+                .equipmentId("idStaticVarCompensator1").equipmentName("nameStaticVarCompensator1")
+                .voltageLevelId("vlId1")
+                .busOrBusbarSectionId("busId1")
+                .minSusceptance(200.0)
+                .maxSusceptance(224.0)
+                .regulationMode(VOLTAGE)
+                .voltageSetpoint(200.0)
+                .voltageRegulationType(DISTANT)
+                .regulatingTerminalId("testTerminalId1")
+                .regulatingTerminalType("STATIC_VAR_COMPENSATOR").regulatingTerminalVlId("idVlTest1")
+                .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
+                .connectionPosition(1).build());
+        List<ModificationInfos> savedModificationInfos = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationOne, modificationTwo));
+        Map<UUID, AbstractModification> expectedModifications = savedModificationInfos.stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification));
+
+        Map<UUID, AbstractModification> standaloneNetworkModifications = networkModificationRepository.getStandaloneNetworkModifications(List.of(savedModificationInfos.getFirst().getUuid(),
+                savedModificationInfos.getLast().getUuid()), false);
+
+        assertThat(standaloneNetworkModifications).isEqualTo(expectedModifications);
+    }
+
+    @Test
+    void testGetStandaloneNetworkModificationsWithoutErrorOnMissingModificationReturnsExpected() {
+        ModificationEntity modificationOne = ModificationEntity.fromDTO(CreateCouplingDeviceInfos.builder()
+                .couplingDeviceInfos(CouplingDeviceInfos.builder()
+                        .busbarSectionId1("bbs1")
+                        .busbarSectionId2("bbs2")
+                        .build())
+                .build());
+
+        List<ModificationInfos> savedModificationInfos = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationOne));
+        Map<UUID, AbstractModification> expectedModifications = savedModificationInfos.stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification));
+
+        Map<UUID, AbstractModification> standaloneNetworkModifications = networkModificationRepository.getStandaloneNetworkModifications(List.of(savedModificationInfos.getFirst().getUuid(),
+                UUID.randomUUID()), false);
+
+        assertThat(standaloneNetworkModifications).isEqualTo(expectedModifications);
+    }
+
+    @Test
+    void testGetStandaloneNetworkModificationsWithErrorOnMissingModificationThrowsException() {
+        List<UUID> nonExistingUuids = List.of(UUID.randomUUID(), UUID.randomUUID());
+
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getStandaloneNetworkModifications(nonExistingUuids, true));
     }
 }
