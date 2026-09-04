@@ -17,7 +17,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.byfilter.AbstractByFilterTest;
-import org.gridsuite.modification.server.service.FilterService;
+import org.gridsuite.modification.server.service.FilterLoader;
 import org.gridsuite.modification.server.utils.FilterStub;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.StubbedFilterRequest;
@@ -65,8 +65,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractByFilterTest {
 
     @BeforeEach
     public void specificSetUp() {
-        FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
-        org.gridsuite.modification.server.service.FilterLoader.setFilterServerBaseUri(wireMockServer.baseUrl());
+        FilterLoader.setFilterServerBaseUri(wireMockServer.baseUrl());
         getNetwork().getVariantManager().setWorkingVariant("variant_1");
         createEquipments();
     }
