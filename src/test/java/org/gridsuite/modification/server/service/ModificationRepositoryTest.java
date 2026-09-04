@@ -10,9 +10,9 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
+import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.ModificationContainerInfos;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -22,6 +22,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.repositories.ModificationContainerRepository;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
@@ -37,12 +38,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
-import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
-import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
-import static org.gridsuite.modification.NetworkModificationException.Type.MOVE_MODIFICATION_ERROR;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.dto.VoltageRegulationType.DISTANT;
+import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -136,8 +135,8 @@ class ModificationRepositoryTest {
     @Test
     void test() {
         assertEquals(List.of(), this.networkModificationRepository.getModificationGroupsUuids());
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+                new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
 
         var nullModifEntity = ModificationEntity.fromDTO(
@@ -190,8 +189,8 @@ class ModificationRepositoryTest {
 
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertEquals(0, modificationRepository.findAll().size());
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -241,8 +240,8 @@ class ModificationRepositoryTest {
         assertRequestsCount(1, 0, 0, 0);
 
         // Non-existent modification uuid
-        assertThrows(NetworkModificationException.class, () -> getEquipmentAttributeModification(TEST_GROUP_ID),
-                new NetworkModificationException(MODIFICATION_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> getEquipmentAttributeModification(TEST_GROUP_ID),
+                new NetworkModificationServerException(MODIFICATION_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -264,8 +263,8 @@ class ModificationRepositoryTest {
         assertRequestsCount(5, 0, 0, 3);
 
         // Non-existent group modification uuid
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -308,8 +307,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(5, 0, 0, 3);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -389,8 +388,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(5, 0, 0, 4);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -439,8 +438,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(5, 0, 0, 3);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -531,8 +530,8 @@ class ModificationRepositoryTest {
         // https://github.com/jdbc-observations/datasource-proxy/issues/123
         assertRequestsCount(12, 0, 0);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -740,10 +739,10 @@ class ModificationRepositoryTest {
         ModificationContainerInfos target = new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP);
         List<UUID> modificationsToMoveUuid2 = List.of(groovyScriptEntity2.getId());
         UUID referenceNodeUuid = groovyScriptEntity2.getId();
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.moveModifications(
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.moveModifications(
                 source, target,
                 modificationsToMoveUuid2, referenceNodeUuid),
-                new NetworkModificationException(MOVE_MODIFICATION_ERROR).getMessage());
+                new NetworkModificationServerException(MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR).getMessage());
         assertRequestsCount(5, 0, 0, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -796,8 +795,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(4, 0, 0, 3);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -849,8 +848,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(5, 0, 0, 4);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -885,8 +884,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     private static VoltageLevelCreationInfos makeAVoltageLevelInfos() {
@@ -990,8 +989,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -1052,8 +1051,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -1102,8 +1101,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -1170,8 +1169,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -1212,8 +1211,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     private static <T> void testModificationEmbedded(IAttributeModificationEmbeddable<T> modification, T val) {
@@ -1476,8 +1475,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(5, 0, 0, 3);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -1518,5 +1517,84 @@ class ModificationRepositoryTest {
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modificationInfos.size());
+    }
+
+    @Test
+    void testGetStandaloneNetworkModificationReturnsExpected() {
+        ModificationEntity modification = ModificationEntity.fromDTO(CreateCouplingDeviceInfos.builder()
+                .couplingDeviceInfos(CouplingDeviceInfos.builder()
+                        .busbarSectionId1("bbs1")
+                        .busbarSectionId2("bbs2")
+                        .build())
+                .build());
+        List<ModificationInfos> savedModificationInfos = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modification));
+
+        AbstractModification standaloneNetworkModification = networkModificationRepository.getStandaloneNetworkModification(savedModificationInfos.getFirst().getUuid());
+
+        assertThat(standaloneNetworkModification).isEqualTo(savedModificationInfos.getFirst().toModification());
+    }
+
+    @Test
+    void testGetNonExistentStandaloneNetworkModificationThrowsException() {
+        UUID nonExistingUuid = UUID.randomUUID();
+
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getStandaloneNetworkModification(nonExistingUuid));
+    }
+
+    @Test
+    void testGetStandaloneNetworkModificationsReturnsExpected() {
+        ModificationEntity modificationOne = ModificationEntity.fromDTO(CreateCouplingDeviceInfos.builder()
+                .couplingDeviceInfos(CouplingDeviceInfos.builder()
+                        .busbarSectionId1("bbs1")
+                        .busbarSectionId2("bbs2")
+                        .build())
+                .build());
+        ModificationEntity modificationTwo = ModificationEntity.fromDTO(StaticVarCompensatorCreationInfos.builder()
+                .equipmentId("idStaticVarCompensator1").equipmentName("nameStaticVarCompensator1")
+                .voltageLevelId("vlId1")
+                .busOrBusbarSectionId("busId1")
+                .minSusceptance(200.0)
+                .maxSusceptance(224.0)
+                .regulationMode(VOLTAGE)
+                .voltageSetpoint(200.0)
+                .voltageRegulationType(DISTANT)
+                .regulatingTerminalId("testTerminalId1")
+                .regulatingTerminalType("STATIC_VAR_COMPENSATOR").regulatingTerminalVlId("idVlTest1")
+                .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
+                .connectionPosition(1).build());
+        List<ModificationInfos> savedModificationInfos = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationOne, modificationTwo));
+        Map<UUID, AbstractModification> expectedModifications = savedModificationInfos.stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification));
+
+        Map<UUID, AbstractModification> standaloneNetworkModifications = networkModificationRepository.getStandaloneNetworkModifications(List.of(savedModificationInfos.getFirst().getUuid(),
+                savedModificationInfos.getLast().getUuid()), false);
+
+        assertThat(standaloneNetworkModifications).isEqualTo(expectedModifications);
+    }
+
+    @Test
+    void testGetStandaloneNetworkModificationsWithoutErrorOnMissingModificationReturnsExpected() {
+        ModificationEntity modificationOne = ModificationEntity.fromDTO(CreateCouplingDeviceInfos.builder()
+                .couplingDeviceInfos(CouplingDeviceInfos.builder()
+                        .busbarSectionId1("bbs1")
+                        .busbarSectionId2("bbs2")
+                        .build())
+                .build());
+
+        List<ModificationInfos> savedModificationInfos = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationOne));
+        Map<UUID, AbstractModification> expectedModifications = savedModificationInfos.stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification));
+
+        Map<UUID, AbstractModification> standaloneNetworkModifications = networkModificationRepository.getStandaloneNetworkModifications(List.of(savedModificationInfos.getFirst().getUuid(),
+                UUID.randomUUID()), false);
+
+        assertThat(standaloneNetworkModifications).isEqualTo(expectedModifications);
+    }
+
+    @Test
+    void testGetStandaloneNetworkModificationsWithErrorOnMissingModificationThrowsException() {
+        List<UUID> nonExistingUuids = List.of(UUID.randomUUID(), UUID.randomUUID());
+
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getStandaloneNetworkModifications(nonExistingUuids, true));
     }
 }
