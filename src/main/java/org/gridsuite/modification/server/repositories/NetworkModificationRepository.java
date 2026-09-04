@@ -193,7 +193,6 @@ public class NetworkModificationRepository {
      * Clone each selected modification so it can be stored inside a composite, keeping the caller-specified
      * order and duplicates (the same uuid may appear twice, e.g. two references resolved to the same shared
      * composite): each occurrence gets its own fresh clone.
-     * <p>
      * A selected uuid pointing to a {@link ModificationReferenceEntity} (a "shared" modification) is resolved
      * to the composite it references, and the reference's own description - not the referenced composite's -
      * is carried onto the clone, since that description lives on the reference, not on the shared composite.
