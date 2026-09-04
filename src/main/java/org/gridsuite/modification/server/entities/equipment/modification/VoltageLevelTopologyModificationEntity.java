@@ -78,17 +78,12 @@ public class VoltageLevelTopologyModificationEntity extends EquipmentModificatio
 
     private VoltageLevelTopologyModificationInfos.VoltageLevelTopologyModificationInfosBuilder<?, ?> toVoltageLevelTopologyModificationInfosBuilder() {
         List<BooleanEquipmentAttributeModificationEntity> attributeModificationEntities = getEquipmentAttributeModification();
-        return VoltageLevelTopologyModificationInfos.builder()
-                .uuid(getId())
+        return toModificationInfosBuilder(VoltageLevelTopologyModificationInfos.builder()
                 .equipmentId(getEquipmentId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .equipmentAttributeModificationList(Optional.ofNullable(attributeModificationEntities)
                         .map(list -> list.stream()
                                 .map(EquipmentAttributeModificationEntity::toModificationInfos)
                                 .toList())
-                        .orElse(null));
+                        .orElse(null)));
     }
 }

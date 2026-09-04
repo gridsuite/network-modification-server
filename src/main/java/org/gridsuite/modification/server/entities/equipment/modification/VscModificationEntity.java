@@ -145,12 +145,7 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
     }
 
     private VscModificationInfos.VscModificationInfosBuilder<?, ?> toVscModificationInfosBuilder() {
-        return VscModificationInfos.builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
+        return toModificationInfosBuilder(VscModificationInfos.builder()
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .nominalV(IAttributeModificationEmbeddable.toAttributeModification(getNominalV()))
@@ -169,7 +164,7 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList()));
     }
 
     @Override

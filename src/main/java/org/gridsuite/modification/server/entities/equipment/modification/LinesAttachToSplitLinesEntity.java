@@ -81,13 +81,8 @@ public class LinesAttachToSplitLinesEntity extends ModificationEntity {
     }
 
     private LinesAttachToSplitLinesInfos.LinesAttachToSplitLinesInfosBuilder toLinesAttachToSplitLinesInfosBuilder() {
-        return LinesAttachToSplitLinesInfos
+        return toModificationInfosBuilder(LinesAttachToSplitLinesInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())
                 .attachedLineId(getAttachedLineId())
@@ -96,6 +91,6 @@ public class LinesAttachToSplitLinesEntity extends ModificationEntity {
                 .replacingLine1Id(getReplacingLine1Id())
                 .replacingLine1Name(getReplacingLine1Name())
                 .replacingLine2Id(getReplacingLine2Id())
-                .replacingLine2Name(getReplacingLine2Name());
+                .replacingLine2Name(getReplacingLine2Name()));
     }
 }

@@ -128,13 +128,8 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
     }
 
     private StaticVarCompensatorCreationInfos.StaticVarCompensatorCreationInfosBuilder<?, ?> toStaticVarCompensatorCreationInfosBuilder() {
-        return StaticVarCompensatorCreationInfos
+        return toModificationInfosBuilder(StaticVarCompensatorCreationInfos
             .builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             // Injection
@@ -169,6 +164,6 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList()));
     }
 }

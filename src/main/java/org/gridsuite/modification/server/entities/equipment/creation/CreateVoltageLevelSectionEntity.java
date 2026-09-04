@@ -64,13 +64,8 @@ public class CreateVoltageLevelSectionEntity extends ModificationEntity {
     }
 
     private CreateVoltageLevelSectionInfos.CreateVoltageLevelSectionInfosBuilder<?, ?> toCreateVoltageLevelSectionInfosBuilder() {
-        return CreateVoltageLevelSectionInfos
+        return toModificationInfosBuilder(CreateVoltageLevelSectionInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .voltageLevelId(getVoltageLevelId())
                 .busbarSectionId(getBusbarSectionId())
                 .busbarIndex(getBusbarIndex())
@@ -78,7 +73,7 @@ public class CreateVoltageLevelSectionEntity extends ModificationEntity {
                 .isSwitchOpen(isSwitchOpen())
                 .rightSwitchKind(getRightSwitchKind())
                 .leftSwitchKind(getLeftSwitchKind())
-                .isAfterBusbarSectionId(isAfterBusbarSectionId());
+                .isAfterBusbarSectionId(isAfterBusbarSectionId()));
     }
 
     @Override

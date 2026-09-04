@@ -54,17 +54,12 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
     }
 
     private DeleteVoltageLevelOnLineInfos.DeleteVoltageLevelOnLineInfosBuilder<?, ?> toDeleteVoltageLevelOnLineInfosBuilder() {
-        return DeleteVoltageLevelOnLineInfos
+        return toModificationInfosBuilder(DeleteVoltageLevelOnLineInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())
                 .replacingLine1Id(getReplacingLine1Id())
-                .replacingLine1Name(getReplacingLine1Name());
+                .replacingLine1Name(getReplacingLine1Name()));
     }
 
     private void assignAttributes(DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {

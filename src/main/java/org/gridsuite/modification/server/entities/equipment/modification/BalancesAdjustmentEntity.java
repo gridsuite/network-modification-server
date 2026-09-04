@@ -69,12 +69,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
 
     @Override
     public BalancesAdjustmentModificationInfos toModificationInfos() {
-        return BalancesAdjustmentModificationInfos.builder()
-                .date(getDate())
-                .uuid(getId())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
+        return toModificationInfosBuilder(BalancesAdjustmentModificationInfos.builder()
                 .areas(areas.stream().map(BalancesAdjustmentAreaEntity::getAreaInfos).toList())
                 .thresholdNetPosition(thresholdNetPosition)
                 .maxNumberIterations(maxNumberIterations)
@@ -83,7 +78,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
                 .withLoadFlow(withLoadFlow)
                 .loadFlowParametersId(loadFlowParametersId)
                 .withRatioTapChangers(withRatioTapChangers)
-                .subtractLoadFlowBalancing(subtractLoadFlowBalancing)
+                .subtractLoadFlowBalancing(subtractLoadFlowBalancing))
                 .build();
     }
 

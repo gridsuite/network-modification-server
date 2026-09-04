@@ -45,14 +45,9 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .map(ModificationEntity::toModificationInfos)
                 .map(CompositeModificationEntity::fillDisplayMessage)
                 .toList();
-        return CompositeModificationInfos.builder()
+        return toModificationInfosBuilder(CompositeModificationInfos.builder()
                 .name(getName())
-                .description(getDescription())
-                .date(getDate())
-                .activated(getActivated())
-                .uuid(getId())
-                .stashed(getStashed())
-                .modificationsInfos(modificationsInfos)
+                .modificationsInfos(modificationsInfos))
                 .build();
     }
 

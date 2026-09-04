@@ -49,19 +49,14 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
     }
 
     private SubstationModificationInfos.SubstationModificationInfosBuilder<?, ?> toSubstationModificationInfosBuilder() {
-        return SubstationModificationInfos
+        return toModificationInfosBuilder(SubstationModificationInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .country(AttributeModification.toAttributeModification(getCountry(), getCountryOp()))
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                     getProperties().stream()
                         .map(FreePropertyEntity::toInfos)
-                        .toList());
+                        .toList()));
     }
 }

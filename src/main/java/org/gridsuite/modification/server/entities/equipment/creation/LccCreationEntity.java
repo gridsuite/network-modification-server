@@ -91,12 +91,7 @@ public class LccCreationEntity extends EquipmentCreationEntity {
     private LccCreationInfos.LccCreationInfosBuilder<?, ?> toLccCreationInfosBuilder() {
         LccConverterStationCreationInfos converterStationCreationInfos1 = getConverterStation1() == null ? null : getConverterStation1().toLccConverterStationInfos();
         LccConverterStationCreationInfos converterStationCreationInfos2 = getConverterStation2() == null ? null : getConverterStation2().toLccConverterStationInfos();
-        return LccCreationInfos.builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
+        return toModificationInfosBuilder(LccCreationInfos.builder()
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .nominalV(getNominalV())
@@ -110,6 +105,6 @@ public class LccCreationEntity extends EquipmentCreationEntity {
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList()));
     }
 }

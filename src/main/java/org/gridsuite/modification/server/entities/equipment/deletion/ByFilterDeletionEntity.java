@@ -68,16 +68,12 @@ public class ByFilterDeletionEntity extends ModificationEntity {
 
     @Override
     public ByFilterDeletionInfos toModificationInfos() {
-        return ByFilterDeletionInfos
+        return toModificationInfosBuilder(ByFilterDeletionInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .filters(getFilters().stream()
                         .map(filter -> new FilterInfos(filter.getFilterId(), filter.getName()))
                         .collect(Collectors.toList()))
-                .equipmentType(getEquipmentType()).build();
+                .equipmentType(getEquipmentType()))
+                .build();
     }
 }

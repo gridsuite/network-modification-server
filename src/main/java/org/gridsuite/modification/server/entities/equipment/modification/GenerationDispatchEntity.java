@@ -160,18 +160,13 @@ public class GenerationDispatchEntity extends ModificationEntity {
 
     @Override
     public GenerationDispatchInfos toModificationInfos() {
-        return GenerationDispatchInfos.builder()
-                .date(getDate())
-                .uuid(getId())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
+        return toModificationInfosBuilder(GenerationDispatchInfos.builder()
                 .lossCoefficient(getLossCoefficient())
                 .defaultOutageRate(getDefaultOutageRate())
                 .generatorsWithoutOutage(toGeneratorsFilters(generatorsWithoutOutage))
                 .generatorsWithFixedSupply(toGeneratorsFilters(generatorsWithFixedSupply))
                 .generatorsFrequencyReserve(toGeneratorsFrequencyReserve(generatorsFrequencyReserve))
-                .substationsGeneratorsOrdering(toSubstationsGeneratorsOrderingInfos(generatorsOrdering))
+                .substationsGeneratorsOrdering(toSubstationsGeneratorsOrderingInfos(generatorsOrdering)))
                 .build();
     }
 }

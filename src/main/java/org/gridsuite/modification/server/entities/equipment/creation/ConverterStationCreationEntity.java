@@ -72,10 +72,7 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
     }
 
     public ConverterStationCreationInfos toConverterStationInfos() {
-        return ConverterStationCreationInfos.builder()
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
+        return toModificationInfosBuilder(ConverterStationCreationInfos.builder()
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 // Injection
@@ -93,7 +90,7 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
                 .voltageRegulationOn(getVoltageRegulationOn())
                 .voltageSetpoint(getVoltageSetpoint())
                 .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsCreationInfos(getReactiveCapabilityCurvePoints()))
-                .reactiveCapabilityCurve(getReactiveCapabilityCurve())
+                .reactiveCapabilityCurve(getReactiveCapabilityCurve()))
                 .build();
     }
 }

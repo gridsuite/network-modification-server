@@ -67,14 +67,9 @@ public class MoveVoltageLevelFeederBaysEntity extends ModificationEntity {
     }
 
     private MoveVoltageLevelFeederBaysInfos.MoveVoltageLevelFeederBaysInfosBuilder<?, ?> toMoveVoltageLevelFeederBaysInfosBuilder() {
-        return MoveVoltageLevelFeederBaysInfos.builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
+        return toModificationInfosBuilder(MoveVoltageLevelFeederBaysInfos.builder()
             .voltageLevelId(voltageLevelId)
             .feederBays(moveFeederBays.stream()
-                .map(MoveFeederBayEmbeddable::toConnectablePositionModificationInfos).toList());
+                .map(MoveFeederBayEmbeddable::toConnectablePositionModificationInfos).toList()));
     }
 }
