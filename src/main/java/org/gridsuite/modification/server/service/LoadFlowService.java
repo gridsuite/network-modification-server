@@ -11,7 +11,7 @@ import org.gridsuite.modification.ILoadFlowService;
 import org.gridsuite.modification.dto.LoadFlowParametersInfos;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.UUID;
@@ -27,17 +27,20 @@ public class LoadFlowService implements ILoadFlowService {
     private static final String PARAMETERS_URI = "/parameters/{parametersUuid}";
 
     private final String loadFlowServerBaseUri;
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
-    public LoadFlowService(@Value("${gridsuite.services.loadflow-server.base-uri:http://loadflow-server/}") String loadFlowServerBaseUri, RestTemplate restTemplate) {
+    public LoadFlowService(@Value("${gridsuite.services.loadflow-server.base-uri:http://loadflow-server/}") String loadFlowServerBaseUri, RestClient restClient) {
         this.loadFlowServerBaseUri = loadFlowServerBaseUri;
-        this.restTemplate = restTemplate;
+        this.restClient = restClient;
     }
 
     @Override
     public LoadFlowParametersInfos getLoadFlowParametersInfos(UUID uuid) {
         String path = UriComponentsBuilder.fromPath(DELIMITER + LOADFLOW_SERVER_API_VERSION + PARAMETERS_URI)
                 .buildAndExpand(uuid).toUriString();
-        return restTemplate.getForObject(loadFlowServerBaseUri + path, LoadFlowParametersInfos.class);
+        return restClient.get()
+                .uri(loadFlowServerBaseUri + path)
+                .retrieve()
+                .body(LoadFlowParametersInfos.class);
     }
 }
