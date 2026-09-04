@@ -54,7 +54,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.apache.commons.collections4.SetUtils.emptyIfNull;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
 
@@ -285,6 +284,31 @@ public class NetworkModificationService {
     }
 
     @Transactional
+    public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable) {
+        assertRootNetworkTagFits(rootNetworkTag);
+        networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
+    }
+
+    @Transactional
+    public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag) {
+        assertRootNetworkTagFits(newTag);
+        networkModificationRepository.renameRootNetworkTag(groupUuids, oldTag, newTag);
+    }
+
+    @Transactional
+    public void deleteRootNetworkTags(@NonNull List<UUID> groupUuids, @NonNull List<String> rootNetworkTags) {
+        networkModificationRepository.deleteRootNetworkTags(groupUuids, rootNetworkTags);
+    }
+
+    private static void assertRootNetworkTagFits(String rootNetworkTag) {
+        if (rootNetworkTag.length() > ModificationEntity.ROOT_NETWORK_TAG_MAX_LENGTH) {
+            throw new NetworkModificationServerException(ROOT_NETWORK_TAG_TOO_LONG,
+                    String.format(ROOT_NETWORK_TAG_TOO_LONG.messageTemplate(), ModificationEntity.ROOT_NETWORK_TAG_MAX_LENGTH),
+                    Map.of("maxLength", ModificationEntity.ROOT_NETWORK_TAG_MAX_LENGTH));
+        }
+    }
+
+    @Transactional
     public List<ReferenceData> getReferences(@NonNull List<UUID> modificationUuids) {
         return networkModificationRepository.getReferences(modificationUuids);
     }
@@ -353,10 +377,9 @@ public class NetworkModificationService {
                     modificationApplicationContext.networkUuid(),
                     modificationApplicationContext.variantId(),
                     new ModificationApplicationGroup(groupUuid,
-                        modifications.stream()
-                            .filter(m -> !modificationApplicationContext.excludedModifications().contains(m.getUuid()))
-                            .toList(),
-                        new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId())
+                        modifications,
+                        new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId()),
+                        modificationApplicationContext.rootNetworkTag()
                     )
                 ),
             applicationContexts
@@ -391,23 +414,21 @@ public class NetworkModificationService {
         List<ModificationApplicationGroup> modificationGroupsInfos = new ArrayList<>();
         Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReportsInfos().stream(),
             (groupUuid, reportInfos) -> {
-                Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExclude().get(groupUuid);
                 List<ModificationInfos> modifications = List.of();
                 try {
-                    modifications = networkModificationRepository.getActiveModifications(groupUuid, emptyIfNull(modificationsToExclude));
+                    modifications = networkModificationRepository.getActiveModifications(groupUuid, buildInfos.getRootNetworkTag());
                 } catch (NetworkModificationServerException e) {
                     if (e.getBusinessErrorCode() != MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
                         throw e;
                     }
                 }
-                modificationGroupsInfos.add(new ModificationApplicationGroup(groupUuid, modifications, reportInfos));
+                modificationGroupsInfos.add(new ModificationApplicationGroup(groupUuid, modifications, reportInfos, buildInfos.getRootNetworkTag()));
 
             }
         );
 
         PreloadingStrategy preloadingStrategy = modificationGroupsInfos.stream().map(ModificationApplicationGroup::modifications)
             .flatMap(Collection::stream)
-            .filter(m -> m.getActivated() && !m.getStashed())
             .map(ModificationInfos::getType)
             .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
             .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
@@ -509,7 +530,7 @@ public class NetworkModificationService {
     private CompletableFuture<Optional<NetworkModificationResult>> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
         if (!modificationGroupInfos.modifications().isEmpty()) {
             PreloadingStrategy preloadingStrategy = modificationGroupInfos.modifications().stream()
-                .filter(m -> m.getActivated() && !m.getStashed())
+                .filter(m -> m.isActivatedOn(modificationGroupInfos.rootNetworkTag()))
                 .map(ModificationInfos::getType)
                 .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
                 .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)

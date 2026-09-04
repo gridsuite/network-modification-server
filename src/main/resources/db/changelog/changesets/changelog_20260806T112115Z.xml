@@ -1,0 +1,17 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="florent (generated)" id="1786015296336-4">
+        <createTable tableName="modification_root_network_applicability">
+            <column name="modification_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="modification_root_network_applicabilityPK"/>
+            </column>
+            <column name="applicable" type="BOOLEAN"/>
+            <column name="root_network_tag" type="VARCHAR(4)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="modification_root_network_applicabilityPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="florent (generated)" id="1786015296336-8">
+        <addForeignKeyConstraint baseColumnNames="modification_id" baseTableName="modification_root_network_applicability" constraintName="modification_root_network_applicability_fk" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

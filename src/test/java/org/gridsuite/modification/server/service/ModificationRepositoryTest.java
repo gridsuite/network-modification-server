@@ -13,6 +13,8 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
+import org.gridsuite.modification.server.dto.CompositeInfos;
+import org.gridsuite.modification.server.dto.ModificationApplicability;
 import org.gridsuite.modification.server.dto.ModificationContainerInfos;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -36,6 +38,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
@@ -57,6 +61,9 @@ class ModificationRepositoryTest {
     private static final UUID TEST_GROUP_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID_2 = UUID.fromString("5809dabf-60f8-46e5-9e58-57b03d6b1818");
     private static final UUID TEST_GROUP_ID_3 = UUID.fromString("de67bab1-f47b-4199-80a7-10bd77285675");
+    private static final String ROOT_NETWORK_TAG = "PH1";
+    private static final String OTHER_ROOT_NETWORK_TAG = "PH2";
+    private static final String RENAMED_ROOT_NETWORK_TAG = "PH3";
 
     @Autowired
     private ModificationGroupRepository modificationGroupRepository;
@@ -233,11 +240,12 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(3, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         getEquipmentAttributeModification(modifEntity1.getId());
-        assertRequestsCount(1, 0, 0, 0);
+        // the modification itself, then the applicabilities of the tree it may hold
+        assertRequestsCount(2, 0, 0, 0);
 
         // Non-existent modification uuid
         assertThrows(NetworkModificationServerException.class, () -> getEquipmentAttributeModification(TEST_GROUP_ID),
@@ -301,7 +309,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(3, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -382,7 +390,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(3, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -432,7 +440,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(3, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -557,7 +565,7 @@ class ModificationRepositoryTest {
 
         List<ModificationInfos> modifications = List.of(groovyScriptEntity1, groovyScriptEntity2, groovyScriptEntity3, groovyScriptEntity4, groovyScriptEntity5, tabularModificationEntity);
         networkModificationRepository.saveModificationInfos(TEST_GROUP_ID, modifications);
-        assertRequestsCount(2, 8, 0, 0);
+        assertRequestsCount(3, 8, 0, 0);
 
         var modificationOriginal = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
 
@@ -1469,7 +1477,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(3, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -1517,6 +1525,502 @@ class ModificationRepositoryTest {
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modificationInfos.size());
+    }
+
+    private static ModificationEntity switchModification(String equipmentId) {
+        return ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder()
+                .equipmentId(equipmentId).equipmentAttributeName("open").equipmentAttributeValue(true)
+                .equipmentType(IdentifiableType.SWITCH).build());
+    }
+
+    private UUID insertComposite(UUID targetGroupUuid, boolean shared, String... equipmentIds) {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID,
+                Arrays.stream(equipmentIds).map(ModificationRepositoryTest::switchModification).toList());
+        UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(
+                modifications.stream().map(ModificationInfos::getUuid).toList(), "composite");
+        return networkModificationRepository.insertCompositeModifications(targetGroupUuid,
+                List.of(new CompositeInfos(compositeUuid, "composite", shared, "description"))).getFirst().getUuid();
+    }
+
+    /**
+     * @return the shared modification a reference points to, the one carrying the applicabilities
+     */
+    private UUID sharedModificationOf(UUID referenceUuid) {
+        return ((ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid)).getReferenceId();
+    }
+
+    /**
+     * Reads the applicability of the modifications of a group the way the front end does: through the metadata,
+     * where every modification carries its own.
+     */
+    private Map<UUID, Map<String, Boolean>> getApplicabilities(UUID groupUuid) {
+        return networkModificationRepository.getModifications(groupUuid, true, true).stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::getApplicabilityByRootNetworkTag));
+    }
+
+    private Map<UUID, Map<String, Boolean>> getApplicabilitiesByModificationsInside(UUID containerUuid) {
+        return networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(containerUuid)).stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::getApplicabilityByRootNetworkTag));
+    }
+
+    @Test
+    void testUpdateRootNetworkApplicability() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(switchModification("v1d1"), switchModification("v1d2")));
+        UUID deactivatedUuid = modifications.get(0).getUuid();
+        UUID untouchedUuid = modifications.get(1).getUuid();
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
+
+        Map<UUID, Map<String, Boolean>> applicabilities = getApplicabilities(TEST_GROUP_ID);
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicabilities.get(deactivatedUuid));
+        assertEquals(Map.of(), applicabilities.get(untouchedUuid),
+                "A modification never updated holds no applicability, which means applicable everywhere");
+
+        // reactivating writes an explicit entry rather than removing it
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, true);
+        assertEquals(Map.of(ROOT_NETWORK_TAG, true), getApplicabilities(TEST_GROUP_ID).get(deactivatedUuid));
+    }
+
+    @Test
+    void testCopyingAModificationKeepsItsApplicabilities() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(switchModification("v1d1")));
+        UUID modificationUuid = modifications.getFirst().getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), ROOT_NETWORK_TAG, false);
+
+        // copying a modification goes through its infos, which have to carry the applicabilities
+        SQLStatementCountValidator.reset();
+        UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(List.of(modificationUuid), "composite");
+        SQLStatementCountValidator.assertSelectCount(2);
+
+        CompositeModificationInfos composite = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(compositeUuid);
+        UUID copyUuid = composite.getModificationsInfos().getFirst().getUuid();
+        assertEquals(List.of(new ModificationApplicability(copyUuid, ROOT_NETWORK_TAG, false)),
+                modificationRepository.findApplicabilitiesByIdIn(List.of(copyUuid)),
+                "The copy carries the applicability of the modification it was made from");
+    }
+
+    @Test
+    void testDeletingAModificationDeletesItsApplicabilities() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(switchModification("v1d1")));
+        UUID modificationUuid = modifications.getFirst().getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), ROOT_NETWORK_TAG, false);
+
+        // the applicabilities are deleted by the database, so a modification carrying one is deleted like any other
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(modificationUuid));
+
+        assertEquals(List.of(), modificationRepository.findApplicabilitiesByIdIn(List.of(modificationUuid)),
+                "The applicabilities of a deleted modification must not outlive it");
+    }
+
+    @Test
+    void testUpdateRootNetworkApplicabilityKeepsTagsIndependent() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(switchModification("v1d1")));
+        UUID modificationUuid = modifications.getFirst().getUuid();
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), OTHER_ROOT_NETWORK_TAG, true);
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, OTHER_ROOT_NETWORK_TAG, true),
+                getApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+    }
+
+    @Test
+    void testUpdateRootNetworkApplicabilityPropagatesToCompositeSubModifications() {
+        UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), ROOT_NETWORK_TAG, false);
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(compositeUuid));
+        Map<UUID, Map<String, Boolean>> applicabilitiesByModifications = getApplicabilitiesByModificationsInside(compositeUuid);
+        assertEquals(2, applicabilitiesByModifications.size());
+        applicabilitiesByModifications.values().forEach(applicability ->
+                assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicability,
+                        "Updating a composite must reach its sub modifications"));
+    }
+
+    @Test
+    void testUpdateRootNetworkApplicabilityOnSharedModification() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(referenceUuid), ROOT_NETWORK_TAG, false);
+
+        assertEquals(List.of(Map.of(ROOT_NETWORK_TAG, false)), List.copyOf(getApplicabilitiesByModificationsInside(sharedUuid).values()),
+                "A reference has no applicability of its own: the update went to the shared modification it points to");
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
+                "The reference is reported with the applicability of the shared modification");
+    }
+
+    @Test
+    void testGetActiveModificationsLeavesOutWhatTheTagDeactivates() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(switchModification("v1d1"), switchModification("v1d2")));
+        UUID deactivatedUuid = modifications.get(0).getUuid();
+        UUID keptUuid = modifications.get(1).getUuid();
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
+
+        assertEquals(List.of(keptUuid), activeModificationUuids(TEST_GROUP_ID, ROOT_NETWORK_TAG),
+                "A modification the tag deactivates is excluded from active modifications");
+        assertEquals(List.of(deactivatedUuid, keptUuid), activeModificationUuids(TEST_GROUP_ID, OTHER_ROOT_NETWORK_TAG),
+                "Only an explicit false entry for the tag leaves a modification out, and this tag has none");
+        assertEquals(List.of(deactivatedUuid, keptUuid), activeModificationUuids(TEST_GROUP_ID, null),
+                "Without a root network context the applicabilities are ignored");
+    }
+
+    @Test
+    void testGetActiveModificationsFiltersAReferenceOnItsSharedModification() {
+        // inserting a composite as shared puts a reference to it in the group, not a copy of it
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), ROOT_NETWORK_TAG, false);
+
+        assertEquals(List.of(), activeModificationUuids(TEST_GROUP_ID_2, ROOT_NETWORK_TAG),
+                "Deactivating the shared modification also deactivate the reference, which holds no applicability of its own");
+        assertEquals(List.of(referenceUuid), activeModificationUuids(TEST_GROUP_ID_2, OTHER_ROOT_NETWORK_TAG),
+                "Only an explicit false entry on the shared modification leaves the reference out, and this tag has none");
+    }
+
+    @Test
+    void testGetActiveModificationsLeavesOutTheChildrenOfADeactivatedComposite() {
+        UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), ROOT_NETWORK_TAG, false);
+        UUID childUuid = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeUuid)).getFirst().getUuid();
+
+        // we activate a child while the composite remains deactivated
+        networkModificationRepository.updateRootNetworkApplicability(List.of(childUuid), ROOT_NETWORK_TAG, true);
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, true), getApplicabilitiesByModificationsInside(compositeUuid).get(childUuid),
+                "Taken on its own the child is applicable on the tag");
+        assertEquals(List.of(), activeModificationUuids(TEST_GROUP_ID_2, ROOT_NETWORK_TAG),
+                "A deactivated composite automatically deactivate its children whatever their own applicability is");
+    }
+
+    @Test
+    void testGetActiveModificationsCarriesTheApplicabilitiesOfACompositeContent() {
+        insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        List<UUID> contentUuids = activeCompositeContentUuids(TEST_GROUP_ID_2, null);
+        UUID deactivatedUuid = contentUuids.get(0);
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
+
+        CompositeModificationInfos composite = (CompositeModificationInfos) networkModificationRepository
+                .getActiveModifications(TEST_GROUP_ID_2, ROOT_NETWORK_TAG).getFirst();
+
+        assertEquals(contentUuids, composite.getModificationsInfos().stream().map(ModificationInfos::getUuid).toList());
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), composite.getModificationsInfos().getFirst().getApplicabilityByRootNetworkTag());
+    }
+
+    @Test
+    void testUpdatingTheApplicabilityDoesNotLoadTheModificationsOneByOne() {
+        List<UUID> oneModification = saveSwitchModifications("single", 1);
+        List<UUID> manyModifications = saveSwitchModifications("many", 20);
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.updateRootNetworkApplicability(oneModification, ROOT_NETWORK_TAG, false);
+        assertRequestsCount(1, 1, 0, 0);
+
+        // twenty modifications cost what one costs: they are loaded in one query, not one by one
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.updateRootNetworkApplicability(manyModifications, ROOT_NETWORK_TAG, false);
+        assertRequestsCount(1, 1, 0, 0);
+    }
+
+    private List<UUID> saveSwitchModifications(String equipmentIdPrefix, int count) {
+        return networkModificationRepository.saveModifications(TEST_GROUP_ID_2,
+                        IntStream.range(0, count).mapToObj(i -> switchModification(equipmentIdPrefix + i)).toList())
+                .stream().map(ModificationInfos::getUuid).toList();
+    }
+
+    @Test
+    void testRenameRootNetworkTagMovesTheApplicabilityOfTheGroupModifications() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID_3,
+                List.of(switchModification("v1d1"), switchModification("v1d2")));
+        UUID deactivatedUuid = modifications.get(0).getUuid();
+        UUID untouchedUuid = modifications.get(1).getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
+
+        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_3), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+
+        Map<UUID, Map<String, Boolean>> applicabilities = getApplicabilities(TEST_GROUP_ID_3);
+        assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), applicabilities.get(deactivatedUuid),
+                "Renaming the tag of a root network must keep its applicability");
+        assertEquals(Map.of(), applicabilities.get(untouchedUuid));
+        assertEquals(List.of(untouchedUuid), activeModificationUuids(TEST_GROUP_ID_3, RENAMED_ROOT_NETWORK_TAG));
+    }
+
+    @Test
+    void testRenameRootNetworkTagOnlyAddsToASharedModification() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(referenceUuid), ROOT_NETWORK_TAG, false);
+
+        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+
+        Map<String, Boolean> bothTags = Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, false);
+        assertEquals(bothTags, getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
+                "We don't replace the old tag in shared modifications, the new one is just added");
+        assertEquals(List.of(bothTags), List.copyOf(getApplicabilitiesByModificationsInside(sharedUuid).values()),
+                "The content of the shared composite carries the applicability too, so the rename must reach it");
+        assertEquals(List.of(), activeModificationUuids(TEST_GROUP_ID_2, RENAMED_ROOT_NETWORK_TAG));
+    }
+
+    @Test
+    void testRenameRootNetworkTagTakesOverAnEntryLeftUnderTheNewName() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d1")));
+        UUID modificationUuid = modifications.getFirst().getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), ROOT_NETWORK_TAG, false);
+        // a leftover entry, the new tag naming no root network of the study yet
+        networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), OTHER_ROOT_NETWORK_TAG, true);
+
+        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_3), ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG);
+
+        assertEquals(Map.of(OTHER_ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_3).get(modificationUuid),
+                "On a modification the study owns the tag is really renamed: if an entry already exists under the new name, it is replaced");
+    }
+
+    /**
+     * <pre>
+     * composite                  (no entry)
+     * ├── inner composite        (no entry)
+     * │   ├── v1d1               false
+     * │   ├── v1d2               true
+     * │   └── v1d3               (no entry)
+     * ├── v2d1                   false
+     * ├── v2d2                   true
+     * └── v2d3                   (no entry)
+     * </pre>
+     * Both levels hold the three states a tag can be in: set to false, set to true, and no entry at all.
+     *
+     * @return the composite holding that tree
+     */
+    private UUID compositeWithEveryApplicabilityCase() {
+        UUID innerUuid = insertComposite(TEST_GROUP_ID_3, false, "v1d1", "v1d2", "v1d3");
+        List<UUID> siblingUuids = networkModificationRepository.saveModifications(TEST_GROUP_ID_3,
+                List.of(switchModification("v2d1"), switchModification("v2d2"), switchModification("v2d3")))
+                .stream().map(ModificationInfos::getUuid).toList();
+        UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(
+                Stream.concat(Stream.of(innerUuid), siblingUuids.stream()).toList(), "source");
+
+        List<UUID> contentUuids = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeUuid))
+                .stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> innerUuids = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(contentUuids.get(0)))
+                .stream().map(ModificationInfos::getUuid).toList();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(innerUuids.get(0)), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(innerUuids.get(1)), ROOT_NETWORK_TAG, true);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(1)), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(2)), ROOT_NETWORK_TAG, true);
+
+        assertEquals(List.of(Map.of(), Map.of(ROOT_NETWORK_TAG, false), Map.of(ROOT_NETWORK_TAG, true), Map.of(),
+                        Map.of(ROOT_NETWORK_TAG, false), Map.of(ROOT_NETWORK_TAG, true), Map.of()),
+                applicabilitiesInDepth(compositeUuid), "the tree the copy has to carry over");
+        return compositeUuid;
+    }
+
+    @Test
+    void testExportingACompositeKeepsTheApplicabilitiesOfItsWholeTree() {
+        UUID sourceUuid = compositeWithEveryApplicabilityCase();
+
+        UUID exportedUuid = networkModificationRepository.createNetworkCompositeModification(List.of(sourceUuid), "exported");
+
+        assertEquals(applicabilitiesInDepth(sourceUuid), applicabilitiesInDepth(exportedUuid),
+                "Exporting a composite carries the applicabilities of everything it holds, however deep");
+    }
+
+    @Test
+    void testInsertingACompositeKeepsTheApplicabilitiesOfItsWholeTree() {
+        UUID sourceUuid = compositeWithEveryApplicabilityCase();
+
+        UUID insertedUuid = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID,
+                List.of(new CompositeInfos(sourceUuid, "composite", false, "description"))).getFirst().getUuid();
+
+        assertEquals(applicabilitiesInDepth(sourceUuid), applicabilitiesInDepth(insertedUuid),
+                "Inserting a composite carries the applicabilities of everything it holds, however deep");
+    }
+
+    /**
+     * What a save, a copy or a move returns is handed straight to the applicator, which drops the modifications the
+     * root network tag deactivates. It reads that from the dto, so a modification returned without its
+     * applicabilities would be applied on a root network it is deactivated on.
+     */
+    @Test
+    void testTheModificationsReturnedForApplicationCarryTheirApplicabilities() {
+        ModificationInfos created = EquipmentAttributeModificationInfos.builder()
+                .equipmentId("v3d1").equipmentAttributeName("open").equipmentAttributeValue(true)
+                .equipmentType(IdentifiableType.SWITCH).build();
+        created.setApplicabilityByRootNetworkTag(Map.of(ROOT_NETWORK_TAG, false));
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false),
+                networkModificationRepository.saveModificationInfos(TEST_GROUP_ID, List.of(created)).getFirst()
+                        .getApplicabilityByRootNetworkTag(),
+                "Saving a modification returns it with the applicabilities it was given");
+
+        UUID sourceUuid = compositeWithEveryApplicabilityCase();
+
+        List<ModificationInfos> inserted = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID,
+                List.of(new CompositeInfos(sourceUuid, "composite", false, "description")));
+        assertEquals(applicabilitiesInDepth(inserted.getFirst().getUuid()), applicabilitiesInDepth(inserted.getFirst()),
+                "Inserting a composite returns it with the applicabilities it was given");
+
+        List<ModificationInfos> duplicated = networkModificationRepository.saveDuplicateModifications(
+                TEST_GROUP_ID_2, null, List.of(inserted.getFirst().getUuid()));
+        assertEquals(applicabilitiesInDepth(duplicated.getFirst().getUuid()), applicabilitiesInDepth(duplicated.getFirst()),
+                "Duplicating a composite returns it with the applicabilities it was given");
+
+        List<Map<String, Boolean>> contentApplicabilities = List.of(
+            Map.of(), Map.of(ROOT_NETWORK_TAG, false), Map.of(ROOT_NETWORK_TAG, true), Map.of());
+
+        List<ModificationInfos> extracted = networkModificationRepository.extractModificationsFromCompositesAndSave(
+                TEST_GROUP_ID_3, List.of(inserted.getFirst().getUuid()));
+        assertEquals(contentApplicabilities, extracted.stream().map(ModificationInfos::getApplicabilityByRootNetworkTag).toList(),
+                "Splitting a composite returns its content with the applicabilities it was given");
+
+        List<ModificationInfos> moved = networkModificationRepository.moveModificationsFromGroup(
+                new ModificationContainerInfos(TEST_GROUP_ID_3, ModificationContainerType.GROUP),
+                new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
+                extracted.stream().map(ModificationInfos::getUuid).toList(), null);
+        assertEquals(contentApplicabilities, moved.stream().map(ModificationInfos::getApplicabilityByRootNetworkTag).toList(),
+                "Moving modifications returns them with the applicabilities they keep");
+    }
+
+    @Test
+    void testInsertingACompositeAsSharedCarriesTheApplicabilityOfTheModificationItPointsTo() {
+        UUID sharedUuid = insertComposite(TEST_GROUP_ID_3, false, "v1d1", "v1d2");
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), ROOT_NETWORK_TAG, false);
+
+        List<ModificationInfos> inserted = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID,
+                List.of(new CompositeInfos(sharedUuid, "composite", true, "description")));
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), inserted.getFirst().getApplicabilityByRootNetworkTag(),
+                "A reference holds no applicability of its own, so it is returned with the one of the modification it points to");
+    }
+
+    @Test
+    void testReadingASharedModificationCarriesTheApplicabilitiesOfItsContent() {
+        UUID sharedUuid = compositeWithEveryApplicabilityCase();
+
+        UUID referenceUuid = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID_2,
+                List.of(new CompositeInfos(sharedUuid, "composite", true, "description"))).getFirst().getUuid();
+
+        ModificationReferenceInfos reference = (ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid);
+
+        assertEquals(applicabilitiesInDepth(sharedUuid), applicabilitiesInDepth(reference.getReferenceInfos()),
+                "Reading a shared modification carries the applicabilities of its whole tree, an empty one rather than a null where the tag says nothing");
+    }
+
+    /**
+     * @return the applicabilities of everything a modification holds, depth first, the order the content is read in
+     */
+    private List<Map<String, Boolean>> applicabilitiesInDepth(UUID containerUuid) {
+        return networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(containerUuid)).stream()
+                .flatMap(content -> Stream.concat(Stream.of(content.getApplicabilityByRootNetworkTag()),
+                        applicabilitiesInDepth(content.getUuid()).stream()))
+                .toList();
+    }
+
+    /**
+     * @return the same, but from the DTO instead of the database (references do not hold applicabilities)
+     */
+    private static List<Map<String, Boolean>> applicabilitiesInDepth(ModificationInfos modificationInfos) {
+        if (!(modificationInfos instanceof CompositeModificationInfos composite)) {
+            return List.of();
+        }
+        return composite.getModificationsInfos().stream()
+                .flatMap(content -> Stream.concat(Stream.of(content.getApplicabilityByRootNetworkTag()),
+                        applicabilitiesInDepth(content).stream()))
+                .toList();
+    }
+
+    @Test
+    void testRenameRootNetworkTagReachesNestedComposites() {
+        // an inner composite, copied into a group, then wrapped with a sibling into an outer one
+        UUID innerCompositeUuid = insertComposite(TEST_GROUP_ID_3, false, "v1d1");
+        UUID siblingUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d2"))).getFirst().getUuid();
+        UUID outerSourceUuid = networkModificationRepository.createNetworkCompositeModification(List.of(innerCompositeUuid, siblingUuid), "outer");
+        UUID outerCompositeUuid = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID_2,
+                List.of(new CompositeInfos(outerSourceUuid, "outer", false, "description"))).getFirst().getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(outerCompositeUuid), ROOT_NETWORK_TAG, false);
+
+        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+
+        assertEquals(4, assertApplicabilityRenamedInDepth(outerCompositeUuid, getApplicabilities(TEST_GROUP_ID_2).get(outerCompositeUuid)),
+                "the outer composite, the inner one and the sibling it holds, and the modification inside the inner one");
+    }
+
+    /**
+     * Asserts that the composite and everything it holds, however deep, carry the renamed tag and only it.
+     *
+     * @return how many modifications were visited, the caller checking the descent did reach the whole tree
+     */
+    private int assertApplicabilityRenamedInDepth(UUID modificationUuid, Map<String, Boolean> applicabilityByRootNetworkTag) {
+        assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), applicabilityByRootNetworkTag);
+        return 1 + getApplicabilitiesByModificationsInside(modificationUuid).entrySet().stream()
+                .mapToInt(content -> assertApplicabilityRenamedInDepth(content.getKey(), content.getValue()))
+                .sum();
+    }
+
+    @Test
+    void testRenameRootNetworkTagReachesASharedModificationNestedInAnother() {
+        // a shared composite, referenced from a group, then wrapped with a sibling into a composite shared in turn
+        UUID innerReferenceUuid = insertComposite(TEST_GROUP_ID_3, true, "v1d1");
+        UUID siblingUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d2"))).getFirst().getUuid();
+        UUID outerSharedUuid = networkModificationRepository.createNetworkCompositeModification(List.of(innerReferenceUuid, siblingUuid), "outer");
+        UUID outerReferenceUuid = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID_2,
+                List.of(new CompositeInfos(outerSharedUuid, "outer", true, "description"))).getFirst().getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(outerReferenceUuid), ROOT_NETWORK_TAG, false);
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_3).get(innerReferenceUuid),
+                "The update reached the innermost shared modification, so the rename has to follow it there");
+
+        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, false),
+                getApplicabilities(TEST_GROUP_ID_3).get(innerReferenceUuid),
+                "A shared modification referenced from inside another one carries the applicability too");
+    }
+
+    @Test
+    void testRenameRootNetworkTagReusesAnEntryTheSharedModificationAlreadyHas() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), ROOT_NETWORK_TAG, false);
+        // another group already named a root network of its own with the tag this one is being renamed to
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), RENAMED_ROOT_NETWORK_TAG, true);
+
+        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, true),
+                getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
+                "A shared modification is never overwritten: the entry the other group set is reused as it is");
+    }
+
+    @Test
+    void testDeleteRootNetworkTagsLeavesTheSharedModificationsAlone() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        networkModificationRepository.updateRootNetworkApplicability(List.of(referenceUuid), ROOT_NETWORK_TAG, false);
+        UUID ownedUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d2"))).getFirst().getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(ownedUuid), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(ownedUuid), OTHER_ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(ownedUuid), RENAMED_ROOT_NETWORK_TAG, false);
+
+        // deleting several root networks at once drops all their tags in one go
+        networkModificationRepository.deleteRootNetworkTags(List.of(TEST_GROUP_ID_2, TEST_GROUP_ID_3), List.of(ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG));
+
+        assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_3).get(ownedUuid),
+                "The deleted root networks take their own applicabilities away, and only those");
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
+                "Another group may name a root network with that very tag, so a shared modification is never cleaned");
+    }
+
+    private List<UUID> activeCompositeContentUuids(UUID groupUuid, String rootNetworkTag) {
+        CompositeModificationInfos composite = (CompositeModificationInfos) networkModificationRepository
+                .getActiveModifications(groupUuid, rootNetworkTag).getFirst();
+        return composite.getModificationsInfos().stream().map(ModificationInfos::getUuid).toList();
+    }
+
+    private List<UUID> activeModificationUuids(UUID groupUuid, String rootNetworkTag) {
+        return networkModificationRepository.getActiveModifications(groupUuid, rootNetworkTag).stream()
+                .map(ModificationInfos::getUuid).toList();
     }
 
     @Test

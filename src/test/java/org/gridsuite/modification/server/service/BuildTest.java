@@ -94,6 +94,8 @@ class BuildTest {
     private static final UUID TEST_NETWORK_STOP_BUILD_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_WITH_WORKFLOW_INFOS = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
+    private static final String TEST_ROOT_NETWORK_TAG = "PH1";
+    private static final String OTHER_ROOT_NETWORK_TAG = "PH2";
     private static final UUID TEST_GROUP_ID_2 = UUID.randomUUID();
 
     private static final UUID TEST_ERROR_REPORT_ID = UUID.randomUUID();
@@ -897,7 +899,7 @@ class BuildTest {
     }
 
     @Test
-    void runBuildWithExcludedModificationsTest(final MockWebServer server) {
+    void runBuildWithNotApplicableModificationsTest(final MockWebServer server) {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(ModificationEntity.fromDTO(
@@ -910,17 +912,20 @@ class BuildTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, entities1.size());
 
-        // build node with excluded modification
+        // the second modification is not applicable on the root network being built
+        modificationRepository.updateRootNetworkApplicability(List.of(modifications.get(1).getUuid()), TEST_ROOT_NETWORK_TAG, false);
+
+        // build node on a root network the second modification is not applicable on
         BuildInfos buildInfos = BuildInfos.builder()
             .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
             .destinationVariantId(NetworkCreation.VARIANT_ID)
             .modificationGroupUuids(List.of(TEST_GROUP_ID))
             .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1, ReportMode.REPLACE)))
-            .modificationUuidsToExclude(Map.of(TEST_GROUP_ID, Set.of(modifications.get(1).getUuid())))
+            .rootNetworkTag(TEST_ROOT_NETWORK_TAG)
             .build();
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
 
-        // test that only non excluded modifications have been made on variant VARIANT_ID
+        // test that only applicable modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
         assertTrue(network.getSwitch("v1d1").isOpen());
         assertNull(network.getLoad("willBeExcludedLoad"));
@@ -1004,6 +1009,91 @@ class BuildTest {
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
     }
 
+    private static EquipmentAttributeModificationInfos switchOpening(String equipmentId) {
+        return EquipmentAttributeModificationInfos.builder().equipmentId(equipmentId).equipmentAttributeName("open")
+                .equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build();
+    }
+
+    private List<ModificationInfos> insertCompositeCoveringEveryApplicabilityCase() {
+        List<ModificationInfos> sources = modificationRepository.saveModifications(TEST_GROUP_ID_2, List.of(
+                ModificationEntity.fromDTO(switchOpening("v1d1")),
+                ModificationEntity.fromDTO(switchOpening("v2d1")),
+                ModificationEntity.fromDTO(switchOpening("v2d2"))));
+        UUID sourceUuid = modificationRepository.createNetworkCompositeModification(
+                sources.stream().map(ModificationInfos::getUuid).toList(), "source");
+        // set on the source: the copy carries the applicabilities over, and is applied as it is returned
+        List<UUID> contentUuids = modificationRepository.getBasicNetworkModificationsFromComposite(List.of(sourceUuid))
+                .stream().map(ModificationInfos::getUuid).toList();
+        modificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(1)), TEST_ROOT_NETWORK_TAG, false);
+        modificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(2)), TEST_ROOT_NETWORK_TAG, true);
+        return modificationRepository.insertCompositeModifications(TEST_GROUP_ID,
+                List.of(new CompositeInfos(sourceUuid, "composite", false, "description")));
+    }
+
+    private static void assertOnlyTheContentTheTagAllowsIsApplied(Network appliedNetwork) {
+        assertTrue(appliedNetwork.getSwitch("v1d1").isOpen(), "The content the tag says nothing about is applied");
+        assertFalse(appliedNetwork.getSwitch("v2d1").isOpen(), "The content the tag deactivates is left out");
+        assertTrue(appliedNetwork.getSwitch("v2d2").isOpen(), "The content the tag activates is applied");
+    }
+
+    @Test
+    void runBuildLeavesOutTheCompositeContentTheRootNetworkDeactivates(final MockWebServer server) {
+        insertCompositeCoveringEveryApplicabilityCase();
+
+        BuildInfos buildInfos = BuildInfos.builder()
+            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .destinationVariantId(NetworkCreation.VARIANT_ID)
+            .modificationGroupUuids(List.of(TEST_GROUP_ID))
+            .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1, ReportMode.REPLACE)))
+            .rootNetworkTag(TEST_ROOT_NETWORK_TAG)
+            .build();
+        networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
+
+        network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
+        assertOnlyTheContentTheTagAllowsIsApplied(network);
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
+    }
+
+    /**
+     * The same modifications are applied once per root network, each with its own tag, so what one of them leaves out
+     * has to stay available to the next.
+     */
+    @Test
+    void applyingOnARootNetworkLeavesTheModificationsAvailableToTheNext(final MockWebServer server) {
+        Network deactivatingNetwork = NetworkCreation.create(TEST_NETWORK_ID, true);
+        Network otherNetwork = NetworkCreation.create(TEST_NETWORK_ID, true);
+        List<ModificationInfos> composites = insertCompositeCoveringEveryApplicabilityCase();
+
+        applyOnRootNetwork(composites, TEST_ROOT_NETWORK_TAG, deactivatingNetwork);
+        applyOnRootNetwork(composites, OTHER_ROOT_NETWORK_TAG, otherNetwork);
+
+        assertFalse(deactivatingNetwork.getSwitch("v2d1").isOpen(), "The modification the tag deactivates is left out");
+        assertTrue(otherNetwork.getSwitch("v2d1").isOpen(),
+                "The other root network names no tag the modifications carry an entry for, so they all apply");
+        assertTrue(TestUtils.getRequestsDone(2, server).stream().allMatch(r -> r.matches("/v1/reports/.*")));
+    }
+
+    private void applyOnRootNetwork(List<ModificationInfos> modifications, String rootNetworkTag, Network appliedNetwork) {
+        TestUtils.applyModificationsBlocking(networkModificationApplicator,
+                new ModificationApplicationGroup(TEST_GROUP_ID, modifications, new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), rootNetworkTag),
+                new NetworkInfos(appliedNetwork, TEST_NETWORK_ID, true));
+    }
+
+    /**
+     * A build leaves out what the tag deactivates before applying anything, but a copy is applied right after it is
+     * saved, on the tree as it stands. The composite itself is applicable here: only its content is deactivated.
+     */
+    @Test
+    void applyingACompositeLeavesOutTheContentTheRootNetworkDeactivates(final MockWebServer server) {
+        Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
+        List<ModificationInfos> composites = insertCompositeCoveringEveryApplicabilityCase();
+
+        applyOnRootNetwork(composites, TEST_ROOT_NETWORK_TAG, network);
+
+        assertOnlyTheContentTheTagAllowsIsApplied(network);
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
+    }
+
     @Test
     void testApplyModificationWithErrors(final MockWebServer server) {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
@@ -1017,14 +1107,14 @@ class BuildTest {
 
         // Building mode : No error send with exception
         NetworkModificationResult networkModificationResult = TestUtils.applyModificationsBlocking(networkModificationApplicator,
-            new ModificationApplicationGroup(groupUuid, modifications, new ReportInfos(reportUuid, reporterId)),
+            TestUtils.groupOnAnyRootNetwork(groupUuid, modifications, new ReportInfos(reportUuid, reporterId)),
             new NetworkInfos(network, TEST_NETWORK_ID, true));
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrors(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
 
         // Incremental mode : No error send with exception
-        ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, variantId, reportUuid, reporterId);
+        ModificationApplicationContext applicationContext = TestUtils.contextOnAnyRootNetwork(TEST_NETWORK_ID, variantId, reportUuid, reporterId);
         NetworkModificationsResult networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext)).join();
         assertEquals(1, networkModificationsResult.modificationResults().size());
         assertTrue(networkModificationsResult.modificationResults().get(0).isPresent());
@@ -1033,7 +1123,7 @@ class BuildTest {
         testNetworkModificationsCount(groupUuid, 2);
 
         // Save mode only (variant does not exist) : No log and no error send with exception
-        applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, UUID.randomUUID().toString(), reportUuid, reporterId);
+        applicationContext = TestUtils.contextOnAnyRootNetwork(TEST_NETWORK_ID, UUID.randomUUID().toString(), reportUuid, reporterId);
         networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext)).join();
         assertEquals(1, networkModificationsResult.modificationResults().size());
         assertTrue(networkModificationsResult.modificationResults().get(0).isEmpty());
@@ -1052,8 +1142,8 @@ class BuildTest {
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
         List<ModificationApplicationGroup> modificationInfosGroups = List.of(
-            new ModificationApplicationGroup(groupUuid, modifications, new ReportInfos(reportUuid, nodeUuid1)),
-            new ModificationApplicationGroup(UUID.randomUUID(), List.of(), new ReportInfos(UUID.randomUUID(), nodeUuid2))
+            TestUtils.groupOnAnyRootNetwork(groupUuid, modifications, new ReportInfos(reportUuid, nodeUuid1)),
+            TestUtils.groupOnAnyRootNetwork(UUID.randomUUID(), List.of(), new ReportInfos(UUID.randomUUID(), nodeUuid2))
         );
 
         //Global application status should be in error and last application status should be OK

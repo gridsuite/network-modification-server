@@ -318,6 +318,38 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping(value = "/network-modifications/root-network-applicability")
+    @Operation(summary = "Updates the applicability of network modifications for a root network tag")
+    @ApiResponse(responseCode = "200", description = "The applicability of the network modifications has been successfully updated")
+    public ResponseEntity<Void> updateRootNetworkApplicability(
+            @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
+            @Parameter(description = "Root network tag") @RequestParam("rootNetworkTag") String rootNetworkTag,
+            @Parameter(description = "Applicability on this root network tag") @RequestParam("applicable") boolean applicable) {
+        networkModificationService.updateRootNetworkApplicability(networkModificationUuids, rootNetworkTag, applicable);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping(value = "/network-modifications/root-network-tag")
+    @Operation(summary = "Renames a root network tag in the applicabilities of the modifications of the given groups")
+    @ApiResponse(responseCode = "200", description = "The root network tag has been successfully renamed")
+    public ResponseEntity<Void> renameRootNetworkTag(
+            @Parameter(description = "Modification groups UUIDs") @RequestParam("groupUuids") List<UUID> groupUuids,
+            @Parameter(description = "Root network tag to rename") @RequestParam("oldTag") String oldTag,
+            @Parameter(description = "Root network tag to rename it to") @RequestParam("newTag") String newTag) {
+        networkModificationService.renameRootNetworkTag(groupUuids, oldTag, newTag);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping(value = "/network-modifications/root-network-tag")
+    @Operation(summary = "Deletes root network tags from the applicabilities of the modifications of the given groups")
+    @ApiResponse(responseCode = "200", description = "The root network tags have been successfully deleted")
+    public ResponseEntity<Void> deleteRootNetworkTags(
+            @Parameter(description = "Modification groups UUIDs") @RequestParam("groupUuids") List<UUID> groupUuids,
+            @Parameter(description = "Root network tags") @RequestParam("rootNetworkTags") List<String> rootNetworkTags) {
+        networkModificationService.deleteRootNetworkTags(groupUuids, rootNetworkTags);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping(value = "/groups/{groupUuid}/stashed-modifications")
     @Operation(summary = "Delete the stashed modifications in a group")
     @ApiResponse(responseCode = "200", description = "Stashed modifications in the group deleted")

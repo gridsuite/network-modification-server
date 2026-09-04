@@ -264,7 +264,8 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
 
         assertEquals(
             "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, " +
-                    "type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null, activated=null, description=null), equipmentId=idLineEdited, properties=null), " +
+                    "type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null, activated=null, " +
+                    "applicabilityByRootNetworkTag=null, description=null), equipmentId=idLineEdited, properties=null), " +
                     "equipmentName=nameLineEdited), r=110.0, x=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, " +
                     "operationalLimitsGroups=[OperationalLimitsGroupInfos(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=200.0, " +
                     "temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), applicability=SIDE1, limitsProperties=null), " +
