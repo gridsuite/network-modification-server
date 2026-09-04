@@ -11,6 +11,7 @@ import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
+import org.gridsuite.modification.context.ModificationContext;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.dto.tabular.LimitSetsTabularModificationInfos;
@@ -28,6 +29,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.Equipme
 import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
+import org.gridsuite.modification.server.service.ModificationContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -75,6 +77,7 @@ public class NetworkModificationRepository {
     private final CompositeContainerRepository compositeContainerRepository;
 
     private final ModificationApplicationInfosService modificationApplicationInfosService;
+    private final ModificationContextFactory modificationContextFactory;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationRepository.class);
     private static final String MODIFICATION_ID = "modificationId";
@@ -97,7 +100,8 @@ public class NetworkModificationRepository {
                                          CompositeModificationRepository compositeModificationRepository,
                                          CompositeContainerRepository compositeContainerRepository,
                                          ModificationContainerRepository modificationContainerRepository,
-                                         ModificationApplicationInfosService modificationApplicationInfosService) {
+                                         ModificationApplicationInfosService modificationApplicationInfosService,
+                                         ModificationContextFactory modificationContextFactory) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
         this.generatorCreationRepository = generatorCreationRepository;
@@ -117,6 +121,7 @@ public class NetworkModificationRepository {
         this.compositeContainerRepository = compositeContainerRepository;
         this.modificationContainerRepository = modificationContainerRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
+        this.modificationContextFactory = modificationContextFactory;
     }
 
     private NetworkModificationServerException getModificationContainerNotFoundException(String containerId, ModificationContainerType containerType) {
@@ -619,14 +624,16 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public AbstractModification getStandaloneNetworkModification(UUID modificationUuid) {
-        return toModificationsInfosOptimized(getModificationEntity(modificationUuid)).toModification();
+        return toModificationsInfosOptimized(getModificationEntity(modificationUuid))
+                .toModification(modificationContextFactory.create());
     }
 
     @Transactional(readOnly = true)
     public Map<UUID, AbstractModification> getStandaloneNetworkModifications(List<UUID> modificationUuids, boolean errorOnModificationNotFound) {
+        ModificationContext modificationContext = modificationContextFactory.create();
         return getModificationEntities(modificationUuids, errorOnModificationNotFound).stream()
                 .map(this::toModificationsInfosOptimized)
-                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification));
+                .collect(Collectors.toMap(ModificationInfos::getUuid, modificationInfos -> modificationInfos.toModification(modificationContext)));
     }
 
     public List<ModificationEntity> getModificationEntities(List<UUID> modificationUuids, boolean errorOnModificationNotFound) {
