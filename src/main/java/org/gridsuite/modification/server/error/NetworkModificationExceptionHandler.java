@@ -41,7 +41,8 @@ public class NetworkModificationExceptionHandler extends AbstractBusinessExcepti
                  NETWORK_NOT_FOUND,
                  VARIANT_NOT_FOUND
                  -> HttpStatus.NOT_FOUND;
-            case MODIFICATION_CONTAINER_BAD_TYPE,
+            case MODIFICATION_BAD_TYPE,
+                 MODIFICATION_CONTAINER_BAD_TYPE,
                  MODIFICATION_INFOS_ERROR,
                  MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN,
                  MODIFICATION_DELETION_ARGUMENT_ERROR,
