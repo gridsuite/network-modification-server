@@ -159,17 +159,7 @@ public class NetworkModificationRepository {
     }
 
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
-        // Fetch originals once, preserving order
-        Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .collect(Collectors.toMap(
-                        ModificationEntity::getId,
-                        e -> ModificationEntity.fromDTO(toModificationsInfosOptimized(e))
-                ));
-        // Reorder clones to match caller-specified order
-        List<ModificationEntity> copyEntities = modificationUuids.stream()
-                .map(cloneByUuid::get)
-                .filter(Objects::nonNull)
-                .toList();
+        List<ModificationEntity> copyEntities = cloneModificationsForComposite(modificationUuids);
 
         //TODO : separate creation and copy
         if (copyEntities.size() == 1 && copyEntities.getFirst() instanceof CompositeModificationEntity single) {
@@ -186,24 +176,66 @@ public class NetworkModificationRepository {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
 
-        // Fetch originals once, preserving order
-        Map<UUID, ModificationEntity> cloneByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .collect(Collectors.toMap(
-                        ModificationEntity::getId,
-                        e -> ModificationEntity.fromDTO(toModificationsInfosOptimized(e))
-                ));
+        List<ModificationEntity> copyEntities = cloneModificationsForComposite(modificationUuids);
 
         //Delete previously held modifications
         deleteModifications(compositeEntity.getModifications());
 
-        // Reorder clones to match caller-specified order
-        List<ModificationEntity> copyEntities = modificationUuids.stream()
-                .map(cloneByUuid::get)
-                .filter(Objects::nonNull)
-                .toList();
         deleteCompositeChildrenSubtree(List.of(compositeEntity));
         compositeEntity.setModifications(copyEntities);
         compositeModificationRepository.renameCompositeModification(compositeEntity, name);
+    }
+
+    /**
+     * Clone each selected modification so it can be stored inside a composite, keeping the caller-specified
+     * order and duplicates (the same uuid may appear twice, e.g. two references resolved to the same shared
+     * composite): each occurrence gets its own fresh clone.
+     * A selected uuid pointing to a {@link ModificationReferenceEntity} (a "shared" modification) is resolved
+     * to the composite it references, and the reference's own description - not the referenced composite's -
+     * is carried onto the clone, since that description lives on the reference, not on the shared composite.
+     */
+    private List<ModificationEntity> cloneModificationsForComposite(List<UUID> modificationUuids) {
+        Map<UUID, ModificationEntity> entitiesByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+
+        // Resolve each requested uuid to the modification it should actually be cloned from, keeping the
+        // reference's own description (if any) as an override for the clone.
+        // source uuid to clone from, and description() carries the reference's description override.
+        List<CompositeInfos> resolvedContents = modificationUuids.stream()
+                .map(uuid -> {
+                    ModificationEntity entity = entitiesByUuid.get(uuid);
+                    if (entity == null) {
+                        return null;
+                    }
+                    return entity instanceof ModificationReferenceEntity referenceEntity
+                            ? new CompositeInfos(referenceEntity.getReferenceId(), null, false, referenceEntity.getDescription())
+                            : new CompositeInfos(uuid, null, false, null);
+                })
+                .toList();
+
+        // Fetch and convert each distinct source modification only once
+        List<UUID> sourceUuids = resolvedContents.stream().filter(Objects::nonNull).map(CompositeInfos::id).distinct().toList();
+        Map<UUID, ModificationInfos> infosBySourceUuid = modificationRepository.findAllByIdIn(sourceUuids).stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, this::toModificationsInfosOptimized));
+
+        // Build one fresh clone per requested occurrence, keeping order and duplicates
+        return resolvedContents.stream()
+                .map(content -> {
+                    if (content == null) {
+                        return null;
+                    }
+                    ModificationInfos infos = infosBySourceUuid.get(content.id());
+                    if (infos == null) {
+                        return null;
+                    }
+                    ModificationEntity clone = ModificationEntity.fromDTO(infos);
+                    if (content.description() != null && !content.description().isBlank()) {
+                        clone.setDescription(content.description());
+                    }
+                    return clone;
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
@@ -1055,6 +1087,7 @@ public class NetworkModificationRepository {
                             .referenceId(compositeToBeInserted.id())
                             .referenceType(ModificationReferenceInfos.Type.BASIC)
                             .referenceInfos(compositeModification)
+                            .description(compositeToBeInserted.description())
                             .build();
                     newCompositeModifications.add(newModificationReference);
                 } else {
