@@ -507,6 +507,11 @@ public class NetworkModificationService {
     }
 
     private CompletableFuture<Optional<NetworkModificationResult>> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
+        if (!networkStoreService.networkExists(networkUuid)) {
+            // The network is not loaded
+            return CompletableFuture.completedFuture(Optional.empty());
+        }
+
         if (!modificationGroupInfos.modifications().isEmpty()) {
             PreloadingStrategy preloadingStrategy = modificationGroupInfos.modifications().stream()
                 .filter(m -> m.getActivated() && !m.getStashed())
