@@ -66,7 +66,6 @@ abstract class AbstractByFormulaModificationTest extends AbstractByFilterTest {
     @BeforeEach
     public void specificSetUp() {
         FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
-        org.gridsuite.modification.server.service.FilterLoader.setFilterServerBaseUri(wireMockServer.baseUrl());
         getNetwork().getVariantManager().setWorkingVariant("variant_1");
         createEquipments();
     }
