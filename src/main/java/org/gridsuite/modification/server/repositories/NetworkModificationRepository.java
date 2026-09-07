@@ -559,10 +559,11 @@ public class NetworkModificationRepository {
                 .build();
         }
     }
+
     /**
      * Clone each selected modification so it can be stored inside a composite, keeping the caller-specified
      * order and duplicates (the same uuid may appear twice, e.g. two references resolved to the same shared
-     * composite): each occurrence gets its own fresh clone.
+     * composite): each occurrence gets its own fresh clone, its applicabilities included.
      * A selected uuid pointing to a {@link ModificationReferenceEntity} (a "shared" modification) is resolved
      * to the composite it references, and the reference's own description - not the referenced composite's -
      * is carried onto the clone, since that description lives on the reference, not on the shared composite.
@@ -571,8 +572,7 @@ public class NetworkModificationRepository {
         Map<UUID, ModificationEntity> entitiesByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
 
-        // Resolve each requested uuid to the modification it should actually be cloned from, keeping the
-        // reference's own description (if any) as an override for the clone.
+        // Resolve each requested uuid to the modification it should actually be cloned from: id() is the
         // source uuid to clone from, and description() carries the reference's description override.
         List<CompositeInfos> resolvedContents = modificationUuids.stream()
                 .map(uuid -> {
@@ -586,10 +586,19 @@ public class NetworkModificationRepository {
                 })
                 .toList();
 
-        // Fetch and convert each distinct source modification only once
+        // Load the modifications the references point to, the ones not already fetched above
+        List<UUID> referencedUuids = resolvedContents.stream().filter(Objects::nonNull)
+                .map(CompositeInfos::id).filter(id -> !entitiesByUuid.containsKey(id)).distinct().toList();
+        if (!referencedUuids.isEmpty()) {
+            modificationRepository.findAllByIdIn(referencedUuids).forEach(entity -> entitiesByUuid.put(entity.getId(), entity));
+        }
+
+        // Convert each distinct source modification only once, filled with its applicabilities
         List<UUID> sourceUuids = resolvedContents.stream().filter(Objects::nonNull).map(CompositeInfos::id).distinct().toList();
-        Map<UUID, ModificationInfos> infosBySourceUuid = modificationRepository.findAllByIdIn(sourceUuids).stream()
-                .collect(Collectors.toMap(ModificationEntity::getId, this::toModificationsInfosOptimized));
+        Map<UUID, ModificationInfos> infosBySourceUuid = addApplicabilities(sourceUuids.stream()
+                .map(entitiesByUuid::get).filter(Objects::nonNull)
+                .map(this::toModificationsInfosOptimized).toList()).stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, Function.identity()));
 
         // Build one fresh clone per requested occurrence, keeping order and duplicates
         return resolvedContents.stream()
@@ -630,19 +639,6 @@ public class NetworkModificationRepository {
      */
     private List<ModificationInfos> savedInfos(List<ModificationEntity> savedEntities) {
         return addApplicabilities(savedEntities.stream().map(ModificationEntity::toModificationInfos).toList());
-    }
-
-    /**
-     * @return copies of the given modifications, their applicabilities included, in the order they were asked for
-     */
-    private List<ModificationEntity> copiesOf(List<UUID> modificationUuids) {
-        Map<UUID, ModificationEntity> cloneByUuid = addApplicabilities(modificationRepository.findAllByIdIn(modificationUuids)
-                .stream().map(this::toModificationsInfosOptimized).toList()).stream()
-                .collect(Collectors.toMap(
-                        ModificationInfos::getUuid,
-                        ModificationEntity::fromDTO
-                ));
-        return modificationUuids.stream().map(cloneByUuid::get).filter(Objects::nonNull).toList();
     }
 
     private static void collectNestedUuids(ModificationInfos modificationInfos, List<UUID> uuids) {
