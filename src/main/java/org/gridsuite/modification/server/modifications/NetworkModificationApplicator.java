@@ -105,7 +105,7 @@ public class NetworkModificationApplicator {
      */
     public CompletableFuture<NetworkModificationResult> applyModifications(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroup.modifications().stream()
-            .filter(m -> m.getActivated() && !m.getStashed())
+            .filter(m -> m.isActivatedOn(modificationInfosGroup.rootNetworkTag()))
             .map(ModificationInfos::getType)
             .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
             .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
@@ -154,9 +154,8 @@ public class NetworkModificationApplicator {
      */
     public NetworkModificationResult applyModifications(List<ModificationApplicationGroup> modificationInfosGroups, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroups.stream()
-                .map(ModificationApplicationGroup::modifications)
-                .flatMap(List::stream)
-                .filter(m -> m.getActivated() && !m.getStashed())
+                .flatMap(g -> g.modifications().stream()
+                        .filter(m -> m.isActivatedOn(g.rootNetworkTag())))
                 .map(ModificationInfos::getType)
                 .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
                 .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
@@ -211,10 +210,10 @@ public class NetworkModificationApplicator {
         }
         ModificationContext modificationContext = modificationContextFactory.create();
         ApplicationStatus groupApplicationStatus = modificationGroupInfos.modifications().stream()
-                .filter(ModificationInfos::getActivated)
+                .filter(m -> m.isActivatedOn(modificationGroupInfos.rootNetworkTag()))
                 .map(m -> {
                     listener.initModificationApplication(modificationGroupInfos.groupUuid(), m);
-                    return apply(m, listener.getNetwork(), reportNode, modificationContext);
+                    return apply(m, listener.getNetwork(), reportNode, modificationGroupInfos.rootNetworkTag(), modificationContext);
                 })
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
@@ -228,22 +227,22 @@ public class NetworkModificationApplicator {
         return groupApplicationStatus;
     }
 
-    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode, ModificationContext modificationContext) {
+    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode, String rootNetworkTag, ModificationContext modificationContext) {
         ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
         try {
-            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(modificationContext), network, subReportNode));
+            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(modificationContext), network, subReportNode, rootNetworkTag));
         } catch (Exception e) {
             handleException(subReportNode, e);
         }
         return getApplicationStatus(reportNode);
     }
 
-    private void apply(AbstractModification modification, Network network, ReportNode subReportNode) {
+    private void apply(AbstractModification modification, Network network, ReportNode subReportNode, String rootNetworkTag) {
         // check input data but don't change the network
         modification.check(network);
 
         // init application context
-        modification.initApplicationContext(this.filterService, this.loadFlowService, null);
+        modification.initApplicationContext(this.filterService, this.loadFlowService, rootNetworkTag);
 
         // apply all changes on the network
         modification.apply(network, getNamingStrategy(), subReportNode);
