@@ -21,6 +21,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
+import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestInstance;
@@ -99,7 +100,7 @@ class VoltageInitReportTest {
     private ApplicationStatus applyModification(Network network, VoltageInitModificationInfos infos) {
         List<ModificationInfos> modifications = modificationRepository.saveModifications(GROUP_ID, List.of(ModificationEntity.fromDTO(infos)));
         List<ModificationApplicationGroup> modificationInfosGroups = List.of(
-                new ModificationApplicationGroup(GROUP_ID, modifications, new ReportInfos(REPORT_ID, NODE_ID))
+                TestUtils.groupOnAnyRootNetwork(GROUP_ID, modifications, new ReportInfos(REPORT_ID, NODE_ID))
         );
         NetworkModificationResult result = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, NETWORK_ID, true));
         return result.getApplicationStatus();
