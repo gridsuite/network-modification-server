@@ -1986,6 +1986,26 @@ class ModificationRepositoryTest {
     }
 
     @Test
+    void testCreatingACompositeFromAnUnknownModificationThrows() {
+        UUID unknownUuid = UUID.randomUUID();
+        assertThrows(NetworkModificationServerException.class,
+                () -> networkModificationRepository.createNetworkCompositeModification(List.of(unknownUuid), "outer"),
+                new NetworkModificationServerException(MODIFICATION_NOT_FOUND, unknownUuid.toString()).getMessage());
+    }
+
+    @Test
+    void testCreatingACompositeFromAReferenceWhoseSharedModificationIsGoneThrows() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+        // the shared modification the reference points to disappears, leaving the reference dangling
+        networkModificationRepository.deleteModifications(null, List.of(sharedUuid));
+
+        assertThrows(NetworkModificationServerException.class,
+                () -> networkModificationRepository.createNetworkCompositeModification(List.of(referenceUuid), "outer"),
+                new NetworkModificationServerException(MODIFICATION_NOT_FOUND, sharedUuid.toString()).getMessage());
+    }
+
+    @Test
     void testRenameRootNetworkTagReusesAnEntryTheSharedModificationAlreadyHas() {
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
         UUID sharedUuid = sharedModificationOf(referenceUuid);

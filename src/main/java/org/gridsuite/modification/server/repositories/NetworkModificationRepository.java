@@ -578,7 +578,7 @@ public class NetworkModificationRepository {
                 .map(uuid -> {
                     ModificationEntity entity = entitiesByUuid.get(uuid);
                     if (entity == null) {
-                        return null;
+                        throw getModificationNotFoundException(uuid.toString());
                     }
                     return entity instanceof ModificationReferenceEntity referenceEntity
                             ? new CompositeInfos(referenceEntity.getReferenceId(), null, false, referenceEntity.getDescription())
@@ -608,7 +608,7 @@ public class NetworkModificationRepository {
                     }
                     ModificationInfos infos = infosBySourceUuid.get(content.id());
                     if (infos == null) {
-                        return null;
+                        throw getModificationNotFoundException(content.id().toString());
                     }
                     ModificationEntity clone = ModificationEntity.fromDTO(infos);
                     if (content.description() != null && !content.description().isBlank()) {
