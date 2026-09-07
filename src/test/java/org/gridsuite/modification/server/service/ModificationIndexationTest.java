@@ -115,7 +115,7 @@ class ModificationIndexationTest {
         UUID groupUuid = UUID.randomUUID();
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
-        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid, modifications, reportInfos), networkInfos);
         assertNotNull(result);
 
         List<ModificationApplicationEntity> modificationApplicationEntities = modificationApplicationRepository.findAll();
@@ -140,7 +140,7 @@ class ModificationIndexationTest {
         UUID groupUuid = UUID.randomUUID();
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadModificationInfos)));
 
-        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid, modifications, reportInfos), networkInfos);
         assertNotNull(result);
 
         List<ModificationApplicationEntity> modificationApplicationEntities = modificationApplicationRepository.findAll();
@@ -165,7 +165,7 @@ class ModificationIndexationTest {
         UUID groupUuid = UUID.randomUUID();
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(equipmentDeletionInfos)));
 
-        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid, modifications, reportInfos), networkInfos);
         assertNotNull(result);
 
         List<ModificationApplicationEntity> modificationApplicationEntities = modificationApplicationRepository.findAll();
@@ -195,7 +195,7 @@ class ModificationIndexationTest {
         UUID groupUuid1 = UUID.randomUUID();
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
-        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid1, modifications, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid1, modifications, reportInfos), networkInfos);
         assertNotNull(result);
 
         // Need to remove the listener created in the last modifications application
@@ -209,7 +209,7 @@ class ModificationIndexationTest {
             groupUuid2,
             null,
             modifications.stream().map(ModificationInfos::getUuid).toList(),
-            List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
+            List.of(TestUtils.contextOnAnyRootNetwork(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
         ).join();
 
         /*
@@ -244,7 +244,7 @@ class ModificationIndexationTest {
         LoadCreationInfos loadCreationInfos = createLoadCreationInfos(newEquipmentId);
         UUID groupUuid1 = UUID.randomUUID();
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
-        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid1, modifications, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid1, modifications, reportInfos), networkInfos);
         assertNotNull(result);
 
         // Need to remove the listener created in the last modifications application
@@ -260,7 +260,7 @@ class ModificationIndexationTest {
                 new ModificationContainerInfos(groupUuid2, ModificationContainerType.GROUP),
                 null,
                 modifications.stream().map(ModificationInfos::getUuid).toList(),
-                List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID())),
+                List.of(TestUtils.contextOnAnyRootNetwork(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID())),
                 true
         ).join();
 
@@ -295,7 +295,7 @@ class ModificationIndexationTest {
         UUID groupUuid1 = UUID.randomUUID();
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
-        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid1, modifications, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid1, modifications, reportInfos), networkInfos);
         assertNotNull(result);
 
         // Create the composite modification to pass later to ?action=insert
@@ -313,7 +313,7 @@ class ModificationIndexationTest {
         UUID groupUuid2 = UUID.randomUUID();
         Pair<List<CompositeInfos>, List<ModificationApplicationContext>> modificationContextInfos = Pair.of(
                 List.of(new CompositeInfos(compositeUuid, "", false, "description")),
-                List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
+                List.of(TestUtils.contextOnAnyRootNetwork(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
         );
         NetworkModificationsResult modificationsResult = networkModificationService.splitCompositeModifications(
             groupUuid2,
@@ -345,7 +345,7 @@ class ModificationIndexationTest {
         UUID groupUuid1 = UUID.randomUUID();
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
-        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid1, modifications, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid1, modifications, reportInfos), networkInfos);
         assertNotNull(result);
 
         /*
@@ -373,7 +373,7 @@ class ModificationIndexationTest {
         UUID groupUuid1 = UUID.randomUUID();
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
-        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid1, modifications, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid1, modifications, reportInfos), networkInfos);
         assertNotNull(result);
 
         /*
@@ -403,7 +403,7 @@ class ModificationIndexationTest {
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid1, loadCreationInfosList.stream().map(ModificationEntity::fromDTO).toList());
 
         // apply modifications to index them
-        TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid1, modifications, reportInfos), networkInfos);
+        TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid1, modifications, reportInfos), networkInfos);
 
         // assert they are both stored in ES and in postgres
         assertEquals(3, modificationApplicationRepository.findAll().size());
@@ -431,7 +431,7 @@ class ModificationIndexationTest {
 
         UUID groupUuid = UUID.randomUUID();
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadModificationInfos)));
-        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid, modifications, reportInfos), networkInfos);
         assertNotNull(result);
 
         ModificationApplicationEntity modificationApplicationEntity = modificationApplicationRepository.findAll().getFirst();
@@ -456,7 +456,7 @@ class ModificationIndexationTest {
 
         UUID groupUuid = UUID.randomUUID();
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(openSwitchModification)));
-        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid, modifications, reportInfos), networkInfos);
         assertNotNull(result);
 
         assertEquals(1, modificationRepository.getModifications(groupUuid, true, true).size());
@@ -473,7 +473,7 @@ class ModificationIndexationTest {
 
         UUID groupUuid = UUID.randomUUID();
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationModificationInfos)));
-        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid, modifications, reportInfos), networkInfos);
         assertNotNull(result);
 
         ModificationApplicationEntity modificationApplicationEntity = modificationApplicationRepository.findAll().getFirst();
@@ -513,7 +513,7 @@ class ModificationIndexationTest {
 
         UUID groupUuid = UUID.randomUUID();
         List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadModificationInfos)));
-        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid, modifications, reportInfos), networkInfos);
         assertNotNull(result);
 
         ModificationApplicationEntity modificationApplicationEntity = modificationApplicationRepository.findAll().getFirst();
@@ -548,7 +548,7 @@ class ModificationIndexationTest {
 
             UUID groupUuid = UUID.randomUUID();
             List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationModificationInfos)));
-            NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(groupUuid, modifications, reportInfos),
+            NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid, modifications, reportInfos),
                     networkInfos);
             assertNotNull(result);
 
