@@ -12,7 +12,7 @@ import org.gridsuite.modification.dto.ByFilterDeletionInfos;
 import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.modifications.byfilter.AbstractByFilterTest;
-import org.gridsuite.modification.server.service.FilterLoader;
+import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.FilterStub;
 import org.gridsuite.modification.server.utils.StubbedFilterRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +38,7 @@ abstract class AbstractByFilterDeletionTest extends AbstractByFilterTest {
 
     @BeforeEach
     public void specificSetUp() {
-        FilterLoader.setFilterServerBaseUri(wireMockServer.baseUrl());
+        FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
         getNetwork().getVariantManager().setWorkingVariant("variant_1");
     }
 
