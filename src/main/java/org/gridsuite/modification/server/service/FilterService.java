@@ -86,9 +86,10 @@ public class FilterService implements IFilterService {
                 .queryParam(IDS_PARAM, filtersUuids)
                 .buildAndExpand()
                 .toUriString();
-        Map<UUID, Filter> filters = restTemplate
-                .exchange(filterServerBaseUri + path, HttpMethod.GET, null, STANDALONE_FILTERS_BY_ID)
-                .getBody();
+        Map<UUID, Filter> filters = restClient.get()
+                .uri(filterServerBaseUri + path)
+                .retrieve()
+                .body(STANDALONE_FILTERS_BY_ID);
         return filters == null ? Map.of() : filters;
     }
 
