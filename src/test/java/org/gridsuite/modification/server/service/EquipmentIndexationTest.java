@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.repositories.ModificationApplicationRep
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -251,6 +252,6 @@ class EquipmentIndexationTest {
     }
 
     private ModificationApplicationContext getNetworkModificationContext(String variantId) {
-        return new ModificationApplicationContext(NETWORK_UUID, variantId, TEST_REPORT_ID, UUID.randomUUID());
+        return TestUtils.contextOnAnyRootNetwork(NETWORK_UUID, variantId, TEST_REPORT_ID, UUID.randomUUID());
     }
 }
