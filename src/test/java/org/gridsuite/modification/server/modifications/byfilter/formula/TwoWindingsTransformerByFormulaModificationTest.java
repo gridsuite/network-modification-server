@@ -88,7 +88,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
                 .build();
 
         checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfos2)).build(),
-                NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+                NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         verifyStandaloneFiltersRequest(stubId, Set.of(FILTER_ID_4));
     }

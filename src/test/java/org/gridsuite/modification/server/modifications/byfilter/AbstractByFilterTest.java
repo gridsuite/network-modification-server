@@ -21,6 +21,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -70,7 +71,10 @@ public abstract class AbstractByFilterTest extends AbstractNetworkModificationTe
         return wireMockServer.stubFor(WireMock.get(WireMock.urlPathEqualTo(PATH))
                 .withQueryParam("ids", havingExactlyIdsIgnoringOrder(filterIds))
                 .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(filterStubs.stream().map(FilterStub::filter).toList()))
+                        .withBody(mapper.writeValueAsString(filterStubs.stream().collect(Collectors.toMap(
+                                FilterStub::id,
+                                FilterStub::filter
+                        ))))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
     }
 
