@@ -16,6 +16,7 @@ public enum ModificationBusinessErrorCode implements BusinessErrorCode {
     MODIFICATION_CONTAINER_TYPE_NOT_FOUND("modification.container.type.notFound", "Modification container type of %s is not found"),
     MODIFICATION_CONTAINER_BAD_TYPE("modification.container.badType", "Modification container type of %s is invalid : actual type %s -> expected type %s"),
     MODIFICATION_NOT_FOUND("modification.notFound", "Modification (%s) not found"),
+    MODIFICATION_BAD_TYPE("modification.badType", "Modification type of %s is invalid : actual type %s -> expected type %s"),
     MODIFICATIONS_NOT_FOUND("modifications.notFound"),
     MODIFICATION_INFOS_ERROR("modification.infos.error", "Modification infos error : %s"),
     MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN("modification.with_group.deletion.forbidden", "Deletion forbidden : modification %s is owned by group %s"),
