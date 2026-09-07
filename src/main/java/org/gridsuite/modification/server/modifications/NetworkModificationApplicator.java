@@ -18,6 +18,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.Getter;
+import org.gridsuite.modification.context.ModificationContext;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
@@ -57,7 +58,7 @@ public class NetworkModificationApplicator {
 
     @Getter private final FilterService filterService;
 
-    private final FilterLoader filterLoader;
+    private final ModificationContextFactory modificationContextFactory;
 
     @Getter private final LoadFlowService loadFlowService;
 
@@ -75,7 +76,8 @@ public class NetworkModificationApplicator {
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ModificationApplicationInfosService applicationInfosService,
-                                         ReportService reportService, FilterService filterService, FilterLoader filterLoader,
+                                         ReportService reportService, FilterService filterService,
+                                         ModificationContextFactory modificationContextFactory,
                                          LoadFlowService loadFlowService,
                                          NetworkModificationObserver networkModificationObserver,
                                          LargeNetworkModificationExecutionService largeNetworkModificationExecutionService) {
@@ -84,7 +86,7 @@ public class NetworkModificationApplicator {
         this.applicationInfosService = applicationInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
-        this.filterLoader = filterLoader;
+        this.modificationContextFactory = modificationContextFactory;
         this.loadFlowService = loadFlowService;
         this.networkModificationObserver = networkModificationObserver;
         this.largeNetworkModificationExecutionService = largeNetworkModificationExecutionService;
@@ -103,7 +105,7 @@ public class NetworkModificationApplicator {
      */
     public CompletableFuture<NetworkModificationResult> applyModifications(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroup.modifications().stream()
-            .filter(m -> m.getActivated() && !m.getStashed())
+            .filter(m -> m.isActivatedOn(modificationInfosGroup.rootNetworkTag()))
             .map(ModificationInfos::getType)
             .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
             .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
@@ -152,9 +154,8 @@ public class NetworkModificationApplicator {
      */
     public NetworkModificationResult applyModifications(List<ModificationApplicationGroup> modificationInfosGroups, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroups.stream()
-                .map(ModificationApplicationGroup::modifications)
-                .flatMap(List::stream)
-                .filter(m -> m.getActivated() && !m.getStashed())
+                .flatMap(g -> g.modifications().stream()
+                        .filter(m -> m.isActivatedOn(g.rootNetworkTag())))
                 .map(ModificationInfos::getType)
                 .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
                 .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
@@ -207,11 +208,12 @@ public class NetworkModificationApplicator {
         } else {
             reportNode = ReportNode.NO_OP;
         }
+        ModificationContext modificationContext = modificationContextFactory.create();
         ApplicationStatus groupApplicationStatus = modificationGroupInfos.modifications().stream()
-                .filter(ModificationInfos::getActivated)
+                .filter(m -> m.isActivatedOn(modificationGroupInfos.rootNetworkTag()))
                 .map(m -> {
                     listener.initModificationApplication(modificationGroupInfos.groupUuid(), m);
-                    return apply(m, listener.getNetwork(), reportNode);
+                    return apply(m, listener.getNetwork(), reportNode, modificationGroupInfos.rootNetworkTag(), modificationContext);
                 })
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
@@ -225,22 +227,22 @@ public class NetworkModificationApplicator {
         return groupApplicationStatus;
     }
 
-    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode) {
+    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode, String rootNetworkTag, ModificationContext modificationContext) {
         ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
         try {
-            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(filterLoader), network, subReportNode));
+            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(modificationContext), network, subReportNode, rootNetworkTag));
         } catch (Exception e) {
             handleException(subReportNode, e);
         }
         return getApplicationStatus(reportNode);
     }
 
-    private void apply(AbstractModification modification, Network network, ReportNode subReportNode) {
+    private void apply(AbstractModification modification, Network network, ReportNode subReportNode, String rootNetworkTag) {
         // check input data but don't change the network
         modification.check(network);
 
         // init application context
-        modification.initApplicationContext(this.filterService, this.loadFlowService);
+        modification.initApplicationContext(this.filterService, this.loadFlowService, rootNetworkTag);
 
         // apply all changes on the network
         modification.apply(network, getNamingStrategy(), subReportNode);

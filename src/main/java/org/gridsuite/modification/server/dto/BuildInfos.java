@@ -27,9 +27,8 @@ public class BuildInfos {
 
     private List<UUID> modificationGroupUuids = new ArrayList<>();
 
-    // map with modification groups as key, modification to excludes as value
-    @Builder.Default
-    private Map<UUID, Set<UUID>> modificationUuidsToExclude = new HashMap<>();
+    // tag of the root network being built, used to resolve the applicability of each modification
+    private String rootNetworkTag;
 
     private List<ReportInfos> reportsInfos = new ArrayList<>();
 }
