@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.VoltageRegulation;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -23,6 +24,7 @@ import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerato
 import static org.gridsuite.modification.server.utils.NetworkUtil.createSwitch;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -88,7 +90,18 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return VoltageInitModificationInfos.builder()
             .stashed(false)
-            .batteries(List.of())// TODO à remplir
+            .batteries(List.of(
+                    VoltageInitBatteryModificationInfos.builder()
+                            .batteryId("v1Battery")
+                            .targetV(75.)
+                            .targetQ(26.)
+                            .build(),
+                    VoltageInitBatteryModificationInfos.builder()
+                            .batteryId("v2Battery")
+                            .targetQ(16.)
+                            .build()
+                )
+            )
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("idGenerator")
@@ -217,7 +230,17 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return VoltageInitModificationInfos.builder()
             .stashed(false)
-            .batteries(List.of())// TODO à remplir
+            .batteries(List.of(
+                VoltageInitBatteryModificationInfos.builder()
+                        .batteryId("v1Battery")
+                        .targetQ(14.)
+                        .build(),
+                VoltageInitBatteryModificationInfos.builder()
+                        .batteryId("v2Battery")
+                        .targetV(226.)
+                        .build()
+                )
+            )
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("idGenerator")
@@ -336,6 +359,9 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
         assertLogMessage("Shunt compensator with id=shuntNotFound not found", "network.modification.shuntCompensatorNotFound", reportService);
         assertEquals(10., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
         assertEquals(226., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
+        assertEquals(75., getNetwork().getBattery("v1Battery").getExtension(VoltageRegulation.class).getTargetV(), 0.001);
+        assertEquals(26., getNetwork().getBattery("v1Battery").getTargetQ(), 0.001);
+        assertEquals(16., getNetwork().getBattery("v2Battery").getTargetQ(), 0.001);
         assertEquals(2, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
         assertEquals(223, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTargetV(), 0.001);
         assertEquals(2, getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTapPosition());
@@ -357,6 +383,9 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
     protected void assertAfterNetworkModificationDeletion() {
         assertEquals(1., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
         assertEquals(224., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
+        assertNull(getNetwork().getBattery("v1Battery").getExtension(VoltageRegulation.class));
+        assertEquals(3., getNetwork().getBattery("v1Battery").getTargetQ(), 0.001);
+        assertEquals(11., getNetwork().getBattery("v2Battery").getTargetQ(), 0.001);
         assertEquals(1, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
         assertEquals(220., getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTargetV(), 0.001);
         assertEquals(1, getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTapPosition());

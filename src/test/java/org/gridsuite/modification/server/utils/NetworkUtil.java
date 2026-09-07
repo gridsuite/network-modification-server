@@ -7,10 +7,7 @@
 package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
-import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
+import com.powsybl.iidm.network.extensions.*;
 
 public final class NetworkUtil {
     private NetworkUtil() {
