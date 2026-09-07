@@ -114,7 +114,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractByFilterTest
 
         UUID stubId = stubStandaloneFilters(List.of(filter));
 
-        checkCreationApplicationStatus(assignmentsWithWrongFilter, NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+        checkCreationApplicationStatus(assignmentsWithWrongFilter, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         verifyStandaloneFiltersRequest(stubId, Set.of(FILTER_WITH_ALL_WRONG_IDS), getAssignmentInfos().size());
     }

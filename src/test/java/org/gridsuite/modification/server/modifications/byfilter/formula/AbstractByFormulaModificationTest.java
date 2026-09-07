@@ -125,7 +125,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractByFilterTest {
                 .identifiableType(getIdentifiableType())
                 .build();
 
-        checkCreationApplicationStatus(byFormulaModificationInfos, NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+        checkCreationApplicationStatus(byFormulaModificationInfos, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         verifyStandaloneFiltersRequest(stubId, Set.of(FILTER_WITH_ALL_WRONG_IDS), getFormulaInfos().size());
     }
