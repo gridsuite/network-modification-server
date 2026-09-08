@@ -233,7 +233,7 @@ class NetworkModificationServiceTest {
                 targetGroupUuid,
                 null,
                 saved.stream().map(ModificationInfos::getUuid).toList(),
-                List.of(new ModificationApplicationContext(networkUuid, "variant", UUID.randomUUID(), UUID.randomUUID(), Set.of()))
+                List.of(new ModificationApplicationContext(networkUuid, "variant", UUID.randomUUID(), UUID.randomUUID(), "tag1"))
         ).join();
 
         assertEquals(1, result.modificationUuids().size());
