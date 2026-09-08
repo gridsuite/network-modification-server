@@ -125,7 +125,7 @@ class ModificationSearchTest {
         );
 
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator,
-                new ModificationApplicationGroup(groupUuid, modifications, reportInfos),
+                TestUtils.groupOnAnyRootNetwork(groupUuid, modifications, reportInfos),
                 networkInfos
         );
         assertThat(result).isNotNull();
@@ -166,7 +166,7 @@ class ModificationSearchTest {
                 substationModificationInfos), ModificationEntity.fromDTO(loadCreationInfos)));
 
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator,
-                new ModificationApplicationGroup(groupUuid, modifications, reportInfos),
+                TestUtils.groupOnAnyRootNetwork(groupUuid, modifications, reportInfos),
                 networkInfos
         );
         assertThat(result).isNotNull();
