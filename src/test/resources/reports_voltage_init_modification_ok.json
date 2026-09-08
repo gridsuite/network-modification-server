@@ -19,7 +19,9 @@
       "network.modification.voltageInitModification" : "Voltage init modification",
       "network.modification.vscConverterStationModification" : "Vsc converter station with id=${id} modified :",
       "network.modification.vscModificationsResume" : "${count} vsc converter station(s) have been modified.",
-      "network.modification.windingsTransformerModificationsResume" : "${count} transformer(s) have been modified."
+      "network.modification.windingsTransformerModificationsResume" : "${count} transformer(s) have been modified.",
+      "network.modification.batteryModification": "Battery with id=${id} modified :",
+      "network.modification.batteryModificationsResume": "${count} batterie(s) have been modified."
     }
   },
   "reportRoot" : {
@@ -31,9 +33,60 @@
     },
     "children" : [ {
       "messageKey" : "network.modification.voltageInitModification",
-      "children" : [ {
-        "messageKey" : "network.modification.GeneratorsModifications",
-        "children" : [ {
+      "children" : [
+        {
+          "messageKey": "network.modification.BatteriesModifications",
+          "children": [
+            {
+              "messageKey": "network.modification.batteryModification",
+              "values": {
+                "id": {
+                  "value": "ESQUE.HG1"
+                },
+                "reportSeverity": {
+                  "value": "DETAIL",
+                  "type": "SEVERITY"
+                }
+              }
+            },
+            {
+              "messageKey": "network.modification.fieldModification",
+              "values": {
+                "arrow": {
+                  "value": "→"
+                },
+                "fieldName": {
+                  "value": "Reactive power set point"
+                },
+                "oldValue": {
+                  "value": "-1.5"
+                },
+                "newValue": {
+                  "value": "10.0"
+                },
+                "reportSeverity": {
+                  "value": "DETAIL",
+                  "type": "SEVERITY"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "messageKey": "network.modification.batteryModificationsResume",
+          "values": {
+            "count": {
+              "value": 1
+            },
+            "reportSeverity": {
+              "value": "INFO",
+              "type": "SEVERITY"
+            }
+          }
+        },
+        {
+          "messageKey" : "network.modification.GeneratorsModifications",
+          "children" : [ {
           "messageKey" : "network.modification.generatorModification",
           "values" : {
             "id" : {
