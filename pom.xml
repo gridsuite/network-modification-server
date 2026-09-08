@@ -59,7 +59,7 @@
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
         <network-modification.version>1.7.0</network-modification.version>
         <!-- FIXME remove this in the next powsybl release update -->
-        <network-store-client.version>1.51.0-SNAPSHOT</network-store-client.version>
+        <network-store-client.version>1.51.0</network-store-client.version>
     </properties>
 
     <build>
