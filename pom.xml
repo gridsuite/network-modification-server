@@ -134,6 +134,18 @@
             <!-- FIXME remove this in the next powsybl release update -->
             <version>${network-store-client.version}</version>
         </dependency>
+        <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-network-store-iidm-impl</artifactId>
+            <version>${network-store.version}</version>
+        </dependency>
+        <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-network-store-model</artifactId>
+            <version>${network-store.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-network-modification</artifactId>
