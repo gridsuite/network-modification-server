@@ -49,6 +49,7 @@ import static org.gridsuite.modification.server.error.ModificationBusinessErrorC
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -1962,22 +1963,47 @@ class ModificationRepositoryTest {
     }
 
     @Test
-    void testRenameRootNetworkTagReachesASharedModificationNestedInAnother() {
-        // a shared composite, referenced from a group, then wrapped with a sibling into a composite shared in turn
+    void testCreatingACompositeFromASharedModificationCopiesItRatherThanLinkingIt() {
+        // a shared composite, referenced from a group and carrying an applicability of its own
         UUID innerReferenceUuid = insertComposite(TEST_GROUP_ID_3, true, "v1d1");
+        networkModificationRepository.updateRootNetworkApplicability(List.of(innerReferenceUuid), ROOT_NETWORK_TAG, false);
         UUID siblingUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d2"))).getFirst().getUuid();
-        UUID outerSharedUuid = networkModificationRepository.createNetworkCompositeModification(List.of(innerReferenceUuid, siblingUuid), "outer");
-        UUID outerReferenceUuid = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID_2,
-                List.of(new CompositeInfos(outerSharedUuid, "outer", true, "description"))).getFirst().getUuid();
-        networkModificationRepository.updateRootNetworkApplicability(List.of(outerReferenceUuid), ROOT_NETWORK_TAG, false);
+
+        // wrapping the reference with a sibling into a new composite resolves it to an independent copy, not a link
+        UUID outerCompositeUuid = networkModificationRepository.createNetworkCompositeModification(List.of(innerReferenceUuid, siblingUuid), "outer");
+
+        CompositeModificationInfos outerComposite = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(outerCompositeUuid);
+        ModificationInfos innerCopy = outerComposite.getModificationsInfos().stream()
+                .filter(CompositeModificationInfos.class::isInstance).findFirst().orElseThrow();
+        assertFalse(innerCopy instanceof ModificationReferenceInfos, "the selected reference must be stored as a copy, not a link");
+        assertEquals("description", innerCopy.getDescription(), "the copy inherits the reference's own description");
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), innerCopy.getApplicabilityByRootNetworkTag(),
+                "the copy inherits the reference's applicabilities");
+
+        // changing the copy's applicability leaves the original shared modification alone
+        networkModificationRepository.updateRootNetworkApplicability(List.of(outerCompositeUuid), RENAMED_ROOT_NETWORK_TAG, false);
         assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_3).get(innerReferenceUuid),
-                "The update reached the innermost shared modification, so the rename has to follow it there");
+                "the shared modification the reference points to is untouched by changes to the copy");
+    }
 
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+    @Test
+    void testCreatingACompositeFromAnUnknownModificationThrows() {
+        UUID unknownUuid = UUID.randomUUID();
+        assertThrows(NetworkModificationServerException.class,
+                () -> networkModificationRepository.createNetworkCompositeModification(List.of(unknownUuid), "outer"),
+                new NetworkModificationServerException(MODIFICATION_NOT_FOUND, unknownUuid.toString()).getMessage());
+    }
 
-        assertEquals(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, false),
-                getApplicabilities(TEST_GROUP_ID_3).get(innerReferenceUuid),
-                "A shared modification referenced from inside another one carries the applicability too");
+    @Test
+    void testCreatingACompositeFromAReferenceWhoseSharedModificationIsGoneThrows() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+        // the shared modification the reference points to disappears, leaving the reference dangling
+        networkModificationRepository.deleteModifications(null, List.of(sharedUuid));
+
+        assertThrows(NetworkModificationServerException.class,
+                () -> networkModificationRepository.createNetworkCompositeModification(List.of(referenceUuid), "outer"),
+                new NetworkModificationServerException(MODIFICATION_NOT_FOUND, sharedUuid.toString()).getMessage());
     }
 
     @Test
