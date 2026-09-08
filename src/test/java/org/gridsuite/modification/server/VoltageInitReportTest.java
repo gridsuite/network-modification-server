@@ -13,13 +13,21 @@ import com.powsybl.commons.report.ReportNodeDeserializer;
 import com.powsybl.commons.report.ReportNodeJsonModule;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ThreeSides;
+import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.service.FilterService;
+import org.gridsuite.modification.server.service.LargeNetworkModificationExecutionService;
+import org.gridsuite.modification.server.service.LoadFlowService;
+import org.gridsuite.modification.server.service.ModificationContextFactory;
+import org.gridsuite.modification.server.service.NetworkModificationObserver;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
@@ -59,7 +67,28 @@ class VoltageInitReportTest {
     private NetworkModificationRepository modificationRepository;
 
     @Autowired
-    private NetworkModificationApplicator networkModificationApplicator;
+    private NetworkStoreService networkStoreService;
+
+    @Autowired
+    private EquipmentInfosService equipmentInfosService;
+
+    @Autowired
+    private ModificationApplicationInfosService applicationInfosService;
+
+    @Autowired
+    private FilterService filterService;
+
+    @Autowired
+    private ModificationContextFactory modificationContextFactory;
+
+    @Autowired
+    private LoadFlowService loadFlowService;
+
+    @Autowired
+    private NetworkModificationObserver networkModificationObserver;
+
+    @Autowired
+    private LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
 
     @MockitoBean
     protected ReportService reportService;
@@ -102,6 +131,9 @@ class VoltageInitReportTest {
         List<ModificationApplicationGroup> modificationInfosGroups = List.of(
                 TestUtils.groupOnAnyRootNetwork(GROUP_ID, modifications, new ReportInfos(REPORT_ID, NODE_ID))
         );
+        NetworkModificationApplicator networkModificationApplicator = new NetworkModificationApplicator(networkStoreService,
+                equipmentInfosService, applicationInfosService, reportService, filterService, modificationContextFactory,
+                loadFlowService, networkModificationObserver, largeNetworkModificationExecutionService);
         NetworkModificationResult result = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, NETWORK_ID, true));
         return result.getApplicationStatus();
     }
