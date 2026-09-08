@@ -139,6 +139,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         assertEquals(
             String.format("ScalingInfos(super=ModificationInfos(uuid=null, type=GENERATOR_SCALING, date=null, stashed=false, messageType=null, messageValues=null, activated=null, " +
+                            "applicabilityByRootNetworkTag=null, " +
                             "description=null), variations=[ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter1)], " +
                             "variationMode=PROPORTIONAL_TO_PMAX, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, " +
                             "filters=[FilterInfos(id=%s, name=filter2)], variationMode=REGULAR_DISTRIBUTION, variationValue=50.0, reactiveVariationMode=null), " +
@@ -239,7 +240,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(generatorScalingInfo.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
+        assertLogMessage(generatorScalingInfo.toModification().getName() + ": There is no valid equipment ID among the provided filter(s)",
                 "network.modification.invalidFilters", reportService);
         wireMockUtils.verifyGetRequest(subWrongId, PATH, handleQueryParams(FILTER_WRONG_ID_1), false);
     }

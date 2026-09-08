@@ -8,17 +8,27 @@ package org.gridsuite.modification.server.entities;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-import static org.gridsuite.modification.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
+
+import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.MODIFICATION_DESCRIPTION_MISSING;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -33,6 +43,8 @@ import static org.gridsuite.modification.NetworkModificationException.Type.MISSI
         indexes = { @Index(name = "modification_container_idx", columnList = "container_id") }
 )
 public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> {
+
+    public static final int ROOT_NETWORK_TAG_MAX_LENGTH = 4;
 
     @Id
     @Column(name = "id")
@@ -63,6 +75,14 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     @Column(name = "description", columnDefinition = "CLOB")
     private String description;
 
+    // Applicability per root network tag: a tag without an entry is applicable.
+    // Deletion is left to the database: cascading it here would make hibernate load the applicabilities of every
+    // modification just to delete them. An entry is never removed from this list either, dropping one is only done
+    // manually in SQL: see deleteRootNetworkApplicabilities.
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OneToMany(mappedBy = "modification", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<ModificationRootNetworkApplicabilityEntity> applicabilities = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "container_id", foreignKey = @ForeignKey(name = "modification_container_fk"))
     private AbstractModificationContainerEntity container;
@@ -85,7 +105,7 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
 
     protected ModificationEntity(ModificationInfos modificationInfos) {
         if (modificationInfos == null) {
-            throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
+            throw new NetworkModificationServerException(MODIFICATION_DESCRIPTION_MISSING);
         }
         // Always mint a fresh id here. We deliberately ignore modificationInfos.getUuid(): fromDTO is also
         // used to clone/duplicate existing modifications, and reusing the source uuid would collide. This
@@ -98,6 +118,9 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         // Preserve the default activation flag when missing
         if (modificationInfos.getActivated() != null) {
             this.activated = modificationInfos.getActivated();
+        }
+        if (modificationInfos.getApplicabilityByRootNetworkTag() != null) {
+            modificationInfos.getApplicabilityByRootNetworkTag().forEach(this::setApplicability);
         }
 
         assignAttributes(modificationInfos);
@@ -139,6 +162,18 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         return container == null ? null : container.getId();
     }
 
+    public void setApplicability(String rootNetworkTag, Boolean applicable) {
+        findApplicability(rootNetworkTag).ifPresentOrElse(
+            applicability -> applicability.setApplicable(applicable),
+            () -> applicabilities.add(new ModificationRootNetworkApplicabilityEntity(this, rootNetworkTag, applicable)));
+    }
+
+    private Optional<ModificationRootNetworkApplicabilityEntity> findApplicability(String rootNetworkTag) {
+        return applicabilities.stream()
+            .filter(applicability -> applicability.getRootNetworkTag().equals(rootNetworkTag))
+            .findFirst();
+    }
+
     public static ModificationEntity fromDTO(ModificationInfos dto) {
         if (dto instanceof EquipmentAttributeModificationInfos infos) {
             return EquipmentAttributeModificationEntity.createAttributeEntity(infos);
@@ -150,6 +185,9 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
                 Constructor<? extends ModificationEntity> constructor = entityClass.getConstructor(dto.getClass());
                 return constructor.newInstance(dto);
             } catch (Exception e) {
+                if (e.getCause() instanceof NetworkModificationServerException networkModificationServerException) {
+                    throw networkModificationServerException;
+                }
                 throw new RuntimeException("Failed to map DTO to Entity", e);
             }
         } else {

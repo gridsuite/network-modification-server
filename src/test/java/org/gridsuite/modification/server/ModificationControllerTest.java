@@ -19,17 +19,22 @@ import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import com.powsybl.ws.commons.error.BaseExceptionHandler;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder;
+import org.gridsuite.modification.error.NetworkModificationException;
+import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.error.ModificationBusinessErrorCode;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.TestImpactUtils;
@@ -45,26 +50,34 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.ModificationType.LINE_MODIFICATION;
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
-import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
+import static org.gridsuite.modification.error.NetworkModificationExceptionType.BUSBAR_SECTION_NOT_FOUND;
+import static org.gridsuite.modification.error.NetworkModificationExceptionType.MODIFICATION_ERROR;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
+import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -72,8 +85,7 @@ import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -84,6 +96,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @AutoConfigureMockMvc
 @SpringBootTest
+@Import(BaseExceptionHandler.class)
 @Tag("IntegrationTest")
 class ModificationControllerTest {
 
@@ -99,6 +112,9 @@ class ModificationControllerTest {
     private static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
     private static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
+
+    private static final String ROOT_NETWORK_TAG = "PH1";
+    private static final String RENAMED_ROOT_NETWORK_TAG = "PH2";
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String NETWORK_MODIFICATION_URI = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
@@ -160,7 +176,8 @@ class ModificationControllerTest {
         when(networkStoreService.getNetwork(eq(TEST_NETWORK_MIXED_TOPOLOGY_ID),
                 nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> NetworkCreation.createMixedTopology(TEST_NETWORK_MIXED_TOPOLOGY_ID));
 
-        doThrow(new PowsyblException()).when(networkStoreService).flush(argThat(n -> TEST_NETWORK_WITH_FLUSH_ERROR_ID.toString().equals(n.getId())));
+        doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error"))
+            .when(networkStoreService).flush(argThat(n -> TEST_NETWORK_WITH_FLUSH_ERROR_ID.toString().equals(n.getId())));
 
         // clean DB
         modificationRepository.deleteAll();
@@ -174,6 +191,27 @@ class ModificationControllerTest {
         equipmentInfosService.deleteAll();
     }
 
+    private static Stream<Arguments> provideModificationInfos() {
+        return Stream.of(
+                Arguments.of(EquipmentAttributeModificationInfos.builder()
+                        .equipmentType(IdentifiableType.SWITCH)
+                        .equipmentAttributeName("open")
+                        .equipmentAttributeValue(true)
+                        .equipmentId("v1b1")
+                        .build()
+                ),
+                Arguments.of(ModificationCreation.getCreationLoad(
+                        "v1",
+                        "idLoad",
+                        "nameLoad",
+                        "1.1",
+                        LoadType.UNDEFINED)),
+                Arguments.of(GroovyScriptInfos.builder()
+                        .script("network.getGenerator('idGenerator').targetP=10")
+                        .build())
+        );
+    }
+
     private boolean existTombstonedEquipmentInfos(String equipmentId, UUID networkUuid, String variantId) {
         return tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(networkUuid, variantId).stream().anyMatch(t -> t.getId().equals(equipmentId));
     }
@@ -185,15 +223,19 @@ class ModificationControllerTest {
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationsResult.modificationResults().getFirst().get().getApplicationStatus());
     }
 
+    private String getErrorDetail(MvcResult mvcResult) throws Exception {
+        return mapper.readTree(mvcResult.getResponse().getContentAsString()).get("detail").asText();
+    }
+
     private String getJsonBody(List<UUID> uuids, String variantId) throws JsonProcessingException {
         return TestUtils.getJsonBody(uuids, TEST_NETWORK_ID, variantId);
     }
 
     @Test
     void testModificationException() {
-        assertEquals(new NetworkModificationException(MODIFICATION_ERROR).getMessage(), MODIFICATION_ERROR.name());
-        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, "Error message").getMessage(), MODIFICATION_ERROR.name() + " : Error message");
-        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, new IllegalArgumentException("Error message")).getMessage(), MODIFICATION_ERROR.name() + " : Error message");
+        assertEquals(new NetworkModificationException(MODIFICATION_ERROR).getMessage(), MODIFICATION_ERROR.getMessage());
+        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, "Error message").getMessage(), MODIFICATION_ERROR.getMessage() + " : Error message");
+        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, new IllegalArgumentException("Error message")).getMessage(), MODIFICATION_ERROR.getMessage() + " : Error message");
     }
 
     @Test
@@ -212,15 +254,16 @@ class ModificationControllerTest {
         MvcResult mvcResult = runRequestAsync(mockMvc,
             post(NETWORK_MODIFICATION_URI).content(body).contentType(MediaType.APPLICATION_JSON),
             status().isNotFound());
-        assertEquals(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage(), mvcResult.getResponse().getContentAsString());
+        assertEquals(String.format(NETWORK_NOT_FOUND.messageTemplate(), NOT_FOUND_NETWORK_ID), getErrorDetail(mvcResult));
     }
 
     @Test
     void assertThrowsUpdateModificationNotFound() {
         UUID modificationUuid = UUID.randomUUID();
         ModificationInfos modificationInfos = LoadCreationInfos.builder().equipmentId("id").build();
-        String errorMessage = assertThrows(NetworkModificationException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
-        assertEquals(new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("%s", modificationUuid)).getMessage(), errorMessage);
+        ModificationBusinessErrorCode businessErrorCode = assertThrows(NetworkModificationServerException.class,
+            () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getBusinessErrorCode();
+        assertEquals(ModificationBusinessErrorCode.MODIFICATION_NOT_FOUND, businessErrorCode);
         assertThrows(NullPointerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, null));
     }
 
@@ -345,8 +388,11 @@ class ModificationControllerTest {
         mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(status().isNotFound(),
-                    content().string(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage()));
+        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertEquals(
+                    String.format(MODIFICATION_CONTAINER_NOT_FOUND.messageTemplate(), TEST_GROUP_ID, ModificationContainerType.GROUP),
+                        result.getResolvedException().getMessage()));
 
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true&errorOnGroupNotFound=false", TEST_GROUP_ID)).andExpectAll(
          status().isOk(),
@@ -365,7 +411,6 @@ class ModificationControllerTest {
                 .equipmentAttributeName("open")
                 .equipmentAttributeValue(true)
                 .equipmentId("v1b1")
-                .stashed(true)
                 .build();
         String switchStatusModificationInfosJson = TestUtils.getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
@@ -376,6 +421,13 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
 
         String uuidString = modifications.getFirst().getUuid().toString();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", uuidString)
+                        .queryParam("stashed", "true"))
+                .andExpect(status().isOk());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, true).size());
+
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString)
@@ -392,7 +444,6 @@ class ModificationControllerTest {
                 .equipmentAttributeName("open")
                 .equipmentAttributeValue(true)
                 .equipmentId("v1b1")
-                .stashed(true)
                 .build();
         String switchStatusModificationInfosJson = TestUtils.getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
@@ -441,6 +492,71 @@ class ModificationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk());
         assertEquals(false, modificationRepository.getModifications(TEST_GROUP_ID, true, true).getFirst().getActivated());
+    }
+
+    @Test
+    void testUpdateRootNetworkApplicability() throws Exception {
+        List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 2);
+        UUID deactivatedUuid = modifications.get(0).getUuid();
+        UUID untouchedUuid = modifications.get(1).getUuid();
+
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
+                .queryParam("uuids", deactivatedUuid.toString())
+                .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
+                .queryParam("applicable", "false")
+        ).andExpect(status().isOk());
+
+        Map<UUID, Map<String, Boolean>> applicabilities = readApplicabilities(TEST_GROUP_ID);
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicabilities.get(deactivatedUuid),
+                "The applicability comes with the modifications themselves, no separate fetch needed");
+        assertEquals(Map.of(), applicabilities.get(untouchedUuid));
+    }
+
+    private Map<UUID, Map<String, Boolean>> readApplicabilities(UUID groupUuid) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", groupUuid))
+                .andExpect(status().isOk())
+                .andReturn();
+        List<ModificationInfos> metadata = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        return metadata.stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::getApplicabilityByRootNetworkTag));
+    }
+
+    @Test
+    void testRenameAndDeleteRootNetworkTag() throws Exception {
+        List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID modificationUuid = modifications.getFirst().getUuid();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
+                .queryParam("uuids", modificationUuid.toString())
+                .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
+                .queryParam("applicable", "false")
+        ).andExpect(status().isOk());
+
+        // renaming the root network tag carries along its applicabilities
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-tag")
+                .queryParam("groupUuids", TEST_GROUP_ID.toString())
+                .queryParam("oldTag", ROOT_NETWORK_TAG)
+                .queryParam("newTag", RENAMED_ROOT_NETWORK_TAG)
+        ).andExpect(status().isOk());
+        assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+
+        // and dropping the tag takes its applicabilities away
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE + "/root-network-tag")
+                .queryParam("groupUuids", TEST_GROUP_ID.toString())
+                .queryParam("rootNetworkTags", RENAMED_ROOT_NETWORK_TAG)
+        ).andExpect(status().isOk());
+        assertEquals(Map.of(), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+    }
+
+    @Test
+    void testUpdateRootNetworkApplicabilityWithTooLongTag() throws Exception {
+        List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
+                .queryParam("uuids", modifications.getFirst().getUuid().toString())
+                .queryParam("rootNetworkTag", "TOO_LONG")
+                .queryParam("applicable", "false")
+        ).andExpect(status().isBadRequest());
     }
 
     @Test
@@ -552,9 +668,11 @@ class ModificationControllerTest {
     @Test
     void testDeleteModificationMissingParamError() throws Exception {
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE))
-                .andExpect(status().isInternalServerError())
-                .andExpect(result -> assertInstanceOf(NetworkModificationException.class, result.getResolvedException()))
-                .andExpect(result -> assertEquals("MODIFICATION_DELETION_ERROR : need to specify the group or give a list of UUIDs", result.getResolvedException().getMessage()));
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertInstanceOf(NetworkModificationServerException.class, result.getResolvedException()))
+                .andExpect(result -> assertEquals(
+                        MODIFICATION_DELETION_ARGUMENT_ERROR.messageTemplate(),
+                        result.getResolvedException().getMessage()));
     }
 
     @Test
@@ -658,7 +776,7 @@ class ModificationControllerTest {
                 put("/v1/containers/" + TEST_GROUP_ID + "?action=XXXXXXX")
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().is5xxServerError());
 
         // create 1 modification in another group
         UUID otherGroupId = UUID.randomUUID();
@@ -698,12 +816,14 @@ class ModificationControllerTest {
 
         // Duplicate modifications from a group and from a list : illegal operation
         bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
-        mvcResult = mockMvc.perform(
+        mockMvc.perform(
                 put("/v1/containers/" + otherGroupId + "?action=COPY" + "&sourceContainerId=" + TEST_GROUP_ID)
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest()).andReturn();
-        assertEquals(new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID).getMessage(), mvcResult.getResponse().getContentAsString());
+            .andExpect(status().isBadRequest())
+                .andExpect(result -> assertInstanceOf(NetworkModificationServerException.class, result.getResolvedException()))
+                .andExpect(result -> assertEquals(MODIFICATION_DUPLICATION_ARGUMENT_ERROR.messageTemplate(),
+                        result.getResolvedException().getMessage()));
     }
 
     /**
@@ -742,7 +862,7 @@ class ModificationControllerTest {
                 put(wrongUrl)
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().is5xxServerError());
 
         // create 1 modification in another group
         UUID otherGroupId = UUID.randomUUID();
@@ -1428,8 +1548,8 @@ class ModificationControllerTest {
 
         var result = ModificationUtils.getInstance().getPosition("1B", network, vl);
         var result2 = ModificationUtils.getInstance().getPosition("1.1", network2, vl2);
-        assertEquals(6, result);
-        assertEquals(0, result2);
+        assertEquals(15, result);
+        assertEquals(10, result2);
 
         ModificationUtils modificationUtils = ModificationUtils.getInstance();
         String errorMessage = assertThrows(NetworkModificationException.class, () -> modificationUtils.getPosition("invalidBbsId", network, vl)).getMessage();
@@ -1718,11 +1838,10 @@ class ModificationControllerTest {
         // Try to delete this modification without its group: not allowed
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
                         .queryParam("uuids", switchModificationId.toString()))
-                .andExpectAll(
-                    status().is5xxServerError(),
-                    content().string(new NetworkModificationException(MODIFICATION_DELETION_ERROR,
-                        String.format("%s is owned by group %s", switchModificationId, TEST_GROUP_ID)).getMessage())
-            );
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertEquals(
+                    String.format(MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN.messageTemplate(), switchModificationId, TEST_GROUP_ID),
+                    result.getResolvedException().getMessage()));
     }
 
     @Test
@@ -2052,11 +2171,59 @@ class ModificationControllerTest {
                 .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        Map<UUID, UUID> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<ReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
-        assertEquals(1, referencesData.size());
-        assertTrue(referencesData.containsKey(referencedLoadModificationInfo.getUuid()));
-        assertNull(referencesData.get(referencedLoadModificationInfo.getUuid()));
+        // both references share the same referencedLoadModificationInfo target, but are kept as distinct entries
+        assertEquals(2, referencesData.size());
+        assertTrue(referencesData.stream().noneMatch(r -> r.modificationUuid().equals(nonReferenceModificationUuid)));
+        for (UUID referenceModificationUuid : List.of(activeReferenceInfo.getUuid(), stashedReferenceInfo.getUuid())) {
+            ReferenceData reference = referencesData.stream()
+                    .filter(r -> r.modificationUuid().equals(referenceModificationUuid))
+                    .findFirst().orElseThrow();
+            assertEquals(referencedLoadModificationInfo.getUuid(), reference.referenceId());
+            assertNull(reference.containerId());
+        }
+    }
+
+    @Test
+    void testGetReferencesWithSharedReference() throws Exception {
+        // Two distinct modifications referencing the very same shared element: getReferences must return
+        // both occurrences instead of collapsing them into a single entry (regression test)
+        ModificationInfos referencedLoadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+        referencedLoadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(referencedLoadModificationInfo))).getFirst();
+
+        ModificationInfos firstReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(referencedLoadModificationInfo.getUuid())
+                .referenceInfos(referencedLoadModificationInfo)
+                .stashed(false)
+                .build();
+        firstReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(firstReferenceInfo))).getFirst();
+
+        ModificationInfos secondReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(referencedLoadModificationInfo.getUuid())
+                .referenceInfos(referencedLoadModificationInfo)
+                .stashed(false)
+                .build();
+        secondReferenceInfo = modificationRepository.saveModifications(TEST_GROUP2_ID, List.of(ModificationEntity.fromDTO(secondReferenceInfo))).getFirst();
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/references")
+                        .queryParam("uuids",
+                                firstReferenceInfo.getUuid().toString(),
+                                secondReferenceInfo.getUuid().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        List<ReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        assertEquals(2, referencesData.size());
+        UUID sharedReferenceId = referencedLoadModificationInfo.getUuid();
+        UUID firstReferenceUuid = firstReferenceInfo.getUuid();
+        UUID secondReferenceUuid = secondReferenceInfo.getUuid();
+        assertTrue(referencesData.stream().anyMatch(r -> r.modificationUuid().equals(firstReferenceUuid) && r.referenceId().equals(sharedReferenceId)));
+        assertTrue(referencesData.stream().anyMatch(r -> r.modificationUuid().equals(secondReferenceUuid) && r.referenceId().equals(sharedReferenceId)));
     }
 
     @Test
@@ -2075,16 +2242,16 @@ class ModificationControllerTest {
                 .referenceInfos(referencedLoadModificationInfo)
                 .stashed(false)
                 .build();
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(activeReferenceInfo)));
+        activeReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(activeReferenceInfo))).getFirst();
 
-        // Create a stashed reference in the tested group: it must be ignored
+        // Create a stashed reference in the tested group: it must also be returned, as its own entry
         ModificationInfos stashedReferenceInfo = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
                 .referenceId(referencedLoadModificationInfo.getUuid())
                 .referenceInfos(referencedLoadModificationInfo)
                 .stashed(true)
                 .build();
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(stashedReferenceInfo)));
+        stashedReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(stashedReferenceInfo))).getFirst();
 
         // Create an active reference in another group: it must not be returned for TEST_GROUP_ID
         ModificationInfos otherGroupReferencedLoadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoadOther", "nameLoadOther", "1.1", LoadType.UNDEFINED);
@@ -2106,11 +2273,158 @@ class ModificationControllerTest {
                 .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        Map<UUID, UUID> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<ReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
-        assertEquals(1, referencesData.size());
-        assertTrue(referencesData.containsKey(referencedLoadModificationInfo.getUuid()));
-        assertNull(referencesData.get(referencedLoadModificationInfo.getUuid()));
-        assertFalse(referencesData.containsKey(otherGroupReferencedLoadModificationInfo.getUuid()));
+        // both the active and the stashed reference of the tested group are returned, as distinct entries
+        assertEquals(2, referencesData.size());
+        for (UUID referenceModificationUuid : List.of(activeReferenceInfo.getUuid(), stashedReferenceInfo.getUuid())) {
+            ReferenceData reference = referencesData.stream()
+                    .filter(r -> r.modificationUuid().equals(referenceModificationUuid))
+                    .findFirst().orElseThrow();
+            assertEquals(referencedLoadModificationInfo.getUuid(), reference.referenceId());
+            assertNull(reference.containerId());
+        }
+        UUID otherGroupReferencedLoadModificationUuid = otherGroupReferencedLoadModificationInfo.getUuid();
+        assertTrue(referencesData.stream().noneMatch(r -> r.referenceId().equals(otherGroupReferencedLoadModificationUuid)));
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideModificationInfos")
+    void testGetStandaloneNetworkModificationShouldReturnExpected(ModificationInfos modificationInfos) throws Exception {
+        ModificationInfos savedModification = modificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(ModificationEntity.fromDTO(modificationInfos))).getFirst();
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone/{modificationUuid}", savedModification.getUuid())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        AbstractModification actualModification = mapper.readValue(mvcResult.getResponse().getContentAsString(), AbstractModification.class);
+
+        assertThat(actualModification).isEqualTo(modificationInfos.toModification());
+    }
+
+    @Test
+    void testGetStandaloneNetworkModificationNotFound() throws Exception {
+        UUID notFoundUuid = UUID.randomUUID();
+        String expectedErrorMessage = String.format(MODIFICATION_NOT_FOUND.messageTemplate(), notFoundUuid);
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone/{modificationUuid}", notFoundUuid))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        assertThat(mvcResult.getResponse().getContentAsString()).contains(expectedErrorMessage);
+    }
+
+    @Test
+    void testStandaloneNetworkModificationsShouldReturnExpected() throws Exception {
+        EquipmentAttributeModificationInfos equipmentAttributeModification = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .build();
+        LoadCreationInfos loadCreationModification = ModificationCreation.getCreationLoad(
+                "v1",
+                "idLoad",
+                "nameLoad",
+                "1.1",
+                LoadType.UNDEFINED);
+        List<ModificationInfos> savedModificationInfos = modificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(ModificationEntity.fromDTO(equipmentAttributeModification), ModificationEntity.fromDTO(loadCreationModification)));
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone")
+                        .param("uuids", savedModificationInfos.getFirst().getUuid().toString(), savedModificationInfos.getLast().getUuid().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        TypeReference<HashMap<UUID, AbstractModification>> typeRef = new TypeReference<HashMap<UUID, AbstractModification>>() { };
+        HashMap<UUID, AbstractModification> actualModifications = mapper.readValue(mvcResult.getResponse().getContentAsString(), typeRef);
+        assertThat(actualModifications).containsAllEntriesOf(savedModificationInfos.stream().collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification)));
+    }
+
+    @Test
+    void testStandaloneNetworkModificationsButNoErrorsWhenMissingModificationShouldReturnExpected() throws Exception {
+        EquipmentAttributeModificationInfos equipmentAttributeModification = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .build();
+        LoadCreationInfos loadCreationModification = ModificationCreation.getCreationLoad(
+                "v1",
+                "idLoad",
+                "nameLoad",
+                "1.1",
+                LoadType.UNDEFINED);
+        UUID nonExistentModificationUuid = UUID.randomUUID();
+        List<ModificationInfos> savedModificationInfos = modificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(ModificationEntity.fromDTO(equipmentAttributeModification), ModificationEntity.fromDTO(loadCreationModification)));
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone")
+                        .param("uuids", savedModificationInfos.getFirst().getUuid().toString(), savedModificationInfos.getLast().getUuid().toString(), nonExistentModificationUuid.toString())
+                        .param("errorOnModificationNotFound", "false")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        TypeReference<HashMap<UUID, AbstractModification>> typeRef = new TypeReference<>() { };
+        HashMap<UUID, AbstractModification> actualModifications = mapper.readValue(mvcResult.getResponse().getContentAsString(), typeRef);
+        assertThat(actualModifications).containsAllEntriesOf(savedModificationInfos.stream().collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification)))
+                .doesNotContainKey(nonExistentModificationUuid);
+    }
+
+    @Test
+    void testStandaloneNetworkModificationsNotFound() throws Exception {
+        EquipmentAttributeModificationInfos equipmentAttributeModification = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .build();
+        UUID nonExistentModificationUuid = UUID.randomUUID();
+        List<ModificationInfos> savedModificationInfos = modificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(ModificationEntity.fromDTO(equipmentAttributeModification)));
+        String expectedErrorMessage = String.format("Some of these modifications %s were not found", List.of(savedModificationInfos.getFirst().getUuid(), nonExistentModificationUuid));
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/standalone")
+                        .param("uuids", savedModificationInfos.getFirst().getUuid().toString(), nonExistentModificationUuid.toString())
+                        .param("errorOnModificationNotFound", "true")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        assertThat(mvcResult.getResponse().getContentAsString()).contains(expectedErrorMessage);
+    }
+
+    @Test
+    void testGetModificationReferenceMetadata() throws Exception {
+        // Create a referenced modification, not owned by the tested group
+        ModificationInfos referencedLoadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+        referencedLoadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(referencedLoadModificationInfo))).getFirst();
+
+        ModificationInfos referenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceId(referencedLoadModificationInfo.getUuid())
+                .referenceInfos(referencedLoadModificationInfo)
+                .stashed(false)
+                .build();
+        referenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(referenceInfo))).getFirst();
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<ModificationInfos> modifications = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, modifications.size());
+        assertInstanceOf(ModificationReferenceInfos.class, modifications.getFirst());
+        ModificationReferenceInfos referenceMetadata = (ModificationReferenceInfos) modifications.getFirst();
+        assertEquals(referenceInfo.getUuid(), referenceMetadata.getUuid());
+        assertEquals(ModificationType.MODIFICATION_REFERENCE, referenceMetadata.getType());
+        assertEquals(referencedLoadModificationInfo.getUuid(), referenceMetadata.getReferenceId());
+        // the label of a reference is the one of the modification it points to
+        assertEquals(ModificationType.LOAD_CREATION.name(), referenceMetadata.getMessageType());
+        assertTrue(referenceMetadata.getMessageValues().contains("idLoad"));
     }
 }

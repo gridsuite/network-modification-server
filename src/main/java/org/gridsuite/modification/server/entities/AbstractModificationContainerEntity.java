@@ -9,13 +9,13 @@ package org.gridsuite.modification.server.entities;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
+import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.MODIFICATION_NOT_FOUND;
 
 /**
  * @author Hugo Marcellin {@literal <hugo.marcelin at rte-france.com>}
@@ -80,8 +80,9 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
                 return i;
             }
         }
-        throw new NetworkModificationException(MODIFICATION_NOT_FOUND,
-            String.format("Modification %s not found in target container %s", referenceUuid, getId()));
+        throw new NetworkModificationServerException(MODIFICATION_NOT_FOUND,
+            String.format("Modification %s not found in target container %s", referenceUuid, getId()),
+            Map.of("modificationId", referenceUuid + " (container = " + getId() + ")"));
     }
 
     private int getNextPositionOrder() {

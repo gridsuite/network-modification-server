@@ -62,8 +62,6 @@ public class ModificationReferenceEntity extends ModificationEntity {
 
     @SneakyThrows
     private void assignAttributes(ModificationReferenceInfos modificationReferenceInfos) {
-        modificationReferenceInfos.check();
-
         this.referenceType = modificationReferenceInfos.getReferenceType().name();
         this.referenceId = modificationReferenceInfos.getReferenceId();
 

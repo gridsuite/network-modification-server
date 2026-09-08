@@ -11,8 +11,8 @@ import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.OperationalLimitsGroup;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -23,8 +23,8 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
+import static org.gridsuite.modification.error.NetworkModificationExceptionType.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
@@ -264,7 +264,8 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
 
         assertEquals(
             "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, " +
-                    "type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null, activated=null, description=null), equipmentId=idLineEdited, properties=null), " +
+                    "type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null, activated=null, " +
+                    "applicabilityByRootNetworkTag=null, description=null), equipmentId=idLineEdited, properties=null), " +
                     "equipmentName=nameLineEdited), r=110.0, x=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, " +
                     "operationalLimitsGroups=[OperationalLimitsGroupInfos(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=200.0, " +
                     "temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), applicability=SIDE1, limitsProperties=null), " +

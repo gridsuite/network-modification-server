@@ -7,8 +7,10 @@
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.Network;
+import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.utils.FilterServiceUtils;
+import org.gridsuite.filter.wip.Filter;
 import org.gridsuite.modification.IFilterService;
 import org.gridsuite.modification.dto.FilterEquipments;
 import org.gridsuite.modification.dto.IdentifiableAttributes;
@@ -16,7 +18,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -28,9 +29,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.FILTERS_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationServerException.handleChangeError;
-
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
@@ -40,6 +38,12 @@ public class FilterService implements IFilterService {
     private static final String FILTER_SERVER_API_VERSION = "v1";
 
     private static final String DELIMITER = "/";
+
+    private static final String STANDALONE_FILTERS_URI = "/standalone-filters";
+
+    private static final String IDS_PARAM = "ids";
+
+    private static final ParameterizedTypeReference<Map<UUID, Filter>> STANDALONE_FILTERS_BY_ID = new ParameterizedTypeReference<>() { };
 
     private static String filterServerBaseUri;
 
@@ -60,15 +64,30 @@ public class FilterService implements IFilterService {
         String path = UriComponentsBuilder.fromPath(DELIMITER + FILTER_SERVER_API_VERSION + "/filters/metadata" + ids)
             .buildAndExpand()
             .toUriString();
-        try {
-            return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null, new ParameterizedTypeReference<List<AbstractFilter>>() { }).getBody();
-        } catch (HttpStatusCodeException e) {
-            throw handleChangeError(e, FILTERS_NOT_FOUND);
-        }
+        return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null, new ParameterizedTypeReference<List<AbstractFilter>>() { }).getBody();
     }
 
     public Stream<org.gridsuite.filter.identifierlistfilter.FilterEquipments> exportFilters(List<UUID> filtersUuids, Network network) {
         return FilterServiceUtils.getFilterEquipmentsFromUuid(network, filtersUuids, this::getFilters).stream();
+    }
+
+    /**
+     * Retrieves self-contained filter definitions, which can then be evaluated locally against a network.
+     *
+     * @return the filters found, indexed by their identifier; identifiers with no matching filter are omitted
+     */
+    public Map<UUID, Filter> getStandaloneFilters(List<UUID> filtersUuids) {
+        if (CollectionUtils.isEmpty(filtersUuids)) {
+            return Map.of();
+        }
+        String path = UriComponentsBuilder.fromPath(DELIMITER + FILTER_SERVER_API_VERSION + STANDALONE_FILTERS_URI)
+                .queryParam(IDS_PARAM, filtersUuids)
+                .buildAndExpand()
+                .toUriString();
+        Map<UUID, Filter> filters = restTemplate
+                .exchange(filterServerBaseUri + path, HttpMethod.GET, null, STANDALONE_FILTERS_BY_ID)
+                .getBody();
+        return filters == null ? Map.of() : filters;
     }
 
     public Map<UUID, FilterEquipments> getUuidFilterEquipmentsMap(Network network, Map<UUID, String> filters) {
