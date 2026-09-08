@@ -23,7 +23,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.service.NetworkModificationService.MODIFICATION_LIST_SIZE_MISMATCH_ERROR;
