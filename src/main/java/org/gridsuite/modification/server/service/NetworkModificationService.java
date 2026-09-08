@@ -322,8 +322,8 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public boolean hasReferences(@NonNull List<UUID> containerUuids) {
-        return modificationRepository.existsReferenceInContainers(containerUuids);
+    public boolean hasModificationReferences(@NonNull List<UUID> containerUuids) {
+        return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainers(containerUuids);
     }
 
     @Transactional

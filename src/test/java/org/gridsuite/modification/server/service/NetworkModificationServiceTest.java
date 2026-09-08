@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.service;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -208,6 +209,40 @@ class NetworkModificationServiceTest {
         assertEquals(1, parentComposites.size());
         assertEquals(compositeUuid, parentComposites.get(nestedChildUuid));
         assertFalse(parentComposites.containsKey(directGroupChildUuid));
+    }
+
+    @Test
+    void shouldFindReferencesNestedInComposites() {
+        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
+        UUID groupWithoutReferenceUuid = UUID.randomUUID();
+        saveComposite(groupWithoutReferenceUuid, List.of(dummyModification(UUID.randomUUID())));
+        // outer ── inner ── reference to the shared composite
+        UUID groupWithReferenceUuid = UUID.randomUUID();
+        UUID outerUuid = saveComposite(groupWithReferenceUuid,
+                List.of(compositeModification(UUID.randomUUID(), List.of(referenceTo(sharedUuid)))));
+
+        assertFalse(networkModificationService.hasModificationReferences(List.of()), "no container, nothing to look into");
+        assertFalse(networkModificationService.hasModificationReferences(List.of(groupWithoutReferenceUuid)));
+        assertTrue(networkModificationService.hasModificationReferences(List.of(groupWithReferenceUuid)), "a reference nested two composites deep");
+        assertTrue(networkModificationService.hasModificationReferences(List.of(outerUuid)), "a composite is a container too");
+        assertTrue(networkModificationService.hasModificationReferences(List.of(groupWithoutReferenceUuid, groupWithReferenceUuid)),
+                "any of the containers holding one is enough");
+    }
+
+    /**
+     * @return the uuid of a composite holding the given content, saved in the given group
+     */
+    private UUID saveComposite(UUID groupUuid, List<ModificationInfos> children) {
+        return networkModificationRepository.saveModifications(groupUuid,
+                List.of(ModificationEntity.fromDTO(compositeModification(UUID.randomUUID(), children)))).getFirst().getUuid();
+    }
+
+    private static ModificationReferenceInfos referenceTo(UUID sharedCompositeUuid) {
+        return ModificationReferenceInfos.builder()
+                .referenceId(sharedCompositeUuid)
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceInfos(CompositeModificationInfos.builder().uuid(sharedCompositeUuid).build())
+                .build();
     }
 
     private static LoadModificationInfos dummyModification(UUID uuid) {

@@ -311,9 +311,9 @@ public class NetworkModificationController {
     @GetMapping(value = "/containers/references/exists", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Whether any of the containers (groups or composites) holds a modification reference, including nested in their composites")
     @ApiResponse(responseCode = "200", description = "true if at least one modification reference is found")
-    public ResponseEntity<Boolean> hasReferences(
+    public ResponseEntity<Boolean> hasModificationReferences(
             @Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids) {
-        return ResponseEntity.ok().body(networkModificationService.hasReferences(containerUuids));
+        return ResponseEntity.ok().body(networkModificationService.hasModificationReferences(containerUuids));
     }
 
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
