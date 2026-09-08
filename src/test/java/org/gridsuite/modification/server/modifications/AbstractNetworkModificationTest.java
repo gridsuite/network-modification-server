@@ -106,6 +106,7 @@ public abstract class AbstractNetworkModificationTest {
 
         when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), any(PreloadingStrategy.class))).thenThrow(new PowsyblException());
         when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
+        when(networkStoreService.networkExists(eq(TEST_NETWORK_ID))).thenReturn(true);
 
         wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
         wireMockUtils = new WireMockUtils(wireMockServer);
