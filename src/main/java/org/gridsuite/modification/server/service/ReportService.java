@@ -15,12 +15,9 @@ import com.powsybl.commons.report.ReportNodeDeserializer;
 import com.powsybl.commons.report.ReportNodeJsonModule;
 import org.gridsuite.modification.server.dto.ReportMode;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Objects;
@@ -37,18 +34,18 @@ public class ReportService {
 
     private String reportServerBaseUri;
 
-    private RestTemplate reportServerRest;
+    private RestClient reportServerRest;
 
     private final ObjectMapper objectMapper;
 
     public ReportService(@Value("${gridsuite.services.report-server.base-uri:http://report-server}") String reportServerURI,
                          ObjectMapper objectMapper,
-                         RestTemplate restTemplate) {
+                         RestClient restClient) {
         this.reportServerBaseUri = reportServerURI;
         this.objectMapper = objectMapper;
         this.objectMapper.registerModule(new ReportNodeJsonModule());
         this.objectMapper.setInjectableValues(new InjectableValues.Std().addValue(ReportNodeDeserializer.DICTIONARY_VALUE_ID, null));
-        this.reportServerRest = restTemplate;
+        this.reportServerRest = restClient;
     }
 
     public void setReportServerBaseUri(String reportServerBaseUri) {
@@ -59,7 +56,7 @@ public class ReportService {
         return this.reportServerBaseUri + DELIMITER + REPORT_API_VERSION + DELIMITER + "reports" + DELIMITER;
     }
 
-    public void setReportServerRest(RestTemplate reportServerRest) {
+    public void setReportServerRest(RestClient reportServerRest) {
         this.reportServerRest = Objects.requireNonNull(reportServerRest, "reportServerRest can't be null");
     }
 
@@ -67,10 +64,13 @@ public class ReportService {
         var path = UriComponentsBuilder.fromPath("{reportUuid}{endpoint}")
             .buildAndExpand(reportUuid, reportMode == ReportMode.REPLACE ? "/replace" : "")
             .toUriString();
-        var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
         try {
-            reportServerRest.exchange(this.getReportServerURI() + path, HttpMethod.PUT, new HttpEntity<>(objectMapper.writeValueAsString(reportNode), headers), ReportNode.class);
+            reportServerRest.put()
+                .uri(this.getReportServerURI() + path)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(objectMapper.writeValueAsString(reportNode))
+                .retrieve()
+                .toEntity(ReportNode.class);
         } catch (JsonProcessingException error) {
             throw new PowsyblException("error creating report", error);
         }
