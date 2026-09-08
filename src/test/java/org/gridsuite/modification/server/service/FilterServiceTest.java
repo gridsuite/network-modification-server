@@ -14,19 +14,14 @@ import org.gridsuite.filter.wip.ExpertFilter;
 import org.gridsuite.filter.wip.Filter;
 import org.gridsuite.filter.wip.IdentifierListFilter;
 import org.gridsuite.filter.wip.rule.CombinatorExpertRule;
-import org.gridsuite.modification.server.RestTemplateConfig;
+import org.gridsuite.modification.server.RestClientConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -42,17 +37,17 @@ class FilterServiceTest {
     private static final String FILTER_SERVER_BASE_URI = "http://filter-server-test";
     private static final String STANDALONE_FILTERS_PATH = "/v1/standalone-filters";
 
-    private final RestTemplateConfig restTemplateConfig = new RestTemplateConfig();
-    private final ObjectMapper objectMapper = restTemplateConfig.objectMapper();
+    private final RestClientConfig restClientConfig = new RestClientConfig();
+    private final ObjectMapper objectMapper = restClientConfig.objectMapper();
 
     private MockRestServiceServer filterServer;
     private FilterService filterService;
 
     @BeforeEach
     void setUp() {
-        RestTemplate restTemplate = restTemplateConfig.restTemplate(new RestTemplateBuilder());
-        filterServer = MockRestServiceServer.createServer(restTemplate);
-        filterService = new FilterService(FILTER_SERVER_BASE_URI, restTemplate);
+        RestClient.Builder restClientBuilder = RestClient.builder();
+        filterServer = MockRestServiceServer.bindTo(restClientBuilder).build();
+        filterService = new FilterService(FILTER_SERVER_BASE_URI, restClientBuilder.build());
     }
 
     @Test
