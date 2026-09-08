@@ -560,11 +560,11 @@ public class NetworkModificationRepository {
         }
     }
 
-    private static ModificationInfos resolveNestedReferences(ModificationInfos infos) {
+    private static ModificationInfos resolveNestedModificationReferences(ModificationInfos infos) {
         if (infos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
             composite.setModificationsInfos(composite.getModificationsInfos().stream()
-                    .map(NetworkModificationRepository::resolveReference)
-                    .map(NetworkModificationRepository::resolveNestedReferences)
+                    .map(NetworkModificationRepository::resolveModificationReference)
+                    .map(NetworkModificationRepository::resolveNestedModificationReferences)
                     .toList());
         }
         return infos;
@@ -574,7 +574,7 @@ public class NetworkModificationRepository {
      * @return the modification itself or, for a reference, the shared modification it points to, given the
      * reference's own description
      */
-    private static ModificationInfos resolveReference(ModificationInfos content) {
+    private static ModificationInfos resolveModificationReference(ModificationInfos content) {
         if (!(content instanceof ModificationReferenceInfos reference)) {
             return content;
         }
@@ -598,7 +598,7 @@ public class NetworkModificationRepository {
         // Substitute modification references with the modifications they point to, so the copy never holds a reference
         Map<UUID, ModificationInfos> infosBySourceUuid = addApplicabilities(getApplicabilityHolders(modificationsToCopy).stream().distinct()
                 .map(this::toModificationsInfosOptimized)
-                .map(NetworkModificationRepository::resolveNestedReferences)
+                .map(NetworkModificationRepository::resolveNestedModificationReferences)
                 .toList()).stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, Function.identity()));
 
