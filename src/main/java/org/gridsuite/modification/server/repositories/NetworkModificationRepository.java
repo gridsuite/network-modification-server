@@ -22,7 +22,7 @@ import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationContainerInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
-import org.gridsuite.modification.server.dto.ReferenceData;
+import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
@@ -532,15 +532,15 @@ public class NetworkModificationRepository {
 
     private ModificationInfos loadModificationReference(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof ModificationReferenceEntity referenceEntity) {
-            ModificationEntity referencedEntity = modificationRepository.findAllByIdIn(List.of(referenceEntity.getReferenceId())).stream().findFirst()
-                .orElseThrow(() -> getModificationNotFoundException(referenceEntity.getReferenceId() + " (referenced modification)"));
+            ModificationEntity referencedEntity = modificationRepository.findAllByIdIn(List.of(referenceEntity.getReferencedId())).stream().findFirst()
+                .orElseThrow(() -> getModificationNotFoundException(referenceEntity.getReferencedId() + " (referenced modification)"));
             ModificationReferenceInfos modificationReferenceInfos = referenceEntity.toModificationInfos();
             ModificationInfos refInfos = toModificationsInfosOptimized(referencedEntity);
 
             if (refInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
                 composite.getModificationsInfos().forEach(compositeModificationRepository::generateModificationMessage);
             }
-            modificationReferenceInfos.setReferenceInfos(refInfos);
+            modificationReferenceInfos.setReferencedInfos(refInfos);
             return modificationReferenceInfos;
         } else {
             ModificationEntity referencedEntity = modificationRepository.findReferencedModificationMetadataByReferenceId(modificationEntity.getId());
@@ -555,7 +555,7 @@ public class NetworkModificationRepository {
                 .description(modificationEntity.getDescription())
                 .messageType(referencedEntity.getMessageType())
                 .messageValues(referencedEntity.getMessageValues())
-                .referenceId(referencedEntity.getId())
+                .referencedId(referencedEntity.getId())
                 .build();
         }
     }
@@ -581,7 +581,7 @@ public class NetworkModificationRepository {
                         throw getModificationNotFoundException(uuid.toString());
                     }
                     return entity instanceof ModificationReferenceEntity referenceEntity
-                            ? new CompositeInfos(referenceEntity.getReferenceId(), null, false, referenceEntity.getDescription())
+                            ? new CompositeInfos(referenceEntity.getReferencedId(), null, false, referenceEntity.getDescription())
                             : new CompositeInfos(uuid, null, false, null);
                 })
                 .toList();
@@ -666,8 +666,8 @@ public class NetworkModificationRepository {
         if (modificationInfos instanceof CompositeModificationInfos composite) {
             return composite.getModificationsInfos() == null ? List.of() : composite.getModificationsInfos();
         }
-        if (modificationInfos instanceof ModificationReferenceInfos reference && reference.getReferenceInfos() != null) {
-            return List.of(reference.getReferenceInfos());
+        if (modificationInfos instanceof ModificationReferenceInfos reference && reference.getReferencedInfos() != null) {
+            return List.of(reference.getReferencedInfos());
         }
         return List.of();
     }
@@ -932,13 +932,13 @@ public class NetworkModificationRepository {
      * @return ReferenceData : modification and elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
-    public List<ReferenceData> getReferences(@NonNull List<UUID> modificationUuids) {
+    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids) {
         List<ModificationEntity> modificationEntities = this.modificationRepository.findAllByIdIn(modificationUuids);
-        List<ReferenceData> references = new ArrayList<>(List.of());
+        List<ModificationReferenceData> references = new ArrayList<>(List.of());
         modificationEntities.forEach(modificationEntity -> {
             if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {
                 UUID containerId = modificationRepository.findCompositeContainerIdByModificationId(modificationEntity.getId());
-                references.add(new ReferenceData(modificationEntity.getId(), modificationReference.getReferenceId(), containerId));
+                references.add(new ModificationReferenceData(modificationEntity.getId(), modificationReference.getReferencedId(), containerId));
             }
         });
 
@@ -1048,7 +1048,7 @@ public class NetworkModificationRepository {
     private List<ModificationEntity> getApplicabilityHolders(List<ModificationEntity> entities) {
         List<UUID> referencedUuids = entities.stream()
             .filter(ModificationReferenceEntity.class::isInstance)
-            .map(entity -> ((ModificationReferenceEntity) entity).getReferenceId())
+            .map(entity -> ((ModificationReferenceEntity) entity).getReferencedId())
             .distinct()
             .toList();
         if (referencedUuids.isEmpty()) {
@@ -1057,7 +1057,7 @@ public class NetworkModificationRepository {
         Map<UUID, ModificationEntity> holdersByUuid = getModificationEntitiesWithApplicabilities(referencedUuids).stream()
             .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
         return entities.stream()
-            .map(entity -> entity instanceof ModificationReferenceEntity reference ? holdersByUuid.get(reference.getReferenceId()) : entity)
+            .map(entity -> entity instanceof ModificationReferenceEntity reference ? holdersByUuid.get(reference.getReferencedId()) : entity)
             .toList();
     }
 
@@ -1301,9 +1301,9 @@ public class NetworkModificationRepository {
                 if (compositeToBeInserted.isShared()) {
                     // inserting a shared composite modification means that we create a new reference to it
                     ModificationReferenceInfos newModificationReference = ModificationReferenceInfos.builder()
-                            .referenceId(compositeToBeInserted.id())
+                            .referencedId(compositeToBeInserted.id())
                             .referenceType(ModificationReferenceInfos.Type.BASIC)
-                            .referenceInfos(compositeModification)
+                            .referencedInfos(compositeModification)
                             .description(compositeToBeInserted.description())
                             .build();
                     newCompositeModifications.add(newModificationReference);
@@ -1348,9 +1348,9 @@ public class NetworkModificationRepository {
         }
 
         ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
-            .referenceId(modificationUuid)
+            .referencedId(modificationUuid)
             .referenceType(ModificationReferenceInfos.Type.BASIC)
-            .referenceInfos(loadCompositeModificationMetadata(compositeEntity, null))
+            .referencedInfos(loadCompositeModificationMetadata(compositeEntity, null))
             .build();
         ModificationEntity referenceEntity = ModificationEntity.fromDTO(referenceInfos);
 
@@ -1389,7 +1389,7 @@ public class NetworkModificationRepository {
         if (ModificationContainerType.COMPOSITE.equals(containerInfos.type())) {
             return modificationRepository.findById(containerInfos.id())
                     .filter(ModificationReferenceEntity.class::isInstance)
-                    .map(entity -> ((ModificationReferenceEntity) entity).getReferenceId())
+                    .map(entity -> ((ModificationReferenceEntity) entity).getReferencedId())
                     .orElse(containerInfos.id());
         }
         return containerInfos.id();
