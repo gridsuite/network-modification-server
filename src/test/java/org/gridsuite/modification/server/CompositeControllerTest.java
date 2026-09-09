@@ -55,8 +55,7 @@ import static org.gridsuite.modification.server.utils.NetworkCreation.VARIANT_ID
 import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -105,6 +104,7 @@ class CompositeControllerTest {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
         network = NetworkCreation.create(TEST_NETWORK_ID, true);
         when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
+        when(networkStoreService.networkExists(any(UUID.class))).thenReturn(true);
         networkModificationRepository.deleteAll();
     }
 
