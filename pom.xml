@@ -58,6 +58,9 @@
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
         <network-modification.version>1.8.0</network-modification.version>
+        <!-- FIXME remove this in the next powsybl release update -->
+        <network-store.version>1.51.0</network-store.version>
+        <network-modification.version>1.8.0</network-modification.version>
     </properties>
 
     <build>
@@ -129,6 +132,20 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-client</artifactId>
+            <!-- FIXME remove this in the next powsybl release update -->
+            <version>${network-store.version}</version>
+        </dependency>
+        <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-network-store-iidm-impl</artifactId>
+            <version>${network-store.version}</version>
+        </dependency>
+        <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-network-store-model</artifactId>
+            <version>${network-store.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>
