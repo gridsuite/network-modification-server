@@ -300,5 +300,5 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
             )
             SELECT EXISTS (SELECT 1 FROM descendants WHERE type = 'MODIFICATION_REFERENCE')
             """)
-    boolean existsReferenceInContainers(@Param("containerIds") Collection<UUID> containerIds);
+    boolean existsReferenceInContainersSubtrees(@Param("containerIds") Collection<UUID> containerIds);
 }
