@@ -111,12 +111,7 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
 
     private ConverterStationModificationInfos.ConverterStationModificationInfosBuilder<?, ?> toConverterStationModificationInfoBuilder() {
 
-        return ConverterStationModificationInfos.builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
+        return toModificationInfosBuilder(ConverterStationModificationInfos.builder()
             .equipmentId(getEquipmentId())
             .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
             .lossFactor(toAttributeModification(getLossFactor()))
@@ -130,6 +125,6 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
             .pMeasurementValidity(toAttributeModification(getPMeasurementValidity()))
             .qMeasurementValue(toAttributeModification(getQMeasurementValue()))
             .qMeasurementValidity(toAttributeModification(getQMeasurementValidity()))
-            .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationInfos(getReactiveCapabilityCurvePoints()));
+            .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationInfos(getReactiveCapabilityCurvePoints())));
     }
 }

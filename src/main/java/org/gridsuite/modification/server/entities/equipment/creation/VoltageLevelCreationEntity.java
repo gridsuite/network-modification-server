@@ -99,13 +99,8 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
         List<CouplingDeviceInfos> couplingDeviceInfos = couplingDevices.stream()
                 .map(cde -> new CouplingDeviceInfos(cde.getBusbarSectionId1(), cde.getBusbarSectionId2()))
                 .collect(Collectors.toList());
-        return VoltageLevelCreationInfos
+        return toModificationInfosBuilder(VoltageLevelCreationInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .substationId(getSubstationId())
@@ -123,7 +118,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList()));
     }
 
     @Override

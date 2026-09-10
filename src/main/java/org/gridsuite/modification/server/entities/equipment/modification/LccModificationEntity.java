@@ -117,12 +117,7 @@ public class LccModificationEntity extends BasicEquipmentModificationEntity {
         LccConverterStationModificationInfos converterStationInfos1 = getConverterStation1() == null ? null : getConverterStation1().toLccConverterStationInfos();
         LccConverterStationModificationInfos converterStationInfos2 = getConverterStation2() == null ? null : getConverterStation2().toLccConverterStationInfos();
 
-        return LccModificationInfos.builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
+        return toModificationInfosBuilder(LccModificationInfos.builder()
             .equipmentId(getEquipmentId())
             .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
             .nominalV(toAttributeModification(getNominalV()))
@@ -136,7 +131,7 @@ public class LccModificationEntity extends BasicEquipmentModificationEntity {
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                 getProperties().stream()
                     .map(FreePropertyEntity::toInfos)
-                    .toList());
+                    .toList()));
     }
 
     @Override

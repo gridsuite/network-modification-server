@@ -57,13 +57,8 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     }
 
     private LoadCreationInfos.LoadCreationInfosBuilder<?, ?> toLoadCreationInfosBuilder() {
-        return LoadCreationInfos
+        return toModificationInfosBuilder(LoadCreationInfos
             .builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             // injection
@@ -81,6 +76,6 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                 getProperties().stream()
                     .map(FreePropertyEntity::toInfos)
-                    .toList());
+                    .toList()));
     }
 }

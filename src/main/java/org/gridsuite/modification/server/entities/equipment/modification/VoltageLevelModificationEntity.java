@@ -106,13 +106,8 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
     }
 
     private VoltageLevelModificationInfos.VoltageLevelModificationInfosBuilder<?, ?> toVoltageLevelModificationInfosBuilder() {
-        return VoltageLevelModificationInfos.builder()
-                .uuid(getId())
+        return toModificationInfosBuilder(VoltageLevelModificationInfos.builder()
                 .equipmentId(getEquipmentId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .nominalV(IAttributeModificationEmbeddable.toAttributeModification(getNominalV()))
                 .lowVoltageLimit(IAttributeModificationEmbeddable.toAttributeModification(getLowVoltageLimit()))
@@ -127,7 +122,7 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList()));
 
     }
 }

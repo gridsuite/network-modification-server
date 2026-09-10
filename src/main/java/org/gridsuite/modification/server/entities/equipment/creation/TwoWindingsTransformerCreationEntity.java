@@ -175,13 +175,8 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                     TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
         }
 
-        TwoWindingsTransformerCreationInfos.TwoWindingsTransformerCreationInfosBuilder<?, ?> builder = TwoWindingsTransformerCreationInfos
+        TwoWindingsTransformerCreationInfos.TwoWindingsTransformerCreationInfosBuilder<?, ?> builder = toModificationInfosBuilder(TwoWindingsTransformerCreationInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 // branch
@@ -212,7 +207,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
                                 .toList())
-                .operationalLimitsGroups(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));
+                .operationalLimitsGroups(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups())));
 
         if (!ratioTapChangerSteps.isEmpty()) {
             List<TapChangerStepCreationInfos> ratioTapChangerStepCreationInfos = ratioTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());

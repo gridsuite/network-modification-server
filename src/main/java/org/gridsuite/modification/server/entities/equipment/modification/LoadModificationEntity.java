@@ -74,13 +74,8 @@ public class LoadModificationEntity extends InjectionModificationEntity {
     }
 
     private LoadModificationInfos.LoadModificationInfosBuilder<?, ?> toLoadModificationInfosBuilder() {
-        return LoadModificationInfos
+        return toModificationInfosBuilder(LoadModificationInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
@@ -100,6 +95,6 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                     getProperties().stream()
                         .map(FreePropertyEntity::toInfos)
-                        .toList());
+                        .toList()));
     }
 }

@@ -109,13 +109,8 @@ public class LineModificationEntity extends BranchModificationEntity {
     }
 
     private LineModificationInfos.LineModificationInfosBuilder<?, ?> toLineModificationInfosBuilder() {
-        LineModificationInfos.LineModificationInfosBuilder<?, ?> builder = LineModificationInfos
+        LineModificationInfos.LineModificationInfosBuilder<?, ?> builder = toModificationInfosBuilder(LineModificationInfos
             .builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
             .equipmentId(getEquipmentId())
             .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
             .voltageLevelId1(toAttributeModification(getVoltageLevelId1()))
@@ -154,7 +149,7 @@ public class LineModificationEntity extends BranchModificationEntity {
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList()));
         if (getOperationalLimitsGroups() != null) {
             builder.operationalLimitsGroups(OperationalLimitsGroupModificationEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));
         }

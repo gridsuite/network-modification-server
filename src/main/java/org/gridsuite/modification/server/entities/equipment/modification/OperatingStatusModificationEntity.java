@@ -48,15 +48,11 @@ public class OperatingStatusModificationEntity extends EquipmentModificationEnti
 
     @Override
     public OperatingStatusModificationInfos toModificationInfos() {
-        var builder = OperatingStatusModificationInfos
-            .builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .equipmentId(getEquipmentId())
-            .action(getAction())
-            .energizedVoltageLevelId(getEnergizedVoltageLevelId());
-        return builder.build();
+        return toModificationInfosBuilder(OperatingStatusModificationInfos
+                .builder()
+                .equipmentId(getEquipmentId())
+                .action(getAction())
+                .energizedVoltageLevelId(getEnergizedVoltageLevelId()))
+                .build();
     }
 }

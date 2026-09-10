@@ -54,20 +54,15 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
     }
 
     private SubstationCreationInfos.SubstationCreationInfosBuilder<?, ?> toSubstationCreationInfosBuilder() {
-        return SubstationCreationInfos
+        return toModificationInfosBuilder(SubstationCreationInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .country(getCountry())
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                     getProperties().stream()
                         .map(FreePropertyEntity::toInfos)
-                        .toList());
+                        .toList()));
     }
 }
 

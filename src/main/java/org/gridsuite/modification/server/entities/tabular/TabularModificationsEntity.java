@@ -67,25 +67,33 @@ public class TabularModificationsEntity extends ModificationEntity {
 
     @Override
     public TabularBaseInfos toModificationInfos() {
-        var builder = switch (ModificationType.valueOf(getType())) {
-            case ModificationType.TABULAR_CREATION -> TabularCreationInfos.builder();
-            case ModificationType.LIMIT_SETS_TABULAR_MODIFICATION -> LimitSetsTabularModificationInfos.builder();
-            default -> TabularModificationInfos.builder();
-        };
         List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
-        return builder
-                .date(getDate())
-                .uuid(getId())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
-                .modificationType(modificationType)
-                .modifications(modificationsInfos)
-                .properties(CollectionUtils.isEmpty(getProperties()) ? null : getProperties().stream()
-                        .map(TabularPropertyEntity::toInfos)
-                        .toList())
-                .csvFilename(getCsvFilename())
-                .build();
+        return switch (ModificationType.valueOf(getType())) {
+            case ModificationType.TABULAR_CREATION -> toModificationInfosBuilder(TabularCreationInfos.builder()
+                    .modificationType(modificationType)
+                    .modifications(modificationsInfos)
+                    .properties(CollectionUtils.isEmpty(getProperties()) ? null : getProperties().stream()
+                            .map(TabularPropertyEntity::toInfos)
+                            .toList())
+                    .csvFilename(getCsvFilename()))
+                    .build();
+            case ModificationType.LIMIT_SETS_TABULAR_MODIFICATION -> toModificationInfosBuilder(LimitSetsTabularModificationInfos.builder()
+                    .modificationType(modificationType)
+                    .modifications(modificationsInfos)
+                    .properties(CollectionUtils.isEmpty(getProperties()) ? null : getProperties().stream()
+                            .map(TabularPropertyEntity::toInfos)
+                            .toList())
+                    .csvFilename(getCsvFilename()))
+                    .build();
+            default -> toModificationInfosBuilder(TabularModificationInfos.builder()
+                    .modificationType(modificationType)
+                    .modifications(modificationsInfos)
+                    .properties(CollectionUtils.isEmpty(getProperties()) ? null : getProperties().stream()
+                            .map(TabularPropertyEntity::toInfos)
+                            .toList())
+                    .csvFilename(getCsvFilename()))
+                    .build();
+        };
     }
 
     private void assignAttributes(TabularBaseInfos tabularBaseInfos) {

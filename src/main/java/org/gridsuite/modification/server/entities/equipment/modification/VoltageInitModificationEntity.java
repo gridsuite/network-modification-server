@@ -198,12 +198,7 @@ public class VoltageInitModificationEntity extends ModificationEntity {
 
     @Override
     public VoltageInitModificationInfos toModificationInfos() {
-        return VoltageInitModificationInfos.builder()
-            .date(getDate())
-            .uuid(getId())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
+        return toModificationInfosBuilder(VoltageInitModificationInfos.builder()
             .generators(toGeneratorsModification(generators))
             .transformers(toTransformersModification(transformers))
             .staticVarCompensators(toStaticVarCompensatorsModification(staticVarCompensators))
@@ -212,7 +207,7 @@ public class VoltageInitModificationEntity extends ModificationEntity {
             .buses(toBusesModification(buses))
             .rootNetworkName(getRootNetworkName())
             .nodeName(getNodeName())
-            .computationDate(getComputationDate())
+            .computationDate(getComputationDate()))
             .build();
     }
 }

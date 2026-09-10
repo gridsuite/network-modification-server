@@ -59,16 +59,11 @@ public class CreateCouplingDeviceEntity extends ModificationEntity {
     }
 
     private CreateCouplingDeviceInfos.CreateCouplingDeviceInfosBuilder<?, ?> toCreateCouplingDeviceInfos() {
-        return CreateCouplingDeviceInfos.builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
+        return toModificationInfosBuilder(CreateCouplingDeviceInfos.builder()
             .voltageLevelId(getVoltageLevelId())
             .couplingDeviceInfos(CouplingDeviceInfos.builder()
                 .busbarSectionId1(getBusOrBbsId1())
                 .busbarSectionId2(getBusOrBbsId2())
-                .build());
+                .build()));
     }
 }

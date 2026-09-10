@@ -31,17 +31,15 @@ public class LoadScalingEntity extends ScalingEntity {
 
     @Override
     public LoadScalingInfos toModificationInfos() {
-        return LoadScalingInfos
+        return toLoadScalingInfosBuilder().build();
+    }
+
+    private LoadScalingInfos.LoadScalingInfosBuilder<?, ?> toLoadScalingInfosBuilder() {
+        return toModificationInfosBuilder(LoadScalingInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .variationType(getVariationType())
                 .variations(getVariations().stream()
                         .map(ScalingVariationEntity::toScalingVariationInfos)
-                        .collect(Collectors.toList()))
-                .build();
+                        .collect(Collectors.toList())));
     }
 }

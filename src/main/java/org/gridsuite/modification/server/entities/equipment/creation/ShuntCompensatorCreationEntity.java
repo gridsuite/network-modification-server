@@ -66,13 +66,8 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
     }
 
     private ShuntCompensatorCreationInfos.ShuntCompensatorCreationInfosBuilder<?, ?> toShuntCompensatorCreationInfosBuilder() {
-        return ShuntCompensatorCreationInfos
+        return toModificationInfosBuilder(ShuntCompensatorCreationInfos
             .builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             // Injection
@@ -92,6 +87,6 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList()));
     }
 }

@@ -107,12 +107,7 @@ public class VscCreationEntity extends EquipmentCreationEntity {
     private VscCreationInfos.VscCreationInfosBuilder<?, ?> toVscCreationInfosBuilder() {
         ConverterStationCreationInfos converterStationCreationInfos1 = getConverterStation1() == null ? null : getConverterStation1().toConverterStationInfos();
         ConverterStationCreationInfos converterStationCreationInfos2 = getConverterStation2() == null ? null : getConverterStation2().toConverterStationInfos();
-        return VscCreationInfos.builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
+        return toModificationInfosBuilder(VscCreationInfos.builder()
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .activePowerSetpoint(getActivePowerSetpoint())
@@ -131,6 +126,6 @@ public class VscCreationEntity extends EquipmentCreationEntity {
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList()));
     }
 }

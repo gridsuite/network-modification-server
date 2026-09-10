@@ -86,13 +86,8 @@ public class LineCreationEntity extends BranchCreationEntity {
     }
 
     private LineCreationInfos.LineCreationInfosBuilder<?, ?> toLineCreationInfosBuilder() {
-        return LineCreationInfos
+        return toModificationInfosBuilder(LineCreationInfos
             .builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             // branch
@@ -123,7 +118,7 @@ public class LineCreationEntity extends BranchCreationEntity {
                                 .map(FreePropertyEntity::toInfos)
                                 .toList())
             .operationalLimitsGroups(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()))
-            .lineSegments(LineSegmentEntity.fromLineSegmentsEntity(getLineSegments()));
+            .lineSegments(LineSegmentEntity.fromLineSegmentsEntity(getLineSegments())));
     }
 
 }

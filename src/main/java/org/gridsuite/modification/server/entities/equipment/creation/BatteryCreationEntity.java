@@ -119,13 +119,8 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     }
 
     private BatteryCreationInfos.BatteryCreationInfosBuilder<?, ?> toBatteryCreationInfosBuilder() {
-        return BatteryCreationInfos
+        return toModificationInfosBuilder(BatteryCreationInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 // injection
@@ -157,7 +152,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList()));
     }
 
 }

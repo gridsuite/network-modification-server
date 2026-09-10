@@ -147,13 +147,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     }
 
     private GeneratorCreationInfos.GeneratorCreationInfosBuilder<?, ?> toGeneratorCreationInfosBuilder() {
-        return GeneratorCreationInfos
+        return toModificationInfosBuilder(GeneratorCreationInfos
             .builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .description(getDescription())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             // injection
@@ -192,6 +187,6 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                    getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList()));
     }
 }

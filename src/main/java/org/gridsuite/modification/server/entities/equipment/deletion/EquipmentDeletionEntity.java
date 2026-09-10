@@ -55,15 +55,10 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
 
     @Override
     public EquipmentDeletionInfos toModificationInfos() {
-        var builder = EquipmentDeletionInfos
+        var builder = toModificationInfosBuilder(EquipmentDeletionInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .equipmentId(getEquipmentId())
-                .equipmentType(getEquipmentType());
+                .equipmentType(getEquipmentType()));
         if (equipmentInfos != null) {
             builder.equipmentInfos(equipmentInfos.toDto());
         }

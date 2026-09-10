@@ -99,13 +99,8 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
     }
 
     private ShuntCompensatorModificationInfos.ShuntCompensatorModificationInfosBuilder<?, ?> toShuntCompensatorModificationInfosBuilder() {
-        return ShuntCompensatorModificationInfos
+        return toModificationInfosBuilder(ShuntCompensatorModificationInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
@@ -125,6 +120,6 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList()));
     }
 }

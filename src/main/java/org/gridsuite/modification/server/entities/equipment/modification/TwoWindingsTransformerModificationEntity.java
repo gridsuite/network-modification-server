@@ -384,13 +384,8 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
 
         }
 
-        TwoWindingsTransformerModificationInfos.TwoWindingsTransformerModificationInfosBuilder<?, ?> builder = TwoWindingsTransformerModificationInfos
+        TwoWindingsTransformerModificationInfos.TwoWindingsTransformerModificationInfosBuilder<?, ?> builder = toModificationInfosBuilder(TwoWindingsTransformerModificationInfos
                 .builder()
-                .uuid(getId())
-                .date(getDate())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .description(getDescription())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId1(toAttributeModification(getVoltageLevelId1()))
@@ -430,7 +425,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList()));
 
         if (getOperationalLimitsGroups() != null) {
             builder.operationalLimitsGroups(OperationalLimitsGroupModificationEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));
