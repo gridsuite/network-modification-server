@@ -171,6 +171,7 @@ class BuildTest {
             network = NetworkCreation.create(TEST_NETWORK_ID, true);
             return network;
         });
+        when(networkStoreService.networkExists(any(UUID.class))).thenReturn(true);
 
         waitStartBuild = new CountDownLatch(1);
         blockBuild = new CountDownLatch(1);
