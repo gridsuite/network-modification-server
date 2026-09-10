@@ -17,14 +17,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.VoltageInitBusModificationInfos;
-import org.gridsuite.modification.dto.VoltageInitGeneratorModificationInfos;
-import org.gridsuite.modification.dto.VoltageInitModificationInfos;
-import org.gridsuite.modification.dto.VoltageInitShuntCompensatorModificationInfos;
-import org.gridsuite.modification.dto.VoltageInitStaticVarCompensatorModificationInfos;
-import org.gridsuite.modification.dto.VoltageInitTransformerModificationInfos;
-import org.gridsuite.modification.dto.VoltageInitVscConverterStationModificationInfos;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -40,6 +33,12 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "voltageInitModification")
 public class VoltageInitModificationEntity extends ModificationEntity {
+    @ElementCollection
+    @CollectionTable(name = "voltageInitBatteriesModification",
+        indexes = {@Index(name = "VoltageInitModificationEntity_batteries_idx1", columnList = "voltage_init_modification_entity_id")},
+        foreignKey = @ForeignKey(name = "VoltageInitModificationEntity_batteries_fk1"))
+    private List<VoltageInitBatteryModificationEmbeddable> batteries;
+
     @ElementCollection
     @CollectionTable(name = "voltageInitGeneratorsModification",
         indexes = {@Index(name = "VoltageInitModificationEntity_generators_idx1", columnList = "voltage_init_modification_entity_id")},
@@ -98,6 +97,7 @@ public class VoltageInitModificationEntity extends ModificationEntity {
 
     private void assignAttributes(VoltageInitModificationInfos voltageInitModificationInfos) {
         generators = toEmbeddableVoltageInitGenerators(voltageInitModificationInfos.getGenerators());
+        batteries = toEmbeddableVoltageInitBatteries(voltageInitModificationInfos.getBatteries());
         transformers = toEmbeddableVoltageInitTransformers(voltageInitModificationInfos.getTransformers());
         staticVarCompensators = toEmbeddableVoltageInitStaticVarCompensators(voltageInitModificationInfos.getStaticVarCompensators());
         vscConverterStations = toEmbeddableVoltageInitVscConverterStations(voltageInitModificationInfos.getVscConverterStations());
@@ -115,10 +115,23 @@ public class VoltageInitModificationEntity extends ModificationEntity {
             .collect(Collectors.toList());
     }
 
+    public static List<VoltageInitBatteryModificationEmbeddable> toEmbeddableVoltageInitBatteries(List<VoltageInitBatteryModificationInfos> batteries) {
+        return batteries == null ? null : batteries.stream()
+            .map(battery -> new VoltageInitBatteryModificationEmbeddable(battery.getBatteryId(), battery.getTargetV(), battery.getTargetQ()))
+            .collect(Collectors.toList());
+    }
+
     private List<VoltageInitGeneratorModificationInfos> toGeneratorsModification(List<VoltageInitGeneratorModificationEmbeddable> generators) {
         return generators != null ? generators
             .stream()
             .map(generator -> new VoltageInitGeneratorModificationInfos(generator.getGeneratorId(), generator.getTargetV(), generator.getTargetQ()))
+            .collect(Collectors.toList()) : null;
+    }
+
+    private List<VoltageInitBatteryModificationInfos> toBatteriesModification(List<VoltageInitBatteryModificationEmbeddable> batteries) {
+        return batteries != null ? batteries
+            .stream()
+            .map(battery -> new VoltageInitBatteryModificationInfos(battery.getBatteryId(), battery.getTargetV(), battery.getTargetQ()))
             .collect(Collectors.toList()) : null;
     }
 
@@ -204,6 +217,7 @@ public class VoltageInitModificationEntity extends ModificationEntity {
             .stashed(getStashed())
             .activated(getActivated())
             .description(getDescription())
+            .batteries(toBatteriesModification(batteries))
             .generators(toGeneratorsModification(generators))
             .transformers(toTransformersModification(transformers))
             .staticVarCompensators(toStaticVarCompensatorsModification(staticVarCompensators))
