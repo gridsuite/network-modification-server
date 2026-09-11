@@ -57,7 +57,8 @@ public class NetworkModificationController {
                                                                                    defaultValue = "false") Boolean onlyStashed,
                                                                            @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound",
                                                                                    required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
-        return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, onlyStashed));
+        return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound,
+            onlyStashed ? StashedFilter.STASHED : StashedFilter.ALL));
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications/export", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -297,7 +298,7 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references data were returned")})
     public ResponseEntity<List<ReferenceData>> getAllReferencesDataFromGroup(
             @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        List<UUID> netModUuids = networkModificationService.getNetworkModifications(groupUuid, true, false, false)
+        List<UUID> netModUuids = networkModificationService.getNetworkModifications(groupUuid, true, false, StashedFilter.ALL)
                 .stream().map(ModificationInfos::getUuid)
                 .toList();
         List<ReferenceData> referencesData = networkModificationService.getReferences(netModUuids);

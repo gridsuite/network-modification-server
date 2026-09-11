@@ -116,13 +116,13 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     // Need a transaction for collections lazy loading
-    public List<ModificationInfos> getNetworkModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean stashedModifications) {
-        return networkModificationRepository.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, stashedModifications);
+    public List<ModificationInfos> getNetworkModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, StashedFilter stashedFilter) {
+        return networkModificationRepository.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, stashedFilter);
     }
 
     @Transactional(readOnly = true)
     public NetworkModificationExportInfos getNetworkModificationsInfosToExport(UUID groupUuid, boolean errorOnGroupNotFound) {
-        List<ModificationInfos> allModifications = networkModificationRepository.getModificationsInfosToExport(List.of(groupUuid), errorOnGroupNotFound);
+        List<ModificationInfos> allModifications = networkModificationRepository.getModifications(groupUuid, false, errorOnGroupNotFound, StashedFilter.UNSTASHED);
         List<ModificationInfos> exportable = new ArrayList<>();
         List<NetworkModificationExportInfos.UnexportedModification> unexported = new ArrayList<>();
         for (ModificationInfos modification : allModifications) {
@@ -174,13 +174,8 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public Map<UUID, List<ModificationInfos>> getNetworkModificationsFromComposite(List<UUID> compositeModificationUuids, boolean onlyMetadata) {
         Map<UUID, List<ModificationInfos>> modifications = new HashMap<>();
-        compositeModificationUuids.forEach(compositeModificationUuid -> {
-            if (onlyMetadata) {
-                modifications.put(compositeModificationUuid, networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeModificationUuid)));
-            } else {
-                modifications.put(compositeModificationUuid, networkModificationRepository.getCompositeModificationsInfos(List.of(compositeModificationUuid)));
-            }
-        });
+        compositeModificationUuids.forEach(compositeModificationUuid -> modifications.put(compositeModificationUuid,
+                networkModificationRepository.getModifications(compositeModificationUuid, onlyMetadata, false)));
         return modifications;
     }
 
@@ -482,8 +477,7 @@ public class NetworkModificationService {
 
     public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
         try {
-            List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
-            networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationToDuplicateInfos);
+            networkModificationRepository.duplicateUnstashedModifications(sourceGroupUuid, targetGroupUuid);
         } catch (NetworkModificationServerException e) {
             if (e.getBusinessErrorCode() != MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
                 throw e;

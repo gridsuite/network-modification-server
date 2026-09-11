@@ -531,7 +531,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(2, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        assertRequestsCount(11, 0, 0, 0);
+        assertRequestsCount(12, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -798,7 +798,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(3, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -851,7 +851,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        assertRequestsCount(3, 0, 0, 0);
+        assertRequestsCount(4, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -1560,7 +1560,7 @@ class ModificationRepositoryTest {
     }
 
     private Map<UUID, Map<String, Boolean>> getApplicabilitiesByModificationsInside(UUID containerUuid) {
-        return networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(containerUuid)).stream()
+        return networkModificationRepository.getModifications(containerUuid, true, false).stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::getApplicabilityByRootNetworkTag));
     }
 
@@ -1688,7 +1688,7 @@ class ModificationRepositoryTest {
     void testGetActiveModificationsLeavesOutTheChildrenOfADeactivatedComposite() {
         UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
         networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), ROOT_NETWORK_TAG, false);
-        UUID childUuid = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeUuid)).getFirst().getUuid();
+        UUID childUuid = networkModificationRepository.getModifications(compositeUuid, true, false).getFirst().getUuid();
 
         // we activate a child while the composite remains deactivated
         networkModificationRepository.updateRootNetworkApplicability(List.of(childUuid), ROOT_NETWORK_TAG, true);
@@ -1805,9 +1805,9 @@ class ModificationRepositoryTest {
         UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(
                 Stream.concat(Stream.of(innerUuid), siblingUuids.stream()).toList(), "source");
 
-        List<UUID> contentUuids = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeUuid))
+        List<UUID> contentUuids = networkModificationRepository.getModifications(compositeUuid, true, false)
                 .stream().map(ModificationInfos::getUuid).toList();
-        List<UUID> innerUuids = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(contentUuids.get(0)))
+        List<UUID> innerUuids = networkModificationRepository.getModifications(contentUuids.get(0), true, false)
                 .stream().map(ModificationInfos::getUuid).toList();
         networkModificationRepository.updateRootNetworkApplicability(List.of(innerUuids.get(0)), ROOT_NETWORK_TAG, false);
         networkModificationRepository.updateRootNetworkApplicability(List.of(innerUuids.get(1)), ROOT_NETWORK_TAG, true);
@@ -1914,7 +1914,7 @@ class ModificationRepositoryTest {
      * @return the applicabilities of everything a modification holds, depth first, the order the content is read in
      */
     private List<Map<String, Boolean>> applicabilitiesInDepth(UUID containerUuid) {
-        return networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(containerUuid)).stream()
+        return networkModificationRepository.getModifications(containerUuid, true, false).stream()
                 .flatMap(content -> Stream.concat(Stream.of(content.getApplicabilityByRootNetworkTag()),
                         applicabilitiesInDepth(content.getUuid()).stream()))
                 .toList();

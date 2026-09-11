@@ -12,6 +12,7 @@ import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -68,7 +69,7 @@ class NetworkModificationServiceTest {
         // the modification was moved out of the composite, into the group, before being stashed
         assertNull(modificationRepository.findCompositeContainerIdByModificationId(childUuid));
         assertEquals(1, networkModificationRepository.getModificationsCount(groupUuid, true));
-        assertTrue(networkModificationRepository.getModificationsMetadata(groupUuid, true).stream()
+        assertTrue(networkModificationRepository.getModificationsMetadata(groupUuid, StashedFilter.STASHED).stream()
                 .anyMatch(modificationInfos -> modificationInfos.getUuid().equals(childUuid)));
         // the composite itself is left in place, now empty
         assertEquals(List.of(compositeUuid), modificationRepository.findAllChildrenUuids(compositeUuid));

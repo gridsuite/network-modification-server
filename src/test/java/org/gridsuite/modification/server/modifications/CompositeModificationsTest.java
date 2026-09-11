@@ -13,14 +13,18 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -38,6 +42,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Tag("IntegrationTest")
 class CompositeModificationsTest extends AbstractNetworkModificationTest {
+
+    @Autowired
+    private ModificationRepository modificationRepository;
 
     @BeforeEach
     void specificSetUp() {
@@ -108,7 +115,7 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         SQLStatementCountValidator.reset();
         mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
             .andExpect(status().isOk());
-        SQLStatementCountValidator.assertSelectCount(8);
+        SQLStatementCountValidator.assertSelectCount(9);
     }
 
     @Test
@@ -131,12 +138,89 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
 
         SQLStatementCountValidator.reset();
         List<ModificationInfos> modifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
-        assertRequestsCount(8, 0, 0, 0);
+        assertRequestsCount(9, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         List<UUID> uuids = networkModificationRepository.findAllChildrenUuids(List.of(modifications.get(0).getUuid()));
         assertEquals(uuids.size(), uuids.stream().collect(Collectors.toSet()).size());
         assertEquals(8 + compositeInfos.size(), uuids.size());
+    }
+
+    @Test
+    void testDBLoadOfCompositesAndReferencesByBatch() {
+        // the request count must not depend on the number of composites and references to convert (no N+1 select):
+        // the active modifications, the composites content, the shared composites and their content, the applicabilities
+        // (the recursive CTE finding the nested composites starts with WITH, it is not counted as a select)
+        assertActiveModificationsSelectCount(1, 5);
+        assertActiveModificationsSelectCount(4, 5);
+    }
+
+    private void assertActiveModificationsSelectCount(int count, int expectedSelectCount) {
+        UUID groupUuid = UUID.randomUUID();
+        List<ModificationEntity> modifications = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            CompositeModificationInfos nestedComposite = CompositeModificationInfos.builder().name("nested" + i)
+                .modificationsInfos(List.of(GroovyScriptInfos.builder().script("script" + i).build())).build();
+            modifications.add(ModificationEntity.fromDTO(CompositeModificationInfos.builder().name("composite" + i)
+                .modificationsInfos(List.of(nestedComposite)).stashed(false).build()));
+            UUID sharedCompositeUuid = modificationRepository.save(ModificationEntity.fromDTO(CompositeModificationInfos.builder().name("shared" + i)
+                .modificationsInfos(List.of(GroovyScriptInfos.builder().script("shared script" + i).build())).build())).getId();
+            modifications.add(ModificationEntity.fromDTO(ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC).referenceId(sharedCompositeUuid).stashed(false).build()));
+        }
+        networkModificationRepository.saveModifications(groupUuid, modifications);
+
+        SQLStatementCountValidator.reset();
+        List<ModificationInfos> activeModifications = networkModificationRepository.getActiveModifications(groupUuid, "tag");
+        assertRequestsCount(expectedSelectCount, 0, 0, 0);
+
+        assertEquals(2 * count, activeModifications.size());
+        activeModifications.stream()
+            .filter(ModificationReferenceInfos.class::isInstance)
+            .map(ModificationReferenceInfos.class::cast)
+            .forEach(reference -> assertEquals(reference.getReferenceId(), reference.getReferenceInfos().getUuid()));
+        activeModifications.forEach(modification -> assertEquals(Map.of(), modification.getApplicabilityByRootNetworkTag()));
+    }
+
+    @Test
+    void testDBLoadOfNestedReferencesByBatch() {
+        // the references are prefetched level by level, like the composites: the request count depends on how deep
+        // they are nested, not on how many they are. The active modifications, then for each of the three levels (the
+        // group composites, the shared composites they reference, the shared composites those reference) the content
+        // of the composites and, but for the last one, the shared composites of the next level, and the applicabilities
+        assertNestedReferencesSelectCount(1, 7);
+        assertNestedReferencesSelectCount(4, 7);
+    }
+
+    private void assertNestedReferencesSelectCount(int count, int expectedSelectCount) {
+        UUID groupUuid = UUID.randomUUID();
+        List<ModificationEntity> modifications = new ArrayList<>();
+        List<UUID> innerSharedUuids = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            UUID innerSharedUuid = modificationRepository.save(ModificationEntity.fromDTO(CompositeModificationInfos.builder().name("inner shared" + i)
+                .modificationsInfos(List.of(GroovyScriptInfos.builder().script("inner script" + i).build())).build())).getId();
+            UUID outerSharedUuid = modificationRepository.save(ModificationEntity.fromDTO(CompositeModificationInfos.builder().name("outer shared" + i)
+                .modificationsInfos(List.of(referenceTo(innerSharedUuid))).build())).getId();
+            modifications.add(ModificationEntity.fromDTO(CompositeModificationInfos.builder().name("composite" + i)
+                .modificationsInfos(List.of(referenceTo(outerSharedUuid))).stashed(false).build()));
+            innerSharedUuids.add(innerSharedUuid);
+        }
+        networkModificationRepository.saveModifications(groupUuid, modifications);
+
+        SQLStatementCountValidator.reset();
+        List<ModificationInfos> activeModifications = networkModificationRepository.getActiveModifications(groupUuid, "tag");
+        assertRequestsCount(expectedSelectCount, 0, 0, 0);
+
+        assertEquals(count, activeModifications.size());
+        for (int i = 0; i < count; i++) {
+            ModificationReferenceInfos outerReference = (ModificationReferenceInfos) ((CompositeModificationInfos) activeModifications.get(i)).getModificationsInfos().getFirst();
+            ModificationReferenceInfos innerReference = (ModificationReferenceInfos) ((CompositeModificationInfos) outerReference.getReferenceInfos()).getModificationsInfos().getFirst();
+            assertEquals(innerSharedUuids.get(i), innerReference.getReferenceInfos().getUuid());
+        }
+    }
+
+    private static ModificationReferenceInfos referenceTo(UUID sharedUuid) {
+        return ModificationReferenceInfos.builder().referenceType(ModificationReferenceInfos.Type.BASIC).referenceId(sharedUuid).stashed(false).build();
     }
 
     private TabularModificationInfos createTabularModification() {

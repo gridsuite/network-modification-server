@@ -62,13 +62,6 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT new ModificationEntity(m.id, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
     List<ModificationEntity> findMetadataIn(List<UUID> uuids);
 
-    /**
-     * @return base data of the network modifications (the data from the main common table, not those specific to each modification)
-     */
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) FROM ModificationEntity m WHERE m.id IN (?1) order by "
-            + "m.modificationsOrder")
-    List<ModificationEntity> findBaseDataByIdIn(List<UUID> uuids);
-
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder")
     List<ModificationEntity> findAllByIdIn(List<UUID> uuids);
 
@@ -218,14 +211,14 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     Set<UUID> findExistingCompositeModificationIds(@Param("ids") List<UUID> ids);
 
     /**
-     * Recursively returns all <em>composite</em> descendants of {@code compositeUuid}
-     * (i.e. only the composites in the subtree, leaves excluded).
+     * Recursively returns all <em>composite</em> descendants of the {@code compositeUuids}
+     * (i.e. only the composites in their subtrees, leaves excluded).
      */
     @NativeQuery("""
         WITH RECURSIVE descendants(id) AS (
             SELECT m.id
               FROM modification m
-             WHERE m.container_id = :compositeUuid
+             WHERE m.container_id IN (:compositeUuids)
             UNION ALL
             SELECT m.id
               FROM modification m
@@ -235,7 +228,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
           FROM composite_modification c
          WHERE c.id IN (SELECT id FROM descendants)
         """)
-    List<UUID> findOnlyCompositeChildrenUuids(@Param("compositeUuid") UUID compositeUuid);
+    List<UUID> findOnlyCompositeChildrenUuids(@Param("compositeUuids") Collection<UUID> compositeUuids);
 
     /**
      * Returns the composite UUID followed by every descendant UUID (composites <em>and</em> leaves),
