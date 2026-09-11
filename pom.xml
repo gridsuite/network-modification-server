@@ -60,7 +60,7 @@
         <network-modification.version>1.9.0-SNAPSHOT</network-modification.version>
         <!-- FIXME remove this in the next powsybl release update -->
         <network-store.version>1.51.0</network-store.version>
-        <network-modification.version>1.9.0-SNAPSHOT</network-modification.version>
+        <network-modification.version>1.9.0</network-modification.version>
     </properties>
 
     <build>
