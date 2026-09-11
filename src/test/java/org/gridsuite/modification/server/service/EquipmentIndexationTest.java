@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.repositories.ModificationApplicationRep
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -34,8 +35,7 @@ import java.util.UUID;
 import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -86,6 +86,7 @@ class EquipmentIndexationTest {
     void setUp() {
         network = NetworkCreation.create(NETWORK_UUID, true);
         when(networkStoreService.getNetwork(eq(NETWORK_UUID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
+        when(networkStoreService.networkExists(any(UUID.class))).thenReturn(true);
 
         // clean DB
         modificationApplicationRepository.deleteAll();
@@ -251,6 +252,6 @@ class EquipmentIndexationTest {
     }
 
     private ModificationApplicationContext getNetworkModificationContext(String variantId) {
-        return new ModificationApplicationContext(NETWORK_UUID, variantId, TEST_REPORT_ID, UUID.randomUUID());
+        return TestUtils.contextOnAnyRootNetwork(NETWORK_UUID, variantId, TEST_REPORT_ID, UUID.randomUUID());
     }
 }

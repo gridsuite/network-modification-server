@@ -17,10 +17,15 @@ import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.MODIFICATION_DESCRIPTION_MISSING;
@@ -38,6 +43,8 @@ import static org.gridsuite.modification.server.error.ModificationBusinessErrorC
         indexes = { @Index(name = "modification_container_idx", columnList = "container_id") }
 )
 public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> {
+
+    public static final int ROOT_NETWORK_TAG_MAX_LENGTH = 4;
 
     @Id
     @Column(name = "id")
@@ -67,6 +74,14 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
 
     @Column(name = "description", columnDefinition = "CLOB")
     private String description;
+
+    // Applicability per root network tag: a tag without an entry is applicable.
+    // Deletion is left to the database: cascading it here would make hibernate load the applicabilities of every
+    // modification just to delete them. An entry is never removed from this list either, dropping one is only done
+    // manually in SQL: see deleteRootNetworkApplicabilities.
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OneToMany(mappedBy = "modification", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<ModificationRootNetworkApplicabilityEntity> applicabilities = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "container_id", foreignKey = @ForeignKey(name = "modification_container_fk"))
@@ -103,6 +118,9 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         // Preserve the default activation flag when missing
         if (modificationInfos.getActivated() != null) {
             this.activated = modificationInfos.getActivated();
+        }
+        if (modificationInfos.getApplicabilityByRootNetworkTag() != null) {
+            modificationInfos.getApplicabilityByRootNetworkTag().forEach(this::setApplicability);
         }
 
         assignAttributes(modificationInfos);
@@ -142,6 +160,18 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
 
     public UUID getContainerUuid() {
         return container == null ? null : container.getId();
+    }
+
+    public void setApplicability(String rootNetworkTag, Boolean applicable) {
+        findApplicability(rootNetworkTag).ifPresentOrElse(
+            applicability -> applicability.setApplicable(applicable),
+            () -> applicabilities.add(new ModificationRootNetworkApplicabilityEntity(this, rootNetworkTag, applicable)));
+    }
+
+    private Optional<ModificationRootNetworkApplicabilityEntity> findApplicability(String rootNetworkTag) {
+        return applicabilities.stream()
+            .filter(applicability -> applicability.getRootNetworkTag().equals(rootNetworkTag))
+            .findFirst();
     }
 
     public static ModificationEntity fromDTO(ModificationInfos dto) {

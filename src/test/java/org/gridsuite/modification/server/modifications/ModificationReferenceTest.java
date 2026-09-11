@@ -45,12 +45,12 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
         ModificationInfos compositeMetadataInfo = modificationRepository.findBaseDataByIdIn(List.of(compositeEntity.getId())).getFirst().toModificationInfos();
 
         return ModificationReferenceInfos.builder()
-            .referenceType(ModificationReferenceInfos.Type.BASIC)
-            .referenceId(compositeMetadataInfo.getUuid())
-            .referenceInfos(compositeInfo)
-            .stashed(false)
-            .activated(true)
-            .build();
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referencedId(compositeEntity.getId())
+                .referencedInfos(referenceInfos)
+                .stashed(false)
+                .activated(true)
+                .build();
     }
 
     @Override
@@ -58,14 +58,91 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
         return buildModification();
     }
 
+    @Override
+    protected void assertAfterNetworkModificationCreation() {
+        assertNotNull(getNetwork().getLoad("idLoad"));
+    }
+
+    @Override
+    protected void assertAfterNetworkModificationDeletion() {
+        assertNull(getNetwork().getLoad("idLoad"));
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
+    }
+
+    @Test
+    void testCompositeToModificationInfosFillsMissingDisplayMessage() {
+        ModificationInfos compositeInfo = buildCompositeModification();
+        ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
+
+        CompositeModificationInfos result = (CompositeModificationInfos) compositeEntity.toModificationInfos();
+
+        ModificationInfos resultChild = result.getModificationsInfos().get(0);
+        assertEquals(ModificationType.LOAD_CREATION.name(), resultChild.getMessageType());
+        assertNotNull(resultChild.getMessageValues());
+    }
+
+    @Test
+    void testGetModificationReferenceInfoFillsChildDisplayMessageFromRepository() {
+        ModificationInfos compositeInfo = buildCompositeModification();
+        ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
+
+        ModificationInfos referenceInfos = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referencedId(compositeEntity.getId())
+                .referencedInfos(compositeEntity.toModificationInfos())
+                .stashed(false)
+                .activated(true)
+                .build();
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos));
+        UUID referenceUuid = saved.get(0).getUuid();
+
+        ModificationInfos fetched = networkModificationRepository.getModificationInfo(referenceUuid);
+
+        assertInstanceOf(ModificationReferenceInfos.class, fetched);
+        ModificationInfos refInfos = ((ModificationReferenceInfos) fetched).getReferencedInfos();
+        assertInstanceOf(CompositeModificationInfos.class, refInfos);
+        ModificationInfos fetchedChild = ((CompositeModificationInfos) refInfos).getModificationsInfos().get(0);
+        assertEquals(ModificationType.LOAD_CREATION.name(), fetchedChild.getMessageType());
+        assertNotNull(fetchedChild.getMessageValues());
+    }
+
     private ModificationInfos buildCompositeModification() {
         List<ModificationInfos> modifications = List.of(
             ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED)
         );
         return CompositeModificationInfos.builder()
-            .name("composite")
-            .modificationsInfos(modifications)
-            .stashed(false)
-            .build();
+                .name("composite")
+                .modificationsInfos(modifications)
+                .stashed(false)
+                .build();
+    }
+
+    @Test
+    void testGetModificationReferenceToNonComposite() {
+        ModificationInfos load = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+        ModificationEntity loadEntity = modificationRepository.save(ModificationEntity.fromDTO(load));
+
+        ModificationInfos referenceInfos = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referencedId(loadEntity.getId())
+                .referencedInfos(loadEntity.toModificationInfos())
+                .stashed(false)
+                .activated(true)
+                .build();
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos));
+
+        ModificationInfos fetched = networkModificationRepository.getModificationInfo(saved.get(0).getUuid());
+
+        assertInstanceOf(ModificationReferenceInfos.class, fetched);
+        assertNotNull(((ModificationReferenceInfos) fetched).getReferencedInfos());
     }
 }

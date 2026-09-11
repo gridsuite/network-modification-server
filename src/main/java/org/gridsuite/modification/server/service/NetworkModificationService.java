@@ -54,7 +54,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.apache.commons.collections4.SetUtils.emptyIfNull;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
 
@@ -86,8 +85,6 @@ public class NetworkModificationService {
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
     static final String DELETED_EQUIPMENT_IDS = "deletedEquipmentIds.fullascii";
-    static final String MODIFICATION_LIST_SIZE_MISMATCH_ERROR =
-            "Error while mapping two modifications list with each other : both lists have different sizes";
     private final ModificationRepository modificationRepository;
     private static final int PAGE_MAX_SIZE = 500;
 
@@ -285,8 +282,33 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public List<ReferenceData> getReferences(@NonNull List<UUID> modificationUuids) {
-        return networkModificationRepository.getReferences(modificationUuids);
+    public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable) {
+        assertRootNetworkTagFits(rootNetworkTag);
+        networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
+    }
+
+    @Transactional
+    public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag) {
+        assertRootNetworkTagFits(newTag);
+        networkModificationRepository.renameRootNetworkTag(groupUuids, oldTag, newTag);
+    }
+
+    @Transactional
+    public void deleteRootNetworkTags(@NonNull List<UUID> groupUuids, @NonNull List<String> rootNetworkTags) {
+        networkModificationRepository.deleteRootNetworkTags(groupUuids, rootNetworkTags);
+    }
+
+    private static void assertRootNetworkTagFits(String rootNetworkTag) {
+        if (rootNetworkTag.length() > ModificationEntity.ROOT_NETWORK_TAG_MAX_LENGTH) {
+            throw new NetworkModificationServerException(ROOT_NETWORK_TAG_TOO_LONG,
+                    String.format(ROOT_NETWORK_TAG_TOO_LONG.messageTemplate(), ModificationEntity.ROOT_NETWORK_TAG_MAX_LENGTH),
+                    Map.of("maxLength", ModificationEntity.ROOT_NETWORK_TAG_MAX_LENGTH));
+        }
+    }
+
+    @Transactional
+    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids) {
+        return networkModificationRepository.getModificationsReferences(modificationUuids);
     }
 
     @Transactional(readOnly = true)
@@ -353,10 +375,9 @@ public class NetworkModificationService {
                     modificationApplicationContext.networkUuid(),
                     modificationApplicationContext.variantId(),
                     new ModificationApplicationGroup(groupUuid,
-                        modifications.stream()
-                            .filter(m -> !modificationApplicationContext.excludedModifications().contains(m.getUuid()))
-                            .toList(),
-                        new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId())
+                        modifications,
+                        new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId()),
+                        modificationApplicationContext.rootNetworkTag()
                     )
                 ),
             applicationContexts
@@ -391,23 +412,21 @@ public class NetworkModificationService {
         List<ModificationApplicationGroup> modificationGroupsInfos = new ArrayList<>();
         Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReportsInfos().stream(),
             (groupUuid, reportInfos) -> {
-                Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExclude().get(groupUuid);
                 List<ModificationInfos> modifications = List.of();
                 try {
-                    modifications = networkModificationRepository.getActiveModifications(groupUuid, emptyIfNull(modificationsToExclude));
+                    modifications = networkModificationRepository.getActiveModifications(groupUuid, buildInfos.getRootNetworkTag());
                 } catch (NetworkModificationServerException e) {
                     if (e.getBusinessErrorCode() != MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
                         throw e;
                     }
                 }
-                modificationGroupsInfos.add(new ModificationApplicationGroup(groupUuid, modifications, reportInfos));
+                modificationGroupsInfos.add(new ModificationApplicationGroup(groupUuid, modifications, reportInfos, buildInfos.getRootNetworkTag()));
 
             }
         );
 
         PreloadingStrategy preloadingStrategy = modificationGroupsInfos.stream().map(ModificationApplicationGroup::modifications)
             .flatMap(Collection::stream)
-            .filter(m -> m.getActivated() && !m.getStashed())
             .map(ModificationInfos::getType)
             .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
             .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
@@ -461,55 +480,26 @@ public class NetworkModificationService {
                         result));
     }
 
-    /**
-     * @return a mapping between the uuids of the duplicated modifications and the uuid of the new modifications
-     */
-    public Map<UUID, UUID> duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
+    public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
         try {
             List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
-            List<ModificationInfos> newModifications = networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationToDuplicateInfos);
-
-            Map<UUID, UUID> duplicateModificationMapping = new HashMap<>();
-            mapUuidsFromTwoModificationsLists(modificationToDuplicateInfos, newModifications, duplicateModificationMapping);
-
-            return duplicateModificationMapping;
+            networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationToDuplicateInfos);
         } catch (NetworkModificationServerException e) {
-            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
-                return Map.of();
+            if (e.getBusinessErrorCode() != MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
+                throw e;
             }
-            throw e;
-        }
-    }
-
-    private List<ModificationInfos> getNestedModifications(ModificationInfos modificationInfos) {
-        return modificationInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null
-                ? composite.getModificationsInfos()
-                : List.of();
-    }
-
-    /**
-     * recursively map the uuids from two lists of modifications, including those inside the composite modifications
-     */
-    void mapUuidsFromTwoModificationsLists(
-            List<ModificationInfos> modificationsList1,
-            List<ModificationInfos> modificationsList2,
-            Map<UUID, UUID> modificationsMapping) {
-        if (modificationsList1.size() != modificationsList2.size()) {
-            throw new IllegalArgumentException(MODIFICATION_LIST_SIZE_MISMATCH_ERROR);
-        }
-        for (int i = 0; i < modificationsList1.size(); i++) {
-            modificationsMapping.put(modificationsList1.get(i).getUuid(), modificationsList2.get(i).getUuid());
-            mapUuidsFromTwoModificationsLists(
-                    getNestedModifications(modificationsList1.get(i)),
-                    getNestedModifications(modificationsList2.get(i)),
-                    modificationsMapping);
         }
     }
 
     private CompletableFuture<Optional<NetworkModificationResult>> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
+        if (!networkStoreService.networkExists(networkUuid)) {
+            // The network is not loaded
+            return CompletableFuture.completedFuture(Optional.empty());
+        }
+
         if (!modificationGroupInfos.modifications().isEmpty()) {
             PreloadingStrategy preloadingStrategy = modificationGroupInfos.modifications().stream()
-                .filter(m -> m.getActivated() && !m.getStashed())
+                .filter(m -> m.isActivatedOn(modificationGroupInfos.rootNetworkTag()))
                 .map(ModificationInfos::getType)
                 .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
                 .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
@@ -570,6 +560,11 @@ public class NetworkModificationService {
     @Transactional
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
         return networkModificationRepository.createNetworkCompositeModification(modificationUuids, name);
+    }
+
+    @Transactional
+    public void extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
+        networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {

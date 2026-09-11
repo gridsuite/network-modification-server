@@ -87,7 +87,7 @@ class NetworkModificationApplicatorTest {
 
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(
             networkModificationApplicator,
-            new ModificationApplicationGroup(UUID.randomUUID(), List.of(modificationInfos), reportInfos),
+            TestUtils.groupOnAnyRootNetwork(UUID.randomUUID(), List.of(modificationInfos), reportInfos),
             networkInfos
         );
 
@@ -102,7 +102,7 @@ class NetworkModificationApplicatorTest {
             .activated(true)
             .build();
         List<ModificationApplicationGroup> modificationInfosGroups = List.of(
-            new ModificationApplicationGroup(
+            TestUtils.groupOnAnyRootNetwork(
                 UUID.randomUUID(),
                 List.of(modificationInfos),
                 mock(ReportInfos.class)
@@ -120,7 +120,7 @@ class NetworkModificationApplicatorTest {
 
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(
             networkModificationApplicator,
-            new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos),
+            TestUtils.groupOnAnyRootNetwork(UUID.randomUUID(), modificationInfosList, reportInfos),
             networkInfos
         );
 
@@ -132,7 +132,7 @@ class NetworkModificationApplicatorTest {
     void testApplyModificationsWithGroupsAndAllCollectionsNeededForBusViewStashedAndNotActivated() {
         var modificationInfosList = createModificationsWithUnactiveAllCollectionAndActiveNone();
         List<ModificationApplicationGroup> modificationInfosGroups = List.of(
-            new ModificationApplicationGroup(
+            TestUtils.groupOnAnyRootNetwork(
                 UUID.randomUUID(),
                 modificationInfosList,
                 mock(ReportInfos.class)
