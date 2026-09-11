@@ -307,8 +307,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public List<ReferenceData> getReferences(@NonNull List<UUID> modificationUuids) {
-        return networkModificationRepository.getReferences(modificationUuids);
+    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids) {
+        return networkModificationRepository.getModificationsReferences(modificationUuids);
     }
 
     @Transactional(readOnly = true)

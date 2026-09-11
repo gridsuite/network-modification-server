@@ -281,11 +281,10 @@ public class NetworkModificationController {
     @GetMapping(value = "/references", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "fetch references of the network modifications")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references data were returned")})
-    public ResponseEntity<List<ReferenceData>> getReferences(
+    public ResponseEntity<List<ModificationReferenceData>> getModificationsReferences(
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids) {
-        List<ReferenceData> referencesData = networkModificationService.getReferences(networkModificationUuids);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(referencesData);
+        List<ModificationReferenceData> referencesData = networkModificationService.getModificationsReferences(networkModificationUuids);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(referencesData);
     }
 
     /**
@@ -295,12 +294,12 @@ public class NetworkModificationController {
     @GetMapping(value = "/groups/{groupUuid}/references", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Fetches references data of all the network modifications in a group, including in the composites' submodifications")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references data were returned")})
-    public ResponseEntity<List<ReferenceData>> getAllReferencesDataFromGroup(
+    public ResponseEntity<List<ModificationReferenceData>> getAllReferencesDataFromGroup(
             @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
         List<UUID> netModUuids = networkModificationService.getNetworkModifications(groupUuid, true, false, false)
                 .stream().map(ModificationInfos::getUuid)
                 .toList();
-        List<ReferenceData> referencesData = networkModificationService.getReferences(netModUuids);
+        List<ModificationReferenceData> referencesData = networkModificationService.getModificationsReferences(netModUuids);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(referencesData);
     }

@@ -927,8 +927,8 @@ class ModificationControllerTest {
         loadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(loadModificationInfo))).getFirst();
         ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
             .referenceType(ModificationReferenceInfos.Type.BASIC)
-            .referenceId(loadModificationInfo.getUuid())
-            .referenceInfos(loadModificationInfo)
+            .referencedId(loadModificationInfo.getUuid())
+            .referencedInfos(loadModificationInfo)
             .stashed(false)
             .build();
         modificationReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(modificationReferenceInfo))).getFirst();
@@ -2051,8 +2051,8 @@ class ModificationControllerTest {
         // Create an active reference to this modification
         ModificationInfos activeReferenceInfo = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
-                .referenceId(referencedLoadModificationInfo.getUuid())
-                .referenceInfos(referencedLoadModificationInfo)
+                .referencedId(referencedLoadModificationInfo.getUuid())
+                .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
                 .build();
         activeReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(activeReferenceInfo))).getFirst();
@@ -2060,8 +2060,8 @@ class ModificationControllerTest {
         // Create a stashed reference: it must also be ignored by getReferences
         ModificationInfos stashedReferenceInfo = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
-                .referenceId(referencedLoadModificationInfo.getUuid())
-                .referenceInfos(referencedLoadModificationInfo)
+                .referencedId(referencedLoadModificationInfo.getUuid())
+                .referencedInfos(referencedLoadModificationInfo)
                 .stashed(true)
                 .build();
         stashedReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(stashedReferenceInfo))).getFirst();
@@ -2075,16 +2075,16 @@ class ModificationControllerTest {
                 .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        List<ReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<ModificationReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
         // both references share the same referencedLoadModificationInfo target, but are kept as distinct entries
         assertEquals(2, referencesData.size());
         assertTrue(referencesData.stream().noneMatch(r -> r.modificationUuid().equals(nonReferenceModificationUuid)));
         for (UUID referenceModificationUuid : List.of(activeReferenceInfo.getUuid(), stashedReferenceInfo.getUuid())) {
-            ReferenceData reference = referencesData.stream()
+            ModificationReferenceData reference = referencesData.stream()
                     .filter(r -> r.modificationUuid().equals(referenceModificationUuid))
                     .findFirst().orElseThrow();
-            assertEquals(referencedLoadModificationInfo.getUuid(), reference.referenceId());
+            assertEquals(referencedLoadModificationInfo.getUuid(), reference.referencedId());
             assertNull(reference.containerId());
         }
     }
@@ -2098,16 +2098,16 @@ class ModificationControllerTest {
 
         ModificationInfos firstReferenceInfo = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
-                .referenceId(referencedLoadModificationInfo.getUuid())
-                .referenceInfos(referencedLoadModificationInfo)
+                .referencedId(referencedLoadModificationInfo.getUuid())
+                .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
                 .build();
         firstReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(firstReferenceInfo))).getFirst();
 
         ModificationInfos secondReferenceInfo = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
-                .referenceId(referencedLoadModificationInfo.getUuid())
-                .referenceInfos(referencedLoadModificationInfo)
+                .referencedId(referencedLoadModificationInfo.getUuid())
+                .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
                 .build();
         secondReferenceInfo = modificationRepository.saveModifications(TEST_GROUP2_ID, List.of(ModificationEntity.fromDTO(secondReferenceInfo))).getFirst();
@@ -2120,14 +2120,14 @@ class ModificationControllerTest {
                 .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        List<ReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<ModificationReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
         assertEquals(2, referencesData.size());
         UUID sharedReferenceId = referencedLoadModificationInfo.getUuid();
         UUID firstReferenceUuid = firstReferenceInfo.getUuid();
         UUID secondReferenceUuid = secondReferenceInfo.getUuid();
-        assertTrue(referencesData.stream().anyMatch(r -> r.modificationUuid().equals(firstReferenceUuid) && r.referenceId().equals(sharedReferenceId)));
-        assertTrue(referencesData.stream().anyMatch(r -> r.modificationUuid().equals(secondReferenceUuid) && r.referenceId().equals(sharedReferenceId)));
+        assertTrue(referencesData.stream().anyMatch(r -> r.modificationUuid().equals(firstReferenceUuid) && r.referencedId().equals(sharedReferenceId)));
+        assertTrue(referencesData.stream().anyMatch(r -> r.modificationUuid().equals(secondReferenceUuid) && r.referencedId().equals(sharedReferenceId)));
     }
 
     @Test
@@ -2142,8 +2142,8 @@ class ModificationControllerTest {
         // Create an active reference in the tested group: it must be returned
         ModificationInfos activeReferenceInfo = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
-                .referenceId(referencedLoadModificationInfo.getUuid())
-                .referenceInfos(referencedLoadModificationInfo)
+                .referencedId(referencedLoadModificationInfo.getUuid())
+                .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
                 .build();
         activeReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(activeReferenceInfo))).getFirst();
@@ -2151,8 +2151,8 @@ class ModificationControllerTest {
         // Create a stashed reference in the tested group: it must also be returned, as its own entry
         ModificationInfos stashedReferenceInfo = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
-                .referenceId(referencedLoadModificationInfo.getUuid())
-                .referenceInfos(referencedLoadModificationInfo)
+                .referencedId(referencedLoadModificationInfo.getUuid())
+                .referencedInfos(referencedLoadModificationInfo)
                 .stashed(true)
                 .build();
         stashedReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(stashedReferenceInfo))).getFirst();
@@ -2166,8 +2166,8 @@ class ModificationControllerTest {
 
         ModificationInfos otherGroupReferenceInfo = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
-                .referenceId(otherGroupReferencedLoadModificationInfo.getUuid())
-                .referenceInfos(otherGroupReferencedLoadModificationInfo)
+                .referencedId(otherGroupReferencedLoadModificationInfo.getUuid())
+                .referencedInfos(otherGroupReferencedLoadModificationInfo)
                 .stashed(false)
                 .build();
         modificationRepository.saveModifications(TEST_GROUP2_ID, List.of(ModificationEntity.fromDTO(otherGroupReferenceInfo)));
@@ -2177,19 +2177,19 @@ class ModificationControllerTest {
                 .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        List<ReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<ModificationReferenceData> referencesData = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
         // both the active and the stashed reference of the tested group are returned, as distinct entries
         assertEquals(2, referencesData.size());
         for (UUID referenceModificationUuid : List.of(activeReferenceInfo.getUuid(), stashedReferenceInfo.getUuid())) {
-            ReferenceData reference = referencesData.stream()
+            ModificationReferenceData reference = referencesData.stream()
                     .filter(r -> r.modificationUuid().equals(referenceModificationUuid))
                     .findFirst().orElseThrow();
-            assertEquals(referencedLoadModificationInfo.getUuid(), reference.referenceId());
+            assertEquals(referencedLoadModificationInfo.getUuid(), reference.referencedId());
             assertNull(reference.containerId());
         }
         UUID otherGroupReferencedLoadModificationUuid = otherGroupReferencedLoadModificationInfo.getUuid();
-        assertTrue(referencesData.stream().noneMatch(r -> r.referenceId().equals(otherGroupReferencedLoadModificationUuid)));
+        assertTrue(referencesData.stream().noneMatch(r -> r.referencedId().equals(otherGroupReferencedLoadModificationUuid)));
     }
 
     @ParameterizedTest
@@ -2309,8 +2309,8 @@ class ModificationControllerTest {
 
         ModificationInfos referenceInfo = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
-                .referenceId(referencedLoadModificationInfo.getUuid())
-                .referenceInfos(referencedLoadModificationInfo)
+                .referencedId(referencedLoadModificationInfo.getUuid())
+                .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
                 .build();
         referenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(referenceInfo))).getFirst();
@@ -2326,7 +2326,7 @@ class ModificationControllerTest {
         ModificationReferenceInfos referenceMetadata = (ModificationReferenceInfos) modifications.getFirst();
         assertEquals(referenceInfo.getUuid(), referenceMetadata.getUuid());
         assertEquals(ModificationType.MODIFICATION_REFERENCE, referenceMetadata.getType());
-        assertEquals(referencedLoadModificationInfo.getUuid(), referenceMetadata.getReferenceId());
+        assertEquals(referencedLoadModificationInfo.getUuid(), referenceMetadata.getReferencedId());
         // the label of a reference is the one of the modification it points to
         assertEquals(ModificationType.LOAD_CREATION.name(), referenceMetadata.getMessageType());
         assertTrue(referenceMetadata.getMessageValues().contains("idLoad"));
