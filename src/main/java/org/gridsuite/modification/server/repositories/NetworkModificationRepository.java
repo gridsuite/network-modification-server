@@ -1324,16 +1324,21 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * Takes a composite modification out of its group so that it can be stored as an element in the directory server,
-     * and puts a reference to it at the very same place in the group. The composite modification keeps the same uuid,
-     * only its container changes.
-     * @param groupUuid group owning the composite modification
+     * Takes a composite modification out of its container so that it can be stored as an element in the directory
+     * server, and puts a reference to it at the very same place in that container. The composite modification keeps
+     * the same uuid, only its container changes.
+     * <p>
+     * The composite may be nested in other composites : its own container is then the composite containing it, but the
+     * group of the node still has to be reached by walking the containers up, so that only a composite belonging to
+     * that group - and not one contained by an already shared composite - can be extracted.
+     * @param groupUuid group the composite modification belongs to, possibly through other composites
      * @param modificationUuid uuid of the composite modification to share
      * @param name name given to the shared composite modification, null to keep the current one
+     * @return the container the composite modification has been taken out of, now containing the reference to it :
+     * either the group or a parent composite
      */
     @Transactional
-    public void extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
-        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
+    public ModificationContainerInfos extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
         ModificationEntity modificationEntity = getModificationEntity(modificationUuid);
         if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
             String expectedType = ModificationType.COMPOSITE_MODIFICATION.name();
@@ -1341,11 +1346,9 @@ public class NetworkModificationRepository {
                 String.format(MODIFICATION_BAD_TYPE.messageTemplate(), modificationUuid, modificationEntity.getType(), expectedType),
                 Map.of(MODIFICATION_ID, modificationUuid.toString(), "modificationType", modificationEntity.getType(), "expectedModificationType", expectedType));
         }
-        if (!groupUuid.equals(modificationEntity.getContainerUuid())) {
-            throw new NetworkModificationServerException(MODIFICATION_NOT_FOUND,
-                String.format("Modification %s is not owned by group %s", modificationUuid, groupUuid),
-                Map.of(MODIFICATION_ID, modificationUuid, "groupId", groupUuid));
-        }
+        assertBelongsToGroup(compositeEntity, groupUuid);
+        assertContainsNoSharedModification(compositeEntity);
+        AbstractModificationContainerEntity containerEntity = compositeEntity.getContainer();
 
         ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
             .referencedId(modificationUuid)
@@ -1355,13 +1358,61 @@ public class NetworkModificationRepository {
         ModificationEntity referenceEntity = ModificationEntity.fromDTO(referenceInfos);
 
         // the reference takes the place - and the order - of the shared composite modification
-        groupEntity.addModification(referenceEntity, compositeEntity.getModificationsOrder());
-        groupEntity.removeModifications(List.of(modificationUuid));
+        containerEntity.addModification(referenceEntity, compositeEntity.getModificationsOrder());
+        containerEntity.removeModifications(List.of(modificationUuid));
         compositeEntity.setContainer(null);
         compositeEntity.setModificationsOrder(0);
         if (name != null) {
             compositeModificationRepository.renameCompositeModification(compositeEntity, name);
         }
+        return new ModificationContainerInfos(containerEntity.getId(),
+            containerEntity.isGroup() ? ModificationContainerType.GROUP : ModificationContainerType.COMPOSITE);
+    }
+
+    /**
+     * Asserts the modification belongs to the given group, walking the containers up : a modification nested in
+     * composites of the group belongs to it, one contained by an already shared composite does not.
+     */
+    private void assertBelongsToGroup(ModificationEntity modificationEntity, UUID groupUuid) {
+        AbstractModificationContainerEntity containerEntity = modificationEntity.getContainer();
+        while (containerEntity != null && containerEntity.isComposite()) {
+            containerEntity = getModificationEntity(containerEntity.getId()).getContainer();
+        }
+        // a null container means a shared composite has been reached : sharing takes a composite out of its group
+        if (containerEntity == null || !groupUuid.equals(containerEntity.getId())) {
+            throw new NetworkModificationServerException(MODIFICATION_NOT_FOUND,
+                String.format("Modification %s is not owned by group %s", modificationEntity.getId(), groupUuid),
+                Map.of(MODIFICATION_ID, modificationEntity.getId(), "groupId", groupUuid));
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public boolean containsSharedModification(@NonNull UUID compositeUuid) {
+        ModificationEntity modificationEntity = getModificationEntity(compositeUuid);
+        if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
+            String expectedType = ModificationType.COMPOSITE_MODIFICATION.name();
+            throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
+                String.format(MODIFICATION_BAD_TYPE.messageTemplate(), compositeUuid, modificationEntity.getType(), expectedType),
+                Map.of(MODIFICATION_ID, compositeUuid.toString(), "modificationType", modificationEntity.getType(), "expectedModificationType", expectedType));
+        }
+        return containsSharedModification(compositeEntity);
+    }
+
+    private void assertContainsNoSharedModification(CompositeModificationEntity compositeEntity) {
+        if (containsSharedModification(compositeEntity)) {
+            throw new NetworkModificationServerException(MODIFICATION_CONTAINS_SHARED,
+                String.format(MODIFICATION_CONTAINS_SHARED.messageTemplate(), compositeEntity.getId()),
+                Map.of(MODIFICATION_ID, compositeEntity.getId()));
+        }
+    }
+
+    private boolean containsSharedModification(CompositeModificationEntity compositeEntity) {
+        return compositeEntity.getModifications().stream().anyMatch(this::isOrContainsSharedModification);
+    }
+
+    private boolean isOrContainsSharedModification(ModificationEntity modificationEntity) {
+        return modificationEntity instanceof ModificationReferenceEntity
+            || modificationEntity instanceof CompositeModificationEntity compositeEntity && containsSharedModification(compositeEntity);
     }
 
     private AbstractModificationContainerEntity getContainer(ModificationContainerInfos containerInfos) {

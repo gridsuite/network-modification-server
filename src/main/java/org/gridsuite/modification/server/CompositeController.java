@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
+import org.gridsuite.modification.server.dto.ModificationContainerInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.data.util.Pair;
@@ -82,15 +83,21 @@ public class CompositeController {
         return ResponseEntity.ok().body(networkModificationService.createNetworkCompositeModification(modificationUuids, name));
     }
 
-    @PostMapping(value = "/{uuid}/share")
-    @Operation(summary = "Extract a composite modification from its group, replacing it by a reference to it")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been extracted")})
-    public ResponseEntity<Void> extractCompositeModificationToShare(
+    @PostMapping(value = "/{uuid}/share", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Extract a composite modification from its container, replacing it by a reference to it")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The container the composite modification has been extracted from")})
+    public ResponseEntity<ModificationContainerInfos> extractCompositeModificationToShare(
             @PathVariable("uuid") UUID compositeModificationUuid,
-            @Parameter(description = "Group owning the composite modification", required = true) @RequestParam("groupUuid") UUID groupUuid,
+            @Parameter(description = "Group the composite modification belongs to", required = true) @RequestParam("groupUuid") UUID groupUuid,
             @Parameter(description = "New name of the shared composite modification") @RequestParam(value = "name", required = false) String name) {
-        networkModificationService.extractCompositeModificationToShare(groupUuid, compositeModificationUuid, name);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(networkModificationService.extractCompositeModificationToShare(groupUuid, compositeModificationUuid, name));
+    }
+
+    @GetMapping(value = "/{uuid}/contains-shared-modification", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Tell whether a composite modification contains, at any depth, a shared modification")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Whether the composite modification contains a shared modification")})
+    public ResponseEntity<Boolean> containsSharedModification(@PathVariable("uuid") UUID compositeModificationUuid) {
+        return ResponseEntity.ok().body(networkModificationService.containsSharedModification(compositeModificationUuid));
     }
 
     @GetMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
