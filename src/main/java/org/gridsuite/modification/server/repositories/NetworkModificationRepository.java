@@ -934,24 +934,7 @@ public class NetworkModificationRepository {
      */
     @Transactional(readOnly = true)
     public List<UUID> findAncestorCompositeUuids(@NonNull UUID modificationUuid) {
-        List<UUID> ancestors = new ArrayList<>();
-        Set<UUID> visited = new HashSet<>();
-        UUID currentContainerId = modificationRepository.findById(modificationUuid)
-                .map(ModificationEntity::getContainerUuid)
-                .orElse(null);
-
-        while (currentContainerId != null && visited.add(currentContainerId)) {
-            ModificationContainerType containerType = modificationContainerRepository.getTypeById(currentContainerId);
-            if (containerType != ModificationContainerType.COMPOSITE) {
-                break; // reached a GROUP (a study node's own modifications) : top of the tree
-            }
-            ancestors.add(currentContainerId);
-            // the composite container shares its id with the CompositeModificationEntity that owns it
-            currentContainerId = modificationRepository.findById(currentContainerId)
-                    .map(ModificationEntity::getContainerUuid)
-                    .orElse(null);
-        }
-        return ancestors;
+        return modificationRepository.findAncestorCompositeUuids(modificationUuid);
     }
 
     /**

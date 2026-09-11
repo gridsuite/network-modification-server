@@ -243,6 +243,28 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findOnlyCompositeChildrenUuids(@Param("compositeUuid") UUID compositeUuid);
 
     /**
+     * @return ancestor composite modification uuids of {@code modificationUuid}, closest first;
+     * empty if the modification is a direct child of a group (not nested in any composite)
+     */
+    @NativeQuery("""
+        WITH RECURSIVE ancestors(id, level) AS (
+            SELECT m.container_id, 1
+              FROM modification m
+             WHERE m.id = :modificationUuid
+            UNION ALL
+            SELECT comp.container_id, a.level + 1
+              FROM ancestors a
+              JOIN modification_container c ON c.id = a.id AND c.type = 'COMPOSITE'
+              JOIN modification comp ON comp.id = a.id
+        )
+        SELECT CAST(a.id AS VARCHAR)
+          FROM ancestors a
+          JOIN modification_container c ON c.id = a.id AND c.type = 'COMPOSITE'
+         ORDER BY a.level
+        """)
+    List<UUID> findAncestorCompositeUuids(@Param("modificationUuid") UUID modificationUuid);
+
+    /**
      * Returns the composite UUID followed by every descendant UUID (composites <em>and</em> leaves),
      * ordered depth-first by {@code modifications_order} at each level.
      */
