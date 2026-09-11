@@ -14,5 +14,5 @@ import java.util.UUID;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public record ModificationApplicationGroup(UUID groupUuid, List<ModificationInfos> modifications, ReportInfos reportInfos) {
+public record ModificationApplicationGroup(UUID groupUuid, List<ModificationInfos> modifications, ReportInfos reportInfos, String rootNetworkTag) {
 }

@@ -49,7 +49,8 @@ public class NetworkModificationExceptionHandler extends AbstractBusinessExcepti
                  MODIFICATION_DUPLICATION_ARGUMENT_ERROR,
                  MODIFICATION_DESCRIPTION_MISSING,
                  MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR,
-                 VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING
+                 VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING,
+                 ROOT_NETWORK_TAG_TOO_LONG
                 -> HttpStatus.BAD_REQUEST;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };

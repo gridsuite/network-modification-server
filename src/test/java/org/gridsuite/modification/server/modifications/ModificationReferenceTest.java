@@ -51,8 +51,8 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
         return ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
-                .referenceId(compositeEntity.getId())
-                .referenceInfos(referenceInfos)
+                .referencedId(compositeEntity.getId())
+                .referencedInfos(referenceInfos)
                 .stashed(false)
                 .activated(true)
                 .build();
@@ -102,8 +102,8 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
         ModificationInfos referenceInfos = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
-                .referenceId(compositeEntity.getId())
-                .referenceInfos(compositeEntity.toModificationInfos())
+                .referencedId(compositeEntity.getId())
+                .referencedInfos(compositeEntity.toModificationInfos())
                 .stashed(false)
                 .activated(true)
                 .build();
@@ -113,7 +113,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
         ModificationInfos fetched = networkModificationRepository.getModificationInfo(referenceUuid);
 
         assertInstanceOf(ModificationReferenceInfos.class, fetched);
-        ModificationInfos refInfos = ((ModificationReferenceInfos) fetched).getReferenceInfos();
+        ModificationInfos refInfos = ((ModificationReferenceInfos) fetched).getReferencedInfos();
         assertInstanceOf(CompositeModificationInfos.class, refInfos);
         ModificationInfos fetchedChild = ((CompositeModificationInfos) refInfos).getModificationsInfos().get(0);
         assertEquals(ModificationType.LOAD_CREATION.name(), fetchedChild.getMessageType());
@@ -138,8 +138,8 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
         ModificationInfos referenceInfos = ModificationReferenceInfos.builder()
                 .referenceType(ModificationReferenceInfos.Type.BASIC)
-                .referenceId(loadEntity.getId())
-                .referenceInfos(loadEntity.toModificationInfos())
+                .referencedId(loadEntity.getId())
+                .referencedInfos(loadEntity.toModificationInfos())
                 .stashed(false)
                 .activated(true)
                 .build();
@@ -148,6 +148,6 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
         ModificationInfos fetched = networkModificationRepository.getModificationInfo(saved.get(0).getUuid());
 
         assertInstanceOf(ModificationReferenceInfos.class, fetched);
-        assertNotNull(((ModificationReferenceInfos) fetched).getReferenceInfos());
+        assertNotNull(((ModificationReferenceInfos) fetched).getReferencedInfos());
     }
 }
