@@ -563,8 +563,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
-        networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name);
+    public void extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name, String description) {
+        networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name, description);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {
@@ -572,8 +572,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
-        networkModificationRepository.updateCompositeModification(compositeUuid, name);
+    public void updateCompositeModification(@NonNull UUID compositeUuid, String name, String description) {
+        networkModificationRepository.updateCompositeModification(compositeUuid, name, description);
     }
 
     @Transactional
