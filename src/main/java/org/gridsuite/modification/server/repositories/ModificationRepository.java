@@ -229,7 +229,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     ModificationEntity findReferencedModificationMetadataByReferenceId(UUID uuid);
 
     // return all the modification-references pointing at a given element (e.g. a composite shared from directory-server)
-    @Query("SELECT r FROM ModificationReferenceEntity r WHERE r.referenceId = :elementUuid")
+    @Query("SELECT r FROM ModificationReferenceEntity r WHERE r.referencedId = :elementUuid")
     List<ModificationReferenceEntity> findAllByReferenceId(@Param("elementUuid") UUID elementUuid);
 
     @Query(value = "SELECT cast(operational_limits_groups_id AS VARCHAR) FROM line_modification_operational_limits_groups WHERE branch_id IN ?1", nativeQuery = true)
