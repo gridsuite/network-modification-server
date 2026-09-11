@@ -283,4 +283,22 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     @EntityGraph(attributePaths = {"content.modifications"}, type = EntityGraph.EntityGraphType.LOAD)
     List<CompositeModificationEntity> findAllCompositesWithModificationsByIdIn(List<UUID> compositeUuids);
+
+    /**
+     * @return whether at least one of {@code containerIds} (groups or composites) holds a modification reference,
+     * directly or nested in any of its composite descendants
+     */
+    @NativeQuery("""
+            WITH RECURSIVE descendants(id, type) AS (
+                SELECT m.id, m.type
+                  FROM modification m
+                 WHERE m.container_id IN (:containerIds)
+                UNION ALL
+                SELECT m.id, m.type
+                  FROM modification m
+                  JOIN descendants d ON m.container_id = d.id
+            )
+            SELECT EXISTS (SELECT 1 FROM descendants WHERE type = 'MODIFICATION_REFERENCE')
+            """)
+    boolean existsReferenceInContainersSubtrees(@Param("containerIds") Collection<UUID> containerIds);
 }

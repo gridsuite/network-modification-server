@@ -560,64 +560,65 @@ public class NetworkModificationRepository {
         }
     }
 
+    private static ModificationInfos resolveNestedModificationReferences(ModificationInfos infos) {
+        if (infos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
+            composite.setModificationsInfos(composite.getModificationsInfos().stream()
+                    .map(NetworkModificationRepository::resolveModificationReference)
+                    .map(NetworkModificationRepository::resolveNestedModificationReferences)
+                    .toList());
+        }
+        return infos;
+    }
+
     /**
-     * Clone each selected modification so it can be stored inside a composite, keeping the caller-specified
-     * order and duplicates (the same uuid may appear twice, e.g. two references resolved to the same shared
-     * composite): each occurrence gets its own fresh clone, its applicabilities included.
-     * A selected uuid pointing to a {@link ModificationReferenceEntity} (a "shared" modification) is resolved
-     * to the composite it references, and the reference's own description - not the referenced composite's -
-     * is carried onto the clone, since that description lives on the reference, not on the shared composite.
+     * @return the modification itself or, for a reference, the shared modification it points to, given the
+     * reference's own description
+     */
+    private static ModificationInfos resolveModificationReference(ModificationInfos content) {
+        if (!(content instanceof ModificationReferenceInfos reference)) {
+            return content;
+        }
+        ModificationInfos referenced = reference.getReferencedInfos();
+        if (reference.getDescription() != null && !reference.getDescription().isBlank()) {
+            referenced.setDescription(reference.getDescription());
+        }
+        return referenced;
+    }
+
+    /**
+     * Clone each selected modification so it can be stored inside a composite, keeping the caller-specified order
+     * and duplicates: each occurrence gets its own fresh clone, its applicabilities included.
      */
     private List<ModificationEntity> copiesOf(List<UUID> modificationUuids) {
-        Map<UUID, ModificationEntity> entitiesByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
-
-        // Resolve each requested uuid to the modification it should actually be cloned from: id() is the
-        // source uuid to clone from, and description() carries the reference's description override.
-        List<CompositeInfos> resolvedContents = modificationUuids.stream()
-                .map(uuid -> {
-                    ModificationEntity entity = entitiesByUuid.get(uuid);
-                    if (entity == null) {
-                        throw getModificationNotFoundException(uuid.toString());
-                    }
-                    return entity instanceof ModificationReferenceEntity referenceEntity
-                            ? new CompositeInfos(referenceEntity.getReferencedId(), null, false, referenceEntity.getDescription())
-                            : new CompositeInfos(uuid, null, false, null);
-                })
+        List<ModificationEntity> modificationsToCopy = modificationUuids.stream()
+                .map(getModificationEntities(modificationUuids.stream().distinct().toList(), true).stream()
+                        .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()))::get)
                 .toList();
 
-        // Load the modifications the references point to, the ones not already fetched above
-        List<UUID> referencedUuids = resolvedContents.stream().filter(Objects::nonNull)
-                .map(CompositeInfos::id).filter(id -> !entitiesByUuid.containsKey(id)).distinct().toList();
-        if (!referencedUuids.isEmpty()) {
-            modificationRepository.findAllByIdIn(referencedUuids).forEach(entity -> entitiesByUuid.put(entity.getId(), entity));
-        }
-
-        // Convert each distinct source modification only once, filled with its applicabilities
-        List<UUID> sourceUuids = resolvedContents.stream().filter(Objects::nonNull).map(CompositeInfos::id).distinct().toList();
-        Map<UUID, ModificationInfos> infosBySourceUuid = addApplicabilities(sourceUuids.stream()
-                .map(entitiesByUuid::get).filter(Objects::nonNull)
-                .map(this::toModificationsInfosOptimized).toList()).stream()
+        // Substitute modification references with the modifications they point to, so the copy never holds a reference
+        Map<UUID, ModificationInfos> infosBySourceUuid = addApplicabilities(getApplicabilityHolders(modificationsToCopy).stream().distinct()
+                .map(this::toModificationsInfosOptimized)
+                .map(NetworkModificationRepository::resolveNestedModificationReferences)
+                .toList()).stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, Function.identity()));
 
-        // Build one fresh clone per requested occurrence, keeping order and duplicates
-        return resolvedContents.stream()
-                .map(content -> {
-                    if (content == null) {
-                        return null;
-                    }
-                    ModificationInfos infos = infosBySourceUuid.get(content.id());
-                    if (infos == null) {
-                        throw getModificationNotFoundException(content.id().toString());
-                    }
-                    ModificationEntity clone = ModificationEntity.fromDTO(infos);
-                    if (content.description() != null && !content.description().isBlank()) {
-                        clone.setDescription(content.description());
-                    }
-                    return clone;
-                })
-                .filter(Objects::nonNull)
-                .toList();
+        return modificationsToCopy.stream().map(entity -> copyOf(entity, infosBySourceUuid)).toList();
+    }
+
+    /**
+     * @return a fresh clone of the modification, built from its source infos; when the modification is a
+     * reference, its own description is carried onto the clone, as it lives on the reference, not on the shared one
+     */
+    private static ModificationEntity copyOf(ModificationEntity entity, Map<UUID, ModificationInfos> infosBySourceUuid) {
+        ModificationEntity clone = ModificationEntity.fromDTO(infosBySourceUuid.get(resolveReferenceUuid(entity)));
+        if (entity instanceof ModificationReferenceEntity reference && reference.getDescription() != null && !reference.getDescription().isBlank()) {
+            clone.setDescription(reference.getDescription());
+        }
+        return clone;
+    }
+
+    private static UUID resolveReferenceUuid(ModificationEntity entity) {
+        return entity instanceof ModificationReferenceEntity reference ? reference.getReferencedId() : entity.getId();
     }
 
     /**

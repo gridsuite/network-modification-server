@@ -319,6 +319,11 @@ public class NetworkModificationService {
                         row -> UUID.fromString((String) row[1])));
     }
 
+    @Transactional(readOnly = true)
+    public boolean hasModificationReferences(@NonNull List<UUID> containerUuids) {
+        return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
+    }
+
     @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         for (UUID modificationUuid : modificationUuids) {
