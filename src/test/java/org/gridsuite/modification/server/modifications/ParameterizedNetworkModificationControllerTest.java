@@ -102,6 +102,7 @@ class ParameterizedNetworkModificationControllerTest {
 
         when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), any(PreloadingStrategy.class))).thenThrow(new PowsyblException());
         when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
+        when(networkStoreService.networkExists(TEST_NETWORK_ID)).thenReturn(true);
     }
 
     @AfterEach
@@ -170,7 +171,7 @@ class ParameterizedNetworkModificationControllerTest {
 
         String body = TestUtils.getJsonBody(List.of(modificationUuid), TEST_NETWORK_ID, null);
 
-        ResultActions copyAction = mockMvc.perform(put("/v1/groups/{groupUuid}?action=COPY", TEST_GROUP_ID)
+        ResultActions copyAction = mockMvc.perform(put("/v1/containers/{groupUuid}?action=COPY", TEST_GROUP_ID)
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(request().asyncStarted());
