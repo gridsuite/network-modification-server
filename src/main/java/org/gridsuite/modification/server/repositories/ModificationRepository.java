@@ -192,31 +192,6 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
             """, nativeQuery = true)
     List<Object[]> findCompositeContainerIdsByModificationIds(@Param("uuids") Collection<UUID> uuids);
 
-    /**
-     * For each given modification, walks up the {@code container_id} chain (a modification may live in a
-     * COMPOSITE that is itself nested in another container) until it reaches the enclosing GROUP.
-     * Modifications sitting directly in a group are resolved in one step.
-     *
-     * @return one [modification id, root group id] row per given modification uuid that is actually reachable
-     * from a group; ids not found (deleted, or orphaned from any group) have no row
-     */
-    @Query(value = """
-            WITH RECURSIVE container_chain(modification_id, current_container_id) AS (
-                SELECT m.id AS modification_id, m.container_id AS current_container_id
-                  FROM modification m
-                 WHERE m.id IN :uuids
-                UNION ALL
-                SELECT cc.modification_id, m2.container_id
-                  FROM container_chain cc
-                  JOIN modification m2 ON m2.id = cc.current_container_id
-            )
-            SELECT CAST(cc.modification_id AS VARCHAR), CAST(cc.current_container_id AS VARCHAR)
-              FROM container_chain cc
-              JOIN modification_container c ON c.id = cc.current_container_id
-             WHERE c.type = 'GROUP'
-            """, nativeQuery = true)
-    List<Object[]> findRootGroupIdsByModificationIds(@Param("uuids") Collection<UUID> uuids);
-
     @Query("""
           SELECT COUNT(m) FROM ModificationEntity m
           WHERE m.container.id = :containerId AND m.stashed = :stashed

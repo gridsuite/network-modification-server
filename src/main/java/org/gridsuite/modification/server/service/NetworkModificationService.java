@@ -281,11 +281,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
+    public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
         networkModificationRepository.updateNetworkModificationMetadata(modificationUuids, metadata);
-        //List<UUID> ancestorCompositeUuids = networkModificationRepository.findAncestorCompositeUuids(modificationUuids.getFirst());
-        //ancestorCompositeUuids.forEach(compositeUuid -> notificationService.emitElementUpdated(compositeUuid, userId));
-
     }
 
     @Transactional
@@ -321,14 +318,6 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public Map<UUID, UUID> findModificationParentComposites(@NonNull List<UUID> modificationUuids) {
         return modificationRepository.findCompositeContainerIdsByModificationIds(modificationUuids).stream()
-                .collect(Collectors.toMap(
-                        row -> UUID.fromString((String) row[0]),
-                        row -> UUID.fromString((String) row[1])));
-    }
-
-    @Transactional(readOnly = true)
-    public Map<UUID, UUID> findModificationRootGroups(@NonNull List<UUID> modificationUuids) {
-        return modificationRepository.findRootGroupIdsByModificationIds(modificationUuids).stream()
                 .collect(Collectors.toMap(
                         row -> UUID.fromString((String) row[0]),
                         row -> UUID.fromString((String) row[1])));

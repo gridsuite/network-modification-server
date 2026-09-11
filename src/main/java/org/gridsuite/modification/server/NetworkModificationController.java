@@ -312,7 +312,7 @@ public class NetworkModificationController {
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @RequestBody ModificationInfos metadata, @RequestHeader("userId") String userId) {
 
-        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata, userId);
+        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata);
         return ResponseEntity.ok().build();
     }
 
