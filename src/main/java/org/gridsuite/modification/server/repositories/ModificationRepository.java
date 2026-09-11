@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.repositories;
 import org.gridsuite.modification.server.dto.ModificationApplicability;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationReferenceEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -202,6 +203,10 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
             "from ModificationEntity m WHERE m.id = (select r.referencedId from ModificationReferenceEntity r WHERE r.id = ?1)")
     ModificationEntity findReferencedModificationMetadataByReferenceId(UUID uuid);
 
+    // return all the modification-references pointing at a given element (e.g. a composite shared from directory-server)
+    @Query("SELECT r FROM ModificationReferenceEntity r WHERE r.referencedId = :elementUuid")
+    List<ModificationReferenceEntity> findAllByReferenceId(@Param("elementUuid") UUID elementUuid);
+
     @Query(value = "SELECT cast(operational_limits_groups_id AS VARCHAR) FROM line_modification_operational_limits_groups WHERE branch_id IN ?1", nativeQuery = true)
     List<UUID> findLineModificationOpLimitsGroupsIdsByBranchIds(List<UUID> uuids);
 
@@ -236,6 +241,28 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
          WHERE c.id IN (SELECT id FROM descendants)
         """)
     List<UUID> findOnlyCompositeChildrenUuids(@Param("compositeUuid") UUID compositeUuid);
+
+    /**
+     * @return ancestor composite modification uuids of {@code modificationUuid}, closest first;
+     * empty if the modification is a direct child of a group (not nested in any composite)
+     */
+    @NativeQuery("""
+        WITH RECURSIVE ancestors(id, level) AS (
+            SELECT m.container_id, 1
+              FROM modification m
+             WHERE m.id = :modificationUuid
+            UNION ALL
+            SELECT comp.container_id, a.level + 1
+              FROM ancestors a
+              JOIN modification_container c ON c.id = a.id AND c.type = 'COMPOSITE'
+              JOIN modification comp ON comp.id = a.id
+        )
+        SELECT CAST(a.id AS VARCHAR)
+          FROM ancestors a
+          JOIN modification_container c ON c.id = a.id AND c.type = 'COMPOSITE'
+         ORDER BY a.level
+        """)
+    List<UUID> findAncestorCompositeUuids(@Param("modificationUuid") UUID modificationUuid);
 
     /**
      * Returns the composite UUID followed by every descendant UUID (composites <em>and</em> leaves),

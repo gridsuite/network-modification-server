@@ -118,7 +118,7 @@ class NetworkModificationServiceTest {
 
         assertEquals(1, result.modificationUuids().size());
         assertEquals(1, result.modificationResults().size());
-        assertTrue(result.modificationResults().get(0).isEmpty());
+        assertTrue(result.modificationResults().getFirst().isEmpty());
     }
 
     private static LoadModificationInfos dummyModification(UUID uuid) {
