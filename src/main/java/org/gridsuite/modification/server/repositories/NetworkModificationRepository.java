@@ -793,7 +793,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void deleteModificationGroup(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
+    public void deleteModificationGroups(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
         try {
             List<ModificationGroupEntity> groupEntities = getModificationGroups(groupUuids);
             if (groupEntities.size() != groupUuids.size()) {
@@ -1145,7 +1145,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void deleteStashedModificationInAllGroup(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
+    public void deleteStashedModificationFromGroups(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
         try {
             List<ModificationEntity> modifications = getModificationGroups(groupUuids).stream()
                     .flatMap(group -> group.removeAllStashedModifications().stream()).collect(Collectors.toList());
