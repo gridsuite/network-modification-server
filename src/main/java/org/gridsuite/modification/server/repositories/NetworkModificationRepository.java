@@ -191,11 +191,14 @@ public class NetworkModificationRepository {
         compositeModificationRepository.renameCompositeModification(compositeEntity, name);
     }
 
-    public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
+    public void updateCompositeModification(@NonNull UUID compositeUuid, String name, String description) {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
         if (name != null) {
             compositeModificationRepository.renameCompositeModification(compositeEntity, name);
+        }
+        if (description != null) {
+            compositeModificationRepository.changeDescriptionOfCompositeModification(compositeEntity, description);
         }
     }
 
@@ -1332,7 +1335,7 @@ public class NetworkModificationRepository {
      * @param name name given to the shared composite modification, null to keep the current one
      */
     @Transactional
-    public void extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
+    public void extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name, String description) {
         ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
         ModificationEntity modificationEntity = getModificationEntity(modificationUuid);
         if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
@@ -1361,6 +1364,9 @@ public class NetworkModificationRepository {
         compositeEntity.setModificationsOrder(0);
         if (name != null) {
             compositeModificationRepository.renameCompositeModification(compositeEntity, name);
+        }
+        if (description != null) {
+            compositeModificationRepository.changeDescriptionOfCompositeModification(compositeEntity, description);
         }
     }
 

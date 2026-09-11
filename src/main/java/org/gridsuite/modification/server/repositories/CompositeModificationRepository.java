@@ -37,6 +37,12 @@ public interface CompositeModificationRepository extends JpaRepository<Composite
     }
 
     @SneakyThrows
+    default void changeDescriptionOfCompositeModification(CompositeModificationEntity compositeEntity, String description) {
+        compositeEntity.setDescription(description);
+        compositeEntity.setMessageValues(MAPPER.writeValueAsString(compositeEntity.toModificationInfos().getMapMessageValues()));
+    }
+
+    @SneakyThrows
     default void generateModificationMessage(ModificationInfos modificationInfos) {
         if (modificationInfos.getMessageType() == null) {
             modificationInfos.setMessageType(modificationInfos.getType().name());
