@@ -50,7 +50,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query("""
             SELECT m FROM ModificationEntity m
             LEFT JOIN ModificationRootNetworkApplicabilityEntity a
-                   ON a.modification.id = COALESCE(TREAT(m AS ModificationReferenceEntity).referenceId, m.id)
+                   ON a.modification.id = COALESCE(TREAT(m AS ModificationReferenceEntity).referencedId, m.id)
                   AND a.rootNetworkTag = :rootNetworkTag
             WHERE m.container.id = :containerId AND m.stashed = false AND m.activated = true
               AND COALESCE(a.applicable, true)
@@ -86,7 +86,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
             SELECT new org.gridsuite.modification.server.dto.ModificationApplicability(m.id, a.rootNetworkTag, a.applicable)
             FROM ModificationEntity m
             JOIN ModificationRootNetworkApplicabilityEntity a
-                 ON a.modification.id = COALESCE(TREAT(m AS ModificationReferenceEntity).referenceId, m.id)
+                 ON a.modification.id = COALESCE(TREAT(m AS ModificationReferenceEntity).referencedId, m.id)
             WHERE m.id IN (:uuids)
             """)
     List<ModificationApplicability> findApplicabilitiesByIdIn(@Param("uuids") Collection<UUID> uuids);
@@ -108,7 +108,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      * @return the shared modifications the references among {@code ids} point to, deduplicated: several references
      * may well point to the same one.
      */
-    @Query("SELECT DISTINCT r.referenceId FROM ModificationReferenceEntity r WHERE r.id IN :ids")
+    @Query("SELECT DISTINCT r.referencedId FROM ModificationReferenceEntity r WHERE r.id IN :ids")
     List<UUID> findReferencedModificationIds(@Param("ids") Collection<UUID> ids);
 
     /**
@@ -199,7 +199,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     // return the referenced modification of a modification reference
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) " +
-            "from ModificationEntity m WHERE m.id = (select r.referenceId from ModificationReferenceEntity r WHERE r.id = ?1)")
+            "from ModificationEntity m WHERE m.id = (select r.referencedId from ModificationReferenceEntity r WHERE r.id = ?1)")
     ModificationEntity findReferencedModificationMetadataByReferenceId(UUID uuid);
 
     @Query(value = "SELECT cast(operational_limits_groups_id AS VARCHAR) FROM line_modification_operational_limits_groups WHERE branch_id IN ?1", nativeQuery = true)

@@ -264,13 +264,13 @@ class CompositeControllerTest {
                 ModificationReferenceInfos.class,
                 newModificationList.getLast()
         );
-        assertEquals(compositeModificationUuid, insertedReference.getReferenceId());
+        assertEquals(compositeModificationUuid, insertedReference.getReferencedId());
         assertEquals(ModificationReferenceInfos.Type.BASIC, insertedReference.getReferenceType());
         assertEquals("description", insertedReference.getDescription());
 
         CompositeModificationInfos referencedComposite = assertInstanceOf(
                 CompositeModificationInfos.class,
-                insertedReference.getReferenceInfos()
+                insertedReference.getReferencedInfos()
         );
         assertEquals(compositeModificationUuid, referencedComposite.getUuid());
         checkCompositeModificationContent(referencedComposite.getModificationsInfos());
@@ -411,10 +411,10 @@ class CompositeControllerTest {
         assertEquals(modificationsNumber + 1, newModificationList.size());
 
         ModificationReferenceInfos reference = assertInstanceOf(ModificationReferenceInfos.class, newModificationList.getLast());
-        assertEquals(compositeInGroupUuid, reference.getReferenceId());
+        assertEquals(compositeInGroupUuid, reference.getReferencedId());
         assertEquals(ModificationReferenceInfos.Type.BASIC, reference.getReferenceType());
 
-        CompositeModificationInfos sharedComposite = assertInstanceOf(CompositeModificationInfos.class, reference.getReferenceInfos());
+        CompositeModificationInfos sharedComposite = assertInstanceOf(CompositeModificationInfos.class, reference.getReferencedInfos());
         assertEquals(compositeInGroupUuid, sharedComposite.getUuid());
         assertEquals("shared composite", sharedComposite.getName());
         checkCompositeModificationContent(sharedComposite.getModificationsInfos());

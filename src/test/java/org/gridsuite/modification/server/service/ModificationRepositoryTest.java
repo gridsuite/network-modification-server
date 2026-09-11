@@ -1547,7 +1547,7 @@ class ModificationRepositoryTest {
      * @return the shared modification a reference points to, the one carrying the applicabilities
      */
     private UUID sharedModificationOf(UUID referenceUuid) {
-        return ((ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid)).getReferenceId();
+        return ((ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid)).getReferencedId();
     }
 
     /**
@@ -1906,7 +1906,7 @@ class ModificationRepositoryTest {
 
         ModificationReferenceInfos reference = (ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid);
 
-        assertEquals(applicabilitiesInDepth(sharedUuid), applicabilitiesInDepth(reference.getReferenceInfos()),
+        assertEquals(applicabilitiesInDepth(sharedUuid), applicabilitiesInDepth(reference.getReferencedInfos()),
                 "Reading a shared modification carries the applicabilities of its whole tree, an empty one rather than a null where the tag says nothing");
     }
 
