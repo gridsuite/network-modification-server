@@ -144,7 +144,17 @@ public class NetworkModificationController {
     public ResponseEntity<Void> deleteModificationGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                         @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false,
                                                                 defaultValue = "true") Boolean errorOnGroupNotFound) {
-        networkModificationService.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
+        networkModificationService.deleteModificationGroups(List.of(groupUuid), errorOnGroupNotFound);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping(value = "/groups")
+    @Operation(summary = "Delete the given modification groups")
+    @ApiResponse(responseCode = "200", description = "Modifications groups are deleted")
+    public ResponseEntity<Void> deleteModificationGroups(@Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false,
+                                                                defaultValue = "true") Boolean errorOnGroupNotFound,
+                                                         @Parameter(description = "Group UUIDs") @RequestBody List<UUID> groupUuids) {
+        networkModificationService.deleteModificationGroups(groupUuids, errorOnGroupNotFound);
         return ResponseEntity.ok().build();
     }
 
@@ -314,6 +324,17 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping(value = "/groups/stashed-modifications")
+    @Operation(summary = "Delete all the stashed modifications from given groups")
+    @ApiResponse(responseCode = "200", description = "All stashed modifications from the given groups are deleted")
+    public ResponseEntity<Void> deleteStashedModificationFromGroups(
+                                                                 @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false,
+                                                                         defaultValue = "true") Boolean errorOnGroupNotFound,
+                                                                 @Parameter(description = "Group UUIDs") @RequestBody List<UUID> groupUuids) {
+        networkModificationService.deleteStashedModificationFromGroups(groupUuids, errorOnGroupNotFound);
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping(value = "/network-modifications/root-network-applicability")
     @Operation(summary = "Updates the applicability of network modifications for a root network tag")
     @ApiResponse(responseCode = "200", description = "The applicability of the network modifications has been successfully updated")
@@ -352,7 +373,7 @@ public class NetworkModificationController {
     public ResponseEntity<Void> deleteStashedModificationInGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                         @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false,
                                                                 defaultValue = "true") Boolean errorOnGroupNotFound) {
-        networkModificationService.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
+        networkModificationService.deleteStashedModificationFromGroups(List.of(groupUuid), errorOnGroupNotFound);
         return ResponseEntity.ok().build();
     }
 
@@ -367,7 +388,7 @@ public class NetworkModificationController {
     @Operation(summary = "Delete indexed modifications")
     public ResponseEntity<Void> deleteIndexedModifications(@RequestParam("groupUuids") List<UUID> groupUuids,
                                                            @RequestParam("networkUuid") UUID networkUuid) {
-        networkModificationService.deleteIndexedModificationGroup(groupUuids, networkUuid);
+        networkModificationService.deleteIndexedModificationGroups(groupUuids, networkUuid);
         return ResponseEntity.ok().build();
     }
 

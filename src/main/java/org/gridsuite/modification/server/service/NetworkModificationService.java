@@ -239,17 +239,17 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
-        deleteIndexedModificationGroup(List.of(groupUuid));
-        networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
+    public void deleteModificationGroups(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
+        deleteIndexedModificationGroups(groupUuids);
+        networkModificationRepository.deleteModificationGroups(groupUuids, errorOnGroupNotFound);
     }
 
-    private void deleteIndexedModificationGroup(List<UUID> groupUuids) {
+    private void deleteIndexedModificationGroups(List<UUID> groupUuids) {
         applicationInfosService.deleteAllByGroupUuids(groupUuids);
     }
 
     @Transactional
-    public void deleteIndexedModificationGroup(List<UUID> groupUuids, UUID networkUuid) {
+    public void deleteIndexedModificationGroups(List<UUID> groupUuids, UUID networkUuid) {
         applicationInfosService.deleteAllByGroupUuidsAndNetworkUuid(groupUuids, networkUuid);
     }
 
@@ -581,8 +581,8 @@ public class NetworkModificationService {
         networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
     }
 
-    public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
-        networkModificationRepository.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
+    public void deleteStashedModificationFromGroups(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
+        networkModificationRepository.deleteStashedModificationFromGroups(groupUuids, errorOnGroupNotFound);
     }
 
     public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {
