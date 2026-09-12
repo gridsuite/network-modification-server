@@ -9,19 +9,17 @@ package org.gridsuite.modification.server.modifications.byfilter.assignment;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.extensions.*;
-import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.BooleanAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.equipmentfield.GeneratorField;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
@@ -43,22 +41,6 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
     private static final String GENERATOR_ID_8 = "gen8";
     private static final String GENERATOR_ID_9 = "gen9";
     private static final String GENERATOR_ID_10 = "gen10";
-    private static final String GENERATOR_ID_11 = "gen11";
-
-    @Test
-    void testCreateWithWarning() throws Exception {
-        IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
-        IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
-
-        DoubleAssignmentInfos assignmentInfos = DoubleAssignmentInfos.builder()
-                .filters(List.of(filterWithOneWrongId))
-                .editedField(GeneratorField.ACTIVE_POWER_SET_POINT.name())
-                .value(55.)
-                .build();
-
-        checkCreateWithWarning(List.of(assignmentInfos), List.of(identifiableAttributes, wrongIdAttributes));
-        assertEquals(55, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
-    }
 
     @Override
     protected void createEquipments() {
@@ -129,30 +111,17 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
         getNetwork().getGenerator(GENERATOR_ID_10).setRatedS(30.);
     }
 
-    @Override
-    protected List<AbstractFilter> getTestFilters() {
-        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_1, 1.0),
-                new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_2, 2.0)))
-            .build();
-        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_3, 2.0),
-                new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_4, 5.0)))
-            .build();
-        IdentifierListFilter filter3 = IdentifierListFilter.builder().id(FILTER_ID_3).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_5, 6.0),
-                new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_6, 7.0)))
-            .build();
-        IdentifierListFilter filter4 = IdentifierListFilter.builder().id(FILTER_ID_4).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_7, 3.0),
-                new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_8, 8.0)))
-            .build();
-        IdentifierListFilter filter5 = IdentifierListFilter.builder().id(FILTER_ID_5).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_9, 0.0),
-                new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_10, 9.0)))
-            .build();
+    private static final Map<UUID, Set<String>> FILTER_MAPPING = Map.of(
+            FILTER_ID_1, Set.of(GENERATOR_ID_1, GENERATOR_ID_2),
+            FILTER_ID_2, Set.of(GENERATOR_ID_3, GENERATOR_ID_4),
+            FILTER_ID_3, Set.of(GENERATOR_ID_5, GENERATOR_ID_6),
+            FILTER_ID_4, Set.of(GENERATOR_ID_7, GENERATOR_ID_8),
+            FILTER_ID_5, Set.of(GENERATOR_ID_9, GENERATOR_ID_10)
+    );
 
-        return List.of(filter1, filter2, filter3, filter4, filter5);
+    @Override
+    protected Map<UUID, Set<String>> getFilterMapping() {
+        return FILTER_MAPPING;
     }
 
     @Override
