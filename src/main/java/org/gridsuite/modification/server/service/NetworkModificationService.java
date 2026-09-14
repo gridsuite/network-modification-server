@@ -568,12 +568,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public ModificationContainerInfos extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
+    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
         return networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name);
-    }
-
-    public boolean containsSharedModification(@NonNull UUID compositeModificationUuid) {
-        return networkModificationRepository.containsSharedModification(compositeModificationUuid);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {

@@ -20,7 +20,7 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.dto.ActionType;
 import org.gridsuite.modification.server.dto.CompositeInfos;
-import org.gridsuite.modification.server.dto.ModificationContainerInfos;
+import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
@@ -408,10 +408,6 @@ class CompositeControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // the group it has been taken out of is returned, so that the caller knows where the reference now stands
-        ModificationContainerInfos container = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP), container);
-
         // the composite modification is shared as it was, keeping its own uuid, and a reference to it took its place
         // in the group
         List<ModificationInfos> newModificationList = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
@@ -420,6 +416,10 @@ class CompositeControllerTest {
         ModificationReferenceInfos reference = assertInstanceOf(ModificationReferenceInfos.class, newModificationList.getLast());
         assertEquals(compositeInGroupUuid, reference.getReferencedId());
         assertEquals(ModificationReferenceInfos.Type.BASIC, reference.getReferenceType());
+
+        // that reference is returned, at the root level of the group, so that the caller can register it
+        assertEquals(new ModificationReferenceData(reference.getUuid(), compositeInGroupUuid, null),
+                mapper.readValue(mvcResult.getResponse().getContentAsString(), ModificationReferenceData.class));
 
         CompositeModificationInfos sharedComposite = assertInstanceOf(CompositeModificationInfos.class, reference.getReferencedInfos());
         assertEquals(compositeInGroupUuid, sharedComposite.getUuid());
@@ -488,15 +488,14 @@ class CompositeControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // the composite P it has been taken out of is returned, and contains the reference to C in its place
-        ModificationContainerInfos container = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(new ModificationContainerInfos(parentInGroup.getUuid(), ModificationContainerType.COMPOSITE), container);
-
+        // P contains the reference to C in its place, and that reference is returned along with P
         CompositeModificationInfos newParentInGroup = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(parentInGroup.getUuid());
         ModificationReferenceInfos reference = assertInstanceOf(ModificationReferenceInfos.class, newParentInGroup.getModificationsInfos().stream()
                 .filter(ModificationReferenceInfos.class::isInstance).findFirst().orElseThrow());
-        assertEquals(childInGroupUuid, reference.getReferenceId());
-        CompositeModificationInfos sharedComposite = assertInstanceOf(CompositeModificationInfos.class, reference.getReferenceInfos());
+        assertEquals(childInGroupUuid, reference.getReferencedId());
+        assertEquals(new ModificationReferenceData(reference.getUuid(), childInGroupUuid, parentInGroup.getUuid()),
+                mapper.readValue(mvcResult.getResponse().getContentAsString(), ModificationReferenceData.class));
+        CompositeModificationInfos sharedComposite = assertInstanceOf(CompositeModificationInfos.class, reference.getReferencedInfos());
         assertEquals("shared nested composite", sharedComposite.getName());
         checkCompositeModificationContent(sharedComposite.getModificationsInfos());
 
@@ -511,17 +510,6 @@ class CompositeControllerTest {
                         .queryParam("groupUuid", TEST_GROUP2_ID.toString())
                         .queryParam("name", "another group"))
                 .andExpect(status().isNotFound());
-
-        // the same content check is exposed on its own, for a caller to know beforehand that P cannot be shared
-        mvcResult = mockMvc.perform(get(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + parentInGroup.getUuid() + "/contains-shared-modification"))
-                .andExpect(status().isOk())
-                .andReturn();
-        assertEquals(Boolean.TRUE, mapper.readValue(mvcResult.getResponse().getContentAsString(), Boolean.class));
-
-        mvcResult = mockMvc.perform(get(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + childInGroupUuid + "/contains-shared-modification"))
-                .andExpect(status().isOk())
-                .andReturn();
-        assertEquals(Boolean.FALSE, mapper.readValue(mvcResult.getResponse().getContentAsString(), Boolean.class));
 
         // G is now contained by the shared C : walking its containers up no longer reaches the group, since sharing C took
         // it out of P - so G belongs to the shared element and cannot be taken out of it
