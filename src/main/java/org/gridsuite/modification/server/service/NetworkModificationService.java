@@ -307,8 +307,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public List<ReferenceData> getReferences(@NonNull List<UUID> modificationUuids) {
-        return networkModificationRepository.getReferences(modificationUuids);
+    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids) {
+        return networkModificationRepository.getModificationsReferences(modificationUuids);
     }
 
     @Transactional(readOnly = true)
@@ -317,6 +317,11 @@ public class NetworkModificationService {
                 .collect(Collectors.toMap(
                         row -> UUID.fromString((String) row[0]),
                         row -> UUID.fromString((String) row[1])));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasModificationReferences(@NonNull List<UUID> containerUuids) {
+        return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
     }
 
     @Transactional
