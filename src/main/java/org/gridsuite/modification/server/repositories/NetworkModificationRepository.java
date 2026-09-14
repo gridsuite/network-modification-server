@@ -1339,6 +1339,7 @@ public class NetworkModificationRepository {
      */
     @Transactional
     public ModificationContainerInfos extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
+        getModificationGroup(groupUuid); // check if group exists
         ModificationEntity modificationEntity = getModificationEntity(modificationUuid);
         if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
             String expectedType = ModificationType.COMPOSITE_MODIFICATION.name();
