@@ -1091,4 +1091,27 @@ class CompositeControllerTest {
                     "gap or duplicate at index " + i + " for modification " + sorted.get(i).getId());
         }
     }
+
+    @Test
+    void testHasReferences() throws Exception {
+        List<ModificationInfos> switchMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "shared")
+                        .content(mapper.writeValueAsString(switchMods.stream().map(ModificationInfos::getUuid).toList()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        runRequestAsync(mockMvc, put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP2_ID + "?action=INSERT")
+                .content(getJsonBodyModificationCompositeToBeInserted(List.of(new CompositeInfos(sharedCompositeUuid, "shared", true, null))))
+                .contentType(MediaType.APPLICATION_JSON), status().isOk());
+
+        assertFalse(hasReferences(TEST_GROUP_ID));
+        assertTrue(hasReferences(TEST_GROUP2_ID));
+        assertTrue(hasReferences(TEST_GROUP_ID, TEST_GROUP2_ID));
+    }
+
+    private boolean hasReferences(UUID... containerUuids) throws Exception {
+        return mapper.readValue(mockMvc.perform(get("/v1/containers/references/exists")
+                        .queryParam("uuids", Arrays.stream(containerUuids).map(UUID::toString).toArray(String[]::new)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), Boolean.class);
+    }
 }
