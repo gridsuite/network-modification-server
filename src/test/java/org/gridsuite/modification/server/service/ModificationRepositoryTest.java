@@ -48,9 +48,7 @@ import static org.gridsuite.modification.dto.VoltageRegulationType.DISTANT;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -1239,6 +1237,17 @@ class ModificationRepositoryTest {
     @Test
     void testVoltageInitModification() {
         var voltageInitModificationEntity = ModificationEntity.fromDTO(VoltageInitModificationInfos.builder()
+            .batteries(List.of(
+                    VoltageInitBatteryModificationInfos.builder()
+                            .batteryId("v1Battery")
+                            .targetQ(10.)
+                            .build(),
+                    VoltageInitBatteryModificationInfos.builder()
+                            .batteryId("v2Battery")
+                            .targetV(226.)
+                            .build()
+                )
+            )
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G1")
@@ -1311,7 +1320,7 @@ class ModificationRepositoryTest {
             .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity));
-        assertRequestsCount(2, 9, 0, 0);
+        assertRequestsCount(2, 10, 0, 0);
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modificationInfos.size());
@@ -1323,7 +1332,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity.getId()));
-        assertRequestsCount(4, 0, 0, 8);
+        assertRequestsCount(4, 0, 0, 9);
 
         SQLStatementCountValidator.reset();
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
@@ -1547,7 +1556,7 @@ class ModificationRepositoryTest {
      * @return the shared modification a reference points to, the one carrying the applicabilities
      */
     private UUID sharedModificationOf(UUID referenceUuid) {
-        return ((ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid)).getReferenceId();
+        return ((ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid)).getReferencedId();
     }
 
     /**
@@ -1906,7 +1915,7 @@ class ModificationRepositoryTest {
 
         ModificationReferenceInfos reference = (ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid);
 
-        assertEquals(applicabilitiesInDepth(sharedUuid), applicabilitiesInDepth(reference.getReferenceInfos()),
+        assertEquals(applicabilitiesInDepth(sharedUuid), applicabilitiesInDepth(reference.getReferencedInfos()),
                 "Reading a shared modification carries the applicabilities of its whole tree, an empty one rather than a null where the tag says nothing");
     }
 
@@ -1986,23 +1995,53 @@ class ModificationRepositoryTest {
     }
 
     @Test
+    void testCreatingACompositeCopiesTheReferencesNestedInItsContentRatherThanLinkingThem() {
+        // outer ── inner ── reference to a shared composite, the reference carrying a description and an applicability
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_3, true, "v1d1");
+        networkModificationRepository.updateRootNetworkApplicability(List.of(referenceUuid), ROOT_NETWORK_TAG, false);
+        UUID innerUuid = insertComposite(TEST_GROUP_ID_3, false, "v1d2");
+        UUID outerUuid = insertComposite(TEST_GROUP_ID_3, false, "v1d3");
+        ModificationContainerInfos group = new ModificationContainerInfos(TEST_GROUP_ID_3, ModificationContainerType.GROUP);
+        networkModificationRepository.moveModifications(group,
+                new ModificationContainerInfos(innerUuid, ModificationContainerType.COMPOSITE), List.of(referenceUuid), null);
+        networkModificationRepository.moveModifications(group,
+                new ModificationContainerInfos(outerUuid, ModificationContainerType.COMPOSITE), List.of(innerUuid), null);
+
+        UUID copyUuid = networkModificationRepository.createNetworkCompositeModification(List.of(outerUuid), "copy");
+
+        ModificationInfos nestedCopy = compositeInside(compositeInside(networkModificationRepository.getModificationInfo(copyUuid)));
+        assertFalse(nestedCopy instanceof ModificationReferenceInfos, "a reference nested in the copied content must be stored as a copy, not a link");
+        assertNotEquals(sharedModificationOf(referenceUuid), nestedCopy.getUuid(), "the copy is a modification of its own, not the shared one");
+        assertEquals("description", nestedCopy.getDescription(), "the nested copy inherits the reference's own description");
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), nestedCopy.getApplicabilityByRootNetworkTag(),
+                "the nested copy inherits the applicabilities of the shared modification");
+        assertInstanceOf(ModificationReferenceInfos.class, networkModificationRepository.getModificationInfo(referenceUuid),
+                "the source composite keeps its reference, only the copy resolves it");
+    }
+
+    /**
+     * @return the composite a composite holds, the first one when it holds several
+     */
+    private static ModificationInfos compositeInside(ModificationInfos compositeInfos) {
+        return ((CompositeModificationInfos) compositeInfos).getModificationsInfos().stream()
+                .filter(CompositeModificationInfos.class::isInstance).findFirst().orElseThrow();
+    }
+
+    @Test
     void testCreatingACompositeFromAnUnknownModificationThrows() {
         UUID unknownUuid = UUID.randomUUID();
-        assertThrows(NetworkModificationServerException.class,
-                () -> networkModificationRepository.createNetworkCompositeModification(List.of(unknownUuid), "outer"),
-                new NetworkModificationServerException(MODIFICATION_NOT_FOUND, unknownUuid.toString()).getMessage());
+        assertEquals(MODIFICATIONS_NOT_FOUND, assertThrows(NetworkModificationServerException.class,
+                () -> networkModificationRepository.createNetworkCompositeModification(List.of(unknownUuid), "outer")).getBusinessErrorCode());
     }
 
     @Test
     void testCreatingACompositeFromAReferenceWhoseSharedModificationIsGoneThrows() {
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
-        UUID sharedUuid = sharedModificationOf(referenceUuid);
         // the shared modification the reference points to disappears, leaving the reference dangling
-        networkModificationRepository.deleteModifications(null, List.of(sharedUuid));
+        networkModificationRepository.deleteModifications(null, List.of(sharedModificationOf(referenceUuid)));
 
-        assertThrows(NetworkModificationServerException.class,
-                () -> networkModificationRepository.createNetworkCompositeModification(List.of(referenceUuid), "outer"),
-                new NetworkModificationServerException(MODIFICATION_NOT_FOUND, sharedUuid.toString()).getMessage());
+        assertEquals(MODIFICATIONS_NOT_FOUND, assertThrows(NetworkModificationServerException.class,
+                () -> networkModificationRepository.createNetworkCompositeModification(List.of(referenceUuid), "outer")).getBusinessErrorCode());
     }
 
     @Test

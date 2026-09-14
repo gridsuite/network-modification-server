@@ -266,13 +266,13 @@ class CompositeControllerTest {
                 ModificationReferenceInfos.class,
                 newModificationList.getLast()
         );
-        assertEquals(compositeModificationUuid, insertedReference.getReferenceId());
+        assertEquals(compositeModificationUuid, insertedReference.getReferencedId());
         assertEquals(ModificationReferenceInfos.Type.BASIC, insertedReference.getReferenceType());
         assertEquals("description", insertedReference.getDescription());
 
         CompositeModificationInfos referencedComposite = assertInstanceOf(
                 CompositeModificationInfos.class,
-                insertedReference.getReferenceInfos()
+                insertedReference.getReferencedInfos()
         );
         assertEquals(compositeModificationUuid, referencedComposite.getUuid());
         checkCompositeModificationContent(referencedComposite.getModificationsInfos());
@@ -418,10 +418,10 @@ class CompositeControllerTest {
         assertEquals(modificationsNumber + 1, newModificationList.size());
 
         ModificationReferenceInfos reference = assertInstanceOf(ModificationReferenceInfos.class, newModificationList.getLast());
-        assertEquals(compositeInGroupUuid, reference.getReferenceId());
+        assertEquals(compositeInGroupUuid, reference.getReferencedId());
         assertEquals(ModificationReferenceInfos.Type.BASIC, reference.getReferenceType());
 
-        CompositeModificationInfos sharedComposite = assertInstanceOf(CompositeModificationInfos.class, reference.getReferenceInfos());
+        CompositeModificationInfos sharedComposite = assertInstanceOf(CompositeModificationInfos.class, reference.getReferencedInfos());
         assertEquals(compositeInGroupUuid, sharedComposite.getUuid());
         assertEquals("shared composite", sharedComposite.getName());
         checkCompositeModificationContent(sharedComposite.getModificationsInfos());
@@ -1197,5 +1197,28 @@ class CompositeControllerTest {
             assertEquals(i, sorted.get(i).getModificationsOrder(),
                     "gap or duplicate at index " + i + " for modification " + sorted.get(i).getId());
         }
+    }
+
+    @Test
+    void testHasReferences() throws Exception {
+        List<ModificationInfos> switchMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "shared")
+                        .content(mapper.writeValueAsString(switchMods.stream().map(ModificationInfos::getUuid).toList()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        runRequestAsync(mockMvc, put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP2_ID + "?action=INSERT")
+                .content(getJsonBodyModificationCompositeToBeInserted(List.of(new CompositeInfos(sharedCompositeUuid, "shared", true, null))))
+                .contentType(MediaType.APPLICATION_JSON), status().isOk());
+
+        assertFalse(hasReferences(TEST_GROUP_ID));
+        assertTrue(hasReferences(TEST_GROUP2_ID));
+        assertTrue(hasReferences(TEST_GROUP_ID, TEST_GROUP2_ID));
+    }
+
+    private boolean hasReferences(UUID... containerUuids) throws Exception {
+        return mapper.readValue(mockMvc.perform(get("/v1/containers/references/exists")
+                        .queryParam("uuids", Arrays.stream(containerUuids).map(UUID::toString).toArray(String[]::new)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), Boolean.class);
     }
 }
