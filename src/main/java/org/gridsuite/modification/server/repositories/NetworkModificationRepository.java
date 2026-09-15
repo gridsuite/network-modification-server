@@ -1335,7 +1335,7 @@ public class NetworkModificationRepository {
      * @param groupUuid group the composite modification belongs to, possibly through other composites
      * @param modificationUuid uuid of the composite modification to share
      * @param name name given to the shared composite modification, null to keep the current one
-     * @return the reference left in place of the composite modification, either in the group or in a parent composite
+     * @return the reference left in place of the composite modification
      */
     @Transactional
     public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {

@@ -417,7 +417,7 @@ class CompositeControllerTest {
         assertEquals(compositeInGroupUuid, reference.getReferencedId());
         assertEquals(ModificationReferenceInfos.Type.BASIC, reference.getReferenceType());
 
-        // that reference is returned, at the root level of the group, so that the caller can register it
+        // that reference is returned, at the root level of the group
         assertEquals(new ModificationReferenceData(reference.getUuid(), compositeInGroupUuid, null),
                 mapper.readValue(mvcResult.getResponse().getContentAsString(), ModificationReferenceData.class));
 
@@ -488,7 +488,7 @@ class CompositeControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // P contains the reference to C in its place, and that reference is returned along with P
+        // P contains the reference to C in its place, and that reference is returned
         CompositeModificationInfos newParentInGroup = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(parentInGroup.getUuid());
         ModificationReferenceInfos reference = assertInstanceOf(ModificationReferenceInfos.class, newParentInGroup.getModificationsInfos().stream()
                 .filter(ModificationReferenceInfos.class::isInstance).findFirst().orElseThrow());
