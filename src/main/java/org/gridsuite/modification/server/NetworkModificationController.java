@@ -296,12 +296,7 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references data were returned")})
     public ResponseEntity<List<ModificationReferenceData>> getAllReferencesDataFromGroup(
             @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        List<UUID> netModUuids = networkModificationService.getNetworkModifications(groupUuid, true, false, false)
-                .stream().map(ModificationInfos::getUuid)
-                .toList();
-        List<ModificationReferenceData> referencesData = networkModificationService.getModificationsReferences(netModUuids);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(referencesData);
+        return ResponseEntity.ok(networkModificationService.getAllReferencesDataFromGroup(groupUuid));
     }
 
     @GetMapping(value = "/containers/references/exists", produces = MediaType.APPLICATION_JSON_VALUE)
