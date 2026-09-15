@@ -306,6 +306,15 @@ public class NetworkModificationService {
         }
     }
 
+    /**
+     * @return all the references in the group including, recursively, from all the sub composites in the group
+     */
+    @Transactional(readOnly = true)
+    public List<ModificationReferenceData> getAllReferencesDataFromGroup(@NonNull UUID groupUuid) {
+        List<UUID> allModificationUuids = modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(groupUuid));
+        return networkModificationRepository.getModificationsReferences(allModificationUuids);
+    }
+
     @Transactional
     public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids) {
         return networkModificationRepository.getModificationsReferences(modificationUuids);
