@@ -103,6 +103,11 @@ class ModificationIndexationTest {
         cleanDB();
     }
 
+    private static List<ModificationMoveInfos> moves(ModificationContainerInfos source, ModificationContainerInfos target,
+                                                     List<UUID> modificationUuids, UUID beforeUuid) {
+        return modificationUuids.stream().map(uuid -> new ModificationMoveInfos(uuid, source, target, beforeUuid)).toList();
+    }
+
     private void cleanDB() {
         modificationRepository.deleteAll();
         modificationApplicationRepository.deleteAll();
@@ -257,10 +262,9 @@ class ModificationIndexationTest {
         UUID groupUuid2 = UUID.randomUUID();
         modificationRepository.saveModifications(groupUuid2, List.of()); // create empty target group so getContainerType resolves it
         NetworkModificationsResult modificationsResult = networkModificationService.moveModifications(
-                new ModificationContainerInfos(groupUuid1, ModificationContainerType.GROUP),
-                new ModificationContainerInfos(groupUuid2, ModificationContainerType.GROUP),
-                null,
-                modifications.stream().map(ModificationInfos::getUuid).toList(),
+                moves(new ModificationContainerInfos(groupUuid1, ModificationContainerType.GROUP),
+                        new ModificationContainerInfos(groupUuid2, ModificationContainerType.GROUP),
+                        modifications.stream().map(ModificationInfos::getUuid).toList(), null),
                 List.of(TestUtils.contextOnAnyRootNetwork(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID())),
                 true
         ).join();
