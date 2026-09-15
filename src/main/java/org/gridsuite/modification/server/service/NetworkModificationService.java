@@ -461,28 +461,26 @@ public class NetworkModificationService {
     }
 
     public CompletableFuture<NetworkModificationsResult> moveModifications(
-            @NonNull ModificationContainerInfos sourceContainerInfos,
-            @NonNull ModificationContainerInfos targetContainerInfos,
-            UUID beforeModificationUuid,
-            @NonNull List<UUID> modificationUuids,
+            @NonNull List<ModificationMoveInfos> moveInfos,
             @NonNull List<ModificationApplicationContext> applicationContexts,
             boolean canApply) {
-        List<ModificationInfos> modifications = networkModificationRepository.moveModificationsFromGroup(
-            sourceContainerInfos, targetContainerInfos, modificationUuids, beforeModificationUuid);
+        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(moveInfos);
+        List<UUID> movedUuids = movedModifications.stream().map(ModificationInfos::getUuid).toList();
 
-        boolean shouldApply = canApply
-                && !sourceContainerInfos.id().equals(targetContainerInfos.id())
-                && targetContainerInfos.type() == ModificationContainerType.GROUP
-                && !modifications.isEmpty();
+        List<ModificationMoveInfos> movesIntoGroup = canApply
+                ? moveInfos.stream().filter(ModificationMoveInfos::movedToGroup).toList()
+                : List.of();
+        if (movesIntoGroup.isEmpty()) {
+            return CompletableFuture.completedFuture(new NetworkModificationsResult(movedUuids, List.of()));
+        }
 
-        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = shouldApply
-                ? applyModifications(targetContainerInfos.id(), modifications, applicationContexts)
-                : CompletableFuture.completedFuture(List.of());
+        // the application contexts belong to one node, so every move entering a group enters that node's group
+        UUID targetGroupUuid = movesIntoGroup.getFirst().target().id();
+        Set<UUID> uuidsEnteringGroup = movesIntoGroup.stream().map(ModificationMoveInfos::modificationUuid).collect(Collectors.toSet());
+        List<ModificationInfos> toApply = movedModifications.stream().filter(m -> uuidsEnteringGroup.contains(m.getUuid())).toList();
 
-        return futureResult.thenApply(result ->
-                new NetworkModificationsResult(
-                        modifications.stream().map(ModificationInfos::getUuid).toList(),
-                        result));
+        return applyModifications(targetGroupUuid, toApply, applicationContexts)
+                .thenApply(result -> new NetworkModificationsResult(movedUuids, result));
     }
 
     public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {

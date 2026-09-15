@@ -19,10 +19,7 @@ import org.gridsuite.modification.dto.tabular.TabularBaseInfos;
 import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
-import org.gridsuite.modification.server.dto.CompositeInfos;
-import org.gridsuite.modification.server.dto.ModificationContainerInfos;
-import org.gridsuite.modification.server.dto.ModificationMetadata;
-import org.gridsuite.modification.server.dto.ModificationReferenceData;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
@@ -209,25 +206,6 @@ public class NetworkModificationRepository {
         return modificationRepository.saveAll(modifications);
     }
 
-    /**
-     * This function does a prepass to insure all modifications are contained in the same source container before moving them to the target container
-     */
-
-    @Transactional
-    // TODO Remove this method and use moveModifications instead, after refactoring the front-end to use the new API.
-    // This method is kept for backward compatibility with the old front-end.
-    // With the refactoring, the source container will be determined by each modification and moveSubModificationsToGroup has to be deleted
-    public List<ModificationInfos> moveModificationsFromGroup(
-            @NonNull ModificationContainerInfos sourceContainerInfos,
-            @NonNull ModificationContainerInfos targetContainerInfos,
-            @NonNull List<UUID> modificationUuids, UUID beforeModificationUuid) {
-        AbstractModificationContainerEntity sourceContainer = getContainer(sourceContainerInfos);
-        AbstractModificationContainerEntity targetContainer = getContainer(targetContainerInfos);
-        moveSubModificationsToGroup(sourceContainer, modificationUuids);
-        return addApplicabilities(moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid)
-            .stream().map(this::toModificationsInfosOptimized).toList());
-    }
-
     @Transactional
     public List<ModificationInfos> moveModifications(
             @NonNull ModificationContainerInfos sourceContainerInfos,
@@ -239,59 +217,34 @@ public class NetworkModificationRepository {
                 .stream().map(this::toModificationsInfosOptimized).toList();
     }
 
-    /**
-     * During a cut operation some selected modifications may currently be nested inside a composite other than
-     * {@code sourceId} (e.g. grouped under an unrelated composite ancestor). Before the requested
-     * move runs, promote each of those to be a direct child of {@code sourceId}, so that
-     * {@link #moveModificationsNonTransactional} always operates on modifications that are
-     * genuinely children of the source container. Composite roots among the selection, and
-     * modifications already covered by a selected composite ancestor, are left in place — only
-     * their loose descendants need surfacing.
-     * TODO To be removed (see moveModificationsFromGroup)
-     */
-    private void moveSubModificationsToGroup(AbstractModificationContainerEntity sourceContainer, List<UUID> modificationUuids) {
-        Set<UUID> selectedCompositeUuids = modificationRepository.findExistingCompositeModificationIds(modificationUuids);
-
-        Set<UUID> childrenOfSelectedComposites = selectedCompositeUuids
-            .stream()
-            .flatMap(uuid -> modificationRepository.findAllChildrenUuids(uuid).stream())
-            .collect(Collectors.toCollection(HashSet::new));
-        childrenOfSelectedComposites.removeAll(selectedCompositeUuids);
-
-        List<UUID> subModificationUuids = modificationUuids.stream()
-                .filter(uuid -> !childrenOfSelectedComposites.contains(uuid))
-                .toList();
-
-        for (UUID uuid : subModificationUuids) {
-            UUID parentCompositeUuid = modificationRepository.findCompositeContainerIdByModificationId(uuid);
-            if (parentCompositeUuid != null && !parentCompositeUuid.equals(sourceContainer.getId())) {
-                moveModificationsNonTransactional(
-                        getContainer(new ModificationContainerInfos(parentCompositeUuid, ModificationContainerType.COMPOSITE)),
-                        sourceContainer,
-                        List.of(uuid), null);
+    @Transactional
+    public List<ModificationInfos> moveModifications(@NonNull List<ModificationMoveInfos> moves) {
+        List<ModificationEntity> moved = new ArrayList<>();
+        List<UUID> leavingGroupForAnotherGroup = new ArrayList<>();
+        for (ModificationMoveInfos move : moves) {
+            AbstractModificationContainerEntity source = getContainer(move.source());
+            AbstractModificationContainerEntity target = getContainer(move.target());
+            List<ModificationEntity> entities = moveModificationsNonTransactional(source, target, List.of(move.modificationUuid()), move.beforeUuid());
+            if (source != target && source.isGroup() && target.isGroup()) {
+                leavingGroupForAnotherGroup.addAll(collectAllModificationUuids(entities));
             }
+            moved.addAll(entities);
         }
+        if (!leavingGroupForAnotherGroup.isEmpty()) {
+            modificationApplicationInfosService.deleteAllByModificationIds(leavingGroupForAnotherGroup);
+        }
+        return addApplicabilities(moved.stream().map(this::toModificationsInfosOptimized).toList());
     }
 
     private List<ModificationEntity> moveModificationsNonTransactional(AbstractModificationContainerEntity sourceContainer, AbstractModificationContainerEntity targetContainer,
-                                                                        List<UUID> modificationUuids, UUID beforeModificationUuid) {
-        boolean sameContainer = sourceContainer.getId().equals(targetContainer.getId());
-
-        if (sameContainer) {
+                                                                       List<UUID> modificationUuids, UUID beforeModificationUuid) {
+        if (sourceContainer.getId().equals(targetContainer.getId())) {
             return sourceContainer.moveModifications(modificationUuids, beforeModificationUuid);
         }
-
         List<ModificationEntity> modificationsMoved = sourceContainer.removeModifications(modificationUuids);
-        if (modificationsMoved.isEmpty()) {
-            return List.of();
+        if (!modificationsMoved.isEmpty()) {
+            targetContainer.insertModifications(modificationsMoved, beforeModificationUuid);
         }
-
-        if (sourceContainer.isGroup() && targetContainer.isGroup()) {
-            modificationApplicationInfosService.deleteAllByModificationIds(collectAllModificationUuids(modificationsMoved));
-        }
-
-        targetContainer.insertModifications(modificationsMoved, beforeModificationUuid);
-
         return modificationsMoved;
     }
 
