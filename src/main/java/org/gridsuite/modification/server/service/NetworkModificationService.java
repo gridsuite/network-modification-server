@@ -568,8 +568,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
-        networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name);
+    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
+        return networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {
