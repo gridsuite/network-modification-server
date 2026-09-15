@@ -88,8 +88,9 @@ public class CompositeController {
     public ResponseEntity<Void> extractCompositeModificationToShare(
             @PathVariable("uuid") UUID compositeModificationUuid,
             @Parameter(description = "Group owning the composite modification", required = true) @RequestParam("groupUuid") UUID groupUuid,
-            @Parameter(description = "New name of the shared composite modification") @RequestParam(value = "name", required = false) String name) {
-        networkModificationService.extractCompositeModificationToShare(groupUuid, compositeModificationUuid, name);
+            @Parameter(description = "New name of the shared composite modification") @RequestParam(value = "name", required = false) String name,
+            @Parameter(description = "New name of the shared composite modification") @RequestParam(value = "description", required = false) String description) {
+        networkModificationService.extractCompositeModificationToShare(groupUuid, compositeModificationUuid, name, description);
         return ResponseEntity.ok().build();
     }
 
@@ -125,8 +126,9 @@ public class CompositeController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
     public ResponseEntity<Void> updateNetworkCompositeModification(
             @PathVariable("uuid") UUID compositeModificationUuid,
-            @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name) {
-        networkModificationService.updateCompositeModification(compositeModificationUuid, name);
+            @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name,
+            @Parameter(description = "New composite description") @RequestParam(value = "description", required = false) String description) {
+        networkModificationService.updateCompositeModification(compositeModificationUuid, name, description);
         return ResponseEntity.ok().build();
     }
 
