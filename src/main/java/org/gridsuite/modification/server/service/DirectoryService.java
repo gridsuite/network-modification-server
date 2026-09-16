@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.service;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.ReferenceAttributes;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -38,14 +36,6 @@ public class DirectoryService {
                          RestClient restClient) {
         setDirectoryServerBaseUri(directoryServerBaseUri);
         this.restClient = restClient;
-    }
-
-    private void updateElementsReferences(List<ModificationReferenceData> modificationReferences, UUID rootContainerId, UUID containerId,
-                                          ReferenceAttributes.ReferenceType targetReferenceType, String userId) {
-        modificationReferences.forEach(ref -> updateElementReference(
-                ref.referencedId(),
-                ReferenceAttributes.createReferenceAttributes(ref.modificationUuid(), rootContainerId, containerId, targetReferenceType), userId)
-        );
     }
 
     /**
