@@ -42,10 +42,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 
 /**
- * A "by formula" modification (bulk modification resolved through the filter server) impacting 10 generators across
- * 3 substations must be reported as a single server-side {@code CollectionElementImpact}, not one impact per
- * generator.
- *
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
 @Tag("IntegrationTest")
