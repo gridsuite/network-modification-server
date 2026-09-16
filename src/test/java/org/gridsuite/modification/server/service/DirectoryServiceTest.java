@@ -59,4 +59,32 @@ class DirectoryServiceTest {
 
         directoryServer.verify();
     }
+
+    @Test
+    void testCreateElementReference() {
+        UUID elementUuid = UUID.randomUUID();
+        UUID referenceUuid = UUID.randomUUID();
+        UUID rootContainerId = UUID.randomUUID();
+        UUID containerId = UUID.randomUUID();
+        String userId = "userId";
+        ReferenceAttributes referenceAttributes = ReferenceAttributes.createReferenceAttributes(
+                referenceUuid,
+                rootContainerId,
+                containerId,
+                ReferenceAttributes.ReferenceType.STUDY_NODE
+        );
+
+        String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/" + elementUuid + "/references";
+        directoryServer.expect(requestTo(expectedUrl))
+                .andExpect(method(PUT))
+                .andExpect(header(HEADER_USER_ID, userId))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.referenceId").value(referenceUuid.toString()))
+                .andRespond(withSuccess());
+
+        directoryService.createElementReference(elementUuid, referenceAttributes, userId);
+
+        directoryServer.verify();
+    }
+
 }
