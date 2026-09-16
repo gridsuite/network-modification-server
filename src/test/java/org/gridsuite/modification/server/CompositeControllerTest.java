@@ -18,11 +18,7 @@ import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
-import org.gridsuite.modification.server.dto.ActionType;
-import org.gridsuite.modification.server.dto.CompositeInfos;
-import org.gridsuite.modification.server.dto.ModificationReferenceData;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -39,7 +35,6 @@ import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearc
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InOrder;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -951,39 +946,28 @@ class CompositeControllerTest {
         assertContiguousOrder(modificationRepository.findAllByContainerId(TEST_GROUP_ID, false));
         assertContiguousOrder(modificationRepository.findAllByContainer(firstCompositeUuid));
         assertContiguousOrder(modificationRepository.findAllByContainer(twodepthCompositeUuid));
-
-        // ---- 3. editing the leaf nested 2 levels deep must notify directory-server (via the generic
-        // elementUpdated notification) for each ancestor composite, closest first - directory-server
-        // decides on its own whether either composite is actually shared and relays to study-server
-        UUID deeplyNestedLeafUuid = originalRootModUuids.get(0);
-        EquipmentAttributeModificationInfos leafUpdate = EquipmentAttributeModificationInfos.builder()
-                .equipmentType(IdentifiableType.SWITCH)
-                .equipmentAttributeName("open")
-                .equipmentId("v1b1")
-                .equipmentAttributeValue(true)
-                .build();
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + deeplyNestedLeafUuid)
-                        .content(mapper.writeValueAsString(leafUpdate))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("userId", TEST_USER_ID))
-                .andExpect(status().isOk());
-
-        InOrder inOrder = inOrder(notificationService);
-        inOrder.verify(notificationService).emitElementUpdated(twodepthCompositeUuid, TEST_USER_ID);
-        inOrder.verify(notificationService).emitElementUpdated(firstCompositeUuid, TEST_USER_ID);
     }
 
     @Test
-    void testUpdateNetworkModificationInsideCompositeNotifiesDirectoryServer() throws Exception {
+    void testNotificationWhenSharedModificationUpdated() throws Exception {
         // Create a switch modification directly in the group, then assemble it into a composite
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         UUID leafUuid = modificationList.getFirst().getUuid();
 
+        // Create a shared composite modification with the switch modification
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(List.of(leafUuid)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Create a modification reference to shared composite modification
+        ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
+            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referencedId(sharedCompositeUuid)
+            .stashed(false)
+            .build();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(modificationReferenceInfo))).getFirst();
 
         // Editing the leaf while it is nested in the composite must notify directory-server
         EquipmentAttributeModificationInfos leafUpdate = EquipmentAttributeModificationInfos.builder()
@@ -998,11 +982,11 @@ class CompositeControllerTest {
                         .header("userId", TEST_USER_ID))
                 .andExpect(status().isOk());
 
-        verify(notificationService).emitElementUpdated(compositeUuid, TEST_USER_ID);
+        verify(notificationService).emitElementUpdated(sharedCompositeUuid, TEST_USER_ID);
     }
 
     @Test
-    void testUpdateRootLevelNetworkModificationDoesNotNotifyDirectoryServer() throws Exception {
+    void testNoNotificationWhenModificationUpdated() throws Exception {
         // A modification sitting directly under a group is not nested in any composite : nothing to notify
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         UUID leafUuid = modificationList.getFirst().getUuid();

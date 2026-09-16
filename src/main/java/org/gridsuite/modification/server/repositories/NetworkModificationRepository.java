@@ -934,8 +934,8 @@ public class NetworkModificationRepository {
      *         direct child of a group (not nested in any composite)
      */
     @Transactional(readOnly = true)
-    public List<UUID> findAncestorCompositeUuids(@NonNull UUID modificationUuid) {
-        return modificationRepository.findAncestorCompositeUuids(modificationUuid);
+    public List<UUID> getAllSharedCompositeAncestorsUuids(@NonNull UUID modificationUuid) {
+        return modificationRepository.findAllSharedCompositeAncestorsUuids(modificationUuid);
     }
 
     /**
@@ -953,18 +953,6 @@ public class NetworkModificationRepository {
         });
 
         return references;
-    }
-
-    /**
-     * @return one ReferenceData per modification-reference pointing at {@code elementUuid} (e.g. a
-     * composite shared from directory-server), empty if nothing references it
-     */
-    @Transactional(readOnly = true)
-    public List<ModificationReferenceData> getReferencesByElementUuid(@NonNull UUID elementUuid) {
-        return modificationRepository.findAllByReferenceId(elementUuid).stream()
-                .map(reference -> new ModificationReferenceData(reference.getId(), reference.getReferencedId(),
-                        modificationRepository.findCompositeContainerIdByModificationId(reference.getId())))
-                .toList();
     }
 
     @Transactional
