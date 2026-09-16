@@ -24,6 +24,12 @@
             </iidm:generator>
             <iidm:load id="LD5" loadType="UNDEFINED" p0="200.0" q0="5.0" node="4" p="200.0" q="5.0"/>
             <iidm:lccConverterStation id="LCC2" name="LCC2" lossFactor="1.1" powerFactor="0.6" node="10" p="-79.12"/>
+            <iidm:battery id="ESQUE.HG1" targetP="-0.4000000059604645" targetQ="-1.5" minP="-4.880000114440918" maxP="4.880000114440918" node="12" p="0.40000000596046453" q="-0.0">
+                <iidm:reactiveCapabilityCurve>
+                    <iidm:point p="-4.880000114440918" minQ="-1.75" maxQ="1.600000023841858"/>
+                    <iidm:point p="4.880000114440918" minQ="-1.1299999952316284" maxQ="2.0799999237060547"/>
+                </iidm:reactiveCapabilityCurve>
+            </iidm:battery>
         </iidm:voltageLevel>
     </iidm:substation>
     <iidm:substation id="S4" country="FR">

@@ -10,6 +10,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -101,6 +102,54 @@ class NetworkModificationServiceTest {
     }
 
     @Test
+    void shouldFindReferencesNestedInComposites() {
+        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
+        UUID groupWithoutReferenceUuid = UUID.randomUUID();
+        saveComposite(groupWithoutReferenceUuid, List.of(dummyModification(UUID.randomUUID())));
+        // outer ── inner ── reference to the shared composite
+        UUID groupWithReferenceUuid = UUID.randomUUID();
+        UUID outerUuid = saveComposite(groupWithReferenceUuid,
+                List.of(compositeModification(UUID.randomUUID(), List.of(referenceTo(sharedUuid)))));
+
+        assertFalse(networkModificationService.hasModificationReferences(List.of()), "no container, nothing to look into");
+        assertFalse(networkModificationService.hasModificationReferences(List.of(groupWithoutReferenceUuid)));
+        assertTrue(networkModificationService.hasModificationReferences(List.of(groupWithReferenceUuid)), "a reference nested two composites deep");
+        assertTrue(networkModificationService.hasModificationReferences(List.of(outerUuid)), "a composite is a container too");
+        assertTrue(networkModificationService.hasModificationReferences(List.of(groupWithoutReferenceUuid, groupWithReferenceUuid)),
+                "any of the containers holding one is enough");
+    }
+
+    /**
+     * @return the uuid of a composite holding the given content, saved in the given group
+     */
+    private UUID saveComposite(UUID groupUuid, List<ModificationInfos> children) {
+        return networkModificationRepository.saveModifications(groupUuid,
+                List.of(ModificationEntity.fromDTO(compositeModification(UUID.randomUUID(), children)))).getFirst().getUuid();
+    }
+
+    private static ModificationReferenceInfos referenceTo(UUID sharedCompositeUuid) {
+        return ModificationReferenceInfos.builder()
+                .referencedId(sharedCompositeUuid)
+                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referencedInfos(CompositeModificationInfos.builder().uuid(sharedCompositeUuid).build())
+                .build();
+    }
+
+    private static LoadModificationInfos dummyModification(UUID uuid) {
+        return LoadModificationInfos.builder()
+                .equipmentId("dummyEquipmentId")
+                .uuid(uuid)
+                .build();
+    }
+
+    private static CompositeModificationInfos compositeModification(UUID uuid, List<ModificationInfos> children) {
+        return CompositeModificationInfos.builder()
+                .uuid(uuid)
+                .modificationsInfos(children)
+                .build();
+    }
+
+    @Test
     void shouldNotApplyModificationsWhenNetworkDoesNotExist() {
         UUID networkUuid = UUID.randomUUID();
         UUID targetGroupUuid = UUID.randomUUID();
@@ -119,19 +168,5 @@ class NetworkModificationServiceTest {
         assertEquals(1, result.modificationUuids().size());
         assertEquals(1, result.modificationResults().size());
         assertTrue(result.modificationResults().get(0).isEmpty());
-    }
-
-    private static LoadModificationInfos dummyModification(UUID uuid) {
-        return LoadModificationInfos.builder()
-                .equipmentId("dummyEquipmentId")
-                .uuid(uuid)
-                .build();
-    }
-
-    private static CompositeModificationInfos compositeModification(UUID uuid, List<ModificationInfos> children) {
-        return CompositeModificationInfos.builder()
-                .uuid(uuid)
-                .modificationsInfos(children)
-                .build();
     }
 }

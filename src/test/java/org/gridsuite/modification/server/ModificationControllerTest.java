@@ -1579,6 +1579,17 @@ class ModificationControllerTest {
         // Create the modification
         VoltageInitModificationInfos modificationsInfos1 = VoltageInitModificationInfos.builder()
             .stashed(false)
+            .batteries(List.of(
+                    VoltageInitBatteryModificationInfos.builder()
+                        .batteryId("v1Battery")
+                        .targetQ(10.)
+                        .build(),
+                    VoltageInitBatteryModificationInfos.builder()
+                        .batteryId("v2Battery")
+                        .targetV(226.)
+                        .build()
+                )
+            )
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G1")
