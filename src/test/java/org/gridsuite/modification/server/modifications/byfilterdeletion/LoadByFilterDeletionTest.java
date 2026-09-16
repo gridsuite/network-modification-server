@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ * Copyright (c) 2026, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -40,8 +40,6 @@ import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCo
 /**
  * A "by filter" bulk deletion (resolved through the filter server) removing 12 loads across 5 substations must be
  * reported as a single server-side {@code CollectionElementImpact} on substations, not one impact per deleted load.
- *
- * @author Etienne Lesot <etienne.lesot at rte-france.com>
  */
 @Tag("IntegrationTest")
 class LoadByFilterDeletionTest extends AbstractNetworkModificationTest {
