@@ -98,9 +98,10 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         this.description = description;
     }
 
-    public ModificationEntity(UUID id, String type) {
+    public ModificationEntity(UUID id, String type, String description) {
         this.id = id;
         this.type = type;
+        this.description = description;
     }
 
     protected ModificationEntity(ModificationInfos modificationInfos) {

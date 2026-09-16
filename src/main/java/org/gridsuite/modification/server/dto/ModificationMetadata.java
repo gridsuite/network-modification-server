@@ -29,5 +29,8 @@ public class ModificationMetadata {
 
     @Schema(description = "Modification type")
     private ModificationType type;
+
+    @Schema(description = "Modification description")
+    private String description;
 }
 

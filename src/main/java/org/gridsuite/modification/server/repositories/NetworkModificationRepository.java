@@ -555,7 +555,7 @@ public class NetworkModificationRepository {
                 .date(modificationEntity.getDate())
                 .stashed(modificationEntity.getStashed())
                 .activated(modificationEntity.getActivated())
-                .description(modificationEntity.getDescription())
+                .description(referencedEntity.getDescription())
                 .messageType(referencedEntity.getMessageType())
                 .messageValues(referencedEntity.getMessageValues())
                 .referencedId(referencedEntity.getId())
@@ -1003,7 +1003,14 @@ public class NetworkModificationRepository {
                     .findById(modificationUuid)
                     .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
             if (metadata.getDescription() != null) {
-                modificationEntity.setDescription(metadata.getDescription());
+                if (modificationEntity instanceof ModificationReferenceEntity modificationReferenceEntity) {
+                    ModificationEntity referencedModificationEntity = this.modificationRepository
+                            .findById(modificationReferenceEntity.getReferencedId())
+                            .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
+                    referencedModificationEntity.setDescription(metadata.getDescription());
+                } else {
+                    modificationEntity.setDescription(metadata.getDescription());
+                }
             }
             if (metadata.getActivated() != null) {
                 updateActivated(modificationEntity, metadata.getActivated());
@@ -1162,6 +1169,7 @@ public class NetworkModificationRepository {
                 .map(entity -> ModificationMetadata.builder()
                         .id(entity.getId())
                         .type(ModificationType.valueOf(entity.getType()))
+                        .description(entity.getDescription())
                         .build())
                 .toList();
     }
