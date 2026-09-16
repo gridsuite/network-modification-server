@@ -81,6 +81,8 @@ public class NetworkModificationService {
 
     private final FilterService filterService;
 
+    private final DirectoryService directoryService;
+
     static final String NETWORK_UUID = "networkUuid.keyword";
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
@@ -97,7 +99,8 @@ public class NetworkModificationService {
                                       ModificationApplicationInfosService applicationInfosService,
                                       ElasticsearchOperations elasticsearchOperations,
                                       ModificationRepository modificationRepository,
-                                      FilterService filterService) {
+                                      FilterService filterService,
+                                      DirectoryService directoryService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -108,6 +111,7 @@ public class NetworkModificationService {
         this.elasticsearchOperations = elasticsearchOperations;
         this.modificationRepository = modificationRepository;
         this.filterService = filterService;
+        this.directoryService = directoryService;
     }
 
     public List<UUID> getModificationGroups() {
