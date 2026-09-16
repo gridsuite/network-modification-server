@@ -6,21 +6,27 @@
  */
 package org.gridsuite.modification.server.modifications.tabularcreations;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
-import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
+import org.gridsuite.modification.dto.SubstationCreationInfos;
+import org.gridsuite.modification.dto.tabular.*;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,15 +35,16 @@ import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Checks (1) that the SQL request count to read a tabular creation does not depend on the number of its
- * sub-creations (the JPA N+1 problem is correctly solved), and (2) that a bulk tabular creation produces a single
- * server-side {@code CollectionElementImpact} per created element type rather than one impact per sub-creation.
- *
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Tag("IntegrationTest")
@@ -73,7 +80,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .build(),
             GeneratorCreationInfos.builder()
                 .equipmentId("id3").voltageLevelId("v3").busOrBusbarSectionId("3A")
-                .connectionName("feederId3").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(true)
+                .connectionName("feederId3").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(false).terminalConnected(true)
                 .energySource(EnergySource.WIND).minP(0).maxP(200)
                 .targetP(150).voltageRegulationOn(true).targetV(375D)
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
@@ -91,7 +98,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .build(),
             GeneratorCreationInfos.builder()
                 .equipmentId("id5").voltageLevelId("v5").busOrBusbarSectionId("1A1")
-                .connectionName("name5").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(true)
+                .connectionName("name5").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(false).terminalConnected(true)
                 .energySource(EnergySource.WIND).minP(0).maxP(200)
                 .targetP(150).voltageRegulationOn(true).targetV(375D)
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
@@ -137,6 +144,22 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
+    }
+
+    protected void assertAfterNetworkModificationCreation() {
+        assertNotNull(getNetwork().getGenerator("id1"));
+        assertNotNull(getNetwork().getGenerator("id2"));
+        assertNotNull(getNetwork().getGenerator("id3"));
+        assertNotNull(getNetwork().getGenerator("id4"));
+        assertNotNull(getNetwork().getGenerator("id5"));
+    }
+
+    protected void assertAfterNetworkModificationDeletion() {
+        assertNull(getNetwork().getGenerator("id1"));
+        assertNull(getNetwork().getGenerator("id2"));
+        assertNull(getNetwork().getGenerator("id3"));
+        assertNull(getNetwork().getGenerator("id4"));
+        assertNull(getNetwork().getGenerator("id5"));
     }
 
     @Override
@@ -187,5 +210,176 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         // We check that the request count is not dependent on the number of sub creations of the tabular creation (the JPA N+1 problem is correctly solved)
         assertSelectCount(10);
+    }
+
+    @Test
+    void testAllModificationsHaveSucceeded() throws Exception {
+        List<ModificationInfos> creations = List.of(
+            GeneratorCreationInfos.builder()
+                .equipmentId("id1").equipmentName("name1").voltageLevelId("v1").busOrBusbarSectionId("1.1")
+                .connectionName("feederId1").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(100).terminalConnected(true)
+                .energySource(EnergySource.HYDRO).minP(0).maxP(100).ratedS(10D)
+                .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
+                .plannedActivePowerSetPoint(70D).marginalCost(5D).plannedOutageRate(0.8).forcedOutageRate(0.3)
+                .minQ(7D).maxQ(13D).participate(true).droop(0.5F)
+                .directTransX(5D).stepUpTransformerX(45D)
+                .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(35D)
+                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
+                .build(),
+            GeneratorCreationInfos.builder()
+                .equipmentId("id2").equipmentName("name2").voltageLevelId("v2").busOrBusbarSectionId("1A")
+                .connectionName("feederId2").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(false)
+                .energySource(EnergySource.NUCLEAR).minP(0).maxP(500)
+                .targetP(300).targetQ(400D).voltageRegulationOn(false)
+                .plannedActivePowerSetPoint(200D).forcedOutageRate(0.3)
+                .minQ(7D).participate(false)
+                .stepUpTransformerX(45D)
+                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
+                .build()
+        );
+
+        ModificationInfos creationInfos = TabularCreationInfos.builder()
+            .modificationType(ModificationType.GENERATOR_CREATION)
+            .modifications(creations)
+            .build();
+        String tabularCreationJson = getJsonBody(creationInfos, null);
+
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+            .andExpect(status().isOk()).andReturn();
+        assertLogMessage("Tabular creation: 2 generators have been created", "network.modification.tabular.creation", reportService);
+    }
+
+    @Test
+    void testAllModificationsHaveFailed() throws Exception {
+        List<ModificationInfos> creations = List.of(
+            GeneratorCreationInfos.builder()
+                .equipmentId("id1").equipmentName("name1").voltageLevelId("unknown_vl").busOrBusbarSectionId("1.1")
+                .connectionName("feederId1").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(100).terminalConnected(true)
+                .energySource(EnergySource.HYDRO).minP(0).maxP(100).ratedS(10D)
+                .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
+                .plannedActivePowerSetPoint(70D).marginalCost(5D).plannedOutageRate(0.8).forcedOutageRate(0.3)
+                .minQ(7D).maxQ(13D).participate(true).droop(0.5F)
+                .directTransX(5D).stepUpTransformerX(45D)
+                .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(35D)
+                .reactiveCapabilityCurve(false)
+                .build(),
+            GeneratorCreationInfos.builder()
+                .equipmentId("id2").equipmentName("name2").voltageLevelId("v1").busOrBusbarSectionId("unknown_bbs")
+                .connectionName("feederId1").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(100).terminalConnected(true)
+                .energySource(EnergySource.HYDRO).minP(0).maxP(100).ratedS(10D)
+                .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
+                .plannedActivePowerSetPoint(70D).marginalCost(5D).plannedOutageRate(0.8).forcedOutageRate(0.3)
+                .minQ(7D).maxQ(13D).participate(true).droop(0.5F)
+                .directTransX(5D).stepUpTransformerX(45D)
+                .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(35D)
+                .reactiveCapabilityCurve(false)
+                .build(),
+            GeneratorCreationInfos.builder()
+                .equipmentId("id3").equipmentName("name3").voltageLevelId("v1").busOrBusbarSectionId("1.1")
+                .connectionName("feederId3").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(100).terminalConnected(true)
+                .energySource(EnergySource.HYDRO).minP(0).maxP(-100).ratedS(10D)
+                .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
+                .plannedActivePowerSetPoint(70D).marginalCost(5D).plannedOutageRate(0.8).forcedOutageRate(0.3)
+                .minQ(7D).maxQ(13D).participate(true).droop(0.5F)
+                .directTransX(5D).stepUpTransformerX(45D)
+                .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(35D)
+                .reactiveCapabilityCurve(false)
+                .build()
+        );
+        ModificationInfos creationInfos = TabularCreationInfos.builder()
+                .modificationType(ModificationType.GENERATOR_CREATION)
+                .modifications(creations)
+                .build();
+        String tabularCreationJson = getJsonBody(creationInfos, null);
+
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                        .andExpect(status().isOk()).andReturn();
+        assertLogMessage("Tabular creation: No generators have been created", "network.modification.tabular.creation.error", reportService);
+    }
+
+    @Test
+    @Override
+    public void testCreate() throws Exception {
+        super.testCreate();
+        assertAfterNetworkModificationCreation();
+    }
+
+    @Test
+    @Override
+    public void testCreateDisabledModification() throws Exception {
+        super.testCreateDisabledModification();
+        assertAfterNetworkModificationDeletion();
+    }
+
+    @Test
+    @Override
+    public void testDelete() throws Exception {
+        super.testDelete();
+        assertAfterNetworkModificationDeletion();
+    }
+
+    @Test
+    void testUnsupportedTabularCreationType() throws Exception {
+        List<ModificationInfos> creations = List.of(
+                SubstationCreationInfos.builder()
+                        .stashed(false)
+                        .equipmentId("SubstationId")
+                        .equipmentName("SubstationName")
+                        .country(Country.AF)
+                        .properties(List.of(FreePropertyInfos.builder().name("DEMO").value("DemoC").build()))
+                        .build()
+        );
+        ModificationInfos creationInfos = TabularCreationInfos.builder()
+                .modificationType(ModificationType.SUBSTATION_CREATION)
+                .modifications(creations)
+                .build();
+        String tabularCreationJson = getJsonBody(creationInfos, null);
+
+        // creation
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted());
+        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+            .andExpect(status().isOk()).andReturn();
+        NetworkModificationsResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(result);
+        assertEquals(1, result.modificationUuids().size());
+        UUID modifId = result.modificationUuids().get(0);
+
+        // try to get via the group
+        UnsupportedOperationException exception = assertThrows(
+            UnsupportedOperationException.class,
+            () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+        );
+        assertEquals("No sub-modifications loading for modification type: SUBSTATION_CREATION", exception.getMessage());
+
+        // try to get via id
+        exception = assertThrows(
+            UnsupportedOperationException.class,
+            () -> networkModificationRepository.getModificationInfo(modifId)
+        );
+        assertEquals("No sub-modifications loading for modification type: SUBSTATION_CREATION", exception.getMessage());
+
+        // try to update
+        exception = assertThrows(
+            UnsupportedOperationException.class,
+            () -> networkModificationRepository.updateModification(modifId, creationInfos)
+        );
+        // deletion error because we try to remove the sub-modifications before updating them
+        assertEquals("No sub-modifications deletion method for type: SUBSTATION_CREATION", exception.getMessage());
+
+        // try to delete
+        List<UUID> ids = List.of(modifId);
+        exception = assertThrows(
+            UnsupportedOperationException.class,
+            () -> networkModificationRepository.deleteModifications(TEST_GROUP_ID, ids)
+        );
+        assertEquals("No sub-modifications deletion method for type: SUBSTATION_CREATION", exception.getMessage());
     }
 }

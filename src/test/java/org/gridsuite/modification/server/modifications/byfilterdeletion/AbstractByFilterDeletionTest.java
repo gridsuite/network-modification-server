@@ -73,6 +73,13 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
     }
 
     @Test
+    @Override
+    public void testCreateDisabledModification() throws Exception {
+        super.testCreateDisabledModification();
+        assertAfterNetworkModificationDeletion();
+    }
+
+    @Test
     void testCreateWithErrors() throws Exception {
         var filter1 = FilterInfos.builder()
                 .id(FILTER_ID_1)

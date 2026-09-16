@@ -30,20 +30,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 
 /**
- * A generator scaling (bulk modification resolved through the filter server) impacting 10 generators across 3
- * substations must be reported as a single server-side {@code CollectionElementImpact}, not one impact per
- * generator.
- *
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
 @Tag("IntegrationTest")

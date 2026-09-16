@@ -10,9 +10,7 @@ import com.powsybl.iidm.network.BusbarSection;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.VoltageLevel;
-import org.gridsuite.modification.dto.CouplingDeviceInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.VoltageLevelCreationInfos;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -33,10 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Checks that the {@code naming-strategy} property read by {@code NetworkModificationApplicator.getNamingStrategy()}
- * is honored when applying a modification, using the {@link org.gridsuite.modification.server.utils.DummyNamingStrategy}
- * registered for tests only.
- *
  * @author Etienne Homer <etienne.homer at rte-france.com>
  */
 @Tag("IntegrationTest")

@@ -32,9 +32,6 @@ import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applica
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Checks that no sub-modification / tabular property row is left orphaned after a tabular line modification is
- * created, updated, then its group is deleted.
- *
  * @author Anis Touri <anis.touri at rte-france.com>
  */
 @Tag("IntegrationTest")
@@ -89,6 +86,40 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
                 .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
+    }
+
+    protected void assertAfterNetworkModificationCreation() {
+        assertEquals(10., getNetwork().getLine("line1").getR(), 0.001);
+        assertEquals(20., getNetwork().getLine("line2").getX(), 0.001);
+        assertEquals(30., getNetwork().getLine("line3").getG1(), 0.001);
+        assertEquals(40., getNetwork().getLine("line3").getB1(), 0.001);
+    }
+
+    protected void assertAfterNetworkModificationDeletion() {
+        assertEquals(1., getNetwork().getLine("line1").getR(), 0.001);
+        assertEquals(5., getNetwork().getLine("line2").getX(), 0.001);
+        assertEquals(5.5, getNetwork().getLine("line3").getG1(), 0.001);
+    }
+
+    @Test
+    @Override
+    public void testCreate() throws Exception {
+        super.testCreate();
+        assertAfterNetworkModificationCreation();
+    }
+
+    @Test
+    @Override
+    public void testCreateDisabledModification() throws Exception {
+        super.testCreateDisabledModification();
+        assertAfterNetworkModificationDeletion();
+    }
+
+    @Test
+    @Override
+    public void testDelete() throws Exception {
+        super.testDelete();
+        assertAfterNetworkModificationDeletion();
     }
 
     @Test

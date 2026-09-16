@@ -28,9 +28,6 @@ import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Checks that no sub-modification row is left orphaned after a tabular two windings transformer modification is
- * created, updated, then its group is deleted.
- *
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
 @Tag("IntegrationTest")

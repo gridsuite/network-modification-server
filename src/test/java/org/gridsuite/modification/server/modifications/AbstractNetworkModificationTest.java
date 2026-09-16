@@ -272,6 +272,10 @@ public abstract class AbstractNetworkModificationTest {
         return network;
     }
 
+    protected UUID getNetworkId() {
+        return TEST_NETWORK_ID;
+    }
+
     protected UUID getGroupId() {
         return TEST_GROUP_ID;
     }
