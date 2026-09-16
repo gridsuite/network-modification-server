@@ -12,8 +12,6 @@ import lombok.Setter;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.ReferenceAttributes;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -57,33 +55,32 @@ public class DirectoryService {
      * @param referenceAttributes new attributes of the modification-reference including its own referenceUuid which doesn't change
      * @param userId id of the user who moves the reference
      */
-    public void updateElementReference(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, String userId) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HEADER_USER_ID, userId);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<ReferenceAttributes> requestEntity = new HttpEntity<>(referenceAttributes, headers);
-
+    public void updateElementReference(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, @NonNull String userId) {
         var path = UriComponentsBuilder.fromPath(
                         DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references/{referenceUuid}")
                 .buildAndExpand(elementUuid, referenceAttributes.getReferenceId())
                 .toUriString();
 
-        restClient.put().uri(getDirectoryServerBaseUri() + path).body(requestEntity);
+        restClient.put()
+                .uri(getDirectoryServerBaseUri() + path).header(HEADER_USER_ID, userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(referenceAttributes)
+                .retrieve()
+                .toBodilessEntity();
     }
 
-    public void createElementReference(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, String userId) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HEADER_USER_ID, userId);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<ReferenceAttributes> requestEntity = new HttpEntity<>(referenceAttributes, headers);
-
+    public void createElementReference(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, @NonNull String userId) {
         var path = UriComponentsBuilder.fromPath(
                         DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references")
                 .buildAndExpand(elementUuid)
                 .toUriString();
 
-        restClient.post().uri(getDirectoryServerBaseUri() + path).body(requestEntity);
+        restClient.put()
+                .uri(getDirectoryServerBaseUri() + path)
+                .header(HEADER_USER_ID, userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(referenceAttributes)
+                .retrieve()
+                .toBodilessEntity();
     }
 }
