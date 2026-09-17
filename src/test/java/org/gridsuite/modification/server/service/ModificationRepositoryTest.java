@@ -1574,6 +1574,33 @@ class ModificationRepositoryTest {
                 .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::getApplicabilityByRootNetworkTag));
     }
 
+    private Map<UUID, Boolean> activationsByModificationsInside(UUID containerUuid) {
+        return networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(containerUuid)).stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::getActivated));
+    }
+
+    private List<UUID> modificationUuidsInside(UUID containerUuid) {
+        return networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(containerUuid)).stream()
+                .map(ModificationInfos::getUuid).toList();
+    }
+
+    /**
+     * @return the uuid of the modification and of everything it holds, however deep
+     */
+    private List<UUID> modificationTreeUuids(UUID modificationUuid) {
+        return Stream.concat(
+                Stream.of(modificationUuid),
+                modificationUuidsInside(modificationUuid).stream()
+                        .flatMap(uuid -> modificationTreeUuids(uuid).stream()))
+                .toList();
+    }
+
+    private void updateActivation(UUID modificationUuid, boolean activated) {
+        ModificationInfos metadata = new ModificationInfos();
+        metadata.setActivated(activated);
+        networkModificationRepository.updateNetworkModificationMetadata(List.of(modificationUuid), metadata);
+    }
+
     @Test
     void testUpdateRootNetworkApplicability() {
         List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID,
@@ -1637,17 +1664,43 @@ class ModificationRepositoryTest {
     }
 
     @Test
-    void testUpdateRootNetworkApplicabilityPropagatesToCompositeSubModifications() {
+    void testUpdateRootNetworkApplicabilityLeavesTheCompositeSubModificationsAlone() {
         UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        List<UUID> contentUuids = modificationUuidsInside(compositeUuid);
+        UUID deactivatedUuid = contentUuids.getFirst();
+        UUID untouchedUuid = contentUuids.getLast();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
 
+        // the composite is deactivated on the tag, then activated again
         networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), ROOT_NETWORK_TAG, true);
 
-        assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(compositeUuid));
-        Map<UUID, Map<String, Boolean>> applicabilitiesByModifications = getApplicabilitiesByModificationsInside(compositeUuid);
-        assertEquals(2, applicabilitiesByModifications.size());
-        applicabilitiesByModifications.values().forEach(applicability ->
-                assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicability,
-                        "Updating a composite must reach its sub modifications"));
+        assertEquals(Map.of(ROOT_NETWORK_TAG, true), getApplicabilities(TEST_GROUP_ID_2).get(compositeUuid));
+        Map<UUID, Map<String, Boolean>> applicabilities = getApplicabilitiesByModificationsInside(compositeUuid);
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicabilities.get(deactivatedUuid),
+                "Updating the applicability of a composite leaves its content untouched");
+        assertEquals(Map.of(), applicabilities.get(untouchedUuid),
+                "A sub modification nobody updated holds no applicability at all");
+    }
+
+    @Test
+    void testUpdateTheActivationLeavesTheCompositeSubModificationsAlone() {
+        UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        List<UUID> contentUuids = modificationUuidsInside(compositeUuid);
+        UUID deactivatedUuid = contentUuids.getFirst();
+        UUID untouchedUuid = contentUuids.getLast();
+        updateActivation(deactivatedUuid, false);
+
+        // the composite is deactivated globally, then activated again
+        updateActivation(compositeUuid, false);
+        updateActivation(compositeUuid, true);
+
+        assertEquals(Boolean.TRUE, networkModificationRepository.getModificationInfo(compositeUuid).getActivated());
+        Map<UUID, Boolean> activations = activationsByModificationsInside(compositeUuid);
+        assertEquals(Boolean.FALSE, activations.get(deactivatedUuid),
+                "Updating the activation of a composite leaves its content untouched");
+        assertEquals(Boolean.TRUE, activations.get(untouchedUuid),
+                "A sub modification nobody updated stays activated");
     }
 
     @Test
@@ -1657,8 +1710,11 @@ class ModificationRepositoryTest {
 
         networkModificationRepository.updateRootNetworkApplicability(List.of(referenceUuid), ROOT_NETWORK_TAG, false);
 
-        assertEquals(List.of(Map.of(ROOT_NETWORK_TAG, false)), List.copyOf(getApplicabilitiesByModificationsInside(sharedUuid).values()),
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false),
+                networkModificationRepository.getModificationInfo(sharedUuid).getApplicabilityByRootNetworkTag(),
                 "A reference has no applicability of its own: the update went to the shared modification it points to");
+        assertEquals(List.of(Map.of()), List.copyOf(getApplicabilitiesByModificationsInside(sharedUuid).values()),
+                "The shared modification is a composite, whose content keeps the applicability it carries itself");
         assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
                 "The reference is reported with the applicability of the shared modification");
     }
@@ -1695,10 +1751,10 @@ class ModificationRepositoryTest {
     }
 
     @Test
-    void testGetActiveModificationsLeavesOutTheChildrenOfADeactivatedComposite() {
+    void testGetActiveModificationsLeavesOutTheChildrenOfACompositeTheTagDeactivates() {
         UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        UUID childUuid = modificationUuidsInside(compositeUuid).getFirst();
         networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), ROOT_NETWORK_TAG, false);
-        UUID childUuid = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeUuid)).getFirst().getUuid();
 
         // we activate a child while the composite remains deactivated
         networkModificationRepository.updateRootNetworkApplicability(List.of(childUuid), ROOT_NETWORK_TAG, true);
@@ -1706,7 +1762,22 @@ class ModificationRepositoryTest {
         assertEquals(Map.of(ROOT_NETWORK_TAG, true), getApplicabilitiesByModificationsInside(compositeUuid).get(childUuid),
                 "Taken on its own the child is applicable on the tag");
         assertEquals(List.of(), activeModificationUuids(TEST_GROUP_ID_2, ROOT_NETWORK_TAG),
-                "A deactivated composite automatically deactivate its children whatever their own applicability is");
+                "A composite the tag deactivates automatically deactivates its children whatever their own applicability is");
+    }
+
+    @Test
+    void testGetActiveModificationsLeavesOutTheChildrenOfAGloballyDeactivatedComposite() {
+        UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        UUID childUuid = modificationUuidsInside(compositeUuid).getFirst();
+        updateActivation(compositeUuid, false);
+
+        // we activate a child while the composite remains deactivated
+        updateActivation(childUuid, true);
+
+        assertEquals(Boolean.TRUE, activationsByModificationsInside(compositeUuid).get(childUuid),
+                "Taken on its own the child is activated");
+        assertEquals(List.of(), activeModificationUuids(TEST_GROUP_ID_2, ROOT_NETWORK_TAG),
+                "A globally deactivated composite automatically deactivates its children whatever their own activation is");
     }
 
     @Test
@@ -1766,7 +1837,8 @@ class ModificationRepositoryTest {
     void testRenameRootNetworkTagOnlyAddsToASharedModification() {
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
         UUID sharedUuid = sharedModificationOf(referenceUuid);
-        networkModificationRepository.updateRootNetworkApplicability(List.of(referenceUuid), ROOT_NETWORK_TAG, false);
+        // the shared composite and the modification it holds each carry an applicability of their own
+        networkModificationRepository.updateRootNetworkApplicability(modificationTreeUuids(sharedUuid), ROOT_NETWORK_TAG, false);
 
         networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
 
@@ -1815,10 +1887,8 @@ class ModificationRepositoryTest {
         UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(
                 Stream.concat(Stream.of(innerUuid), siblingUuids.stream()).toList(), "source");
 
-        List<UUID> contentUuids = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeUuid))
-                .stream().map(ModificationInfos::getUuid).toList();
-        List<UUID> innerUuids = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(contentUuids.get(0)))
-                .stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> contentUuids = modificationUuidsInside(compositeUuid);
+        List<UUID> innerUuids = modificationUuidsInside(contentUuids.get(0));
         networkModificationRepository.updateRootNetworkApplicability(List.of(innerUuids.get(0)), ROOT_NETWORK_TAG, false);
         networkModificationRepository.updateRootNetworkApplicability(List.of(innerUuids.get(1)), ROOT_NETWORK_TAG, true);
         networkModificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(1)), ROOT_NETWORK_TAG, false);
@@ -1951,7 +2021,8 @@ class ModificationRepositoryTest {
         UUID outerSourceUuid = networkModificationRepository.createNetworkCompositeModification(List.of(innerCompositeUuid, siblingUuid), "outer");
         UUID outerCompositeUuid = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID_2,
                 List.of(new CompositeInfos(outerSourceUuid, "outer", false, "description"))).getFirst().getUuid();
-        networkModificationRepository.updateRootNetworkApplicability(List.of(outerCompositeUuid), ROOT_NETWORK_TAG, false);
+
+        networkModificationRepository.updateRootNetworkApplicability(modificationTreeUuids(outerCompositeUuid), ROOT_NETWORK_TAG, false);
 
         networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
 
