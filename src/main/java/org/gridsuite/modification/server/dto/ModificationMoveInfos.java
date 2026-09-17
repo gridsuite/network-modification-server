@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.dto;
 
 import lombok.NonNull;
-import org.gridsuite.modification.server.entities.ModificationContainerType;
 
 import java.util.UUID;
 
@@ -19,9 +18,5 @@ public record ModificationMoveInfos(
         @NonNull UUID modificationUuid,
         @NonNull ModificationContainerInfos source,
         @NonNull ModificationContainerInfos target,
-        UUID beforeUuid) {
+        UUID beforeUuid) { }
 
-    public boolean movedToGroup() {
-        return target.type() == ModificationContainerType.GROUP && !source.id().equals(target.id());
-    }
-}
