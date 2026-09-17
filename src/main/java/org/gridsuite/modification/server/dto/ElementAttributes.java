@@ -8,9 +8,6 @@ package org.gridsuite.modification.server.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NonNull;
-
-import java.util.UUID;
 
 /**
  * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>

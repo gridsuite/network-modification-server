@@ -16,8 +16,6 @@ gridsuite:
       base-uri: http://localhost:5026
     loadflow-server:
       base-uri: http://localhost:5008
-    directory-server:
-      base-uri: http://localhost:5026
 
 spring:
   rabbitmq:
