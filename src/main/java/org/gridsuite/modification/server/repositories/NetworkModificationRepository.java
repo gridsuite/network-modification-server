@@ -237,23 +237,19 @@ public class NetworkModificationRepository {
 
     @Transactional
     public List<ModificationInfos> moveModifications(
-            @NonNull ModificationContainerInfos sourceContainerInfos,
-            @NonNull ModificationContainerInfos targetContainerInfos,
+            @NonNull ModificationContainerInfos source,
+            @NonNull ModificationContainerInfos target,
             @NonNull List<UUID> modificationUuids, UUID beforeModificationUuid) {
-        var source = getContainer(sourceContainerInfos);
-        var target = getContainer(targetContainerInfos);
-        var moved = moveModificationsNonTransactional(source, target, modificationUuids, beforeModificationUuid);
-        cleanupApplicationRecordsIfGroupChanged(source, target, moved);
+        var sourceContainer = getContainer(source);
+        var targetContainer = getContainer(target);
+        var moved = moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid);
+        cleanupApplicationRecordsIfGroupChanged(sourceContainer, targetContainer, moved);
         return addApplicabilities(moved.stream().map(this::toModificationsInfosOptimized).toList());
     }
 
     @Transactional
     public List<ModificationInfos> moveModification(@NonNull ModificationMoveInfos move) {
-        var source = getContainer(move.source());
-        var target = getContainer(move.target());
-        var moved = moveModificationsNonTransactional(source, target, List.of(move.modificationUuid()), move.beforeUuid());
-        cleanupApplicationRecordsIfGroupChanged(source, target, moved);
-        return addApplicabilities(moved.stream().map(this::toModificationsInfosOptimized).toList());
+        return moveModifications(move.source(), move.target(), List.of(move.modificationUuid()), move.beforeUuid());
     }
 
     private List<ModificationEntity> moveModificationsNonTransactional(AbstractModificationContainerEntity sourceContainer, AbstractModificationContainerEntity targetContainer,
