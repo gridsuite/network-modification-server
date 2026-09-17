@@ -1003,7 +1003,7 @@ public class NetworkModificationRepository {
                 modificationEntity.setDescription(metadata.getDescription());
             }
             if (metadata.getActivated() != null) {
-                updateActivated(modificationEntity, metadata.getActivated());
+                modificationEntity.setActivated(metadata.getActivated());
             }
             if (metadata instanceof CompositeModificationInfos compositeMetadata
                     && modificationEntity instanceof CompositeModificationEntity composite
@@ -1013,34 +1013,14 @@ public class NetworkModificationRepository {
         }
     }
 
-    // TODO remove when activation for a sub modification (composite) is implemented : no need optimized load
-    private void updateActivated(ModificationEntity entity, boolean activated) {
-        entity.setActivated(activated);
-        if (entity instanceof CompositeModificationEntity composite) {
-            composite.getModifications().forEach(sub -> updateActivated(sub, activated));
-        }
-    }
-
+    /**
+     * Sets the applicability of the given modifications, and of them only: a composite among them keeps the
+     * applicabilities of its content untouched, as a composite and what it holds each carry their own state.
+     */
     @Transactional
     public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable) {
-        setApplicabilityInDepth(getModificationEntitiesWithApplicabilities(modificationUuids), rootNetworkTag, applicable);
-    }
-
-    /**
-     * Sets the applicability of the given modifications and of everything the composites among them hold, one level
-     * of the tree at a time so that the references of a level are all resolved in a single query.
-     */
-    private void setApplicabilityInDepth(List<ModificationEntity> entities, String rootNetworkTag, boolean applicable) {
-        List<ModificationEntity> holders = getApplicabilityHolders(entities);
-        holders.forEach(holder -> holder.setApplicability(rootNetworkTag, applicable));
-        List<ModificationEntity> content = holders.stream()
-            .filter(CompositeModificationEntity.class::isInstance)
-            .map(CompositeModificationEntity.class::cast)
-            .flatMap(composite -> composite.getModifications().stream())
-            .toList();
-        if (!content.isEmpty()) {
-            setApplicabilityInDepth(content, rootNetworkTag, applicable);
-        }
+        getApplicabilityHolders(getModificationEntitiesWithApplicabilities(modificationUuids))
+            .forEach(holder -> holder.setApplicability(rootNetworkTag, applicable));
     }
 
     /**
