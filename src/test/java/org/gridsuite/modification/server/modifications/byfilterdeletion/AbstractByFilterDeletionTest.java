@@ -1,5 +1,6 @@
 package org.gridsuite.modification.server.modifications.byfilterdeletion;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
@@ -7,7 +8,6 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ByFilterDeletionInfos;
 import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -44,10 +45,6 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
 
     protected abstract List<AbstractFilter> getTestFilters();
 
-    protected abstract void assertAfterNetworkModificationCreation();
-
-    protected abstract void assertAfterNetworkModificationDeletion();
-
     protected static final String PATH = "/v1/filters/metadata";
 
     @Test
@@ -60,23 +57,8 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         super.testCreate();
-        assertAfterNetworkModificationCreation();
 
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
-    }
-
-    @Test
-    @Override
-    public void testDelete() throws Exception {
-        super.testDelete();
-        assertAfterNetworkModificationDeletion();
-    }
-
-    @Test
-    @Override
-    public void testCreateDisabledModification() throws Exception {
-        super.testCreateDisabledModification();
-        assertAfterNetworkModificationDeletion();
     }
 
     @Test
@@ -125,37 +107,6 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
     }
 
-    @Test
-    void testCreateAllFiltersWrong() throws Exception {
-        var filter1 = FilterInfos.builder()
-                .id(FILTER_ID_1)
-                .name("filter1")
-                .build();
-
-        ByFilterDeletionInfos byFilterDeletionInfos = ByFilterDeletionInfos.builder()
-                .stashed(false)
-                .equipmentType(getIdentifiableType())
-                .filters(List.of(filter1))
-                .build();
-
-        List<IdentifierListFilter> filters = List.of(IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(getEquipmentType())
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(EQUIPMENT_WRONG_ID_1, null)))
-            .build());
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath() + "(.+){1}.*"))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(filters))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
-        String body = getJsonBody(byFilterDeletionInfos, null);
-
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
-        assertLogMessage(ModificationType.BY_FILTER_DELETION.name() + ": There is no valid equipment ID among the provided filter(s)",
-            "network.modification.invalidFilters", reportService);
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
-    }
-
     private String getPath() {
         return "/v1/filters/metadata\\?ids=";
     }
@@ -200,5 +151,19 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
                 .equipmentType(getIdentifiableType())
                 .filters(List.of(filter2))
                 .build();
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals("BY_FILTER_DELETION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals(getIdentifiableType().name(), createdValues.get("equipmentType"));
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals("BY_FILTER_DELETION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals(getIdentifiableType().name(), createdValues.get("equipmentType"));
     }
 }

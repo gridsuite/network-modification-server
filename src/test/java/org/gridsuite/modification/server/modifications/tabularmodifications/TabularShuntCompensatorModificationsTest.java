@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.commons.report.ReportConstants;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
@@ -22,11 +23,10 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
@@ -50,10 +50,10 @@ import static org.mockito.Mockito.when;
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                ShuntCompensatorModificationInfos.builder().equipmentId("v2shunt").maximumSectionCount(new AttributeModification<>(100, OperationType.SET))
-                        .sectionCount(new AttributeModification<>(10, OperationType.SET)).build(),
-                ShuntCompensatorModificationInfos.builder().equipmentId("v5shunt").maximumSectionCount(new AttributeModification<>(200, OperationType.SET))
-                        .sectionCount(new AttributeModification<>(20, OperationType.SET)).build()
+                ShuntCompensatorModificationInfos.builder().equipmentId("v2shunt").maximumSectionCount(new AttributeModification<>(100, OperationType.SET)).sectionCount(new AttributeModification<>(
+                        10, OperationType.SET)).build(),
+                ShuntCompensatorModificationInfos.builder().equipmentId("v5shunt").maximumSectionCount(new AttributeModification<>(200, OperationType.SET)).sectionCount(new AttributeModification<>(
+                        20, OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
@@ -66,10 +66,10 @@ import static org.mockito.Mockito.when;
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                ShuntCompensatorModificationInfos.builder().equipmentId("v2shunt").maximumSectionCount(new AttributeModification<>(500, OperationType.SET))
-                        .sectionCount(new AttributeModification<>(50, OperationType.SET)).build(),
-                ShuntCompensatorModificationInfos.builder().equipmentId("v5shunt").maximumSectionCount(new AttributeModification<>(500, OperationType.SET))
-                        .sectionCount(new AttributeModification<>(50, OperationType.SET)).build()
+                ShuntCompensatorModificationInfos.builder().equipmentId("v2shunt").maximumSectionCount(new AttributeModification<>(500, OperationType.SET)).sectionCount(new AttributeModification<>(
+                        50, OperationType.SET)).build(),
+                ShuntCompensatorModificationInfos.builder().equipmentId("v5shunt").maximumSectionCount(new AttributeModification<>(500, OperationType.SET)).sectionCount(new AttributeModification<>(
+                        50, OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
@@ -79,6 +79,7 @@ import static org.mockito.Mockito.when;
                 .build();
     }
 
+    @Override
     protected void assertAfterNetworkModificationCreation() {
         assertEquals(100, getNetwork().getShuntCompensator("v2shunt").getMaximumSectionCount());
         assertEquals(10, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
@@ -86,6 +87,7 @@ import static org.mockito.Mockito.when;
         assertEquals(20, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
     }
 
+    @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertEquals(3, getNetwork().getShuntCompensator("v2shunt").getMaximumSectionCount());
         assertEquals(2, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
@@ -93,25 +95,18 @@ import static org.mockito.Mockito.when;
         assertEquals(2, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
     }
 
-    @Test
     @Override
-    public void testCreate() throws Exception {
-        super.testCreate();
-        assertAfterNetworkModificationCreation();
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals(ModificationType.SHUNT_COMPENSATOR_MODIFICATION.name(), createdValues.get("tabularModificationType"));
     }
 
-    @Test
     @Override
-    public void testCreateDisabledModification() throws Exception {
-        super.testCreateDisabledModification();
-        assertAfterNetworkModificationDeletion();
-    }
-
-    @Test
-    @Override
-    public void testDelete() throws Exception {
-        super.testDelete();
-        assertAfterNetworkModificationDeletion();
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals(ModificationType.SHUNT_COMPENSATOR_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
     }
 
     @Test

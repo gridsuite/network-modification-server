@@ -177,23 +177,8 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         super.testCreate();
-        assertAfterNetworkModificationCreation();
 
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
-    }
-
-    @Test
-    @Override
-    public void testDelete() throws Exception {
-        super.testDelete();
-        assertAfterNetworkModificationDeletion();
-    }
-
-    @Test
-    @Override
-    public void testCreateDisabledModification() throws Exception {
-        super.testCreateDisabledModification();
-        assertAfterNetworkModificationDeletion();
     }
 
     @Test
@@ -286,10 +271,6 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
     protected abstract void createEquipments();
 
     protected abstract List<AbstractFilter> getTestFilters();
-
-    protected abstract void assertAfterNetworkModificationCreation();
-
-    protected abstract void assertAfterNetworkModificationDeletion();
 
     protected abstract List<FormulaInfos> getFormulaInfos();
 

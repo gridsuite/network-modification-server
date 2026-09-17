@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
@@ -14,9 +15,9 @@ import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,10 +35,10 @@ class TabularVoltageLevelModificationsTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                VoltageLevelModificationInfos.builder().equipmentId("v1").nominalV(new AttributeModification<>(300., OperationType.SET))
-                        .highVoltageLimit(new AttributeModification<>(400., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(299., OperationType.SET)).build(),
-                VoltageLevelModificationInfos.builder().equipmentId("v2").nominalV(new AttributeModification<>(300., OperationType.SET))
-                        .highVoltageLimit(new AttributeModification<>(400., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(299., OperationType.SET)).build()
+                VoltageLevelModificationInfos.builder().equipmentId("v1").nominalV(new AttributeModification<>(300., OperationType.SET)).highVoltageLimit(new AttributeModification<>(400.,
+                        OperationType.SET)).lowVoltageLimit(new AttributeModification<>(299., OperationType.SET)).build(),
+                VoltageLevelModificationInfos.builder().equipmentId("v2").nominalV(new AttributeModification<>(300., OperationType.SET)).highVoltageLimit(new AttributeModification<>(400.,
+                        OperationType.SET)).lowVoltageLimit(new AttributeModification<>(299., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.VOLTAGE_LEVEL_MODIFICATION)
@@ -50,10 +51,10 @@ class TabularVoltageLevelModificationsTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                VoltageLevelModificationInfos.builder().equipmentId("v1").nominalV(new AttributeModification<>(500., OperationType.SET))
-                        .highVoltageLimit(new AttributeModification<>(502., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(499., OperationType.SET)).build(),
-                VoltageLevelModificationInfos.builder().equipmentId("v2").nominalV(new AttributeModification<>(500., OperationType.SET))
-                        .highVoltageLimit(new AttributeModification<>(502., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(499., OperationType.SET)).build()
+                VoltageLevelModificationInfos.builder().equipmentId("v1").nominalV(new AttributeModification<>(500., OperationType.SET)).highVoltageLimit(new AttributeModification<>(502.,
+                        OperationType.SET)).lowVoltageLimit(new AttributeModification<>(499., OperationType.SET)).build(),
+                VoltageLevelModificationInfos.builder().equipmentId("v2").nominalV(new AttributeModification<>(500., OperationType.SET)).highVoltageLimit(new AttributeModification<>(502.,
+                        OperationType.SET)).lowVoltageLimit(new AttributeModification<>(499., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.VOLTAGE_LEVEL_MODIFICATION)
@@ -63,6 +64,7 @@ class TabularVoltageLevelModificationsTest extends AbstractNetworkModificationTe
                 .build();
     }
 
+    @Override
     protected void assertAfterNetworkModificationCreation() {
         assertEquals(300., getNetwork().getVoltageLevel("v1").getNominalV(), 0.001);
         assertEquals(299., getNetwork().getVoltageLevel("v1").getLowVoltageLimit(), 0.001);
@@ -72,6 +74,7 @@ class TabularVoltageLevelModificationsTest extends AbstractNetworkModificationTe
         assertEquals(400., getNetwork().getVoltageLevel("v2").getHighVoltageLimit(), 0.001);
     }
 
+    @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertEquals(380.0, getNetwork().getVoltageLevel("v1").getNominalV(), 0.001);
         assertEquals(Double.NaN, getNetwork().getVoltageLevel("v1").getLowVoltageLimit(), 0.001);
@@ -81,24 +84,17 @@ class TabularVoltageLevelModificationsTest extends AbstractNetworkModificationTe
         assertEquals(Double.NaN, getNetwork().getVoltageLevel("v2").getHighVoltageLimit(), 0.001);
     }
 
-    @Test
     @Override
-    public void testCreate() throws Exception {
-        super.testCreate();
-        assertAfterNetworkModificationCreation();
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals(ModificationType.VOLTAGE_LEVEL_MODIFICATION.name(), createdValues.get("tabularModificationType"));
     }
 
-    @Test
     @Override
-    public void testCreateDisabledModification() throws Exception {
-        super.testCreateDisabledModification();
-        assertAfterNetworkModificationDeletion();
-    }
-
-    @Test
-    @Override
-    public void testDelete() throws Exception {
-        super.testDelete();
-        assertAfterNetworkModificationDeletion();
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals(ModificationType.VOLTAGE_LEVEL_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
     }
 }

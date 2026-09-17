@@ -97,37 +97,18 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                 .build();
     }
 
+    @Override
     protected void assertAfterNetworkModificationCreation() {
         assertEquals(500., getNetwork().getGenerator("idGenerator").getMaxP(), 0.001);
         assertEquals(500., getNetwork().getGenerator("v5generator").getMaxP(), 0.001);
         assertEquals(500., getNetwork().getGenerator("v6generator").getMaxP(), 0.001);
     }
 
+    @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertEquals(1000., getNetwork().getGenerator("idGenerator").getMaxP(), 0.001);
         assertEquals(1000., getNetwork().getGenerator("v5generator").getMaxP(), 0.001);
         assertEquals(1000., getNetwork().getGenerator("v6generator").getMaxP(), 0.001);
-    }
-
-    @Test
-    @Override
-    public void testCreate() throws Exception {
-        super.testCreate();
-        assertAfterNetworkModificationCreation();
-    }
-
-    @Test
-    @Override
-    public void testCreateDisabledModification() throws Exception {
-        super.testCreateDisabledModification();
-        assertAfterNetworkModificationDeletion();
-    }
-
-    @Test
-    @Override
-    public void testDelete() throws Exception {
-        super.testDelete();
-        assertAfterNetworkModificationDeletion();
     }
 
     @Test
@@ -204,6 +185,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
+        // (95, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
         TestUtils.assertRequestsCount(22, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
@@ -246,6 +228,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
+
         TestUtils.assertRequestsCount(14, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
@@ -257,6 +240,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
+        // (107, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for
+        // insertions and is it reached for reactive_capability_curve_points
         TestUtils.assertRequestsCount(22, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
@@ -309,6 +294,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
+        // (26, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for
+        // insertions and is it reached for reactive_capability_curve_points
         TestUtils.assertRequestsCount(21, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
@@ -660,6 +647,20 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
             () -> networkModificationRepository.deleteModifications(TEST_GROUP_ID, ids)
         );
         assertEquals("No sub-modifications deletion method for type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals(ModificationType.GENERATOR_MODIFICATION.name(), createdValues.get("tabularModificationType"));
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals(ModificationType.GENERATOR_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
     }
 
     private List<Pair<UUID, ModificationInfos>> createFewTabularModifications() {

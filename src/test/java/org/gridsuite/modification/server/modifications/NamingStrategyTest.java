@@ -14,21 +14,14 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>
@@ -66,15 +59,8 @@ class NamingStrategyTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
-    @Test
-    void testBusbarSectionsNamedByConfiguredNamingStrategy() throws Exception {
-        String bodyJson = getJsonBody(buildModification(), null);
-
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
-
+    @Override
+    protected void assertAfterNetworkModificationCreation() {
         VoltageLevel vl1 = getNetwork().getVoltageLevel("vl1");
         Set<String> busbarIds = vl1.getNodeBreakerView()
                 .getBusbarSectionStream()
@@ -82,4 +68,20 @@ class NamingStrategyTest extends AbstractNetworkModificationTest {
                 .collect(Collectors.toSet());
         assertTrue(busbarIds.containsAll(Set.of("BUSBAR_1_1", "BUSBAR_2_1", "BUSBAR_1_2", "BUSBAR_2_2")));
     }
+
+    @Override
+    protected void assertAfterNetworkModificationDeletion() {
+        // nothing to test
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        // nothing to test
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        // nothing to test
+    }
+
 }

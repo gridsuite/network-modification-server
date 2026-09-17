@@ -71,6 +71,26 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         return buildModification();
     }
 
+    @Override
+    protected void assertAfterNetworkModificationCreation() {
+        // Nothing to test
+    }
+
+    @Override
+    protected void assertAfterNetworkModificationDeletion() {
+        // Nothing to test
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertNotNull(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertNotNull(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
+    }
+
     @Test
     void testCheckSqlRequestsCount() throws Exception {
         UUID modificationUuid = saveModification(buildModification());

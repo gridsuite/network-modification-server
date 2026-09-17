@@ -164,23 +164,8 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         super.testCreate();
-        assertAfterNetworkModificationCreation();
 
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).toList()), false);
-    }
-
-    @Test
-    @Override
-    public void testDelete() throws Exception {
-        super.testDelete();
-        assertAfterNetworkModificationDeletion();
-    }
-
-    @Test
-    @Override
-    public void testCreateDisabledModification() throws Exception {
-        super.testCreateDisabledModification();
-        assertAfterNetworkModificationDeletion();
     }
 
     @Test
@@ -265,10 +250,6 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
     protected abstract void createEquipments();
 
     protected abstract List<AbstractFilter> getTestFilters();
-
-    protected abstract void assertAfterNetworkModificationCreation();
-
-    protected abstract void assertAfterNetworkModificationDeletion();
 
     protected List<AssignmentInfos<?>> getAssignmentInfos() {
         PropertyAssignmentInfos spyAssignmentInfos = spy(PropertyAssignmentInfos.builder()

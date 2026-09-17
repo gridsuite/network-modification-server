@@ -25,27 +25,32 @@ import org.gridsuite.modification.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.ResultActions;
 
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * A load scaling (bulk modification resolved through the filter server) impacting 10 loads across 3 substations must
- * be reported as a single server-side {@code CollectionElementImpact}, not one impact per load.
- *
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 @Tag("IntegrationTest")
@@ -72,6 +77,7 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
     void specificSetUp() {
         FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
 
+        //createLoads
         getNetwork().getVariantManager().setWorkingVariant("variant_1");
         getNetwork().getLoad(LOAD_ID_1).setP0(100).setQ0(10);
         getNetwork().getLoad(LOAD_ID_2).setP0(200).setQ0(20);
@@ -119,7 +125,7 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
     @Override
     public void testCreate() throws Exception {
         List<AbstractFilter> filters = getTestFilters();
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath() + "(.+,){4}.*"))
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + "(.+,){4}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
@@ -133,7 +139,7 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
     @Override
     public void testCopy() throws Exception {
         List<AbstractFilter> filters = getTestFilters();
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath() + "(.+,){4}.*"))
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + "(.+,){4}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
@@ -150,11 +156,30 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModification() {
-        FilterInfos filter1 = FilterInfos.builder().id(FILTER_ID_1).name("filter1").build();
-        FilterInfos filter2 = FilterInfos.builder().id(FILTER_ID_2).name("filter2").build();
-        FilterInfos filter3 = FilterInfos.builder().id(FILTER_ID_3).name("filter3").build();
-        FilterInfos filter4 = FilterInfos.builder().id(FILTER_ID_4).name("filter4").build();
-        FilterInfos filter5 = FilterInfos.builder().id(FILTER_ID_5).name("filter5").build();
+        FilterInfos filter1 = FilterInfos.builder()
+            .id(FILTER_ID_1)
+            .name("filter1")
+            .build();
+
+        FilterInfos filter2 = FilterInfos.builder()
+            .id(FILTER_ID_2)
+            .name("filter2")
+            .build();
+
+        FilterInfos filter3 = FilterInfos.builder()
+            .id(FILTER_ID_3)
+            .name("filter3")
+            .build();
+
+        FilterInfos filter4 = FilterInfos.builder()
+            .id(FILTER_ID_4)
+            .name("filter4")
+            .build();
+
+        FilterInfos filter5 = FilterInfos.builder()
+            .id(FILTER_ID_5)
+            .name("filter5")
+            .build();
 
         ScalingVariationInfos variation1 = ScalingVariationInfos.builder()
             .variationMode(VariationMode.REGULAR_DISTRIBUTION)
@@ -201,7 +226,10 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        FilterInfos filter5 = FilterInfos.builder().id(FILTER_ID_5).name("filter 3").build();
+        FilterInfos filter5 = FilterInfos.builder()
+            .id(FILTER_ID_5)
+            .name("filter 3")
+            .build();
 
         ScalingVariationInfos variation5 = ScalingVariationInfos.builder()
             .variationMode(VariationMode.PROPORTIONAL)
@@ -219,11 +247,24 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
             .build();
     }
 
+    @Override
+    protected void assertAfterNetworkModificationCreation() {
+        // Nothing to test
+    }
+
+    @Override
+    protected void assertAfterNetworkModificationDeletion() {
+        // Nothing to test
+    }
+
     private static Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
         return Map.of("ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
     }
 
-    private static String getPath() {
-        return "/v1/filters/metadata\\?ids=";
+    private static String getPath(boolean isRegexPhat) {
+        if (isRegexPhat) {
+            return "/v1/filters/metadata\\?ids=";
+        }
+        return "/v1/filters/metadata?ids=";
     }
 }

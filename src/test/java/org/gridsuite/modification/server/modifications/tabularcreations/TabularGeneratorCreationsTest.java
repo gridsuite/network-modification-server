@@ -29,6 +29,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
@@ -146,6 +147,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
+    @Override
     protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getGenerator("id1"));
         assertNotNull(getNetwork().getGenerator("id2"));
@@ -154,6 +156,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         assertNotNull(getNetwork().getGenerator("id5"));
     }
 
+    @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getGenerator("id1"));
         assertNull(getNetwork().getGenerator("id2"));
@@ -303,25 +306,18 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         assertLogMessage("Tabular creation: No generators have been created", "network.modification.tabular.creation.error", reportService);
     }
 
-    @Test
     @Override
-    public void testCreate() throws Exception {
-        super.testCreate();
-        assertAfterNetworkModificationCreation();
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals(ModificationType.TABULAR_CREATION.name(), modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals(ModificationType.GENERATOR_CREATION.name(), createdValues.get("tabularCreationType"));
     }
 
-    @Test
     @Override
-    public void testCreateDisabledModification() throws Exception {
-        super.testCreateDisabledModification();
-        assertAfterNetworkModificationDeletion();
-    }
-
-    @Test
-    @Override
-    public void testDelete() throws Exception {
-        super.testDelete();
-        assertAfterNetworkModificationDeletion();
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals(ModificationType.TABULAR_CREATION.name(), modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals(ModificationType.GENERATOR_CREATION.name(), updatedValues.get("tabularCreationType"));
     }
 
     @Test
