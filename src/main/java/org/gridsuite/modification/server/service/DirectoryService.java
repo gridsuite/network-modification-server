@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.server.dto.ElementAttributes;
+import org.gridsuite.modification.server.dto.ReferenceAttributes;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,42 @@ public class DirectoryService {
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HEADER_USER_ID, userId)
                 .body(elementAttributes)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    /**
+     * updates a reference from a shared modification in directory server so it points to a new container.
+     * the row to update is identified by elementUuid (the referenced shared element) and referenceUuid (the modification-reference itself)
+     * @param elementUuid uuid of the referenced shared element in the directory-server
+     * @param referenceAttributes new attributes of the modification-reference including its own referenceUuid which doesn't change
+     * @param userId id of the user who moves the reference
+     */
+    public void updateElementReference(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, @NonNull String userId) {
+        var path = UriComponentsBuilder.fromPath(
+                        DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references/{referenceUuid}")
+                .buildAndExpand(elementUuid, referenceAttributes.getReferenceId())
+                .toUriString();
+
+        restClient.put()
+                .uri(getDirectoryServerBaseUri() + path).header(HEADER_USER_ID, userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(referenceAttributes)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    public void createElementReference(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, @NonNull String userId) {
+        var path = UriComponentsBuilder.fromPath(
+                        DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references")
+                .buildAndExpand(elementUuid)
+                .toUriString();
+
+        restClient.put()
+                .uri(getDirectoryServerBaseUri() + path)
+                .header(HEADER_USER_ID, userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(referenceAttributes)
                 .retrieve()
                 .toBodilessEntity();
     }

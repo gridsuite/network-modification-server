@@ -28,8 +28,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @SuperBuilder
 public class ReferenceContainer {
-    @NonNull
-    private UUID rootContainerId;
-    @NonNull
-    private UUID containerId;
+    @NonNull private UUID rootContainerId;
+    @NonNull private UUID containerId;
 }
