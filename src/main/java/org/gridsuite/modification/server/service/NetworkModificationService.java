@@ -464,23 +464,21 @@ public class NetworkModificationService {
             @NonNull List<ModificationMoveInfos> moveInfos,
             @NonNull List<ModificationApplicationContext> applicationContexts,
             boolean canApply) {
-        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(moveInfos);
-        List<UUID> movedUuids = movedModifications.stream().map(ModificationInfos::getUuid).toList();
+        List<ModificationInfos> allMoved = new ArrayList<>();
+        moveInfos.forEach(m -> allMoved.addAll(networkModificationRepository.moveModification(m)));
+        List<UUID> movedUuids = allMoved.stream().map(ModificationInfos::getUuid).toList();
 
-        List<ModificationMoveInfos> movesIntoGroup = canApply
-                ? moveInfos.stream().filter(ModificationMoveInfos::movedToGroup).toList()
-                : List.of();
-        if (movesIntoGroup.isEmpty()) {
+        if (!canApply || allMoved.isEmpty()) {
             return CompletableFuture.completedFuture(new NetworkModificationsResult(movedUuids, List.of()));
         }
 
-        // the application contexts belong to one node, so every move entering a group enters that node's group
-        UUID targetGroupUuid = movesIntoGroup.getFirst().target().id();
-        Set<UUID> uuidsEnteringGroup = movesIntoGroup.stream().map(ModificationMoveInfos::modificationUuid).collect(Collectors.toSet());
-        List<ModificationInfos> toApply = movedModifications.stream().filter(m -> uuidsEnteringGroup.contains(m.getUuid())).toList();
+        UUID targetGroup = networkModificationRepository.resolveOwningGroupId(moveInfos.getFirst().target());
+        if (targetGroup == null) {
+            return CompletableFuture.completedFuture(new NetworkModificationsResult(movedUuids, List.of()));
+        }
 
-        return applyModifications(targetGroupUuid, toApply, applicationContexts)
-                .thenApply(result -> new NetworkModificationsResult(movedUuids, result));
+        return applyModifications(targetGroup, allMoved, applicationContexts)
+                .thenApply(r -> new NetworkModificationsResult(movedUuids, r));
     }
 
     public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {

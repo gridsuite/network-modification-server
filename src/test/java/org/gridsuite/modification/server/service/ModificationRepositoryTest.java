@@ -626,7 +626,7 @@ class ModificationRepositoryTest {
             new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
             uuidsToMove, null);
         assertEquals(uuidsToMove.size(), movedModifications.size());
-        assertRequestsCount(5, 0, 1, 0);
+        assertRequestsCount(6, 0, 1, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
@@ -645,7 +645,7 @@ class ModificationRepositoryTest {
             new ModificationContainerInfos(TEST_GROUP_ID_3, ModificationContainerType.GROUP),
             uuidsToMove, null);
         assertEquals(uuidsToMove.size(), movedModifications.size());
-        assertRequestsCount(4, 1, 1, 0);
+        assertRequestsCount(5, 1, 1, 0);
 
         modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
         var modification3 = networkModificationRepository.getModifications(TEST_GROUP_ID_3, true, true);
@@ -684,7 +684,7 @@ class ModificationRepositoryTest {
             new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
             uuidsToMove, groovyScriptEntity6.getId());
         assertEquals(uuidsToMove.size(), movedModifications.size());
-        assertRequestsCount(5, 0, 1, 0);
+        assertRequestsCount(6, 0, 1, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
@@ -727,7 +727,7 @@ class ModificationRepositoryTest {
                 new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP),
                 new ModificationContainerInfos(TEST_GROUP_ID_3, ModificationContainerType.GROUP),
                 modificationsToMoveUuid, null);
-        assertRequestsCount(5, 0, 1, 0);
+        assertRequestsCount(6, 0, 1, 0);
         // only the valid modification is moved
         assertEquals(1, movedModifications.size());
         assertEquals(groovyScriptEntity1.getId(), movedModifications.get(0).getUuid());

@@ -206,33 +206,53 @@ public class NetworkModificationRepository {
         return modificationRepository.saveAll(modifications);
     }
 
+    private UUID resolveOwningGroupId(AbstractModificationContainerEntity container) {
+        var finalContainer = container;
+        while (!finalContainer.isGroup()) {
+            UUID parentId = modificationRepository.findCompositeContainerIdByModificationId(finalContainer.getId());
+            if (parentId == null) {
+                return null;
+            }
+            finalContainer = getContainer(new ModificationContainerInfos(parentId, ModificationContainerType.COMPOSITE));
+        }
+        return finalContainer.getId();
+    }
+
+    public UUID resolveOwningGroupId(@NonNull ModificationContainerInfos containerInfos) {
+        return resolveOwningGroupId(getContainer(containerInfos));
+    }
+
+    private void cleanupApplicationRecordsIfGroupChanged(
+            AbstractModificationContainerEntity source,
+            AbstractModificationContainerEntity target,
+            List<ModificationEntity> moved) {
+        if (source != target) {
+            UUID sourceGroup = resolveOwningGroupId(source);
+            UUID targetGroup = resolveOwningGroupId(target);
+            if (sourceGroup != null && !sourceGroup.equals(targetGroup)) {
+                modificationApplicationInfosService.deleteAllByModificationIds(collectAllModificationUuids(moved));
+            }
+        }
+    }
+
     @Transactional
     public List<ModificationInfos> moveModifications(
             @NonNull ModificationContainerInfos sourceContainerInfos,
             @NonNull ModificationContainerInfos targetContainerInfos,
             @NonNull List<UUID> modificationUuids, UUID beforeModificationUuid) {
-        AbstractModificationContainerEntity sourceContainer = getContainer(sourceContainerInfos);
-        AbstractModificationContainerEntity targetContainer = getContainer(targetContainerInfos);
-        return addApplicabilities(moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid)
-                .stream().map(this::toModificationsInfosOptimized).toList());
+        var source = getContainer(sourceContainerInfos);
+        var target = getContainer(targetContainerInfos);
+        var moved = moveModificationsNonTransactional(source, target, modificationUuids, beforeModificationUuid);
+        cleanupApplicationRecordsIfGroupChanged(source, target, moved);
+        return addApplicabilities(moved.stream().map(this::toModificationsInfosOptimized).toList());
     }
 
     @Transactional
-    public List<ModificationInfos> moveModifications(@NonNull List<ModificationMoveInfos> moves) {
-        List<ModificationEntity> moved = new ArrayList<>();
-        List<UUID> leavingGroupForAnotherGroup = new ArrayList<>();
-        for (ModificationMoveInfos move : moves) {
-            AbstractModificationContainerEntity source = getContainer(move.source());
-            AbstractModificationContainerEntity target = getContainer(move.target());
-            List<ModificationEntity> entities = moveModificationsNonTransactional(source, target, List.of(move.modificationUuid()), move.beforeUuid());
-            if (source != target && source.isGroup() && target.isGroup()) {
-                leavingGroupForAnotherGroup.addAll(collectAllModificationUuids(entities));
-            }
-            moved.addAll(entities);
-        }
-        if (!leavingGroupForAnotherGroup.isEmpty()) {
-            modificationApplicationInfosService.deleteAllByModificationIds(leavingGroupForAnotherGroup);
-        }
+    public List<ModificationInfos> moveModification(@NonNull ModificationMoveInfos move) {
+        var source = getContainer(move.source());
+        var target = getContainer(move.target());
+        var moved = moveModificationsNonTransactional(source, target, List.of(move.modificationUuid()), move.beforeUuid());
+        cleanupApplicationRecordsIfGroupChanged(source, target, moved);
         return addApplicabilities(moved.stream().map(this::toModificationsInfosOptimized).toList());
     }
 
