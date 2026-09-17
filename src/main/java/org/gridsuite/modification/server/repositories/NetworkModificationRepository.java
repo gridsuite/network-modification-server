@@ -939,6 +939,15 @@ public class NetworkModificationRepository {
     }
 
     /**
+     * @return ancestor composite modification uuids, closest first; empty if the modification is a
+     *         direct child of a group (not nested in any composite)
+     */
+    @Transactional(readOnly = true)
+    public List<UUID> getAllSharedCompositeAncestorsUuids(@NonNull UUID modificationUuid) {
+        return modificationRepository.findAllSharedCompositeAncestorsUuids(modificationUuid);
+    }
+
+    /**
      * @return ReferenceData : modification and elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
