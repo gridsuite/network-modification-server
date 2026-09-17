@@ -472,6 +472,8 @@ public class NetworkModificationService {
             return CompletableFuture.completedFuture(new NetworkModificationsResult(movedUuids, List.of()));
         }
 
+        // TODO as of now if the move operation batch contains different target groups it won't be handled well
+        // since we apply modificaitons on only one group at the end of the process
         UUID targetGroup = networkModificationRepository.resolveOwningGroupId(moveInfos.getFirst().target());
         if (targetGroup == null) {
             return CompletableFuture.completedFuture(new NetworkModificationsResult(movedUuids, List.of()));
