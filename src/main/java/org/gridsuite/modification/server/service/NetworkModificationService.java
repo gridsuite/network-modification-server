@@ -461,28 +461,26 @@ public class NetworkModificationService {
     }
 
     public CompletableFuture<NetworkModificationsResult> moveModifications(
-            @NonNull ModificationContainerInfos sourceContainerInfos,
-            @NonNull ModificationContainerInfos targetContainerInfos,
-            UUID beforeModificationUuid,
-            @NonNull List<UUID> modificationUuids,
+            @NonNull List<ModificationMoveInfos> moveInfos,
             @NonNull List<ModificationApplicationContext> applicationContexts,
             boolean canApply) {
-        List<ModificationInfos> modifications = networkModificationRepository.moveModificationsFromGroup(
-            sourceContainerInfos, targetContainerInfos, modificationUuids, beforeModificationUuid);
+        List<ModificationInfos> allMoved = new ArrayList<>();
+        moveInfos.forEach(m -> allMoved.addAll(networkModificationRepository.moveModification(m)));
+        List<UUID> movedUuids = allMoved.stream().map(ModificationInfos::getUuid).toList();
 
-        boolean shouldApply = canApply
-                && !sourceContainerInfos.id().equals(targetContainerInfos.id())
-                && targetContainerInfos.type() == ModificationContainerType.GROUP
-                && !modifications.isEmpty();
+        if (!canApply || allMoved.isEmpty()) {
+            return CompletableFuture.completedFuture(new NetworkModificationsResult(movedUuids, List.of()));
+        }
 
-        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = shouldApply
-                ? applyModifications(targetContainerInfos.id(), modifications, applicationContexts)
-                : CompletableFuture.completedFuture(List.of());
+        // TODO as of now if the move operation batch contains different target groups it won't be handled well
+        // since we apply modificaitons on only one group at the end of the process
+        UUID targetGroup = networkModificationRepository.resolveOwningGroupId(moveInfos.getFirst().target());
+        if (targetGroup == null) {
+            return CompletableFuture.completedFuture(new NetworkModificationsResult(movedUuids, List.of()));
+        }
 
-        return futureResult.thenApply(result ->
-                new NetworkModificationsResult(
-                        modifications.stream().map(ModificationInfos::getUuid).toList(),
-                        result));
+        return applyModifications(targetGroup, allMoved, applicationContexts)
+                .thenApply(r -> new NetworkModificationsResult(movedUuids, r));
     }
 
     public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
