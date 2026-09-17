@@ -20,10 +20,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.dto.CompositeModificationInfos;
-import org.gridsuite.modification.dto.EquipmentModificationInfos;
-import org.gridsuite.modification.dto.GenerationDispatchInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
@@ -81,6 +78,8 @@ public class NetworkModificationService {
 
     private final FilterService filterService;
 
+    private final DirectoryService directoryService;
+
     static final String NETWORK_UUID = "networkUuid.keyword";
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
@@ -97,7 +96,8 @@ public class NetworkModificationService {
                                       ModificationApplicationInfosService applicationInfosService,
                                       ElasticsearchOperations elasticsearchOperations,
                                       ModificationRepository modificationRepository,
-                                      FilterService filterService) {
+                                      FilterService filterService,
+                                      DirectoryService directoryService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -108,6 +108,7 @@ public class NetworkModificationService {
         this.elasticsearchOperations = elasticsearchOperations;
         this.modificationRepository = modificationRepository;
         this.filterService = filterService;
+        this.directoryService = directoryService;
     }
 
     public List<UUID> getModificationGroups() {
@@ -279,6 +280,16 @@ public class NetworkModificationService {
     @Transactional
     public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
         networkModificationRepository.updateNetworkModificationMetadata(modificationUuids, metadata);
+    }
+
+    @Transactional
+    public void updateModificationReferencedMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationReferenceInfos metadata, String userId) {
+        Map<UUID, ElementAttributes> test = networkModificationRepository.updateModificationReferencedMetadata(modificationUuids, metadata);
+        if (!test.isEmpty()) {
+            test.forEach((elementUuid, elementAttributes) ->
+                    directoryService.updateElement(elementUuid, elementAttributes, userId));
+        }
+
     }
 
     @Transactional
