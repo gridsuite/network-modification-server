@@ -72,16 +72,6 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        // Nothing to test
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        // Nothing to test
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertNotNull(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
     }

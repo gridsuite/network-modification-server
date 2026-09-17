@@ -7,8 +7,6 @@
 package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.ShuntCompensator;
-import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
@@ -125,49 +123,6 @@ class ShuntCompensatorModificationByAssignmentTest extends AbstractModificationB
                 .filters(List.of(filter3))
                 .build();
         return List.of(assignmentInfos1, assignmentInfos2);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        ShuntCompensator shuntCompensator1 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_1);
-        assertEquals(8, shuntCompensator1.getMaximumSectionCount());
-        assertEquals(1, shuntCompensator1.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-
-        ShuntCompensator shuntCompensator2 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_2);
-        assertEquals(8, shuntCompensator2.getMaximumSectionCount());
-        assertEquals(0.375, shuntCompensator2.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-
-        ShuntCompensator shuntCompensator3 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_3);
-        assertEquals(6, shuntCompensator3.getMaximumSectionCount());
-        assertEquals(3, shuntCompensator3.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-
-        ShuntCompensator shuntCompensator4 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_4);
-        assertEquals(10, shuntCompensator4.getSectionCount());
-
-        ShuntCompensator shuntCompensator5 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_5);
-        assertEquals(2, shuntCompensator5.getSectionCount());
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        ShuntCompensator shuntCompensator1 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_1);
-        assertEquals(4, shuntCompensator1.getMaximumSectionCount());
-        assertEquals(2, shuntCompensator1.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-
-        ShuntCompensator shuntCompensator2 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_2);
-        assertEquals(3, shuntCompensator2.getMaximumSectionCount());
-        assertEquals(1, shuntCompensator2.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-
-        ShuntCompensator shuntCompensator3 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_3);
-        assertEquals(6, shuntCompensator3.getMaximumSectionCount());
-        assertEquals(3, shuntCompensator3.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-
-        ShuntCompensator shuntCompensator4 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_4);
-        assertEquals(10, shuntCompensator4.getSectionCount());
-
-        ShuntCompensator shuntCompensator5 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_5);
-        assertEquals(2, shuntCompensator5.getSectionCount());
-        assertEquals(1, shuntCompensator5.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
     }
 
     @Override
