@@ -88,9 +88,10 @@ public class CompositeController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The reference left in place of the composite modification")})
     public ResponseEntity<ModificationReferenceData> extractCompositeModificationToShare(
             @PathVariable("uuid") UUID compositeModificationUuid,
-            @Parameter(description = "Group the composite modification belongs to", required = true) @RequestParam("groupUuid") UUID groupUuid,
-            @Parameter(description = "New name of the shared composite modification") @RequestParam(value = "name", required = false) String name) {
-        return ResponseEntity.ok().body(networkModificationService.extractCompositeModificationToShare(groupUuid, compositeModificationUuid, name));
+            @Parameter(description = "Group owning the composite modification", required = true) @RequestParam("groupUuid") UUID groupUuid,
+            @Parameter(description = "New name of the shared composite modification") @RequestParam(value = "name", required = false) String name,
+            @Parameter(description = "New name of the shared composite modification") @RequestParam(value = "description", required = false) String description) {
+        return ResponseEntity.ok().body(networkModificationService.extractCompositeModificationToShare(groupUuid, compositeModificationUuid, name, description));
     }
 
     @GetMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -125,8 +126,9 @@ public class CompositeController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
     public ResponseEntity<Void> updateNetworkCompositeModification(
             @PathVariable("uuid") UUID compositeModificationUuid,
-            @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name) {
-        networkModificationService.updateCompositeModification(compositeModificationUuid, name);
+            @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name,
+            @Parameter(description = "New composite description") @RequestParam(value = "description", required = false) String description) {
+        networkModificationService.updateCompositeModification(compositeModificationUuid, name, description);
         return ResponseEntity.ok().build();
     }
 
