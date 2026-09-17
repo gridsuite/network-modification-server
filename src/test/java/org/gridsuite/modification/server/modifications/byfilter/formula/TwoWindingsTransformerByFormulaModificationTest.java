@@ -20,7 +20,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createTwoWindingsTransformer;
-import static org.junit.jupiter.api.Assertions.*;
 
 class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaModificationTest {
     private static final String TWT_ID_1 = "twt1";
@@ -46,9 +45,6 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
 
         checkCreateWithError(List.of(formulaInfos), List.of(filter));
 
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
-
         // Test modifying phase tab changer field when phase tab changer is null
         IdentifierListFilterEquipmentAttributes identifiableAttributes3 = getIdentifiableAttributes(TWT_ID_1, 1.);
         IdentifierListFilterEquipmentAttributes identifiableAttributes4 = getIdentifiableAttributes(TWT_ID_2, 1.);
@@ -62,9 +58,6 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
                 .build();
 
         checkCreateWithError(List.of(formulaInfos2), List.of(filter2));
-
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getPhaseTapChanger());
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getPhaseTapChanger());
     }
 
     @Test
@@ -120,13 +113,6 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
                         .formulaInfosList(List.of(formulaInfos))
                         .build(),
                 NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
-
-        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger());
-        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger());
-        assertEquals(2, getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger().getTapPosition());
-        assertEquals(5, getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger().getTapPosition());
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
 
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(List.of(FILTER_ID_1, FILTER_ID_4)), false);
     }

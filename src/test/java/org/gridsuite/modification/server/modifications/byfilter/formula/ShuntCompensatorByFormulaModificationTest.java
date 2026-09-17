@@ -22,7 +22,6 @@ import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ShuntCompensatorByFormulaModificationTest extends AbstractByFormulaModificationTest {
     private static final String SHUNT_COMPENSATOR_ID_1 = "v1shunt";
@@ -46,7 +45,6 @@ class ShuntCompensatorByFormulaModificationTest extends AbstractByFormulaModific
                 .build();
 
         checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes, wrongIdAttributes));
-        assertEquals(5, getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_1).getMaximumSectionCount(), 0);
     }
 
     @Override

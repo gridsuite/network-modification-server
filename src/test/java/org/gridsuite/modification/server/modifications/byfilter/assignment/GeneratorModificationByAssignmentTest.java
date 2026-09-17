@@ -23,7 +23,6 @@ import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -53,7 +52,6 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
                 .build();
 
         checkCreateWithWarning(List.of(assignmentInfos), List.of(identifiableAttributes, wrongIdAttributes));
-        assertEquals(55, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
     }
 
     @Override

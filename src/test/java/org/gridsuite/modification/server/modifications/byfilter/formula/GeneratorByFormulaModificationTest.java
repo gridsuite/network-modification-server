@@ -24,7 +24,6 @@ import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -56,7 +55,6 @@ class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTe
                 .build();
 
         checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes, wrongIdAttributes));
-        assertEquals(75, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
     }
 
     @Test

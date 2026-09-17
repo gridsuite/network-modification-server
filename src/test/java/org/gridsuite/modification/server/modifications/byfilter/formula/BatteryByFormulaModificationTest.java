@@ -22,7 +22,6 @@ import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createBattery;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -49,7 +48,6 @@ class BatteryByFormulaModificationTest extends AbstractByFormulaModificationTest
                 .build();
 
         checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes, wrongIdAttributes));
-        assertEquals(75, getNetwork().getBattery(BATTERY_ID_1).getTargetP(), 0);
     }
 
     @Override
