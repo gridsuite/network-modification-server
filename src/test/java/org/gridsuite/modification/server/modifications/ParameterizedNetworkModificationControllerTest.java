@@ -49,7 +49,6 @@ import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -75,8 +74,7 @@ class ParameterizedNetworkModificationControllerTest {
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIFICATION_BASE = "/v1/network-modifications";
-    private static final String URI_NETWORK_MODIFICATION_WITH_GROUP = URI_NETWORK_MODIFICATION_BASE + "?groupUuid=" + TEST_GROUP_ID;
-    private static final String URI_NETWORK_MODIFICATION_BY_UUID = URI_NETWORK_MODIFICATION_BASE + "/";
+    private static final String URI_CREATE_MODIFICATION = URI_NETWORK_MODIFICATION_BASE + "?groupUuid=" + TEST_GROUP_ID;
 
     @Autowired
     private MockMvc mockMvc;
@@ -121,18 +119,18 @@ class ParameterizedNetworkModificationControllerTest {
             assertNotNull(network.getIdentifiable(creation.getEquipmentId()));
         }
 
-        assertGroupModificationCount(1);
+        assertModificationCount(1);
 
         ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).getFirst();
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
 
-        MvcResult readResult = mockMvc.perform(get(URI_NETWORK_MODIFICATION_BY_UUID + createdModificationUuid))
+        MvcResult readResult = mockMvc.perform(get(URI_NETWORK_MODIFICATION_BASE + "/" + createdModificationUuid))
             .andExpect(status().isOk())
             .andReturn();
         ModificationInfos readModification = mapper.readValue(readResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertThat(readModification).recursivelyEquals(modificationToCreate);
 
-        mockMvc.perform(put(URI_NETWORK_MODIFICATION_BY_UUID + createdModificationUuid)
+        mockMvc.perform(put(URI_NETWORK_MODIFICATION_BASE + "/" + createdModificationUuid)
                 .content(mapper.writeValueAsString(modificationToUpdate))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
@@ -225,7 +223,7 @@ class ParameterizedNetworkModificationControllerTest {
         prepareNetwork(modificationToCreate);
         String bodyJson = TestUtils.getJsonBody(modificationToCreate, TEST_NETWORK_ID, null);
 
-        ResultActions createAction = mockMvc.perform(post(URI_NETWORK_MODIFICATION_WITH_GROUP)
+        ResultActions createAction = mockMvc.perform(post(URI_CREATE_MODIFICATION)
                 .content(bodyJson)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(request().asyncStarted());
@@ -263,7 +261,7 @@ class ParameterizedNetworkModificationControllerTest {
         }
     }
 
-    private void assertGroupModificationCount(int expectedSize) throws Exception {
+    private void assertModificationCount(int expectedSize) throws Exception {
         MvcResult result = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
