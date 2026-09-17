@@ -213,8 +213,8 @@ public class NetworkModificationRepository {
             @NonNull List<UUID> modificationUuids, UUID beforeModificationUuid) {
         AbstractModificationContainerEntity sourceContainer = getContainer(sourceContainerInfos);
         AbstractModificationContainerEntity targetContainer = getContainer(targetContainerInfos);
-        return moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid)
-                .stream().map(this::toModificationsInfosOptimized).toList();
+        return addApplicabilities(moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid)
+                .stream().map(this::toModificationsInfosOptimized).toList());
     }
 
     @Transactional
