@@ -218,7 +218,7 @@ class ParameterizedNetworkModificationControllerTest {
 
         List<ModificationInfos> restoredModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
         assertEquals(1, restoredModifications.size());
-        assertFalse(Boolean.TRUE.equals(restoredModifications.getFirst().getStashed()));
+        assertNotEquals(Boolean.TRUE, restoredModifications.getFirst().getStashed());
     }
 
     private UUID createModification(ModificationInfos modificationToCreate) throws Exception {
