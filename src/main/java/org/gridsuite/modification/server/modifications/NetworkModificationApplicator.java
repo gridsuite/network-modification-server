@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -200,6 +201,7 @@ public class NetworkModificationApplicator {
             UUID reporterId = modificationGroupInfos.reportInfos().getNodeUuid();
             reportNode = ReportNode.newRootReportNode()
                     .withAllResourceBundlesFromClasspath()
+                    .withLocale(Locale.ENGLISH)
                     .withMessageTemplate("network.modification.server.nodeUuid")
                     .withUntypedValue("nodeUuid", reporterId.toString())
                     .build();

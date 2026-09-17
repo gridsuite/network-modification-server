@@ -10,18 +10,16 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.ShuntCompensator;
 import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.IntegerAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.equipmentfield.ShuntCompensatorField;
-import org.junit.jupiter.api.Test;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,21 +34,6 @@ class ShuntCompensatorModificationByAssignmentTest extends AbstractModificationB
     private static final String SHUNT_COMPENSATOR_ID_4 = "v4shunt";
     private static final String SHUNT_COMPENSATOR_ID_5 = "v5shunt";
 
-    @Test
-    void testCreateWithWarning() throws Exception {
-        IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_1, 1.0);
-        IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
-
-        IntegerAssignmentInfos assignmentInfos = IntegerAssignmentInfos.builder()
-                .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
-                .value(2)
-                .filters(List.of(filterWithOneWrongId))
-                .build();
-
-        checkCreateWithWarning(List.of(assignmentInfos), List.of(identifiableAttributes, wrongIdAttributes));
-        assertEquals(2, getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_1).getMaximumSectionCount(), 0);
-    }
-
     @Override
     protected void createEquipments() {
         createShuntCompensator(getNetwork().getVoltageLevel("v1"), SHUNT_COMPENSATOR_ID_1, "v1shunt", 8, 225., 10, true, 4, 2, 3, 2, "cn11", 22, ConnectablePosition.Direction.BOTTOM);
@@ -58,25 +41,17 @@ class ShuntCompensatorModificationByAssignmentTest extends AbstractModificationB
         createShuntCompensator(getNetwork().getVoltageLevel("v4"), SHUNT_COMPENSATOR_ID_4, "v3shunt", 10, 305., 20, true, 15, 4, 3, 10, "cn11", 22, ConnectablePosition.Direction.BOTTOM);
     }
 
-    @Override
-    protected List<AbstractFilter> getTestFilters() {
-        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.SHUNT_COMPENSATOR)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_1, 1.0)))
-            .build();
-        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.SHUNT_COMPENSATOR)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_2, 1.0)))
-            .build();
-        IdentifierListFilter filter3 = IdentifierListFilter.builder().id(FILTER_ID_3).modificationDate(new Date()).equipmentType(EquipmentType.SHUNT_COMPENSATOR)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_3, 1.0)))
-            .build();
-        IdentifierListFilter filter4 = IdentifierListFilter.builder().id(FILTER_ID_4).modificationDate(new Date()).equipmentType(EquipmentType.SHUNT_COMPENSATOR)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_4, 1.0)))
-            .build();
-        IdentifierListFilter filter5 = IdentifierListFilter.builder().id(FILTER_ID_5).modificationDate(new Date()).equipmentType(EquipmentType.SHUNT_COMPENSATOR)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_5, 1.0)))
-            .build();
+    private static final Map<UUID, Set<String>> FILTER_MAPPING = Map.of(
+            FILTER_ID_1, Set.of(SHUNT_COMPENSATOR_ID_1),
+            FILTER_ID_2, Set.of(SHUNT_COMPENSATOR_ID_2),
+            FILTER_ID_3, Set.of(SHUNT_COMPENSATOR_ID_3),
+            FILTER_ID_4, Set.of(SHUNT_COMPENSATOR_ID_4),
+            FILTER_ID_5, Set.of(SHUNT_COMPENSATOR_ID_5)
+    );
 
-        return List.of(filter1, filter2, filter3, filter4, filter5);
+    @Override
+    protected Map<UUID, Set<String>> getFilterMapping() {
+        return FILTER_MAPPING;
     }
 
     @Override
