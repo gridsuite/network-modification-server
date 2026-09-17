@@ -1194,7 +1194,6 @@ public class NetworkModificationRepository {
                 .map(entity -> ModificationMetadata.builder()
                         .id(entity.getId())
                         .type(ModificationType.valueOf(entity.getType()))
-                        .description(entity.getDescription())
                         .build())
                 .toList();
     }

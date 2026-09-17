@@ -59,7 +59,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<ModificationEntity> findAllActiveModificationsByContainerId(@Param("containerId") UUID containerId,
                                                                     @Param("rootNetworkTag") String rootNetworkTag);
 
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.description) FROM ModificationEntity m WHERE m.id IN (?1)")
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
     List<ModificationEntity> findMetadataIn(List<UUID> uuids);
 
     /**
