@@ -312,7 +312,7 @@ public class NetworkModificationService {
      */
     private List<ModificationReferenceData> getAllReferencesDataFromGroupNonTransactional(@NonNull UUID groupUuid) {
         List<UUID> allModificationUuids = modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(groupUuid));
-        return networkModificationRepository.getModificationsReferences(allModificationUuids);
+        return networkModificationRepository.getModificationsReferences(allModificationUuids, false);
     }
 
     @Transactional(readOnly = true)
@@ -321,8 +321,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids) {
-        return networkModificationRepository.getModificationsReferences(modificationUuids);
+    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids, boolean fetchSubModifications) {
+        return networkModificationRepository.getModificationsReferences(modificationUuids, fetchSubModifications);
     }
 
     @Transactional(readOnly = true)
@@ -339,7 +339,7 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
+    public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids, String userId) {
         for (UUID modificationUuid : modificationUuids) {
             UUID parentCompositeUuid = modificationRepository.findCompositeContainerIdByModificationId(modificationUuid);
             if (parentCompositeUuid != null) {
@@ -350,6 +350,12 @@ public class NetworkModificationService {
             }
         }
         networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
+
+        // break all the references pointing to those stashed modification references
+        List<ModificationReferenceData> referencesData = getModificationsReferences(modificationUuids, true);
+        referencesData.forEach(referenceData ->
+                directoryService.removeElementReference(referenceData.referencedId(), referenceData.modificationUuid(), userId)
+        );
     }
 
     @Transactional

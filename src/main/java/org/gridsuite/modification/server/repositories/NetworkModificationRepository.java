@@ -942,8 +942,14 @@ public class NetworkModificationRepository {
      * @return ReferenceData : modification and elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
-    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids) {
-        List<ModificationEntity> modificationEntities = this.modificationRepository.findAllByIdIn(modificationUuids);
+    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids, boolean fetchSubModifications) {
+        List<UUID> testedModificationUuids = modificationUuids;
+        if (fetchSubModifications) {
+            // TODO à vérifier : il est possible que ceci soit inutile si on considère que tout ce qu'on supprime y compris les sous modifs doivent être dans la liste
+            // ça semble être comme ça que ça fonctionne actuellement...
+            testedModificationUuids.addAll(modificationRepository.findAllDescendantModificationIdsByContainerIds(modificationUuids));
+        }
+        List<ModificationEntity> modificationEntities = this.modificationRepository.findAllByIdIn(testedModificationUuids);
         List<ModificationReferenceData> references = new ArrayList<>(List.of());
         modificationEntities.forEach(modificationEntity -> {
             if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {

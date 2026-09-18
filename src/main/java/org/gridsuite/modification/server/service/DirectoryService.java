@@ -18,6 +18,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -72,6 +73,28 @@ public class DirectoryService {
                 .header(HEADER_USER_ID, userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(referenceAttributes)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    /**
+     * remove reference from the shared modification in directory server
+     * @param referenceUuid uuid of the composite or group where the 'Modification reference' is located
+     * @param userId id of the user who caused the unreferencing
+     * @param sharedElementUuid uuid of the referenced shared element in the directory-server
+     */
+    public void removeElementReference(UUID sharedElementUuid, UUID referenceUuid, String userId) {
+        Objects.requireNonNull(referenceUuid);
+        Objects.requireNonNull(sharedElementUuid);
+
+        var path = UriComponentsBuilder.fromPath(
+                        DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references/{referenceUuid}")
+                .buildAndExpand(sharedElementUuid, referenceUuid)
+                .toUriString();
+
+        restClient.delete()
+                .uri(getDirectoryServerBaseUri() + path)
+                .header(HEADER_USER_ID, userId)
                 .retrieve()
                 .toBodilessEntity();
     }
