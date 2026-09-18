@@ -324,6 +324,10 @@ public class NetworkModificationService {
         return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
     }
 
+    public List<UUID> getReferencedModificationUuids(@NonNull List<UUID> containerUuids) {
+        return networkModificationRepository.getReferencedModificationUuids(containerUuids);
+    }
+
     @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         for (UUID modificationUuid : modificationUuids) {
