@@ -112,8 +112,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findReferencedModificationIds(@Param("ids") Collection<UUID> ids);
 
     /**
-     * Copies the applicability of {@code fromTag} to {@code toTag}, skipping the modifications that already have an
-     * entry for {@code toTag}.
+     * Copies the applicability of {@code fromTag} to {@code toTag}.
      */
     @Modifying
     @Query("""
@@ -121,23 +120,8 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         SELECT a.modification, :toTag, a.applicable
           FROM ModificationRootNetworkApplicabilityEntity a
          WHERE a.modification.id IN (:ids) AND a.rootNetworkTag = :fromTag
-           AND NOT EXISTS (SELECT 1 FROM ModificationRootNetworkApplicabilityEntity b
-                            WHERE b.modification = a.modification AND b.rootNetworkTag = :toTag)
         """)
     void copyRootNetworkApplicability(@Param("ids") Collection<UUID> ids, @Param("fromTag") String fromTag, @Param("toTag") String toTag);
-
-    /**
-     * Deletes the {@code toTag} entries of the given modifications, restricted to those also holding a
-     * {@code fromTag} entry. Useful to prepare renaming with {@link #renameRootNetworkApplicability}.
-     */
-    @Modifying
-    @Query("""
-        DELETE FROM ModificationRootNetworkApplicabilityEntity a
-         WHERE a.modification.id IN (:ids) AND a.rootNetworkTag = :toTag
-           AND EXISTS (SELECT 1 FROM ModificationRootNetworkApplicabilityEntity b
-                        WHERE b.modification = a.modification AND b.rootNetworkTag = :fromTag)
-        """)
-    void deleteRootNetworkApplicabilitiesTakenOverBy(@Param("ids") Collection<UUID> ids, @Param("fromTag") String fromTag, @Param("toTag") String toTag);
 
     @Modifying
     @Query("""
