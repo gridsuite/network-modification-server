@@ -36,6 +36,7 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping(value = "/" + NetworkModificationApi.API_VERSION + "/")
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
+    public static final String HEADER_USER_ID = "userId";
 
     private final NetworkModificationService networkModificationService;
 
@@ -91,8 +92,11 @@ public class NetworkModificationController {
     @Operation(summary = "Create a modification group based on another group")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group and its modifications have been duplicated")})
     public ResponseEntity<Void> duplicateGroup(@RequestParam("groupUuid") UUID groupUuid,
-                                               @PathVariable("sourceGroupUuid") UUID sourceGroupUuid) {
-        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid);
+                                               @RequestParam("nodeUuid") UUID nodeUuid,
+                                               @RequestParam("studyUuid") UUID studyUuid,
+                                               @PathVariable("sourceGroupUuid") UUID sourceGroupUuid,
+                                               @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, nodeUuid, studyUuid, userId);
         return ResponseEntity.ok().build();
     }
 
