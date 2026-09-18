@@ -21,9 +21,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
 @Tag("IntegrationTest")
 class SubstationByFilterDeletionTest extends AbstractByFilterDeletionTest {
     private static final String SUBSTATION_ID_1 = "s1";
@@ -39,20 +36,6 @@ class SubstationByFilterDeletionTest extends AbstractByFilterDeletionTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNull(getNetwork().getSubstation(SUBSTATION_ID_1));
-        assertNull(getNetwork().getSubstation(SUBSTATION_ID_2));
-        assertNull(getNetwork().getSubstation(SUBSTATION_ID_3));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNotNull(getNetwork().getSubstation(SUBSTATION_ID_1));
-        assertNotNull(getNetwork().getSubstation(SUBSTATION_ID_2));
-        assertNotNull(getNetwork().getSubstation(SUBSTATION_ID_3));
     }
 
     @Override

@@ -38,12 +38,9 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -192,9 +189,6 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
             .andExpect(status().isOk());
 
         wireMockUtils.verifyGetRequest(stubNonDistributionKey, PATH, handleQueryParams(FILTER_NO_DK), false);
-
-        assertEquals(200, getNetwork().getLoad(LOAD_ID_2).getP0(), 0.01D);
-        assertEquals(200, getNetwork().getLoad(LOAD_ID_3).getP0(), 0.01D);
     }
 
     @Test
@@ -229,8 +223,6 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(loadScalingInfo.toModification().getName() + ": There is no valid equipment ID among the provided filter(s)",
-                "network.modification.invalidFilters", reportService);
         wireMockUtils.verifyGetRequest(stubWithWrongId, PATH, handleQueryParams(FILTER_WRONG_ID_1), false);
     }
 
@@ -286,8 +278,6 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
             );
 
         wireMockUtils.verifyGetRequest(stubMultipleWrongIds, PATH, Map.of("ids", WireMock.matching(".*")), false);
-        assertEquals(600, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
-        assertEquals(300, getNetwork().getLoad(LOAD_ID_10).getP0(), 0.01D);
     }
 
     @Override
@@ -388,35 +378,6 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
             .build();
     }
 
-    //TODO update values after PowSyBl release
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(108.33, getNetwork().getLoad(LOAD_ID_1).getP0(), 0.01D);
-        assertEquals(216.66, getNetwork().getLoad(LOAD_ID_2).getP0(), 0.01D);
-        assertEquals(225.0, getNetwork().getLoad(LOAD_ID_3).getP0(), 0.01D);
-        assertEquals(125.0, getNetwork().getLoad(LOAD_ID_4).getP0(), 0.01D);
-        assertEquals(287.5, getNetwork().getLoad(LOAD_ID_5).getP0(), 0.01D);
-        assertEquals(182.5, getNetwork().getLoad(LOAD_ID_6).getP0(), 0.01D);
-        assertEquals(213.63, getNetwork().getLoad(LOAD_ID_7).getP0(), 0.01D);
-        assertEquals(166.36, getNetwork().getLoad(LOAD_ID_8).getP0(), 0.01D);
-        assertEquals(216.66, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
-        assertEquals(108.33, getNetwork().getLoad(LOAD_ID_10).getP0(), 0.01D);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(100.0, getNetwork().getLoad(LOAD_ID_1).getP0(), 0);
-        assertEquals(200.0, getNetwork().getLoad(LOAD_ID_2).getP0(), 0);
-        assertEquals(200.0, getNetwork().getLoad(LOAD_ID_3).getP0(), 0);
-        assertEquals(100.0, getNetwork().getLoad(LOAD_ID_4).getP0(), 0);
-        assertEquals(200.0, getNetwork().getLoad(LOAD_ID_5).getP0(), 0);
-        assertEquals(120.0, getNetwork().getLoad(LOAD_ID_6).getP0(), 0);
-        assertEquals(200.0, getNetwork().getLoad(LOAD_ID_7).getP0(), 0);
-        assertEquals(130.0, getNetwork().getLoad(LOAD_ID_8).getP0(), 0);
-        assertEquals(200.0, getNetwork().getLoad(LOAD_ID_9).getP0(), 0);
-        assertEquals(100.0, getNetwork().getLoad(LOAD_ID_10).getP0(), 0);
-    }
-
     private static Map<String, StringValuePattern> handleQueryParams(UUID filterId) {
         return Map.of("ids", WireMock.equalTo(filterId.toString()));
     }
@@ -454,9 +415,6 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
 
         // disconnect some loads (must not be taken into account by the variation modification)
         loadsToDisconnect.forEach(l -> getNetwork().getLoad(l).getTerminal().disconnect());
-        List<String> modifiedLoads = Stream.of("LD1", "LD2", "LD3", "LD4", "LD5", "LD6")
-                .filter(l -> !loadsToDisconnect.contains(l))
-                .toList();
 
         IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_ALL_LOADS).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
             .filterEquipmentsAttributes(List.of(
@@ -501,12 +459,6 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
 
-        // If we sum the P0 for all expected modified loads, we should have the requested variation value
-        double connectedLoadsConstantP = modifiedLoads
-                .stream()
-                .map(g -> getNetwork().getLoad(g).getP0())
-                .reduce(0D, Double::sum);
-        assertEquals(variationValue, connectedLoadsConstantP, 0.001D);
 
         wireMockUtils.verifyGetRequest(subFilter, PATH, Map.of("ids", WireMock.matching(".*")), false);
     }

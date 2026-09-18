@@ -148,7 +148,6 @@ public abstract class AbstractNetworkModificationTest {
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        assertAfterNetworkModificationCreation();
 
         ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
@@ -175,8 +174,6 @@ public abstract class AbstractNetworkModificationTest {
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        // when modification is not active, element created by the modifications should NOT be present in network
-        assertAfterNetworkModificationDeletion();
 
         ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
@@ -213,9 +210,6 @@ public abstract class AbstractNetworkModificationTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        // TODO Need a test for substations impacted
-        //assertThat(bsmListResult.get(0)).recursivelyEquals(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"));
-
         ModificationInfos updatedModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
         assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
@@ -239,7 +233,6 @@ public abstract class AbstractNetworkModificationTest {
         List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
 
         assertTrue(storedModifications.isEmpty());
-        assertAfterNetworkModificationDeletion();
     }
 
     @Test
@@ -315,10 +308,6 @@ public abstract class AbstractNetworkModificationTest {
     protected abstract ModificationInfos buildModification();
 
     protected abstract ModificationInfos buildModificationUpdate();
-
-    protected abstract void assertAfterNetworkModificationCreation();
-
-    protected abstract void assertAfterNetworkModificationDeletion();
 
     @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {

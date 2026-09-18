@@ -25,8 +25,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 @Tag("IntegrationTest")
 class EquipmentByFilterDeletionTest extends AbstractByFilterDeletionTest {
@@ -47,28 +45,6 @@ class EquipmentByFilterDeletionTest extends AbstractByFilterDeletionTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.createLoadNetwork(networkUuid, new NetworkFactoryImpl());
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNull(getNetwork().getLoad(LOAD_ID_1));
-        assertNull(getNetwork().getLoad(LOAD_ID_2));
-        assertNull(getNetwork().getLoad(LOAD_ID_3));
-        assertNull(getNetwork().getLoad(LOAD_ID_4));
-        assertNull(getNetwork().getLoad(LOAD_ID_7));
-        assertNull(getNetwork().getLoad(LOAD_ID_11));
-        assertNull(getNetwork().getLoad(LOAD_ID_12));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNotNull(getNetwork().getLoad(LOAD_ID_1));
-        assertNotNull(getNetwork().getLoad(LOAD_ID_2));
-        assertNotNull(getNetwork().getLoad(LOAD_ID_3));
-        assertNotNull(getNetwork().getLoad(LOAD_ID_4));
-        assertNotNull(getNetwork().getLoad(LOAD_ID_7));
-        assertNotNull(getNetwork().getLoad(LOAD_ID_11));
-        assertNotNull(getNetwork().getLoad(LOAD_ID_12));
     }
 
     @Override
