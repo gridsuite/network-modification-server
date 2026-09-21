@@ -321,7 +321,7 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public void removeAllReferencesFromGroup(@NonNull UUID groupUuid, String userId) {
+    public void removeReferencesToGroup(@NonNull UUID groupUuid, String userId) {
         List<ModificationReferenceData> referencesData = getAllReferencesDataFromGroupNonTransactional(groupUuid);
         referencesData.forEach(referenceData ->
                 directoryService.removeElementReference(referenceData.referencedId(), referenceData.modificationUuid(), userId)
@@ -518,16 +518,19 @@ public class NetworkModificationService {
             List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
             networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationToDuplicateInfos);
 
-            // recreate the references :
-            if (nodeUuid != null && studyUuid != null) {
-                List<ModificationReferenceData> referencesData = getAllReferencesDataFromGroupNonTransactional(targetGroupUuid);
-                directoryService.recreateReferences(nodeUuid, studyUuid, userId, referencesData);
-            }
+            recreateReferencesToGroup(targetGroupUuid, nodeUuid, studyUuid, userId);
 
         } catch (NetworkModificationServerException e) {
             if (e.getBusinessErrorCode() != MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
                 throw e;
             }
+        }
+    }
+
+    public void recreateReferencesToGroup(@NonNull UUID targetGroupUuid, UUID nodeUuid, UUID studyUuid, String userId) {
+        if (nodeUuid != null && studyUuid != null) {
+            List<ModificationReferenceData> referencesData = getAllReferencesDataFromGroupNonTransactional(targetGroupUuid);
+            directoryService.recreateReferences(nodeUuid, studyUuid, userId, referencesData);
         }
     }
 

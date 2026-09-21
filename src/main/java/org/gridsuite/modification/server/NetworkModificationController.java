@@ -321,7 +321,19 @@ public class NetworkModificationController {
     public ResponseEntity<Void> removeAllReferencesToGroup(
             @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
             @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.removeAllReferencesFromGroup(groupUuid, userId);
+        networkModificationService.removeReferencesToGroup(groupUuid, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping(value = "/groups/{groupUuid}/references", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Restore the references pointing to any modification in the given group")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references have been restored")})
+    public ResponseEntity<Void> restoreReferencesToGroup(
+            @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+            @RequestParam("nodeUuid") UUID nodeUuid,
+            @RequestParam("studyUuid") UUID studyUuid,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.recreateReferencesToGroup(groupUuid, nodeUuid, studyUuid, userId);
         return ResponseEntity.ok().build();
     }
 
