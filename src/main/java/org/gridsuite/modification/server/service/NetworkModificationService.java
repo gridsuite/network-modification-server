@@ -324,7 +324,7 @@ public class NetworkModificationService {
         return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
     }
 
-    public List<UUID> getReferencedModificationUuids(@NonNull List<UUID> containerUuids) {
+    public Set<UUID> getReferencedModificationUuids(@NonNull List<UUID> containerUuids) {
         return networkModificationRepository.getReferencedModificationUuids(containerUuids);
     }
 

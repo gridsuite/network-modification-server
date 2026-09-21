@@ -2063,7 +2063,7 @@ class ModificationRepositoryTest {
     @Test
     void testRenameRootNetworkTagDropsTheEntryOfAModificationHoldingNoneForTheOldTag() {
         UUID modificationUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d1"))).getFirst().getUuid();
-        // a leftover entry, the modification being applicable by default on the root network being renamed
+
         networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), RENAMED_ROOT_NETWORK_TAG, false);
 
         networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_3), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
@@ -2077,7 +2077,7 @@ class ModificationRepositoryTest {
     void testRenameRootNetworkTagDropsTheEntryOfASharedModificationHoldingNoneForTheOldTag() {
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
         UUID sharedUuid = sharedModificationOf(referenceUuid);
-        // another group already named a root network of its own with the tag this one is being renamed to
+
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), RENAMED_ROOT_NETWORK_TAG, false);
 
         networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
@@ -2100,8 +2100,10 @@ class ModificationRepositoryTest {
                 List.of(nestedReferenceUuid), null);
         insertComposite(TEST_GROUP_ID_3, false, "v1d3");
 
-        assertEquals(List.of(sharedUuid, nestedSharedUuid), networkModificationRepository.getReferencedModificationUuids(List.of(TEST_GROUP_ID_2)));
-        assertEquals(List.of(), networkModificationRepository.getReferencedModificationUuids(List.of(TEST_GROUP_ID_3)));
+        assertEquals(Set.of(sharedUuid, nestedSharedUuid), networkModificationRepository.getReferencedModificationUuids(List.of(TEST_GROUP_ID_2)),
+                "Both shared modifications, the nested one included, but none of their children");
+        assertEquals(Set.of(), networkModificationRepository.getReferencedModificationUuids(List.of(TEST_GROUP_ID_3)),
+                "A group holding no reference leads to no shared modification");
     }
 
     @Test

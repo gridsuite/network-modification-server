@@ -1202,8 +1202,8 @@ class CompositeControllerTest {
         assertFalse(hasReferences(TEST_GROUP_ID));
         assertTrue(hasReferences(TEST_GROUP2_ID));
         assertTrue(hasReferences(TEST_GROUP_ID, TEST_GROUP2_ID));
-        assertEquals(List.of(), getReferencedModifications(TEST_GROUP_ID));
-        assertEquals(List.of(sharedCompositeUuid), getReferencedModifications(TEST_GROUP_ID, TEST_GROUP2_ID));
+        assertEquals(Set.of(), getReferencedModifications(TEST_GROUP_ID));
+        assertEquals(Set.of(sharedCompositeUuid), getReferencedModifications(TEST_GROUP_ID, TEST_GROUP2_ID));
     }
 
     private boolean hasReferences(UUID... containerUuids) throws Exception {
@@ -1212,7 +1212,7 @@ class CompositeControllerTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), Boolean.class);
     }
 
-    private List<UUID> getReferencedModifications(UUID... containerUuids) throws Exception {
+    private Set<UUID> getReferencedModifications(UUID... containerUuids) throws Exception {
         return mapper.readValue(mockMvc.perform(get("/v1/containers/references")
                         .queryParam("uuids", Arrays.stream(containerUuids).map(UUID::toString).toArray(String[]::new)))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), new TypeReference<>() { });
