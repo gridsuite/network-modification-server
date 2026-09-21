@@ -315,6 +315,16 @@ public class NetworkModificationController {
         return ResponseEntity.ok(networkModificationService.getAllReferencesDataFromGroup(groupUuid));
     }
 
+    @DeleteMapping(value = "/groups/{groupUuid}/references", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Removes the references pointing to any modification in the given group from directory-server")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references have been removed")})
+    public ResponseEntity<Void> removeAllReferencesToGroup(
+            @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.removeAllReferencesFromGroup(groupUuid, userId);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping(value = "/containers/references/exists", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Whether any of the containers (groups or composites) holds a modification reference, including nested in their composites")
     @ApiResponse(responseCode = "200", description = "true if at least one modification reference is found")

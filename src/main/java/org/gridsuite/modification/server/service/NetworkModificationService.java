@@ -320,6 +320,14 @@ public class NetworkModificationService {
         return getAllReferencesDataFromGroupNonTransactional(groupUuid);
     }
 
+    @Transactional(readOnly = true)
+    public void removeAllReferencesFromGroup(@NonNull UUID groupUuid, String userId) {
+        List<ModificationReferenceData> referencesData = getAllReferencesDataFromGroupNonTransactional(groupUuid);
+        referencesData.forEach(referenceData ->
+                directoryService.removeElementReference(referenceData.referencedId(), referenceData.modificationUuid(), userId)
+        );
+    }
+
     @Transactional
     public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids, boolean fetchSubModifications) {
         return networkModificationRepository.getModificationsReferences(modificationUuids, fetchSubModifications);
