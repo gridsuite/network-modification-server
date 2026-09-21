@@ -582,9 +582,27 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public UUID assembleNetworkModificationsIntoNewComposite(@NonNull List<UUID> assembledModificationsUuids) {
+    public UUID assembleNetworkModificationsIntoNewComposite(@NonNull List<UUID> assembledModificationsUuids, UUID nodeUuid, String userId) {
         CompositeModificationInfos newComposite =
                 networkModificationRepository.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids).toModificationInfos();
+
+        // update the references whose container is now the new composite (and the root container is the node)
+        List<ModificationReferenceData> references = getModificationsReferences(assembledModificationsUuids, false);
+        references.forEach(ref ->
+                {
+                    ReferenceAttributes referenceAttributes = ReferenceAttributes.createReferenceAttributes(
+                            ref.modificationUuid(),
+                            nodeUuid,
+                            newComposite.getUuid(),
+                            ReferenceAttributes.ReferenceType.STUDY_NODE_NETWORK_MODIFICATION
+                    );
+                    directoryService.updateElementReference(
+                            ref.referencedId(),
+                            referenceAttributes,
+                            userId
+                    );
+                }
+        );
 
         return newComposite.getUuid();
     }
