@@ -340,6 +340,7 @@ public class NetworkModificationRepository {
     /**
      * @param containerUuid a group or a composite modification
      */
+    @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID containerUuid, boolean onlyMetadata, boolean errorOnContainerNotFound, StashedFilter stashedFilter) {
         return emptyIfContainerNotFound(errorOnContainerNotFound, () -> onlyMetadata
                 ? getModificationsMetadata(containerUuid, stashedFilter)
@@ -807,8 +808,7 @@ public class NetworkModificationRepository {
         return toModificationsInfosWithApplicabilities(modificationsEntities);
     }
 
-    @Transactional(readOnly = true)
-    public List<ModificationInfos> getModificationsInfos(UUID containerUuid, StashedFilter stashedFilter) {
+    private List<ModificationInfos> getModificationsInfos(UUID containerUuid, StashedFilter stashedFilter) {
         return toModificationsInfosWithApplicabilities(getModificationEntityStream(containerUuid)
                 .filter(m -> stashedFilter.accepts(m.getStashed()))
                 .toList());
