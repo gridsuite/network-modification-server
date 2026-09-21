@@ -166,7 +166,7 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
             UUID sharedCompositeUuid = modificationRepository.save(ModificationEntity.fromDTO(CompositeModificationInfos.builder().name("shared" + i)
                 .modificationsInfos(List.of(GroovyScriptInfos.builder().script("shared script" + i).build())).build())).getId();
             modifications.add(ModificationEntity.fromDTO(ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC).referenceId(sharedCompositeUuid).stashed(false).build()));
+                .referenceType(ModificationReferenceInfos.Type.BASIC).referencedId(sharedCompositeUuid).stashed(false).build()));
         }
         networkModificationRepository.saveModifications(groupUuid, modifications);
 
@@ -178,7 +178,7 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         activeModifications.stream()
             .filter(ModificationReferenceInfos.class::isInstance)
             .map(ModificationReferenceInfos.class::cast)
-            .forEach(reference -> assertEquals(reference.getReferenceId(), reference.getReferenceInfos().getUuid()));
+            .forEach(reference -> assertEquals(reference.getReferencedId(), reference.getReferencedInfos().getUuid()));
         activeModifications.forEach(modification -> assertEquals(Map.of(), modification.getApplicabilityByRootNetworkTag()));
     }
 
@@ -214,13 +214,13 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         assertEquals(count, activeModifications.size());
         for (int i = 0; i < count; i++) {
             ModificationReferenceInfos outerReference = (ModificationReferenceInfos) ((CompositeModificationInfos) activeModifications.get(i)).getModificationsInfos().getFirst();
-            ModificationReferenceInfos innerReference = (ModificationReferenceInfos) ((CompositeModificationInfos) outerReference.getReferenceInfos()).getModificationsInfos().getFirst();
-            assertEquals(innerSharedUuids.get(i), innerReference.getReferenceInfos().getUuid());
+            ModificationReferenceInfos innerReference = (ModificationReferenceInfos) ((CompositeModificationInfos) outerReference.getReferencedInfos()).getModificationsInfos().getFirst();
+            assertEquals(innerSharedUuids.get(i), innerReference.getReferencedInfos().getUuid());
         }
     }
 
     private static ModificationReferenceInfos referenceTo(UUID sharedUuid) {
-        return ModificationReferenceInfos.builder().referenceType(ModificationReferenceInfos.Type.BASIC).referenceId(sharedUuid).stashed(false).build();
+        return ModificationReferenceInfos.builder().referenceType(ModificationReferenceInfos.Type.BASIC).referencedId(sharedUuid).stashed(false).build();
     }
 
     private TabularModificationInfos createTabularModification() {
