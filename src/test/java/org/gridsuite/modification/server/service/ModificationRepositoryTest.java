@@ -2103,7 +2103,7 @@ class ModificationRepositoryTest {
         assertEquals(Set.of(sharedUuid, nestedSharedUuid), networkModificationRepository.getReferencedModificationUuids(List.of(TEST_GROUP_ID_2)),
                 "Both shared modifications, the nested one included, but none of their children");
         assertEquals(Set.of(), networkModificationRepository.getReferencedModificationUuids(List.of(TEST_GROUP_ID_3)),
-                "A group holding no reference leads to no shared modification");
+                "A group containing no reference leads to no shared modification");
     }
 
     @Test
