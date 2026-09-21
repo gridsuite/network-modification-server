@@ -654,9 +654,8 @@ public class NetworkModificationRepository {
                 .toList();
 
         // Substitute modification references with the modifications they point to, so the copy never holds a reference
-        Map<UUID, ModificationInfos> infosBySourceUuid = addApplicabilities(toModificationsInfos(getApplicabilityHolders(modificationsToCopy).stream().distinct().toList()).stream()
+        Map<UUID, ModificationInfos> infosBySourceUuid = toModificationsInfosWithApplicabilities(getApplicabilityHolders(modificationsToCopy).stream().distinct().toList()).stream()
                 .map(NetworkModificationRepository::resolveNestedModificationReferences)
-                .toList()).stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, Function.identity()));
 
         return modificationsToCopy.stream().map(entity -> copyOf(entity, infosBySourceUuid)).toList();
