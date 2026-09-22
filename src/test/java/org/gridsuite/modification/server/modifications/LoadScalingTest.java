@@ -459,7 +459,6 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
 
-
         wireMockUtils.verifyGetRequest(subFilter, PATH, Map.of("ids", WireMock.matching(".*")), false);
     }
 }
