@@ -323,9 +323,9 @@ public class NetworkModificationController {
     }
 
     @GetMapping(value = "/containers/references", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get the shared modifications the containers (groups or composites) point to, including through their composites and the shared modifications themselves")
+    @Operation(summary = "Get the shared modification UUIDs the containers (groups or composites) point to, including through their composites and the shared modifications themselves")
     @ApiResponse(responseCode = "200", description = "The UUIDs of the shared modifications")
-    public ResponseEntity<Set<UUID>> getReferencedModifications(
+    public ResponseEntity<Set<UUID>> getReferencedModificationUuids(
             @Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids) {
         return ResponseEntity.ok().body(networkModificationService.getReferencedModificationUuids(containerUuids));
     }
