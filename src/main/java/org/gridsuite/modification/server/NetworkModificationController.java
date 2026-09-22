@@ -279,13 +279,14 @@ public class NetworkModificationController {
             @RequestHeader(HEADER_USER_ID) String userId,
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
+            @RequestParam(name = "nodeUuid", required = false) UUID nodeUuid,
+            @RequestParam(name = "studyUuid", required = false) UUID studyUuid,
             @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "stashed", defaultValue = "true") Boolean stashed) {
         if (Boolean.TRUE.equals(stashed)) {
             networkModificationService.stashNetworkModifications(groupUuid, networkModificationUuids, userId);
             networkModificationService.reorderNetworkModifications(groupUuid, Boolean.FALSE);
         } else {
-            // TODO : restauration nécessitera nodeUuid et studyUuid
-            networkModificationService.restoreNetworkModifications(groupUuid, networkModificationUuids);
+            networkModificationService.restoreNetworkModifications(groupUuid, networkModificationUuids, studyUuid, nodeUuid, userId);
             networkModificationService.reorderNetworkModifications(groupUuid, Boolean.TRUE);
         }
         return ResponseEntity.ok().build();
