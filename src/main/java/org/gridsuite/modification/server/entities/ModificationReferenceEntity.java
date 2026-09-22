@@ -25,14 +25,14 @@ import java.util.UUID;
 public class ModificationReferenceEntity extends ModificationEntity {
 
     @Column
-    UUID referenceId;
+    UUID referencedId;
 
     @Column
     String referenceType;
 
     // Transient just for optimization purpose
     @Transient
-    private ModificationInfos referenceInfos;
+    private ModificationInfos referencedInfos;
 
     public ModificationReferenceEntity(@NonNull ModificationReferenceInfos modificationReferenceInfos) {
         super(modificationReferenceInfos);
@@ -47,9 +47,9 @@ public class ModificationReferenceEntity extends ModificationEntity {
             .description(getDescription())
             .date(getDate())
             .stashed(getStashed())
-            .referenceId(getReferenceId())
+            .referencedId(getReferencedId())
             .referenceType(ModificationReferenceInfos.Type.valueOf(getReferenceType()))
-            .referenceInfos(getReferenceInfos())
+            .referencedInfos(getReferencedInfos())
             .build();
     }
 
@@ -63,11 +63,11 @@ public class ModificationReferenceEntity extends ModificationEntity {
     @SneakyThrows
     private void assignAttributes(ModificationReferenceInfos modificationReferenceInfos) {
         this.referenceType = modificationReferenceInfos.getReferenceType().name();
-        this.referenceId = modificationReferenceInfos.getReferenceId();
+        this.referencedId = modificationReferenceInfos.getReferencedId();
 
         // Transient just for optimization purpose
         // No need to load the referenced modification
-        this.referenceInfos = modificationReferenceInfos.getReferenceInfos();
+        this.referencedInfos = modificationReferenceInfos.getReferencedInfos();
     }
 
     @Override

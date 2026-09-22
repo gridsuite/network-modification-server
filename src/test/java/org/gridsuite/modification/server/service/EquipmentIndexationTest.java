@@ -35,8 +35,7 @@ import java.util.UUID;
 import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -87,6 +86,7 @@ class EquipmentIndexationTest {
     void setUp() {
         network = NetworkCreation.create(NETWORK_UUID, true);
         when(networkStoreService.getNetwork(eq(NETWORK_UUID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
+        when(networkStoreService.networkExists(any(UUID.class))).thenReturn(true);
 
         // clean DB
         modificationApplicationRepository.deleteAll();

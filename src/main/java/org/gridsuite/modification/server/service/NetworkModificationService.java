@@ -85,8 +85,6 @@ public class NetworkModificationService {
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
     static final String DELETED_EQUIPMENT_IDS = "deletedEquipmentIds.fullascii";
-    static final String MODIFICATION_LIST_SIZE_MISMATCH_ERROR =
-            "Error while mapping two modifications list with each other : both lists have different sizes";
     private final ModificationRepository modificationRepository;
     private static final int PAGE_MAX_SIZE = 500;
 
@@ -241,17 +239,17 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
-        deleteIndexedModificationGroup(List.of(groupUuid));
-        networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
+    public void deleteModificationGroups(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
+        deleteIndexedModificationGroups(groupUuids);
+        networkModificationRepository.deleteModificationGroups(groupUuids, errorOnGroupNotFound);
     }
 
-    private void deleteIndexedModificationGroup(List<UUID> groupUuids) {
+    private void deleteIndexedModificationGroups(List<UUID> groupUuids) {
         applicationInfosService.deleteAllByGroupUuids(groupUuids);
     }
 
     @Transactional
-    public void deleteIndexedModificationGroup(List<UUID> groupUuids, UUID networkUuid) {
+    public void deleteIndexedModificationGroups(List<UUID> groupUuids, UUID networkUuid) {
         applicationInfosService.deleteAllByGroupUuidsAndNetworkUuid(groupUuids, networkUuid);
     }
 
@@ -309,8 +307,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public List<ReferenceData> getReferences(@NonNull List<UUID> modificationUuids) {
-        return networkModificationRepository.getReferences(modificationUuids);
+    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids) {
+        return networkModificationRepository.getModificationsReferences(modificationUuids);
     }
 
     @Transactional(readOnly = true)
@@ -319,6 +317,11 @@ public class NetworkModificationService {
                 .collect(Collectors.toMap(
                         row -> UUID.fromString((String) row[0]),
                         row -> UUID.fromString((String) row[1])));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasModificationReferences(@NonNull List<UUID> containerUuids) {
+        return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
     }
 
     @Transactional
@@ -482,52 +485,23 @@ public class NetworkModificationService {
                         result));
     }
 
-    /**
-     * @return a mapping between the uuids of the duplicated modifications and the uuid of the new modifications
-     */
-    public Map<UUID, UUID> duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
+    public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
         try {
             List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
-            List<ModificationInfos> newModifications = networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationToDuplicateInfos);
-
-            Map<UUID, UUID> duplicateModificationMapping = new HashMap<>();
-            mapUuidsFromTwoModificationsLists(modificationToDuplicateInfos, newModifications, duplicateModificationMapping);
-
-            return duplicateModificationMapping;
+            networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationToDuplicateInfos);
         } catch (NetworkModificationServerException e) {
-            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
-                return Map.of();
+            if (e.getBusinessErrorCode() != MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
+                throw e;
             }
-            throw e;
-        }
-    }
-
-    private List<ModificationInfos> getNestedModifications(ModificationInfos modificationInfos) {
-        return modificationInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null
-                ? composite.getModificationsInfos()
-                : List.of();
-    }
-
-    /**
-     * recursively map the uuids from two lists of modifications, including those inside the composite modifications
-     */
-    void mapUuidsFromTwoModificationsLists(
-            List<ModificationInfos> modificationsList1,
-            List<ModificationInfos> modificationsList2,
-            Map<UUID, UUID> modificationsMapping) {
-        if (modificationsList1.size() != modificationsList2.size()) {
-            throw new IllegalArgumentException(MODIFICATION_LIST_SIZE_MISMATCH_ERROR);
-        }
-        for (int i = 0; i < modificationsList1.size(); i++) {
-            modificationsMapping.put(modificationsList1.get(i).getUuid(), modificationsList2.get(i).getUuid());
-            mapUuidsFromTwoModificationsLists(
-                    getNestedModifications(modificationsList1.get(i)),
-                    getNestedModifications(modificationsList2.get(i)),
-                    modificationsMapping);
         }
     }
 
     private CompletableFuture<Optional<NetworkModificationResult>> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
+        if (!networkStoreService.networkExists(networkUuid)) {
+            // The network is not loaded
+            return CompletableFuture.completedFuture(Optional.empty());
+        }
+
         if (!modificationGroupInfos.modifications().isEmpty()) {
             PreloadingStrategy preloadingStrategy = modificationGroupInfos.modifications().stream()
                 .filter(m -> m.isActivatedOn(modificationGroupInfos.rootNetworkTag()))
@@ -594,8 +568,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
-        networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name);
+    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
+        return networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {
@@ -612,8 +586,8 @@ public class NetworkModificationService {
         networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
     }
 
-    public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
-        networkModificationRepository.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
+    public void deleteStashedModificationFromGroups(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
+        networkModificationRepository.deleteStashedModificationFromGroups(groupUuids, errorOnGroupNotFound);
     }
 
     public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {

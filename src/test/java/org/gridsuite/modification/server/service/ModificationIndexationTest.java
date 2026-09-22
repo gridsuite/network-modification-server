@@ -95,6 +95,7 @@ class ModificationIndexationTest {
         when(networkInfos.getNetwork()).thenReturn(network);
         when(networkInfos.getNetworkUuuid()).thenReturn(networkUuid);
         when(networkStoreService.getNetwork(eq(networkInfos.getNetworkUuuid()), any(PreloadingStrategy.class))).thenReturn(network);
+        when(networkStoreService.networkExists(any(UUID.class))).thenReturn(true);
     }
 
     @AfterEach
@@ -379,8 +380,8 @@ class ModificationIndexationTest {
         /*
         Delete modification group
          */
-        networkModificationService.deleteModificationGroup(
-            groupUuid1,
+        networkModificationService.deleteModificationGroups(
+            List.of(groupUuid1),
             true
         );
 

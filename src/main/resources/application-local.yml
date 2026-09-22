@@ -4,7 +4,7 @@ server:
 powsybl:
   services:
     network-store-server:
-      base-uri: http://localhost:8080
+      base-uri: http://localhost:8080/
 
 gridsuite:
   services:
@@ -12,6 +12,8 @@ gridsuite:
       base-uri: http://localhost:5028
     filter-server:
       base-uri: http://localhost:5027
+    directory-server:
+      base-uri: http://localhost:5026
     loadflow-server:
       base-uri: http://localhost:5008
 
