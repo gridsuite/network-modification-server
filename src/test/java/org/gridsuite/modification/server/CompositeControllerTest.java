@@ -19,6 +19,12 @@ import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.ActionType;
+import org.gridsuite.modification.server.dto.CompositeInfos;
+import org.gridsuite.modification.server.dto.ModificationReferenceData;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -652,7 +658,7 @@ class CompositeControllerTest {
         // compare duplicate with the source (same data except uuid)
         assertThat(sourceModificationInfos).recursivelyEquals(newModificationInfos);
         // source group has not changed
-        List<ModificationInfos> groupModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
+        List<ModificationInfos> groupModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.ALL);
         assertEquals(1, groupModifications.size());
         assertEquals(modificationUuidList.getFirst(), groupModifications.getFirst().getUuid());
 
@@ -662,7 +668,7 @@ class CompositeControllerTest {
                 .andExpect(status().isOk());
 
         // source group has not changed
-        groupModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
+        groupModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.ALL);
         assertEquals(1, groupModifications.size());
         assertEquals(modificationUuidList.getFirst(), groupModifications.getFirst().getUuid());
         // duplicate has been deleted

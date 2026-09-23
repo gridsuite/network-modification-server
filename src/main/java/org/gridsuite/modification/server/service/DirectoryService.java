@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.server.dto.ElementAttributes;
+import org.gridsuite.modification.server.dto.PermissionType;
 import org.gridsuite.modification.server.dto.ReferenceAttributes;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Collection;
 import java.util.UUID;
 
 /**
@@ -87,6 +89,26 @@ public class DirectoryService {
                 .header(HEADER_USER_ID, userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(referenceAttributes)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    /**
+     * Checks that the user holds the given permission on every given element, and throws otherwise.
+     * @param elementUuids uuids of the elements in the directory-server
+     * @param userId id of the user the permission is checked for
+     * @param permissionType the permission the user must hold
+     */
+    public void checkPermission(@NonNull Collection<UUID> elementUuids, @NonNull String userId, @NonNull PermissionType permissionType) {
+        var path = UriComponentsBuilder.fromPath(DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/authorized")
+                .queryParam("ids", elementUuids)
+                .queryParam("accessType", permissionType)
+                .buildAndExpand()
+                .toUriString();
+
+        restClient.get()
+                .uri(getDirectoryServerBaseUri() + path)
+                .header(HEADER_USER_ID, userId)
                 .retrieve()
                 .toBodilessEntity();
     }
