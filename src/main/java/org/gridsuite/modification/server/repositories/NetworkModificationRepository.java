@@ -981,13 +981,14 @@ public class NetworkModificationRepository {
      */
     @Transactional
     public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids, boolean fetchSubModifications) {
-        List<UUID> testedModificationUuids = modificationUuids;
+        List<ModificationEntity> modificationEntities;
         if (fetchSubModifications) {
-            // TODO à vérifier : il est possible que ceci soit inutile si on considère que tout ce qu'on supprime y compris les sous modifs doivent être dans la liste
-            // ça semble être comme ça que ça fonctionne actuellement...
+            List<UUID> testedModificationUuids = new ArrayList<>(modificationUuids);
             testedModificationUuids.addAll(modificationRepository.findAllDescendantModificationIdsByContainerIds(modificationUuids));
+            modificationEntities = this.modificationRepository.findAllByIdIn(testedModificationUuids);
+        } else {
+            modificationEntities = this.modificationRepository.findAllByIdIn(modificationUuids);
         }
-        List<ModificationEntity> modificationEntities = this.modificationRepository.findAllByIdIn(testedModificationUuids);
         List<ModificationReferenceData> references = new ArrayList<>(List.of());
         modificationEntities.forEach(modificationEntity -> {
             if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {
