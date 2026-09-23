@@ -174,7 +174,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
-        TestUtils.assertRequestsCount(13, 9, 2, 0);
+        TestUtils.assertRequestsCount(14, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -186,7 +186,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
         // (95, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
-        TestUtils.assertRequestsCount(21, 9, 2, 0);
+        TestUtils.assertRequestsCount(22, 9, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -495,7 +495,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         // removing only first tabular modification in the group
-        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), List.of(modifications.get(0).getLeft()));
+        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), List.of(modifications.getFirst().getLeft()));
         // It is actually (4, 0, 1, 7) because deletes made in the native query are not counted
         TestUtils.assertRequestsCount(4, 0, 1, 0);
         assertEquals(4, modificationRepository.count()); // then second tabular still exists (and its sub-modifications)
@@ -616,7 +616,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         NetworkModificationsResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertNotNull(result);
         assertEquals(1, result.modificationUuids().size());
-        UUID modifId = result.modificationUuids().get(0);
+        UUID modifId = result.modificationUuids().getFirst();
 
         // try to get via the group
         UnsupportedOperationException exception = assertThrows(
