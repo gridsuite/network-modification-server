@@ -280,14 +280,14 @@ public class NetworkModificationController {
             @RequestHeader(HEADER_USER_ID) String userId,
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
-            @RequestParam(name = "nodeUuid", required = false) UUID nodeUuid,
-            @RequestParam(name = "studyUuid", required = false) UUID studyUuid,
+            @RequestParam(name = "nodeContainerUuid", required = false) UUID nodeContainerUuid,
+            @RequestParam(name = "studyRootContainerUuid", required = false) UUID studyRootContainerUuid,
             @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "stashed", defaultValue = "true") Boolean stashed) {
         if (Boolean.TRUE.equals(stashed)) {
             networkModificationService.stashNetworkModifications(groupUuid, networkModificationUuids, userId);
             networkModificationService.reorderNetworkModifications(groupUuid, Boolean.FALSE);
         } else {
-            networkModificationService.restoreNetworkModifications(groupUuid, networkModificationUuids, studyUuid, nodeUuid, userId);
+            networkModificationService.restoreNetworkModifications(groupUuid, networkModificationUuids, studyRootContainerUuid, nodeContainerUuid, userId);
             networkModificationService.reorderNetworkModifications(groupUuid, Boolean.TRUE);
         }
         return ResponseEntity.ok().build();
@@ -332,10 +332,10 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references have been restored")})
     public ResponseEntity<Void> restoreReferencesToGroup(
             @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
-            @RequestParam("nodeUuid") UUID nodeUuid,
-            @RequestParam("studyUuid") UUID studyUuid,
+            @RequestParam("nodeContainerUuid") UUID nodeContainerUuid,
+            @RequestParam("studyRootContainerUuid") UUID studyRootContainerUuid,
             @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.recreateReferencesToGroup(groupUuid, nodeUuid, studyUuid, userId);
+        networkModificationService.recreateReferencesToGroup(groupUuid, nodeContainerUuid, studyRootContainerUuid, userId);
         return ResponseEntity.ok().build();
     }
 
