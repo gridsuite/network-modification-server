@@ -462,7 +462,10 @@ public class NetworkModificationService {
             @NonNull List<ModificationApplicationContext> applicationContexts,
             boolean canApply) {
         List<ModificationInfos> allMoved = new ArrayList<>();
-        moveInfos.forEach(m -> allMoved.addAll(networkModificationRepository.moveModification(originGroupUuid, targetGroupUuid, m)));
+        // one transaction per move, through the repository proxy
+        moveInfos.forEach(m -> allMoved.addAll(networkModificationRepository.moveModifications(
+                toContainerInfos(originGroupUuid, m.sourceCompositeUuid()), toContainerInfos(targetGroupUuid, m.targetCompositeUuid()),
+                List.of(m.modificationUuid()), m.insertBeforeUuid())));
         List<UUID> movedUuids = allMoved.stream().map(ModificationInfos::getUuid).toList();
 
         // only modifications entering the target group need to be applied
@@ -472,6 +475,13 @@ public class NetworkModificationService {
 
         return applyModifications(targetGroupUuid, allMoved, applicationContexts)
                 .thenApply(r -> new NetworkModificationsResult(movedUuids, r));
+    }
+
+    /** A null composite designates the group itself */
+    private static ModificationContainerInfos toContainerInfos(UUID groupUuid, UUID compositeUuid) {
+        return compositeUuid != null
+                ? new ModificationContainerInfos(compositeUuid, ModificationContainerType.COMPOSITE)
+                : new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP);
     }
 
     public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {

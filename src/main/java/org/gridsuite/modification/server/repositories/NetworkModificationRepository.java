@@ -244,18 +244,6 @@ public class NetworkModificationRepository {
         return addApplicabilities(moved.stream().map(this::toModificationInfos).toList());
     }
 
-    @Transactional
-    public List<ModificationInfos> moveModification(@NonNull UUID originGroupUuid, @NonNull UUID targetGroupUuid, @NonNull ModificationMoveInfos move) {
-        return moveModifications(toContainerInfos(originGroupUuid, move.sourceCompositeUuid()), toContainerInfos(targetGroupUuid, move.targetCompositeUuid()),
-                List.of(move.modificationUuid()), move.insertBeforeUuid());
-    }
-
-    private static ModificationContainerInfos toContainerInfos(UUID groupUuid, UUID compositeUuid) {
-        return compositeUuid != null
-                ? new ModificationContainerInfos(compositeUuid, ModificationContainerType.COMPOSITE)
-                : new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP);
-    }
-
     private List<ModificationEntity> moveModificationsNonTransactional(AbstractModificationContainerEntity sourceContainer, AbstractModificationContainerEntity targetContainer,
                                                                        List<UUID> modificationUuids, UUID beforeModificationUuid) {
         if (sourceContainer.getId().equals(targetContainer.getId())) {
