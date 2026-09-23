@@ -424,14 +424,20 @@ class ModificationControllerTest {
 
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.STASHED).size());
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "false"))
                 .andExpect(status().isOk());
@@ -456,7 +462,10 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
@@ -1248,11 +1257,21 @@ class ModificationControllerTest {
 
         UUID duplicatedGroupUuid = UUID.randomUUID();
         String uriStringGroups = "/v1/groups/" + TEST_GROUP_ID + "/duplicate?groupUuid=" + duplicatedGroupUuid + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-        mockMvc.perform(post(uriStringGroups)).andExpect(status().isOk());
+        mockMvc.perform(
+                post(uriStringGroups)
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
+                ).andExpect(status().isOk());
         testNetworkModificationsCount(duplicatedGroupUuid, 1);
 
         uriStringGroups = "/v1/groups/" + UUID.randomUUID() + "/duplicate?groupUuid=" + UUID.randomUUID() + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-        mockMvc.perform(post(uriStringGroups).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        mockMvc.perform(
+                post(uriStringGroups)
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
+        ).andExpect(status().isOk());
     }
 
     @Test

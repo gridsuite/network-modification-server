@@ -16,6 +16,7 @@ import org.springframework.web.client.RestClient;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.service.DirectoryService.HEADER_USER_ID;
+import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpMethod.PUT;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
@@ -76,7 +77,7 @@ class DirectoryServiceTest {
 
         String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/" + elementUuid + "/references";
         directoryServer.expect(requestTo(expectedUrl))
-                .andExpect(method(PUT))
+                .andExpect(method(POST))
                 .andExpect(header(HEADER_USER_ID, userId))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.referenceId").value(referenceUuid.toString()))
