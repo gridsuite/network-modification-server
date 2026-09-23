@@ -287,28 +287,10 @@ public class NetworkModificationService {
         networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
     }
 
-    public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag, @NonNull String userId) {
+    @Transactional
+    public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag) {
         assertRootNetworkTagFits(newTag);
-        assertCanRenameRootNetworkTag(groupUuids, userId);
         networkModificationRepository.renameRootNetworkTag(groupUuids, oldTag, newTag);
-    }
-
-    /**
-     * Renaming a tag rewrites the applicabilities the shared modifications contain for every group referencing them:
-     * only a user allowed to write on all of them may do it.
-     */
-    private void assertCanRenameRootNetworkTag(List<UUID> groupUuids, String userId) {
-        Set<UUID> sharedModificationUuids = networkModificationRepository.getReferencedModificationUuids(groupUuids);
-        if (sharedModificationUuids.isEmpty()) {
-            return;
-        }
-        try {
-            directoryService.checkPermission(sharedModificationUuids, userId, PermissionType.WRITE);
-        } catch (HttpClientErrorException.Forbidden e) {
-            throw new NetworkModificationServerException(ROOT_NETWORK_TAG_RENAME_FORBIDDEN,
-                    String.format(ROOT_NETWORK_TAG_RENAME_FORBIDDEN.messageTemplate(), sharedModificationUuids),
-                    Map.of("sharedModificationUuids", sharedModificationUuids));
-        }
     }
 
     @Transactional
@@ -340,6 +322,24 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public boolean hasModificationReferences(@NonNull List<UUID> containerUuids) {
         return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
+    }
+
+    /**
+     * Asserts that the user may write on every shared modification the given containers point to, which is what
+     * rewriting the applicabilities these modifications contain takes: they are shared with other containers.
+     */
+    public void assertReferencedModificationsAreWritable(@NonNull List<UUID> containerUuids, @NonNull String userId) {
+        Set<UUID> sharedModificationUuids = networkModificationRepository.getReferencedModificationUuids(containerUuids);
+        if (sharedModificationUuids.isEmpty()) {
+            return;
+        }
+        try {
+            directoryService.checkPermission(sharedModificationUuids, userId, PermissionType.WRITE);
+        } catch (HttpClientErrorException.Forbidden e) {
+            throw new NetworkModificationServerException(SHARED_MODIFICATIONS_WRITE_FORBIDDEN,
+                    String.format(SHARED_MODIFICATIONS_WRITE_FORBIDDEN.messageTemplate(), sharedModificationUuids),
+                    Map.of("sharedModificationUuids", sharedModificationUuids));
+        }
     }
 
     @Transactional

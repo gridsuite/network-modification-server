@@ -18,6 +18,7 @@ public enum ModificationBusinessErrorCode implements BusinessErrorCode {
     MODIFICATION_NOT_FOUND("modification.notFound", "Modification (%s) not found"),
     MODIFICATION_BAD_TYPE("modification.badType", "Modification type of %s is invalid : actual type %s -> expected type %s"),
     MODIFICATION_CONTAINS_SHARED("modification.containsShared", "Modification %s contains a shared modification"),
+    SHARED_MODIFICATIONS_WRITE_FORBIDDEN("modifications.shared.write.forbidden", "The write permission is missing on at least one of the shared modifications %s"),
     MODIFICATIONS_NOT_FOUND("modifications.notFound"),
     MODIFICATION_INFOS_ERROR("modification.infos.error", "Modification infos error : %s"),
     MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN("modification.with_group.deletion.forbidden", "Deletion forbidden : modification %s is owned by group %s"),
@@ -27,7 +28,6 @@ public enum ModificationBusinessErrorCode implements BusinessErrorCode {
     MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR("modification.composite.move.cycle.error"),
     VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING("modification.voltageLevel.attachmentLine.missing", "Attachment line for voltage level %s is missing"),
     ROOT_NETWORK_TAG_TOO_LONG("rootNetwork.tag.tooLong", "Root network tag can not be longer than %s characters"),
-    ROOT_NETWORK_TAG_RENAME_FORBIDDEN("rootNetwork.tag.rename.forbidden", "Renaming a root network tag needs the write permission on the shared modifications %s"),
 
     NETWORK_NOT_FOUND("network.notFound", "Network %s not found"),
     VARIANT_NOT_FOUND("network.variant.notFound", "Variant %s for network %s not found");

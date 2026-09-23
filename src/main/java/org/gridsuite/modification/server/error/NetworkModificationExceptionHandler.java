@@ -41,7 +41,7 @@ public class NetworkModificationExceptionHandler extends AbstractBusinessExcepti
                  NETWORK_NOT_FOUND,
                  VARIANT_NOT_FOUND
                  -> HttpStatus.NOT_FOUND;
-            case ROOT_NETWORK_TAG_RENAME_FORBIDDEN -> HttpStatus.FORBIDDEN;
+            case SHARED_MODIFICATIONS_WRITE_FORBIDDEN -> HttpStatus.FORBIDDEN;
             case MODIFICATION_BAD_TYPE,
                  MODIFICATION_CONTAINS_SHARED,
                  MODIFICATION_CONTAINER_BAD_TYPE,

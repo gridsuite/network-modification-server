@@ -1208,16 +1208,16 @@ class CompositeControllerTest {
     }
 
     @Test
-    void testRenamingARootNetworkTagNeedsWritePermissionOnTheSharedModifications() throws Exception {
+    void testReferencedModificationsAreWritable() throws Exception {
         UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
         doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null))
                 .when(directoryService).checkPermission(Set.of(sharedCompositeUuid), USER_ID, PermissionType.WRITE);
 
-        // a group pointing at a shared modification the user cannot write on is refused
-        mockMvc.perform(renameRootNetworkTag(TEST_GROUP2_ID)).andExpect(status().isForbidden());
+        // a container pointing at a shared modification the user cannot write on is refused
+        mockMvc.perform(areReferencedModificationsWritable(TEST_GROUP2_ID)).andExpect(status().isForbidden());
 
-        // a group pointing at no shared modification does not even need the permission to be checked
-        mockMvc.perform(renameRootNetworkTag(TEST_GROUP_ID)).andExpect(status().isOk());
+        // a container pointing at no shared modification does not even need the permission to be checked
+        mockMvc.perform(areReferencedModificationsWritable(TEST_GROUP_ID)).andExpect(status().isOk());
         verify(directoryService, times(1)).checkPermission(any(), any(), any());
     }
 
@@ -1234,11 +1234,9 @@ class CompositeControllerTest {
         return sharedCompositeUuid;
     }
 
-    private static MockHttpServletRequestBuilder renameRootNetworkTag(UUID groupUuid) {
-        return put(URI_NETWORK_MODIF_BASE + "/root-network-tag")
-                .queryParam("groupUuids", groupUuid.toString())
-                .queryParam("oldTag", "PH1")
-                .queryParam("newTag", "PH2")
+    private static MockHttpServletRequestBuilder areReferencedModificationsWritable(UUID containerUuid) {
+        return get("/v1/containers/references/authorized")
+                .queryParam("uuids", containerUuid.toString())
                 .header(HEADER_USER_ID, USER_ID);
     }
 

@@ -325,6 +325,20 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.hasModificationReferences(containerUuids));
     }
 
+    @GetMapping(value = "/containers/references/authorized")
+    @Operation(summary = "Control the write permission on the shared modifications the containers (groups or composites) point to, "
+            + "including through their composites and the shared modifications themselves")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The user can write on all of them"),
+        @ApiResponse(responseCode = "403", description = "The user cannot write on at least one of them")
+    })
+    public ResponseEntity<Void> areReferencedModificationsWritable(
+            @Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.assertReferencedModificationsAreWritable(containerUuids, userId);
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Updates the metadata of network modifications")
     @ApiResponse(responseCode = "200", description = "The metadata of the network modifications has been successfully updated")
@@ -359,16 +373,12 @@ public class NetworkModificationController {
 
     @PutMapping(value = "/network-modifications/root-network-tag")
     @Operation(summary = "Renames a root network tag in the applicabilities of the modifications of the given groups")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "The root network tag has been successfully renamed"),
-        @ApiResponse(responseCode = "403", description = "The user cannot write on a shared modification of these groups")
-    })
+    @ApiResponse(responseCode = "200", description = "The root network tag has been successfully renamed")
     public ResponseEntity<Void> renameRootNetworkTag(
             @Parameter(description = "Modification groups UUIDs") @RequestParam("groupUuids") List<UUID> groupUuids,
             @Parameter(description = "Root network tag to rename") @RequestParam("oldTag") String oldTag,
-            @Parameter(description = "Root network tag to rename it to") @RequestParam("newTag") String newTag,
-            @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.renameRootNetworkTag(groupUuids, oldTag, newTag, userId);
+            @Parameter(description = "Root network tag to rename it to") @RequestParam("newTag") String newTag) {
+        networkModificationService.renameRootNetworkTag(groupUuids, oldTag, newTag);
         return ResponseEntity.ok().build();
     }
 
