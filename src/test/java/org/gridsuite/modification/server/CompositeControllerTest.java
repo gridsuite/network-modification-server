@@ -1215,6 +1215,7 @@ class CompositeControllerTest {
 
         // a container pointing at a shared modification the user cannot write on is refused
         mockMvc.perform(areReferencedModificationsWritable(TEST_GROUP2_ID)).andExpect(status().isForbidden());
+        verify(directoryService, times(1)).checkPermission(any(), any(), any());
 
         // a container pointing at no shared modification does not even need the permission to be checked
         mockMvc.perform(areReferencedModificationsWritable(TEST_GROUP_ID)).andExpect(status().isOk());
