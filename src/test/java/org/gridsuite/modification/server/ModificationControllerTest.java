@@ -1707,7 +1707,10 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
@@ -1753,13 +1756,19 @@ class ModificationControllerTest {
 
         // stash
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString)
+                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
         String uuidString2 = modificationsGroup2.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP2_ID.toString())
+                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString2)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
