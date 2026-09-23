@@ -421,7 +421,7 @@ class ModificationControllerTest {
         assertApplicationStatusOK(mvcResult);
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
-        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.ALL);
         assertEquals(1, modifications.size());
 
         String uuidString = modifications.getFirst().getUuid().toString();
@@ -430,14 +430,14 @@ class ModificationControllerTest {
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
-        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, true).size());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.STASHED).size());
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "false"))
                 .andExpect(status().isOk());
-        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, true, true).size());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.STASHED).size());
     }
 
     @Test
@@ -1170,7 +1170,7 @@ class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 5);
 
         // get list of modifications
-        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.ALL);
         assertEquals(5, modifications.size());
         //stash the first modification
         String uuidString = modifications.getFirst().getUuid().toString();
@@ -1180,8 +1180,8 @@ class ModificationControllerTest {
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
-        List<ModificationInfos> stashedModifications = modificationRepository.getModificationsMetadata(TEST_GROUP_ID, true);
-        List<ModificationInfos> modificationAfterStash = modificationRepository.getModificationsMetadata(TEST_GROUP_ID, false)
+        List<ModificationInfos> stashedModifications = modificationRepository.getModificationsMetadata(TEST_GROUP_ID, StashedFilter.STASHED);
+        List<ModificationInfos> modificationAfterStash = modificationRepository.getModificationsMetadata(TEST_GROUP_ID, StashedFilter.ALL)
                 .stream().filter(modificationInfos -> !modificationInfos.getStashed()).toList();
         assertEquals(1, stashedModifications.size());
         assertEquals(4, modificationAfterStash.size());
@@ -1190,8 +1190,8 @@ class ModificationControllerTest {
         UUID newGroupUuid = UUID.randomUUID();
         String uriStringGroups = "/v1/groups/" + TEST_GROUP_ID + "/duplicate?groupUuid=" + newGroupUuid + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(post(uriStringGroups)).andExpect(status().isOk());
-        List<ModificationInfos> stashedCopiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, true);
-        List<ModificationInfos> copiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, false);
+        List<ModificationInfos> stashedCopiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, StashedFilter.STASHED);
+        List<ModificationInfos> copiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, StashedFilter.ALL);
         assertEquals(0, stashedCopiedModifications.size());
         assertEquals(4, copiedModifications.size());
         testNetworkModificationsCount(newGroupUuid, 4);
@@ -1709,14 +1709,14 @@ class ModificationControllerTest {
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
-        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, true).size());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.STASHED).size());
         String body = objectMapper.writeValueAsString(List.of(TEST_GROUP_ID.toString()).toArray(new String[0]));
         mockMvc.perform(delete("/v1/groups/stashed-modifications")
                 .param("errorOnGroupNotFound", "false")
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, true, true).size());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.STASHED).size());
         mockMvc.perform(delete("/v1/groups/stashed-modifications")
                 .queryParam("errorOnGroupNotFound", "false")
                 .content(objectMapper.writeValueAsString(List.of(UUID.randomUUID().toString()).toArray(new String[0])))
@@ -1770,9 +1770,9 @@ class ModificationControllerTest {
                         .queryParam("uuids", uuidString2)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
-        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, true).size());
-        assertEquals(1, modificationRepository.getModifications(TEST_GROUP2_ID, true, true, true).size());
-        assertEquals(0, modificationRepository.getModifications(TEST_GROUP3_ID, true, true, true).size());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.STASHED).size());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP2_ID, true, true, StashedFilter.STASHED).size());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP3_ID, true, true, StashedFilter.STASHED).size());
 
         // remove
         String body = mapper.writeValueAsString(List.of(TEST_GROUP_ID, TEST_GROUP2_ID));
