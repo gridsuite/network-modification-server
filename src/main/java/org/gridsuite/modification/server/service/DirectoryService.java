@@ -99,15 +99,15 @@ public class DirectoryService {
                 .toBodilessEntity();
     }
 
-    public void recreateReferences(@NonNull UUID nodeUuid, @NonNull UUID studyUuid, String userId, List<ModificationReferenceData> referencesData) {
+    public void recreateReferences(@NonNull UUID nodeContainerUuid, @NonNull UUID studyRootContainerUuid, String userId, List<ModificationReferenceData> referencesData) {
         referencesData.forEach(ref -> {
             // local ModificationReferenceData data don't hold the node UUID so when containerId is null it means that this reference modification is at the root level
             // otherwise, the reference modification is inside a composite
             boolean insideComposite = ref.containerId() != null;
             ReferenceAttributes referenceAttributes = ReferenceAttributes.createReferenceAttributes(
                     ref.modificationUuid(),
-                    insideComposite ? nodeUuid : studyUuid,
-                    insideComposite ? ref.containerId() : nodeUuid,
+                    insideComposite ? nodeContainerUuid : studyRootContainerUuid,
+                    insideComposite ? ref.containerId() : nodeContainerUuid,
                     insideComposite ? ReferenceAttributes.ReferenceType.STUDY_NODE_NETWORK_MODIFICATION
                             : ReferenceAttributes.ReferenceType.STUDY_NODE);
             createElementReference(ref.referencedId(), referenceAttributes, userId);

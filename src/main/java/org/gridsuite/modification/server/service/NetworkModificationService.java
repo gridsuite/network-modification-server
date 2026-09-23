@@ -517,15 +517,10 @@ public class NetworkModificationService {
                         result));
     }
 
-    public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid, UUID nodeUuid, UUID studyUuid, String userId) {
+    public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid, UUID nodeContainerUuid, UUID studyContainerUuid, String userId) {
         try {
-            List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
-            networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationToDuplicateInfos);
-
-            recreateReferencesToGroup(targetGroupUuid, nodeUuid, studyUuid, userId);
-
-            // TODO : remplacer ce qui est dessus par ça ??
-            // networkModificationRepository.duplicateUnstashedModifications(sourceGroupUuid, targetGroupUuid);
+            networkModificationRepository.duplicateUnstashedModifications(sourceGroupUuid, targetGroupUuid);
+            recreateReferencesToGroup(targetGroupUuid, nodeContainerUuid, studyContainerUuid, userId);
         } catch (NetworkModificationServerException e) {
             if (e.getBusinessErrorCode() != MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
                 throw e;
@@ -533,10 +528,10 @@ public class NetworkModificationService {
         }
     }
 
-    public void recreateReferencesToGroup(@NonNull UUID targetGroupUuid, UUID nodeUuid, UUID studyUuid, String userId) {
-        if (nodeUuid != null && studyUuid != null) {
+    public void recreateReferencesToGroup(@NonNull UUID targetGroupUuid, UUID nodeContainerUuid, UUID studyContainerUuid, String userId) {
+        if (nodeContainerUuid != null && studyContainerUuid != null) {
             List<ModificationReferenceData> referencesData = getAllReferencesDataFromGroupNonTransactional(targetGroupUuid);
-            directoryService.recreateReferences(nodeUuid, studyUuid, userId, referencesData);
+            directoryService.recreateReferences(nodeContainerUuid, studyContainerUuid, userId, referencesData);
         }
     }
 

@@ -93,11 +93,11 @@ public class NetworkModificationController {
     @Operation(summary = "Create a modification group based on another group")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group and its modifications have been duplicated")})
     public ResponseEntity<Void> duplicateGroup(@RequestParam("groupUuid") UUID groupUuid,
-                                               @RequestParam("nodeUuid") UUID nodeUuid,
-                                               @RequestParam("studyUuid") UUID studyUuid,
+                                               @RequestParam("nodeContainerUuid") UUID nodeContainerUuid,
+                                               @RequestParam("studyRootContainerUuid") UUID studyRootContainerUuid,
                                                @PathVariable("sourceGroupUuid") UUID sourceGroupUuid,
                                                @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, nodeUuid, studyUuid, userId);
+        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, nodeContainerUuid, studyRootContainerUuid, userId);
         return ResponseEntity.ok().build();
     }
 
