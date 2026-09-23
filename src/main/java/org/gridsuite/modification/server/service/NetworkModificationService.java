@@ -46,6 +46,7 @@ import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -81,6 +82,8 @@ public class NetworkModificationService {
 
     private final FilterService filterService;
 
+    private final DirectoryService directoryService;
+
     static final String NETWORK_UUID = "networkUuid.keyword";
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
@@ -97,7 +100,8 @@ public class NetworkModificationService {
                                       ModificationApplicationInfosService applicationInfosService,
                                       ElasticsearchOperations elasticsearchOperations,
                                       ModificationRepository modificationRepository,
-                                      FilterService filterService) {
+                                      FilterService filterService,
+                                      DirectoryService directoryService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -108,6 +112,7 @@ public class NetworkModificationService {
         this.elasticsearchOperations = elasticsearchOperations;
         this.modificationRepository = modificationRepository;
         this.filterService = filterService;
+        this.directoryService = directoryService;
     }
 
     public List<UUID> getModificationGroups() {
@@ -282,10 +287,28 @@ public class NetworkModificationService {
         networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
     }
 
-    @Transactional
-    public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag) {
+    public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag, @NonNull String userId) {
         assertRootNetworkTagFits(newTag);
+        assertCanRenameRootNetworkTag(groupUuids, userId);
         networkModificationRepository.renameRootNetworkTag(groupUuids, oldTag, newTag);
+    }
+
+    /**
+     * Renaming a tag rewrites the applicabilities the shared modifications contain for every group referencing them:
+     * only a user allowed to write on all of them may do it.
+     */
+    private void assertCanRenameRootNetworkTag(List<UUID> groupUuids, String userId) {
+        Set<UUID> sharedModificationUuids = networkModificationRepository.getReferencedModificationUuids(groupUuids);
+        if (sharedModificationUuids.isEmpty()) {
+            return;
+        }
+        try {
+            directoryService.checkPermission(sharedModificationUuids, userId, PermissionType.WRITE);
+        } catch (HttpClientErrorException.Forbidden e) {
+            throw new NetworkModificationServerException(ROOT_NETWORK_TAG_RENAME_FORBIDDEN,
+                    String.format(ROOT_NETWORK_TAG_RENAME_FORBIDDEN.messageTemplate(), sharedModificationUuids),
+                    Map.of("sharedModificationUuids", sharedModificationUuids));
+        }
     }
 
     @Transactional
@@ -317,10 +340,6 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public boolean hasModificationReferences(@NonNull List<UUID> containerUuids) {
         return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
-    }
-
-    public Set<UUID> getReferencedModificationUuids(@NonNull List<UUID> containerUuids) {
-        return networkModificationRepository.getReferencedModificationUuids(containerUuids);
     }
 
     @Transactional

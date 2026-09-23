@@ -29,6 +29,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static org.gridsuite.modification.server.service.DirectoryService.HEADER_USER_ID;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -323,14 +325,6 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.hasModificationReferences(containerUuids));
     }
 
-    @GetMapping(value = "/containers/references", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get the shared modification UUIDs the containers (groups or composites) point to, including through their composites and the shared modifications themselves")
-    @ApiResponse(responseCode = "200", description = "The UUIDs of the shared modifications")
-    public ResponseEntity<Set<UUID>> getReferencedModificationUuids(
-            @Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids) {
-        return ResponseEntity.ok().body(networkModificationService.getReferencedModificationUuids(containerUuids));
-    }
-
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Updates the metadata of network modifications")
     @ApiResponse(responseCode = "200", description = "The metadata of the network modifications has been successfully updated")
@@ -365,12 +359,16 @@ public class NetworkModificationController {
 
     @PutMapping(value = "/network-modifications/root-network-tag")
     @Operation(summary = "Renames a root network tag in the applicabilities of the modifications of the given groups")
-    @ApiResponse(responseCode = "200", description = "The root network tag has been successfully renamed")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The root network tag has been successfully renamed"),
+        @ApiResponse(responseCode = "403", description = "The user cannot write on a shared modification of these groups")
+    })
     public ResponseEntity<Void> renameRootNetworkTag(
             @Parameter(description = "Modification groups UUIDs") @RequestParam("groupUuids") List<UUID> groupUuids,
             @Parameter(description = "Root network tag to rename") @RequestParam("oldTag") String oldTag,
-            @Parameter(description = "Root network tag to rename it to") @RequestParam("newTag") String newTag) {
-        networkModificationService.renameRootNetworkTag(groupUuids, oldTag, newTag);
+            @Parameter(description = "Root network tag to rename it to") @RequestParam("newTag") String newTag,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.renameRootNetworkTag(groupUuids, oldTag, newTag, userId);
         return ResponseEntity.ok().build();
     }
 

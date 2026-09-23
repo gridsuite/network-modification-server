@@ -23,6 +23,7 @@ import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.PermissionType;
 import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
@@ -32,6 +33,7 @@ import org.gridsuite.modification.server.error.NetworkModificationServerExceptio
 import org.gridsuite.modification.server.repositories.CompositeModificationRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.service.DirectoryService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
@@ -44,22 +46,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.util.Pair;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.ModificationType.COMPOSITE_MODIFICATION;
 import static org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest.URI_NETWORK_MODIF_GET_PUT;
+import static org.gridsuite.modification.server.service.DirectoryService.HEADER_USER_ID;
 import static org.gridsuite.modification.server.utils.NetworkCreation.VARIANT_ID;
 import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -76,6 +82,7 @@ class CompositeControllerTest {
     private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/network-composite-modifications";
     private static final String URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT = "/v1/network-composite-modifications/";
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
+    private static final String USER_ID = "userId";
 
     @Autowired
     private MockMvc mockMvc;
@@ -93,6 +100,9 @@ class CompositeControllerTest {
 
     @MockitoBean
     private ReportService reportService;
+
+    @MockitoBean
+    private DirectoryService directoryService;
 
     @Autowired
     private ObjectMapper mapper;
@@ -1189,7 +1199,29 @@ class CompositeControllerTest {
     }
 
     @Test
-    void testReferences() throws Exception {
+    void testHasReferences() throws Exception {
+        insertSharedCompositeInSecondGroup();
+
+        assertFalse(hasReferences(TEST_GROUP_ID));
+        assertTrue(hasReferences(TEST_GROUP2_ID));
+        assertTrue(hasReferences(TEST_GROUP_ID, TEST_GROUP2_ID));
+    }
+
+    @Test
+    void testRenamingARootNetworkTagNeedsWritePermissionOnTheSharedModifications() throws Exception {
+        UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
+        doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null))
+                .when(directoryService).checkPermission(Set.of(sharedCompositeUuid), USER_ID, PermissionType.WRITE);
+
+        // a group pointing at a shared modification the user cannot write on is refused
+        mockMvc.perform(renameRootNetworkTag(TEST_GROUP2_ID)).andExpect(status().isForbidden());
+
+        // a group pointing at no shared modification does not even need the permission to be checked
+        mockMvc.perform(renameRootNetworkTag(TEST_GROUP_ID)).andExpect(status().isOk());
+        verify(directoryService, times(1)).checkPermission(any(), any(), any());
+    }
+
+    private UUID insertSharedCompositeInSecondGroup() throws Exception {
         List<ModificationInfos> switchMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "shared")
                         .content(mapper.writeValueAsString(switchMods.stream().map(ModificationInfos::getUuid).toList()))
@@ -1199,23 +1231,20 @@ class CompositeControllerTest {
         runRequestAsync(mockMvc, put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP2_ID + "?action=INSERT")
                 .content(getJsonBodyModificationCompositeToBeInserted(List.of(new CompositeInfos(sharedCompositeUuid, "shared", true, null))))
                 .contentType(MediaType.APPLICATION_JSON), status().isOk());
+        return sharedCompositeUuid;
+    }
 
-        assertFalse(hasReferences(TEST_GROUP_ID));
-        assertTrue(hasReferences(TEST_GROUP2_ID));
-        assertTrue(hasReferences(TEST_GROUP_ID, TEST_GROUP2_ID));
-        assertEquals(Set.of(), getReferencedModifications(TEST_GROUP_ID));
-        assertEquals(Set.of(sharedCompositeUuid), getReferencedModifications(TEST_GROUP_ID, TEST_GROUP2_ID));
+    private static MockHttpServletRequestBuilder renameRootNetworkTag(UUID groupUuid) {
+        return put(URI_NETWORK_MODIF_BASE + "/root-network-tag")
+                .queryParam("groupUuids", groupUuid.toString())
+                .queryParam("oldTag", "PH1")
+                .queryParam("newTag", "PH2")
+                .header(HEADER_USER_ID, USER_ID);
     }
 
     private boolean hasReferences(UUID... containerUuids) throws Exception {
         return mapper.readValue(mockMvc.perform(get("/v1/containers/references/exists")
                         .queryParam("uuids", Arrays.stream(containerUuids).map(UUID::toString).toArray(String[]::new)))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), Boolean.class);
-    }
-
-    private Set<UUID> getReferencedModifications(UUID... containerUuids) throws Exception {
-        return mapper.readValue(mockMvc.perform(get("/v1/containers/references")
-                        .queryParam("uuids", Arrays.stream(containerUuids).map(UUID::toString).toArray(String[]::new)))
-                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), new TypeReference<>() { });
     }
 }

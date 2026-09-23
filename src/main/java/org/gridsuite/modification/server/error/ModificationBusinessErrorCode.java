@@ -27,6 +27,7 @@ public enum ModificationBusinessErrorCode implements BusinessErrorCode {
     MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR("modification.composite.move.cycle.error"),
     VOLTAGE_LEVEL_ATTACHMENT_LINE_MISSING("modification.voltageLevel.attachmentLine.missing", "Attachment line for voltage level %s is missing"),
     ROOT_NETWORK_TAG_TOO_LONG("rootNetwork.tag.tooLong", "Root network tag can not be longer than %s characters"),
+    ROOT_NETWORK_TAG_RENAME_FORBIDDEN("rootNetwork.tag.rename.forbidden", "Renaming a root network tag needs the write permission on the shared modifications %s"),
 
     NETWORK_NOT_FOUND("network.notFound", "Network %s not found"),
     VARIANT_NOT_FOUND("network.variant.notFound", "Variant %s for network %s not found");

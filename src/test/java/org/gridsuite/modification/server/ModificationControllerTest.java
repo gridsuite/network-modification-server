@@ -80,6 +80,7 @@ import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosServ
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
+import static org.gridsuite.modification.server.service.DirectoryService.HEADER_USER_ID;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -113,6 +114,7 @@ class ModificationControllerTest {
     private static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
+    private static final String USER_ID = "userId";
     private static final String ROOT_NETWORK_TAG = "PH1";
     private static final String RENAMED_ROOT_NETWORK_TAG = "PH2";
 
@@ -538,6 +540,7 @@ class ModificationControllerTest {
                 .queryParam("groupUuids", TEST_GROUP_ID.toString())
                 .queryParam("oldTag", ROOT_NETWORK_TAG)
                 .queryParam("newTag", RENAMED_ROOT_NETWORK_TAG)
+                .header(HEADER_USER_ID, USER_ID)
         ).andExpect(status().isOk());
         assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
 
