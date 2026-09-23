@@ -77,12 +77,10 @@ public class DirectoryService {
     }
 
     /**
-     * checks that the user holds the given permission on every given element, and throws otherwise.
+     * Checks that the user holds the given permission on every given element, and throws otherwise.
      * @param elementUuids uuids of the elements in the directory-server
      * @param userId id of the user the permission is checked for
      * @param permissionType the permission the user must hold
-     * @throws org.springframework.web.client.HttpClientErrorException 403 if the permission is missing on at least
-     * one element, 404 if one of them is unknown
      */
     public void checkPermission(@NonNull Collection<UUID> elementUuids, @NonNull String userId, @NonNull PermissionType permissionType) {
         var path = UriComponentsBuilder.fromPath(DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/authorized")
