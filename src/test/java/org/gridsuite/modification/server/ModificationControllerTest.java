@@ -2372,7 +2372,7 @@ class ModificationControllerTest {
         assertEquals(activeReferenceInfo.getUuid(), referenceData.modificationUuid());
 
         // call the deletion of references through directory service
-        doNothing().when(directoryService).removeElementReference(eq(referenceData.referencedId()), eq(referenceData.modificationUuid()), eq("testUserId"));
+        doNothing().when(directoryService).removeElementReference(referenceData.referencedId(), referenceData.modificationUuid(), "testUserId");
 
         mockMvc.perform(delete("/v1/groups/{groupUuid}/references", TEST_GROUP_ID)
                         .header(HEADER_USER_ID, "testUserId")
