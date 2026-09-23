@@ -241,8 +241,8 @@ class ModificationControllerTest {
     }
 
     /** One move per modification, all from the origin group root list to the target group root list. */
-    private static List<ModificationMoveInfos> moves(List<UUID> modificationUuids, UUID beforeUuid) {
-        return modificationUuids.stream().map(uuid -> new ModificationMoveInfos(uuid, null, null, beforeUuid)).toList();
+    private static List<ModificationMoveInfos> moves(List<UUID> modificationUuids, UUID insertBeforeUuid) {
+        return modificationUuids.stream().map(uuid -> new ModificationMoveInfos(uuid, null, null, insertBeforeUuid)).toList();
     }
 
     private String getJsonBodyMove(List<ModificationMoveInfos> moveInfos, String variantId) throws JsonProcessingException {

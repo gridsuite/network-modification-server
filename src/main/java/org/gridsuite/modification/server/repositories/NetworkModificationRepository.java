@@ -247,7 +247,7 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationInfos> moveModification(@NonNull UUID originGroupUuid, @NonNull UUID targetGroupUuid, @NonNull ModificationMoveInfos move) {
         return moveModifications(toContainerInfos(originGroupUuid, move.sourceCompositeUuid()), toContainerInfos(targetGroupUuid, move.targetCompositeUuid()),
-                List.of(move.modificationUuid()), move.beforeUuid());
+                List.of(move.modificationUuid()), move.insertBeforeUuid());
     }
 
     private static ModificationContainerInfos toContainerInfos(UUID groupUuid, UUID compositeUuid) {

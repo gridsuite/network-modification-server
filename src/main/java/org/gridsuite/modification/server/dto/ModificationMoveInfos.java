@@ -20,4 +20,4 @@ public record ModificationMoveInfos(
         @NonNull UUID modificationUuid,
         UUID sourceCompositeUuid,
         UUID targetCompositeUuid,
-        UUID beforeUuid) { }
+        UUID insertBeforeUuid) { }

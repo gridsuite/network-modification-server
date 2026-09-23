@@ -119,9 +119,9 @@ class CompositeControllerTest {
     }
 
     /** Body of the move endpoint: one move per modification (a null composite designates the group), with no application context. */
-    private String getJsonBodyMove(List<UUID> modificationUuids, UUID sourceCompositeUuid, UUID targetCompositeUuid, UUID beforeUuid) throws JsonProcessingException {
+    private String getJsonBodyMove(List<UUID> modificationUuids, UUID sourceCompositeUuid, UUID targetCompositeUuid, UUID insertBeforeUuid) throws JsonProcessingException {
         List<ModificationMoveInfos> moves = modificationUuids.stream()
-                .map(uuid -> new ModificationMoveInfos(uuid, sourceCompositeUuid, targetCompositeUuid, beforeUuid))
+                .map(uuid -> new ModificationMoveInfos(uuid, sourceCompositeUuid, targetCompositeUuid, insertBeforeUuid))
                 .toList();
         return mapper.writeValueAsString(Pair.of(moves, List.of()));
     }
@@ -753,7 +753,7 @@ class CompositeControllerTest {
         List<UUID> subUuids = initialMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
         assertEquals(3, subUuids.size());
 
-        // Move the first sub-modification to the end (no beforeUuid = append)
+        // Move the first sub-modification to the end (no insertBeforeUuid = append)
         // was [0,1,2] → [1,2,0]
         mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
                         .content(getJsonBodyMove(List.of(subUuids.getFirst()), compositeUuid, compositeUuid, null))
@@ -770,7 +770,7 @@ class CompositeControllerTest {
         assertEquals(subUuids.get(2), orderAfterFirst.get(1));
         assertEquals(subUuids.get(0), orderAfterFirst.get(2));
 
-        // Move the last sub-modification before the first using beforeUuid
+        // Move the last sub-modification before the first using insertBeforeUuid
         // current [1,2,0] → move 0 before 1 → [0,1,2]
         mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
                         .content(getJsonBodyMove(List.of(orderAfterFirst.get(2)), compositeUuid, compositeUuid, orderAfterFirst.get(0)))
