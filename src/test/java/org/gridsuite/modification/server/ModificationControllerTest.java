@@ -76,6 +76,7 @@ import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applica
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.BUSBAR_SECTION_NOT_FOUND;
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
@@ -1207,8 +1208,12 @@ class ModificationControllerTest {
         // test copy group
         UUID newGroupUuid = UUID.randomUUID();
         String copyGroupUriString = "/v1/groups/" + TEST_GROUP_ID + "/duplicate?groupUuid=" + newGroupUuid + "&reportUuid=" + UUID.randomUUID();
-        mockMvc.perform(post(copyGroupUriString))
-                .andExpect(status().isOk());
+        mockMvc.perform(
+                post(copyGroupUriString)
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
+                        .header(HEADER_USER_ID, "user1")
+                ).andExpect(status().isOk());
 
         testNetworkModificationsCount(newGroupUuid, 1);
     }
