@@ -93,14 +93,17 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(value = "/containers/network-modifications/move", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Move modifications, each within or between containers (groups or composites), in request order")
+    @PutMapping(value = "/groups/{groupUuid}/network-modifications/move", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Move modifications from a single origin group (or its composites) into a single target group (or its composites), in request order")
     @ApiResponse(responseCode = "200", description = "The modifications have been moved.")
     public CompletableFuture<ResponseEntity<NetworkModificationsResult>> moveModifications(
-            @Parameter(description = "apply modifications entering a group (default true)")
+            @Parameter(description = "target group UUID") @PathVariable("groupUuid") UUID targetGroupUuid,
+            @Parameter(description = "origin group UUID (defaults to the target group)") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
+            @Parameter(description = "apply modifications entering the target group (default true)")
             @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
             @RequestBody Pair<List<ModificationMoveInfos>, List<ModificationApplicationContext>> moveContextInfos) {
-        return networkModificationService.moveModifications(moveContextInfos.getFirst(), moveContextInfos.getSecond(), canApply)
+        return networkModificationService.moveModifications(Objects.requireNonNullElse(originGroupUuid, targetGroupUuid), targetGroupUuid,
+                        moveContextInfos.getFirst(), moveContextInfos.getSecond(), canApply)
                 .thenApply(ResponseEntity.ok()::body);
     }
 

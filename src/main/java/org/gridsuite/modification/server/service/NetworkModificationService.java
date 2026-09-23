@@ -461,25 +461,21 @@ public class NetworkModificationService {
     }
 
     public CompletableFuture<NetworkModificationsResult> moveModifications(
+            @NonNull UUID originGroupUuid,
+            @NonNull UUID targetGroupUuid,
             @NonNull List<ModificationMoveInfos> moveInfos,
             @NonNull List<ModificationApplicationContext> applicationContexts,
             boolean canApply) {
         List<ModificationInfos> allMoved = new ArrayList<>();
-        moveInfos.forEach(m -> allMoved.addAll(networkModificationRepository.moveModification(m)));
+        moveInfos.forEach(m -> allMoved.addAll(networkModificationRepository.moveModification(originGroupUuid, targetGroupUuid, m)));
         List<UUID> movedUuids = allMoved.stream().map(ModificationInfos::getUuid).toList();
 
-        if (!canApply || allMoved.isEmpty()) {
+        // only modifications entering the target group need to be applied
+        if (!canApply || allMoved.isEmpty() || originGroupUuid.equals(targetGroupUuid)) {
             return CompletableFuture.completedFuture(new NetworkModificationsResult(movedUuids, List.of()));
         }
 
-        // TODO as of now if the move operation batch contains different target groups it won't be handled well
-        // since we apply modificaitons on only one group at the end of the process
-        UUID targetGroup = networkModificationRepository.resolveOwningGroupId(moveInfos.getFirst().target());
-        if (targetGroup == null) {
-            return CompletableFuture.completedFuture(new NetworkModificationsResult(movedUuids, List.of()));
-        }
-
-        return applyModifications(targetGroup, allMoved, applicationContexts)
+        return applyModifications(targetGroupUuid, allMoved, applicationContexts)
                 .thenApply(r -> new NetworkModificationsResult(movedUuids, r));
     }
 

@@ -120,7 +120,6 @@ class ModificationControllerTest {
     private static final String NETWORK_MODIFICATION_URI = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
     private static final String NETWORK_MODIFICATION_URI_2 = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP2_ID;
     private static final String NETWORK_MODIFICATION_URI_3 = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP3_ID;
-    private static final String URI_NETWORK_MODIF_MOVE = "/v1/containers/network-modifications/move";
 
     @Autowired
     private MockMvc mockMvc;
@@ -237,13 +236,13 @@ class ModificationControllerTest {
         return "/v1/groups/" + targetGroupUuid + "/network-modifications/copy";
     }
 
-    private static ModificationContainerInfos group(UUID groupUuid) {
-        return new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP);
+    private static String moveUri(UUID targetGroupUuid) {
+        return "/v1/groups/" + targetGroupUuid + "/network-modifications/move";
     }
 
-    /** One move per modification, all from the same source container to the same target container. */
-    private static List<ModificationMoveInfos> moves(ModificationContainerInfos source, ModificationContainerInfos target, List<UUID> modificationUuids, UUID beforeUuid) {
-        return modificationUuids.stream().map(uuid -> new ModificationMoveInfos(uuid, source, target, beforeUuid)).toList();
+    /** One move per modification, all from the origin group root list to the target group root list. */
+    private static List<ModificationMoveInfos> moves(List<UUID> modificationUuids, UUID beforeUuid) {
+        return modificationUuids.stream().map(uuid -> new ModificationMoveInfos(uuid, null, null, beforeUuid)).toList();
     }
 
     private String getJsonBodyMove(List<ModificationMoveInfos> moveInfos, String variantId) throws JsonProcessingException {
@@ -1012,8 +1011,8 @@ class ModificationControllerTest {
 
         // swap modifications: move [1] before [0]
         List<UUID> movingModificationUuidList = List.of(modificationUuidList.get(1));
-        String bodyJson = getJsonBodyMove(moves(group(TEST_GROUP_ID), group(TEST_GROUP_ID), movingModificationUuidList, modificationUuidList.get(0)), NetworkCreation.VARIANT_ID);
-        String url = URI_NETWORK_MODIF_MOVE;
+        String bodyJson = getJsonBodyMove(moves(movingModificationUuidList, modificationUuidList.get(0)), NetworkCreation.VARIANT_ID);
+        String url = moveUri(TEST_GROUP_ID);
         mockMvc.perform(put(url).content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -1042,8 +1041,8 @@ class ModificationControllerTest {
 
         // cut origin[0] and append to destination
         List<UUID> movingModificationUuidList = List.of(originSingleModification);
-        String bodyJson = getJsonBodyMove(moves(group(TEST_GROUP2_ID), group(TEST_GROUP_ID), movingModificationUuidList, null), NetworkCreation.VARIANT_ID);
-        String url = URI_NETWORK_MODIF_MOVE + "?build=true";
+        String bodyJson = getJsonBodyMove(moves(movingModificationUuidList, null), NetworkCreation.VARIANT_ID);
+        String url = moveUri(TEST_GROUP_ID) + "?originGroupUuid=" + TEST_GROUP2_ID + "&build=true";
         MvcResult mvcResult = runRequestAsync(mockMvc, put(url).content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
         // incremental build: deletion impacts expected, all related to the moved load deletion (dealing with "s1" substation)
@@ -1081,8 +1080,8 @@ class ModificationControllerTest {
 
         // try to move an unexisting modification before [0]: no error, no change
         List<UUID> movingModificationUuidList = List.of(UUID.randomUUID());
-        String bodyJson = getJsonBodyMove(moves(group(TEST_GROUP_ID), group(TEST_GROUP_ID), movingModificationUuidList, modificationUuidList.getFirst()), NetworkCreation.VARIANT_ID);
-        String url = URI_NETWORK_MODIF_MOVE;
+        String bodyJson = getJsonBodyMove(moves(movingModificationUuidList, modificationUuidList.getFirst()), NetworkCreation.VARIANT_ID);
+        String url = moveUri(TEST_GROUP_ID);
 
         mockMvc.perform(put(url).content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -2104,12 +2103,12 @@ class ModificationControllerTest {
         UUID e3 = l.eSubs().get(2);
 
         List<ModificationMoveInfos> moveInfos = List.of(
-                new ModificationMoveInfos(l.d(), group(TEST_GROUP_ID), group(TEST_GROUP_ID), null),
-                new ModificationMoveInfos(e1, new ModificationContainerInfos(l.e(), ModificationContainerType.COMPOSITE), group(TEST_GROUP_ID), null),
-                new ModificationMoveInfos(l.c(), group(TEST_GROUP_ID), group(TEST_GROUP_ID), null));
+                new ModificationMoveInfos(l.d(), null, null, null),
+                new ModificationMoveInfos(e1, l.e(), null, null),
+                new ModificationMoveInfos(l.c(), null, null, null));
 
         MvcResult res = runRequestAsync(mockMvc,
-                put(URI_NETWORK_MODIF_MOVE)
+                put(moveUri(TEST_GROUP_ID))
                         .content(getJsonBodyMove(moveInfos, NetworkCreation.VARIANT_ID))
                         .contentType(MediaType.APPLICATION_JSON),
                 status().isOk());
@@ -2138,12 +2137,12 @@ class ModificationControllerTest {
         UUID e3 = l.eSubs().get(2);
 
         List<ModificationMoveInfos> moveInfos = List.of(
-                new ModificationMoveInfos(l.d(), group(TEST_GROUP2_ID), group(TEST_GROUP_ID), null),
-                new ModificationMoveInfos(e1, new ModificationContainerInfos(l.e(), ModificationContainerType.COMPOSITE), group(TEST_GROUP_ID), null),
-                new ModificationMoveInfos(l.c(), group(TEST_GROUP2_ID), group(TEST_GROUP_ID), null));
+                new ModificationMoveInfos(l.d(), null, null, null),
+                new ModificationMoveInfos(e1, l.e(), null, null),
+                new ModificationMoveInfos(l.c(), null, null, null));
 
         runRequestAsync(mockMvc,
-                put(URI_NETWORK_MODIF_MOVE)
+                put(moveUri(TEST_GROUP_ID) + "?originGroupUuid=" + TEST_GROUP2_ID)
                         .content(getJsonBodyMove(moveInfos, NetworkCreation.VARIANT_ID))
                         .contentType(MediaType.APPLICATION_JSON),
                 status().isOk());

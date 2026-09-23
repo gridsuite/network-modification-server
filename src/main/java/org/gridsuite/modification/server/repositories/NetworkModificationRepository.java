@@ -218,10 +218,6 @@ public class NetworkModificationRepository {
         return finalContainer.getId();
     }
 
-    public UUID resolveOwningGroupId(@NonNull ModificationContainerInfos containerInfos) {
-        return resolveOwningGroupId(getContainer(containerInfos));
-    }
-
     private void cleanupApplicationRecordsIfGroupChanged(
             AbstractModificationContainerEntity source,
             AbstractModificationContainerEntity target,
@@ -248,8 +244,15 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationInfos> moveModification(@NonNull ModificationMoveInfos move) {
-        return moveModifications(move.source(), move.target(), List.of(move.modificationUuid()), move.beforeUuid());
+    public List<ModificationInfos> moveModification(@NonNull UUID originGroupUuid, @NonNull UUID targetGroupUuid, @NonNull ModificationMoveInfos move) {
+        return moveModifications(toContainerInfos(originGroupUuid, move.sourceCompositeUuid()), toContainerInfos(targetGroupUuid, move.targetCompositeUuid()),
+                List.of(move.modificationUuid()), move.beforeUuid());
+    }
+
+    private static ModificationContainerInfos toContainerInfos(UUID groupUuid, UUID compositeUuid) {
+        return compositeUuid != null
+                ? new ModificationContainerInfos(compositeUuid, ModificationContainerType.COMPOSITE)
+                : new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP);
     }
 
     private List<ModificationEntity> moveModificationsNonTransactional(AbstractModificationContainerEntity sourceContainer, AbstractModificationContainerEntity targetContainer,

@@ -12,11 +12,12 @@ import java.util.UUID;
 
 /**
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
+ *
+ * One move of a batch: origin and target groups are given once per request,
+ * a null composite designates the group itself.
  */
-
 public record ModificationMoveInfos(
         @NonNull UUID modificationUuid,
-        @NonNull ModificationContainerInfos source,
-        @NonNull ModificationContainerInfos target,
+        UUID sourceCompositeUuid,
+        UUID targetCompositeUuid,
         UUID beforeUuid) { }
-
