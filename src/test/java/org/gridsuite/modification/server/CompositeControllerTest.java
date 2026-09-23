@@ -53,6 +53,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.ModificationType.COMPOSITE_MODIFICATION;
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 import static org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest.URI_NETWORK_MODIF_GET_PUT;
 import static org.gridsuite.modification.server.utils.NetworkCreation.VARIANT_ID;
 import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
@@ -860,6 +861,8 @@ class CompositeControllerTest {
         List<UUID> assembledModificationUuids = originalRootModUuids.subList(0, 2);
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(assembledModificationUuids))
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
@@ -905,9 +908,12 @@ class CompositeControllerTest {
         assertContiguousOrder(modificationRepository.findAllByContainer(firstCompositeUuid));
 
         // ---- 2. now assembles a modification which is inside a composite with something that is outside :
+        assertNotNull(remainingInGroupEntity.getId());
         assembledModificationUuids = List.of(compositeContent.getFirst().getUuid(), remainingInGroupEntity.getId());
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(assembledModificationUuids))
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
