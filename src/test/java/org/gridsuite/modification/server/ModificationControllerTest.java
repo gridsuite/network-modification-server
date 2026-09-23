@@ -39,6 +39,7 @@ import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.TestImpactUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.service.DirectoryService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.ModificationCreation;
@@ -136,6 +137,9 @@ class ModificationControllerTest {
 
     @MockitoBean
     private ReportService reportService;
+
+    @MockitoBean
+    private DirectoryService directoryService;
 
     @Autowired
     private NetworkModificationService networkModificationService;
@@ -2340,6 +2344,40 @@ class ModificationControllerTest {
         }
         UUID otherGroupReferencedLoadModificationUuid = otherGroupReferencedLoadModificationInfo.getUuid();
         assertTrue(referencesData.stream().noneMatch(r -> r.referencedId().equals(otherGroupReferencedLoadModificationUuid)));
+    }
+
+    @Test
+    void testRemoveAllReferencesToGroup() throws Exception {
+        // Create a referenced modification
+        ModificationInfos referencedLoadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
+        referencedLoadModificationInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(referencedLoadModificationInfo))).getFirst();
+        ModificationInfos activeReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(BASIC)
+                .referencedId(referencedLoadModificationInfo.getUuid())
+                .referencedInfos(referencedLoadModificationInfo)
+                .stashed(false)
+                .build();
+        activeReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(activeReferenceInfo))).getFirst();
+
+        // Verify that the reference exists
+        MvcResult getReferencesResult = mockMvc.perform(get("/v1/groups/{groupUuid}/references", TEST_GROUP_ID)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        List<ModificationReferenceData> referencesData = mapper.readValue(getReferencesResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, referencesData.size());
+        ModificationReferenceData referenceData = referencesData.getFirst();
+        assertEquals(referencedLoadModificationInfo.getUuid(), referenceData.referencedId());
+        assertEquals(activeReferenceInfo.getUuid(), referenceData.modificationUuid());
+
+        // call the deletion of references through directory service
+        doNothing().when(directoryService).removeElementReference(eq(referenceData.referencedId()), eq(referenceData.modificationUuid()), eq("testUserId"));
+
+        mockMvc.perform(delete("/v1/groups/{groupUuid}/references", TEST_GROUP_ID)
+                        .header(HEADER_USER_ID, "testUserId")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 
     @ParameterizedTest
