@@ -324,10 +324,6 @@ public class NetworkModificationService {
         return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
     }
 
-    /**
-     * Asserts that the user may write on every shared modification the given containers point to, which is what
-     * rewriting the applicabilities these modifications contain takes: they are shared with other containers.
-     */
     public void assertReferencedModificationsAreWritable(@NonNull List<UUID> containerUuids, @NonNull String userId) {
         Set<UUID> sharedModificationUuids = networkModificationRepository.getReferencedModificationUuids(containerUuids);
         if (sharedModificationUuids.isEmpty()) {
@@ -336,8 +332,8 @@ public class NetworkModificationService {
         try {
             directoryService.checkPermission(sharedModificationUuids, userId, PermissionType.WRITE);
         } catch (HttpClientErrorException.Forbidden e) {
-            throw new NetworkModificationServerException(SHARED_MODIFICATIONS_WRITE_FORBIDDEN,
-                    String.format(SHARED_MODIFICATIONS_WRITE_FORBIDDEN.messageTemplate(), sharedModificationUuids),
+            throw new NetworkModificationServerException(MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED,
+                    String.format(MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED.messageTemplate(), sharedModificationUuids),
                     Map.of("sharedModificationUuids", sharedModificationUuids));
         }
     }

@@ -326,8 +326,7 @@ public class NetworkModificationController {
     }
 
     @GetMapping(value = "/containers/references/authorized")
-    @Operation(summary = "Control the write permission on the shared modifications the containers (groups or composites) point to, "
-            + "including through their composites and the shared modifications themselves")
+    @Operation(summary = "Check the write permission on the shared modifications the containers (groups or composites) point to")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "The user can write on all of them"),
         @ApiResponse(responseCode = "403", description = "The user cannot write on at least one of them")
