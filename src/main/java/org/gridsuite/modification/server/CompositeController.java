@@ -110,7 +110,6 @@ public class CompositeController {
                                                                                         @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
         Map<UUID, List<ModificationInfos>> modificationsByComposite =
                 networkModificationService.getNetworkModificationsFromComposite(compositeModificationUuids, onlyMetadata);
-        // the references of every composite of the answer are filled in place, in a single call
         modificationPermissionService.addPermissions(
                 modificationsByComposite.values().stream().flatMap(List::stream).toList(), userId);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(modificationsByComposite);
