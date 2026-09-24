@@ -1710,7 +1710,7 @@ class ModificationControllerTest {
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.STASHED).size());
-        String body = objectMapper.writeValueAsString(List.of(TEST_GROUP_ID.toString()).toArray(new String[0]));
+        String body = objectMapper.writeValueAsString(List.of(TEST_GROUP_ID.toString()));
         mockMvc.perform(delete("/v1/groups/stashed-modifications")
                 .param("errorOnGroupNotFound", "false")
                 .content(body)

@@ -106,7 +106,7 @@ public final class ApiUtils {
     }
 
     public static void deleteStashedInGroup(MockMvc mockMvc, UUID groupUuid) throws Exception {
-        String body = getObjectMapper().writeValueAsString(List.of(groupUuid.toString()).toArray(new String[0]));
+        String body = getObjectMapper().writeValueAsString(List.of(groupUuid.toString()));
         mockMvc.perform(delete("/v1/groups/stashed-modifications")
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
