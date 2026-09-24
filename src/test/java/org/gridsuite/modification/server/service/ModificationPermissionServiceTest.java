@@ -49,7 +49,7 @@ class ModificationPermissionServiceTest {
     void aPayloadWithoutReferenceAsksNothing() {
         List<ModificationInfos> modifications = List.of(loadCreation(), composite(loadCreation()));
 
-        modificationPermissionService.withPermissions(modifications, USER_ID);
+        modificationPermissionService.addPermissions(modifications, USER_ID);
 
         verifyNoInteractions(directoryService);
     }
@@ -58,7 +58,7 @@ class ModificationPermissionServiceTest {
     void aPayloadReadWithoutUserAsksNothing() {
         ModificationReferenceInfos reference = reference(UUID.randomUUID(), null);
 
-        modificationPermissionService.withPermissions(List.of(reference), null);
+        modificationPermissionService.addPermissions(List.of(reference), null);
 
         verifyNoInteractions(directoryService);
         assertThat(reference.getPermission()).isNull();
@@ -71,7 +71,7 @@ class ModificationPermissionServiceTest {
         ModificationReferenceInfos secondReference = reference(sharedUuid, null);
         when(directoryService.getElementsPermissions(any(), eq(USER_ID))).thenReturn(Map.of(sharedUuid, PermissionType.WRITE));
 
-        modificationPermissionService.withPermissions(List.of(firstReference, secondReference), USER_ID);
+        modificationPermissionService.addPermissions(List.of(firstReference, secondReference), USER_ID);
 
         ArgumentCaptor<Collection<UUID>> askedUuids = ArgumentCaptor.captor();
         verify(directoryService, times(1)).getElementsPermissions(askedUuids.capture(), eq(USER_ID));
@@ -89,7 +89,7 @@ class ModificationPermissionServiceTest {
         when(directoryService.getElementsPermissions(any(), eq(USER_ID)))
                 .thenReturn(Map.of(outerUuid, PermissionType.WRITE, nestedUuid, PermissionType.READ));
 
-        modificationPermissionService.withPermissions(outerReference, USER_ID);
+        modificationPermissionService.addPermissions(outerReference, USER_ID);
 
         ArgumentCaptor<Collection<UUID>> askedUuids = ArgumentCaptor.captor();
         verify(directoryService, times(1)).getElementsPermissions(askedUuids.capture(), eq(USER_ID));
@@ -105,7 +105,7 @@ class ModificationPermissionServiceTest {
         ModificationReferenceInfos unknownReference = reference(UUID.randomUUID(), null);
         when(directoryService.getElementsPermissions(any(), eq(USER_ID))).thenReturn(Map.of(knownUuid, PermissionType.MANAGE));
 
-        modificationPermissionService.withPermissions(List.of(knownReference, unknownReference), USER_ID);
+        modificationPermissionService.addPermissions(List.of(knownReference, unknownReference), USER_ID);
 
         verify(directoryService, times(1)).getElementsPermissions(any(), eq(USER_ID));
         assertThat(knownReference.getPermission()).isEqualTo(PermissionType.MANAGE);
@@ -117,7 +117,7 @@ class ModificationPermissionServiceTest {
         ModificationReferenceInfos reference = reference(UUID.randomUUID(), null);
         when(directoryService.getElementsPermissions(any(), eq(USER_ID))).thenThrow(new RestClientException("directory-server is down"));
 
-        modificationPermissionService.withPermissions(List.of(reference), USER_ID);
+        modificationPermissionService.addPermissions(List.of(reference), USER_ID);
 
         assertThat(reference.getPermission()).isNull();
     }

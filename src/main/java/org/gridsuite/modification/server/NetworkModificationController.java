@@ -65,7 +65,7 @@ public class NetworkModificationController {
                                                                            @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound",
                                                                                    required = false, defaultValue = "true") Boolean errorOnGroupNotFound,
                                                                            @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
-        return ResponseEntity.ok().body(modificationPermissionService.withPermissions(
+        return ResponseEntity.ok().body(modificationPermissionService.addPermissions(
             networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound,
                 onlyStashed ? StashedFilter.STASHED : StashedFilter.ALL), userId));
     }
@@ -223,7 +223,7 @@ public class NetworkModificationController {
     public ResponseEntity<ModificationInfos> getNetworkModification(
             @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid,
             @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
-        return ResponseEntity.ok().body(modificationPermissionService.withPermissions(
+        return ResponseEntity.ok().body(modificationPermissionService.addPermissions(
             networkModificationService.getNetworkModification(networkModificationUuid), userId));
     }
 

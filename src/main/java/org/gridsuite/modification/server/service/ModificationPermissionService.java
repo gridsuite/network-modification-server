@@ -41,12 +41,18 @@ public class ModificationPermissionService {
         this.directoryService = directoryService;
     }
 
-    public ModificationInfos withPermissions(ModificationInfos modification, @Nullable String userId) {
+    /**
+     * @return the modification it was given, its references filled with their permission
+     */
+    public ModificationInfos addPermissions(ModificationInfos modification, @Nullable String userId) {
         resolvePermissions(List.of(modification), userId);
         return modification;
     }
 
-    public List<ModificationInfos> withPermissions(List<ModificationInfos> modifications, @Nullable String userId) {
+    /**
+     * @return the modifications it was given, their references filled with their permission
+     */
+    public List<ModificationInfos> addPermissions(List<ModificationInfos> modifications, @Nullable String userId) {
         resolvePermissions(modifications, userId);
         return modifications;
     }
@@ -75,7 +81,7 @@ public class ModificationPermissionService {
         try {
             permissions = directoryService.getElementsPermissions(referencedIds, userId);
         } catch (RestClientException e) {
-            LOGGER.warn("Could not read the permissions of the shared modifications, leaving them unresolved", e);
+            LOGGER.warn("Could not read the permissions of the shared modifications", e);
             return;
         }
         references.forEach(reference -> reference.setPermission(permissions.getOrDefault(reference.getReferencedId(), PermissionType.NONE)));
