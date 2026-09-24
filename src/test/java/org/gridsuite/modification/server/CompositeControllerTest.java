@@ -1309,25 +1309,12 @@ class CompositeControllerTest {
                         .header(HEADER_USER_ID, USER_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].permission").value(PermissionType.NONE.name()));
-    }
 
-    @Test
-    void testAReadWithoutUserLeavesThePermissionsAlone() throws Exception {
-        List<ModificationInfos> switchMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
-        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "shared")
-                        .content(mapper.writeValueAsString(switchMods.stream().map(ModificationInfos::getUuid).toList()))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        runRequestAsync(mockMvc, put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP2_ID + "?action=INSERT")
-                .content(getJsonBodyModificationCompositeToBeInserted(List.of(new CompositeInfos(sharedCompositeUuid, "shared", true, null))))
-                .contentType(MediaType.APPLICATION_JSON), status().isOk());
-
-        // server to server reads carry no user: the directory is not even asked, and no permission is answered
+        // a server to server read carries no user: the directory is not even asked, and no permission is answered
+        clearInvocations(directoryService);
         mockMvc.perform(get("/v1/groups/" + TEST_GROUP2_ID + "/network-modifications?onlyMetadata=true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].permission").doesNotExist());
-
         verifyNoInteractions(directoryService);
     }
 
