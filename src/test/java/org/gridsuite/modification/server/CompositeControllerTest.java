@@ -1310,7 +1310,7 @@ class CompositeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].permission").value(PermissionType.NONE.name()));
 
-        // a server to server read carries no user: the directory is not even asked, and no permission is answered
+        // if no user is supplied, the directory is not even asked, and no permission is answered
         clearInvocations(directoryService);
         mockMvc.perform(get("/v1/groups/" + TEST_GROUP2_ID + "/network-modifications?onlyMetadata=true"))
                 .andExpect(status().isOk())

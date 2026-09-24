@@ -89,7 +89,7 @@ public class ModificationPermissionService {
             LOGGER.warn("Could not read the permissions of the shared modifications", e);
             return;
         }
-        // the directory leaves out the elements no permission is held on, and the ones it does not know
+        // directory server leaves out the elements without permission, and the ones it does not know : we default it to NONE
         references.forEach(reference -> reference.setPermission(permissions.getOrDefault(reference.getReferencedId(), PermissionType.NONE)));
     }
 
