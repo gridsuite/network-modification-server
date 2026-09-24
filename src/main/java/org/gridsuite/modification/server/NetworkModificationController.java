@@ -204,8 +204,9 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The network modification was updated")})
     public ResponseEntity<Void> updateNetworkModification(
             @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid,
-            @RequestBody ModificationInfos modificationInfos) {
-        networkModificationService.updateNetworkModification(networkModificationUuid, modificationInfos);
+            @RequestBody ModificationInfos modificationInfos,
+            @RequestHeader("userId") String userId) {
+        networkModificationService.updateNetworkModification(networkModificationUuid, modificationInfos, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -343,7 +344,8 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The metadata of the network modifications has been successfully updated")
     public ResponseEntity<Void> updateNetworkModificationMetadata(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
-            @RequestBody ModificationInfos metadata) {
+            @RequestBody ModificationInfos metadata, @RequestHeader("userId") String userId) {
+
         networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata);
         return ResponseEntity.ok().build();
     }
@@ -388,16 +390,6 @@ public class NetworkModificationController {
             @Parameter(description = "Modification groups UUIDs") @RequestParam("groupUuids") List<UUID> groupUuids,
             @Parameter(description = "Root network tags") @RequestParam("rootNetworkTags") List<String> rootNetworkTags) {
         networkModificationService.deleteRootNetworkTags(groupUuids, rootNetworkTags);
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping(value = "/groups/{groupUuid}/stashed-modifications")
-    @Operation(summary = "Delete the stashed modifications in a group")
-    @ApiResponse(responseCode = "200", description = "Stashed modifications in the group deleted")
-    public ResponseEntity<Void> deleteStashedModificationInGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
-                                                        @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false,
-                                                                defaultValue = "true") Boolean errorOnGroupNotFound) {
-        networkModificationService.deleteStashedModificationFromGroups(List.of(groupUuid), errorOnGroupNotFound);
         return ResponseEntity.ok().build();
     }
 

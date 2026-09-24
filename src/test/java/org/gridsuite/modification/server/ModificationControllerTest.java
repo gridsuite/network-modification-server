@@ -85,7 +85,8 @@ import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -154,6 +155,8 @@ class ModificationControllerTest {
 
     private Network networkWithTeePoint;
     private Network networkBusBreaker;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -263,9 +266,9 @@ class ModificationControllerTest {
         UUID modificationUuid = UUID.randomUUID();
         ModificationInfos modificationInfos = LoadCreationInfos.builder().equipmentId("id").build();
         ModificationBusinessErrorCode businessErrorCode = assertThrows(NetworkModificationServerException.class,
-            () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getBusinessErrorCode();
+            () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos, "userId")).getBusinessErrorCode();
         assertEquals(ModificationBusinessErrorCode.MODIFICATION_NOT_FOUND, businessErrorCode);
-        assertThrows(NullPointerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, null));
+        assertThrows(NullPointerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, null, "userId"));
     }
 
     @Test
@@ -491,6 +494,7 @@ class ModificationControllerTest {
                 .queryParam("uuids", uuidString)
                 .content(mapper.writeValueAsString(metadata))
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("userId", "userId")
         ).andExpect(status().isOk());
         assertEquals(false, modificationRepository.getModifications(TEST_GROUP_ID, true, true).getFirst().getActivated());
     }
@@ -590,6 +594,7 @@ class ModificationControllerTest {
                         .queryParam("uuids", uuidString)
                         .content(mapper.writeValueAsString(metadata))
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId")
                 ).andExpect(status().isOk());
 
         assertEquals("new description", modificationRepository.getModifications(TEST_GROUP_ID, true, true).getFirst().getDescription());
@@ -1707,9 +1712,18 @@ class ModificationControllerTest {
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.STASHED).size());
-        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID + "/stashed-modifications").queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
+        String body = objectMapper.writeValueAsString(List.of(TEST_GROUP_ID.toString()));
+        mockMvc.perform(delete("/v1/groups/stashed-modifications")
+                .param("errorOnGroupNotFound", "false")
+                .content(body)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.STASHED).size());
-        mockMvc.perform(delete("/v1/groups/" + UUID.randomUUID() + "/stashed-modifications").queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
+        mockMvc.perform(delete("/v1/groups/stashed-modifications")
+                .queryParam("errorOnGroupNotFound", "false")
+                .content(objectMapper.writeValueAsString(List.of(UUID.randomUUID().toString()).toArray(new String[0])))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 
     @Test
