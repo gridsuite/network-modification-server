@@ -219,7 +219,7 @@ public class NetworkModificationRepository {
         return finalContainer.getId();
     }
 
-    private void cleanupApplicationRecordsIfGroupChanged(
+    private void deleteStaleApplicationInfos(
             AbstractModificationContainerEntity source,
             AbstractModificationContainerEntity target,
             List<ModificationEntity> moved) {
@@ -240,7 +240,7 @@ public class NetworkModificationRepository {
         var sourceContainer = getContainer(source);
         var targetContainer = getContainer(target);
         var moved = moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid);
-        cleanupApplicationRecordsIfGroupChanged(sourceContainer, targetContainer, moved);
+        deleteStaleApplicationInfos(sourceContainer, targetContainer, moved);
         return addApplicabilities(moved.stream().map(this::toModificationInfos).toList());
     }
 
