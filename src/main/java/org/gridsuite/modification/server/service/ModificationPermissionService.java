@@ -51,11 +51,6 @@ public class ModificationPermissionService {
         return modifications;
     }
 
-    public Map<UUID, List<ModificationInfos>> withPermissions(Map<UUID, List<ModificationInfos>> modificationsByContainer, @Nullable String userId) {
-        resolvePermissions(modificationsByContainer.values().stream().flatMap(List::stream).toList(), userId);
-        return modificationsByContainer;
-    }
-
     /**
      * Reads the permissions of every reference of the given modifications, nested ones included, in a single call
      * to the directory-server. They are left unresolved when there is no user to read them for, when the payload

@@ -99,8 +99,7 @@ public class DirectoryService {
     }
 
     /**
-     * Asks what the user may do with each of the given elements. The uuids travel in the query string, so a batch
-     * far larger than a container holds would overrun the maximum length of a request line.
+     * Get the permissions for a given list of directory elements and a given user.
      * @param elementUuids uuids of the elements in the directory-server
      * @param userId id of the user the permissions are read for
      * @return the strongest permission held on each element, an element held no permission at all on and an element

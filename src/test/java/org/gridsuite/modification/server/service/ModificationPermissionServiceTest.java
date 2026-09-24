@@ -99,21 +99,17 @@ class ModificationPermissionServiceTest {
     }
 
     @Test
-    void everyContainerOfThePayloadIsAskedAtOnce() {
-        UUID firstUuid = UUID.randomUUID();
-        UUID secondUuid = UUID.randomUUID();
-        ModificationReferenceInfos firstReference = reference(firstUuid, null);
-        ModificationReferenceInfos secondReference = reference(secondUuid, null);
-        when(directoryService.getElementsPermissions(any(), eq(USER_ID))).thenReturn(Map.of(firstUuid, PermissionType.MANAGE));
+    void anElementTheDirectoryLeavesOutHoldsNoPermission() {
+        UUID knownUuid = UUID.randomUUID();
+        ModificationReferenceInfos knownReference = reference(knownUuid, null);
+        ModificationReferenceInfos unknownReference = reference(UUID.randomUUID(), null);
+        when(directoryService.getElementsPermissions(any(), eq(USER_ID))).thenReturn(Map.of(knownUuid, PermissionType.MANAGE));
 
-        modificationPermissionService.withPermissions(Map.of(
-                UUID.randomUUID(), List.of(firstReference),
-                UUID.randomUUID(), List.of(secondReference)), USER_ID);
+        modificationPermissionService.withPermissions(List.of(knownReference, unknownReference), USER_ID);
 
         verify(directoryService, times(1)).getElementsPermissions(any(), eq(USER_ID));
-        assertThat(firstReference.getPermission()).isEqualTo(PermissionType.MANAGE);
-        // an element the directory left out is one no permission is held on
-        assertThat(secondReference.getPermission()).isEqualTo(PermissionType.NONE);
+        assertThat(knownReference.getPermission()).isEqualTo(PermissionType.MANAGE);
+        assertThat(unknownReference.getPermission()).isEqualTo(PermissionType.NONE);
     }
 
     @Test

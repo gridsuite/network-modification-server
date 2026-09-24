@@ -108,11 +108,12 @@ public class CompositeController {
                                                                                         @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false,
                                                                                                 defaultValue = "true") Boolean onlyMetadata,
                                                                                         @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(modificationPermissionService.withPermissions(
-                    networkModificationService.getNetworkModificationsFromComposite(compositeModificationUuids, onlyMetadata), userId)
-                );
+        Map<UUID, List<ModificationInfos>> modificationsByComposite =
+                networkModificationService.getNetworkModificationsFromComposite(compositeModificationUuids, onlyMetadata);
+        // the references of every composite of the answer are filled in place, in a single call
+        modificationPermissionService.withPermissions(
+                modificationsByComposite.values().stream().flatMap(List::stream).toList(), userId);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(modificationsByComposite);
     }
 
     @GetMapping(value = "/children-uuids", produces = MediaType.APPLICATION_JSON_VALUE)
