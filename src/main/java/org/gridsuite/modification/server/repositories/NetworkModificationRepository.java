@@ -47,6 +47,7 @@ import java.util.stream.Stream;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE;
+import static org.gridsuite.modification.server.utils.ModificationInfosUtils.contentOf;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -718,20 +719,6 @@ public class NetworkModificationRepository {
      */
     private static Map<String, Boolean> applicabilityOf(UUID modificationUuid, Map<UUID, Map<String, Boolean>> applicabilities) {
         return applicabilities.getOrDefault(modificationUuid, Map.of());
-    }
-
-    /**
-     * @return what a modification holds that carries an applicability of its own: the content of a composite, and the
-     * shared modification a reference points to. The content of a tabular is left out, applicabilities never reach it.
-     */
-    private static List<ModificationInfos> contentOf(ModificationInfos modificationInfos) {
-        if (modificationInfos instanceof CompositeModificationInfos composite) {
-            return composite.getModificationsInfos() == null ? List.of() : composite.getModificationsInfos();
-        }
-        if (modificationInfos instanceof ModificationReferenceInfos reference && reference.getReferencedInfos() != null) {
-            return List.of(reference.getReferencedInfos());
-        }
-        return List.of();
     }
 
     /**

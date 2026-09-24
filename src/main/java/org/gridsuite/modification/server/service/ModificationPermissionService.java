@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.service;
 
 import jakarta.annotation.Nullable;
-import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.dto.PermissionType;
@@ -24,6 +23,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static org.gridsuite.modification.server.utils.ModificationInfosUtils.contentOf;
 
 /**
  * Fills the modification references of a payload with the permission its reader holds on the shared modification
@@ -90,11 +91,7 @@ public class ModificationPermissionService {
     private static void collectReferences(ModificationInfos modification, List<ModificationReferenceInfos> references) {
         if (modification instanceof ModificationReferenceInfos reference) {
             references.add(reference);
-            if (reference.getReferencedInfos() != null) {
-                collectReferences(reference.getReferencedInfos(), references);
-            }
-        } else if (modification instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
-            composite.getModificationsInfos().forEach(content -> collectReferences(content, references));
         }
+        contentOf(modification).forEach(content -> collectReferences(content, references));
     }
 }
