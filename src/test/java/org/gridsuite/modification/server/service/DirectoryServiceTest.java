@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.service;
 
 import org.gridsuite.modification.dto.PermissionType;
 import org.gridsuite.modification.server.dto.ReferenceAttributes;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -43,6 +44,11 @@ class DirectoryServiceTest {
         directoryService = new DirectoryService(DIRECTORY_SERVER_BASE_URI, restClientBuilder.build());
     }
 
+    @AfterEach
+    void tearDown() {
+        directoryServer.verify();
+    }
+
     @Test
     void testUpdateElementReference() {
         UUID elementUuid = UUID.randomUUID();
@@ -66,8 +72,6 @@ class DirectoryServiceTest {
                 .andRespond(withSuccess());
 
         directoryService.updateElementReference(elementUuid, referenceAttributes, userId);
-
-        directoryServer.verify();
     }
 
     @Test
@@ -93,8 +97,6 @@ class DirectoryServiceTest {
                 .andRespond(withSuccess());
 
         directoryService.createElementReference(elementUuid, referenceAttributes, userId);
-
-        directoryServer.verify();
     }
 
     @Test
@@ -106,8 +108,6 @@ class DirectoryServiceTest {
         expectPermissionCheck(firstElementUuid, secondElementUuid, userId).andRespond(withSuccess());
 
         directoryService.checkPermission(List.of(firstElementUuid, secondElementUuid), userId, PermissionType.WRITE);
-
-        directoryServer.verify();
     }
 
     @Test
@@ -120,8 +120,6 @@ class DirectoryServiceTest {
 
         assertThrows(HttpClientErrorException.Forbidden.class,
                 () -> directoryService.checkPermission(List.of(firstElementUuid, secondElementUuid), userId, PermissionType.WRITE));
-
-        directoryServer.verify();
     }
 
     @Test
@@ -140,15 +138,11 @@ class DirectoryServiceTest {
 
         assertThat(directoryService.getElementsPermissions(List.of(readOnlyElementUuid, writableElementUuid), userId))
                 .containsExactlyInAnyOrderEntriesOf(Map.of(readOnlyElementUuid, PermissionType.READ, writableElementUuid, PermissionType.WRITE));
-
-        directoryServer.verify();
     }
 
     @Test
     void testGetElementsPermissionsAsksNothingWithoutElement() {
         assertThat(directoryService.getElementsPermissions(Set.of(), "userId")).isEmpty();
-
-        directoryServer.verify();
     }
 
     @Test
@@ -161,8 +155,6 @@ class DirectoryServiceTest {
                 .andRespond(withServerError());
 
         assertThrows(RestClientException.class, () -> directoryService.getElementsPermissions(List.of(elementUuid), userId));
-
-        directoryServer.verify();
     }
 
     private ResponseActions expectPermissionCheck(UUID firstElementUuid, UUID secondElementUuid, String userId) {
