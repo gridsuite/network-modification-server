@@ -22,9 +22,8 @@ public final class ModificationInfosUtils {
     }
 
     /**
-     * @return what a modification holds: the content of a composite, and the shared modification a reference points
-     * to. The content of a tabular is left out: it holds modifications of a single type, which is never a composite
-     * nor a reference.
+     * @return what a modification holds: the content of a composite, and the shared modification a reference points to.
+     * The content of a tabular is left out.
      */
     public static List<ModificationInfos> contentOf(ModificationInfos modificationInfos) {
         if (modificationInfos instanceof CompositeModificationInfos composite) {

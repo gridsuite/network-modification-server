@@ -60,9 +60,13 @@ public class ModificationPermissionService {
 
     /**
      * Reads the permissions of every reference of the given modifications, nested ones included, in a single call
-     * to the directory-server. They are left unresolved when there is no user to read them for, when the payload
-     * holds no reference at all, and when the directory-server cannot answer: a permission that could not be read
-     * is not a denial, and the write itself is guarded on its own anyway.
+     * to the directory-server.
+     * <p>
+     * A permission is left unresolved when there is no user to read it for and when the directory-server cannot
+     * answer. That is the absence of an answer, global and momentary, and not an answer about the element: taking
+     * it for a denial would turn every modification read-only for the time of an outage, when the write is guarded
+     * on its own anyway. {@code NONE} is the opposite, an answer about the element that the user may not touch it,
+     * either because no permission is held on it or because it does not exist any more.
      */
     private void resolvePermissions(Collection<ModificationInfos> modifications, @Nullable String userId) {
         if (userId == null) {
@@ -85,6 +89,7 @@ public class ModificationPermissionService {
             LOGGER.warn("Could not read the permissions of the shared modifications", e);
             return;
         }
+        // the directory leaves out the elements no permission is held on, and the ones it does not know
         references.forEach(reference -> reference.setPermission(permissions.getOrDefault(reference.getReferencedId(), PermissionType.NONE)));
     }
 
