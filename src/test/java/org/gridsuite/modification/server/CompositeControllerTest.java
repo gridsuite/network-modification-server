@@ -18,6 +18,7 @@ import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.dto.PermissionType;
 import org.gridsuite.modification.server.dto.ActionType;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
@@ -32,6 +33,7 @@ import org.gridsuite.modification.server.error.NetworkModificationServerExceptio
 import org.gridsuite.modification.server.repositories.CompositeModificationRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.service.DirectoryService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
@@ -54,13 +56,16 @@ import java.util.stream.Stream;
 
 import static org.gridsuite.modification.ModificationType.COMPOSITE_MODIFICATION;
 import static org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest.URI_NETWORK_MODIF_GET_PUT;
+import static org.gridsuite.modification.server.service.DirectoryService.HEADER_USER_ID;
 import static org.gridsuite.modification.server.utils.NetworkCreation.VARIANT_ID;
 import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -76,6 +81,7 @@ class CompositeControllerTest {
     private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/network-composite-modifications";
     private static final String URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT = "/v1/network-composite-modifications/";
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
+    private static final String USER_ID = "userId";
 
     @Autowired
     private MockMvc mockMvc;
@@ -93,6 +99,9 @@ class CompositeControllerTest {
 
     @MockitoBean
     private ReportService reportService;
+
+    @MockitoBean
+    private DirectoryService directoryService;
 
     @Autowired
     private ObjectMapper mapper;
@@ -1203,6 +1212,59 @@ class CompositeControllerTest {
         assertFalse(hasReferences(TEST_GROUP_ID));
         assertTrue(hasReferences(TEST_GROUP2_ID));
         assertTrue(hasReferences(TEST_GROUP_ID, TEST_GROUP2_ID));
+    }
+
+    @Test
+    void testTheReferencesCarryThePermissionOfTheirReader() throws Exception {
+        List<ModificationInfos> switchMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "shared")
+                        .content(mapper.writeValueAsString(switchMods.stream().map(ModificationInfos::getUuid).toList()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        runRequestAsync(mockMvc, put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP2_ID + "?action=INSERT")
+                .content(getJsonBodyModificationCompositeToBeInserted(List.of(new CompositeInfos(sharedCompositeUuid, "shared", true, null))))
+                .contentType(MediaType.APPLICATION_JSON), status().isOk());
+        UUID referenceUuid = networkModificationRepository.getModifications(TEST_GROUP2_ID, true, true).getLast().getUuid();
+        when(directoryService.getElementsPermissions(any(), eq(USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ));
+
+        // the group lists the reference with the permission its reader holds on the shared modification
+        mockMvc.perform(get("/v1/groups/" + TEST_GROUP2_ID + "/network-modifications?onlyMetadata=true")
+                        .header(HEADER_USER_ID, USER_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].permission").value(PermissionType.READ.name()));
+
+        // and so does the reference read on its own, unfolded
+        mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/" + referenceUuid).header(HEADER_USER_ID, USER_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.permission").value(PermissionType.READ.name()));
+
+        // a shared modification the directory knows nothing about is one the user may not touch
+        when(directoryService.getElementsPermissions(any(), eq(USER_ID))).thenReturn(Map.of());
+        mockMvc.perform(get("/v1/groups/" + TEST_GROUP2_ID + "/network-modifications?onlyMetadata=true")
+                        .header(HEADER_USER_ID, USER_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].permission").value(PermissionType.NONE.name()));
+    }
+
+    @Test
+    void testAReadWithoutUserLeavesThePermissionsAlone() throws Exception {
+        List<ModificationInfos> switchMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "shared")
+                        .content(mapper.writeValueAsString(switchMods.stream().map(ModificationInfos::getUuid).toList()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        runRequestAsync(mockMvc, put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP2_ID + "?action=INSERT")
+                .content(getJsonBodyModificationCompositeToBeInserted(List.of(new CompositeInfos(sharedCompositeUuid, "shared", true, null))))
+                .contentType(MediaType.APPLICATION_JSON), status().isOk());
+
+        // server to server reads carry no user: the directory is not even asked, and no permission is answered
+        mockMvc.perform(get("/v1/groups/" + TEST_GROUP2_ID + "/network-modifications?onlyMetadata=true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].permission").doesNotExist());
+
+        verifyNoInteractions(directoryService);
     }
 
     private boolean hasReferences(UUID... containerUuids) throws Exception {
