@@ -336,7 +336,7 @@ public class NetworkModificationService {
         }
         try {
             directoryService.checkPermission(sharedModificationUuids, userId, PermissionType.WRITE);
-        } catch (HttpClientErrorException.Forbidden e) {
+        } catch (HttpClientErrorException.Forbidden _) {
             throw new NetworkModificationServerException(MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED,
                     String.format(MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED.messageTemplate(), sharedModificationUuids),
                     Map.of("sharedModificationUuids", sharedModificationUuids));
