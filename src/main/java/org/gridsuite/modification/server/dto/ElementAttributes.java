@@ -10,15 +10,17 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
+ * @author Etienne Lesot <etienne.lesot at rte-france.com>
+ *
+ *     necessary to communicate with directory server
  */
 @Getter
 @AllArgsConstructor
 public class ElementAttributes {
-    private String elementName;
+    private String name;
     private String description;
 
-    public static ElementAttributes createElementAttributes(String elementName, String description) {
-        return new ElementAttributes(elementName, description);
+    public static ElementAttributes createElementAttributes(String name, String description) {
+        return new ElementAttributes(name, description);
     }
 }
