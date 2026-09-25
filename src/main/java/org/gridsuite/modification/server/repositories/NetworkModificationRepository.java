@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.repositories;
 import com.google.common.collect.Lists;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.SetUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.context.ModificationContext;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
@@ -50,6 +51,16 @@ import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_
  */
 @Repository
 public class NetworkModificationRepository {
+
+    /**
+     * Two lists: the IDs of shared modifications and the IDs of all their children, however deep.
+     */
+    private record SharedModificationTrees(Set<UUID> sharedUuids, Set<UUID> childrenUuids) {
+        Set<UUID> allUuids() {
+            return SetUtils.union(sharedUuids, childrenUuids);
+        }
+    }
+
     private final ModificationGroupRepository modificationGroupRepository;
 
     private final ModificationRepository modificationRepository;
@@ -1081,8 +1092,9 @@ public class NetworkModificationRepository {
 
     /**
      * Moves the applicability entries of {@code oldTag} to {@code newTag} for the modifications of the given groups.
-     * A modification a group owns is renamed; a shared one, which other groups may still use the old tag for, only
-     * gets the new tag added.
+     * On a modification a group owns, the entry of the old tag is renamed; on a shared one, which other groups may
+     * still use the old tag for, it is copied under the new tag.
+     * Pre-existing applicabilities for the new tag are removed.
      */
     @Transactional
     public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag) {
@@ -1090,12 +1102,21 @@ public class NetworkModificationRepository {
         if (ownedUuids.isEmpty()) {
             return;
         }
-        List<UUID> sharedUuids = getSharedApplicabilityHolderUuids(ownedUuids);
-        if (!sharedUuids.isEmpty()) {
-            modificationRepository.copyRootNetworkApplicability(sharedUuids, oldTag, newTag);
+        Set<UUID> sharedModificationTreesUuids = getSharedModificationTrees(ownedUuids).allUuids();
+        // owned UUIDs that are references does not contain applicability, so it will be ignored
+        modificationRepository.deleteRootNetworkApplicabilities(SetUtils.union(Set.copyOf(ownedUuids), sharedModificationTreesUuids), List.of(newTag));
+        if (!sharedModificationTreesUuids.isEmpty()) {
+            modificationRepository.copyRootNetworkApplicability(sharedModificationTreesUuids, oldTag, newTag);
         }
-        modificationRepository.deleteRootNetworkApplicabilitiesTakenOverBy(ownedUuids, oldTag, newTag);
         modificationRepository.renameRootNetworkApplicability(ownedUuids, oldTag, newTag);
+    }
+
+    /**
+     * @return the shared modifications the given containers point to, directly or through other shared modifications
+     */
+    @Transactional(readOnly = true)
+    public Set<UUID> getReferencedModificationUuids(@NonNull List<UUID> containerUuids) {
+        return getSharedModificationTrees(getContainedModificationUuids(containerUuids)).sharedUuids();
     }
 
     /**
@@ -1118,22 +1139,23 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return the shared modifications carrying the applicability of the references among {@code modificationUuids},
-     * the content of each one included. Recursively check the nested shared modification if there are.
+     * @return the shared modifications the references among {@code modificationUuids} point to, directly or through
+     * other shared modifications, and all their children
      */
-    private List<UUID> getSharedApplicabilityHolderUuids(List<UUID> modificationUuids) {
-        Set<UUID> holderUuids = new LinkedHashSet<>();
+    private SharedModificationTrees getSharedModificationTrees(List<UUID> modificationUuids) {
+        Set<UUID> sharedUuids = new LinkedHashSet<>();
+        Set<UUID> childrenUuids = new LinkedHashSet<>();
         List<UUID> uuidsToResolve = modificationUuids;
         while (!uuidsToResolve.isEmpty()) {
             List<UUID> referencedUuids = modificationRepository.findReferencedModificationIds(uuidsToResolve).stream()
-                    .filter(referencedUuid -> !holderUuids.contains(referencedUuid))
+                    .filter(referencedUuid -> !sharedUuids.contains(referencedUuid))
                     .toList();
-            holderUuids.addAll(referencedUuids);
+            sharedUuids.addAll(referencedUuids);
             // next: check the nested modifications
             uuidsToResolve = getContainedModificationUuids(referencedUuids);
-            holderUuids.addAll(uuidsToResolve);
+            childrenUuids.addAll(uuidsToResolve);
         }
-        return List.copyOf(holderUuids);
+        return new SharedModificationTrees(sharedUuids, childrenUuids);
     }
 
     @Transactional
