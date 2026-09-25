@@ -58,9 +58,8 @@ public final class ApiUtils {
         ModificationApplicationContext applicationContext = TestUtils.contextOnAnyRootNetwork(networkUuid, UUID.randomUUID().toString(), UUID.randomUUID(), UUID.randomUUID());
         String bodyJson = getObjectMapper().writeValueAsString(org.springframework.data.util.Pair.of(List.of(), List.of(applicationContext)));
         ResultActions mockMvcResultActions = mockMvc.perform(
-                put("/v1/containers/{targetContainerId}", targetGroupUuid)
-                    .param("action", "COPY")
-                    .param("sourceContainerId", originGroupUuid.toString())
+                put("/v1/groups/{targetContainerUuid}/network-modifications/copy", targetGroupUuid)
+                        .param("sourceContainerUuid", originGroupUuid.toString())
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON)
             )
@@ -78,7 +77,7 @@ public final class ApiUtils {
         String body = getObjectMapper().writeValueAsString(org.springframework.data.util.Pair.of(modificationUuids, List.of(applicationContext)));
 
         ResultActions mockMvcResultActions = mockMvc.perform(
-                put("/v1/containers/{targetContainerId}", targetGroupUuid)
+                put("/v1/groups/{targetContainerUuid}/network-modifications/copy", targetGroupUuid)
                     .param("action", "COPY")
                     .contentType("application/json")
                     .content(body)
