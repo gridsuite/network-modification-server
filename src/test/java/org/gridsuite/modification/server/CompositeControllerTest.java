@@ -1303,12 +1303,12 @@ class CompositeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.permission").value(PermissionType.READ.name()));
 
-        // a shared modification the directory knows nothing about is one the user may not touch
+        // a shared modification the directory knows nothing about is left without permission, which grants nothing
         when(directoryService.getElementsPermissions(any(), eq(USER_ID))).thenReturn(Map.of());
         mockMvc.perform(get("/v1/groups/" + TEST_GROUP2_ID + "/network-modifications?onlyMetadata=true")
                         .header(HEADER_USER_ID, USER_ID))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].permission").value(PermissionType.NONE.name()));
+                .andExpect(jsonPath("$[0].permission").doesNotExist());
 
         // if no user is supplied, the directory is not even asked, and no permission is answered
         clearInvocations(directoryService);

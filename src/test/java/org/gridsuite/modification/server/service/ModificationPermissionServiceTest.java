@@ -109,7 +109,7 @@ class ModificationPermissionServiceTest {
 
         verify(directoryService, times(1)).getElementsPermissions(any(), eq(USER_ID));
         assertThat(knownReference.getPermission()).isEqualTo(PermissionType.MANAGE);
-        assertThat(unknownReference.getPermission()).isEqualTo(PermissionType.NONE);
+        assertThat(unknownReference.getPermission()).isNull();
     }
 
     @Test

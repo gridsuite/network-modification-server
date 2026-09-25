@@ -63,10 +63,7 @@ public class ModificationPermissionService {
      * to the directory-server.
      * <p>
      * A permission is left unresolved when there is no user to read it for and when the directory-server cannot
-     * answer. That is the absence of an answer, global and momentary, and not an answer about the element: taking
-     * it for a denial would turn every modification read-only for the time of an outage, when the write is guarded
-     * on its own anyway. {@code NONE} is the opposite, an answer about the element that the user may not touch it,
-     * either because no permission is held on it or because it does not exist any more.
+     * answer.
      */
     private void resolvePermissions(Collection<ModificationInfos> modifications, @Nullable String userId) {
         if (userId == null) {
@@ -89,8 +86,8 @@ public class ModificationPermissionService {
             LOGGER.warn("Could not read the permissions of the shared modifications", e);
             return;
         }
-        // directory server leaves out the elements without permission, and the ones it does not know : we default it to NONE
-        references.forEach(reference -> reference.setPermission(permissions.getOrDefault(reference.getReferencedId(), PermissionType.NONE)));
+        // directory server leaves out the elements without permission, and the ones it does not know : they stay unresolved
+        references.forEach(reference -> reference.setPermission(permissions.get(reference.getReferencedId())));
     }
 
     private static void collectReferences(ModificationInfos modification, List<ModificationReferenceInfos> references) {
