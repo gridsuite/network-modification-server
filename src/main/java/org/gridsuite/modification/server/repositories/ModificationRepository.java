@@ -270,27 +270,36 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         Integer getDepth();
     }
 
-    /**
-     * For each root composite in {@code compositeUuids}, returns the maximum depth of its
-     * (unstashed) descendant tree. Composites with no unstashed children do not appear in the result.
-     */
     @NativeQuery("""
-        WITH RECURSIVE hierarchy(root_id, id, level) AS (
-            SELECT m.container_id, m.id, 1
-              FROM modification m
-             WHERE m.container_id IN (:compositeUuids)
-               AND m.stashed = false
-            UNION ALL
-            SELECT h.root_id, m.id, h.level + 1
-              FROM modification m
-              JOIN hierarchy h ON m.container_id = h.id
-             WHERE m.stashed = false
-        )
-        SELECT CAST(root_id AS VARCHAR) AS id, MAX(level) AS depth
-          FROM hierarchy
-         GROUP BY root_id
-        """)
-    List<CompositeDepth> getCompositesMaxDepth(@Param("compositeUuids") List<UUID> compositeUuids);
+            WITH RECURSIVE
+            roots(input_id, composite_id) AS (
+                SELECT m.id, m.id
+                  FROM modification m
+                 WHERE m.id IN (:uuids)
+                   AND m.type = 'COMPOSITE_MODIFICATION'
+                UNION ALL
+                SELECT m.id, mr.referenced_id
+                  FROM modification m
+                  JOIN modification_reference mr ON mr.id = m.id
+                 WHERE m.id IN (:uuids)
+                   AND m.type = 'MODIFICATION_REFERENCE'
+            ),
+            hierarchy(input_id, id, level) AS (
+                SELECT r.input_id, m.id, 1
+                  FROM modification m
+                  JOIN roots r ON m.container_id = r.composite_id
+                 WHERE m.stashed = false
+                UNION ALL
+                SELECT h.input_id, m.id, h.level + 1
+                  FROM modification m
+                  JOIN hierarchy h ON m.container_id = h.id
+                 WHERE m.stashed = false
+            )
+            SELECT CAST(input_id AS VARCHAR) AS id, MAX(level) AS depth
+              FROM hierarchy
+             GROUP BY input_id
+            """)
+    List<CompositeDepth> getModificationsMaxDepth(@Param("uuids") List<UUID> uuids);
 
     @EntityGraph(attributePaths = {"content.modifications"}, type = EntityGraph.EntityGraphType.LOAD)
     List<CompositeModificationEntity> findAllCompositesWithModificationsByIdIn(List<UUID> compositeUuids);
