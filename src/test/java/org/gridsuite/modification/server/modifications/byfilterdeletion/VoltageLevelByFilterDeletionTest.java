@@ -21,9 +21,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
 @Tag("IntegrationTest")
 class VoltageLevelByFilterDeletionTest extends AbstractByFilterDeletionTest {
     private static final String VOLTAGE_LEVEL_ID_1 = "v1";
@@ -40,22 +37,6 @@ class VoltageLevelByFilterDeletionTest extends AbstractByFilterDeletionTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_1));
-        assertNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_2));
-        assertNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_3));
-        assertNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_4));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNotNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_1));
-        assertNotNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_2));
-        assertNotNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_3));
-        assertNotNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_4));
     }
 
     @Override

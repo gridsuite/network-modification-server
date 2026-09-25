@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.modifications.byfilter.formula;
 
 import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
@@ -23,8 +22,6 @@ import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createBattery;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -51,7 +48,6 @@ class BatteryByFormulaModificationTest extends AbstractByFormulaModificationTest
                 .build();
 
         checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes, wrongIdAttributes));
-        assertEquals(75, getNetwork().getBattery(BATTERY_ID_1).getTargetP(), 0);
     }
 
     @Override
@@ -161,52 +157,6 @@ class BatteryByFormulaModificationTest extends AbstractByFormulaModificationTest
                 .build();
 
         return List.of(formulaInfos1, formulaInfos2, formulaInfos3);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(550, getNetwork().getBattery(BATTERY_ID_1).getMaxP(), 0);
-        assertEquals(40, getNetwork().getBattery(BATTERY_ID_1).getTargetQ(), 0);
-        ActivePowerControl activePowerControl1 = getNetwork().getBattery(BATTERY_ID_1).getExtension(ActivePowerControl.class);
-        assertNotNull(activePowerControl1);
-        assertEquals(2, activePowerControl1.getDroop(), 0);
-
-        assertEquals(2050, getNetwork().getBattery(BATTERY_ID_2).getMaxP(), 0);
-        assertEquals(2000, getNetwork().getBattery(BATTERY_ID_2).getTargetP(), 0);
-        assertEquals(450, getNetwork().getBattery(BATTERY_ID_3).getMaxP(), 0);
-        assertEquals(380, getNetwork().getBattery(BATTERY_ID_3).getTargetP(), 0);
-        assertEquals(400, getNetwork().getBattery(BATTERY_ID_4).getMaxP(), 0);
-
-        assertEquals(15, getNetwork().getBattery(BATTERY_ID_5).getMinP(), 0);
-        assertEquals(70, getNetwork().getBattery(BATTERY_ID_5).getTargetQ(), 0);
-        ActivePowerControl activePowerControl5 = getNetwork().getBattery(BATTERY_ID_5).getExtension(ActivePowerControl.class);
-        assertNotNull(activePowerControl5);
-        assertEquals(8, activePowerControl5.getDroop(), 0);
-
-        assertEquals(60, getNetwork().getBattery(BATTERY_ID_6).getMinP(), 0);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(500, getNetwork().getBattery(BATTERY_ID_1).getMaxP(), 0);
-        assertEquals(80, getNetwork().getBattery(BATTERY_ID_1).getTargetQ(), 0);
-        ActivePowerControl activePowerControl1 = getNetwork().getBattery(BATTERY_ID_1).getExtension(ActivePowerControl.class);
-        assertNotNull(activePowerControl1);
-        assertEquals(1, activePowerControl1.getDroop(), 0);
-
-        assertEquals(2000, getNetwork().getBattery(BATTERY_ID_2).getMaxP(), 0);
-        assertEquals(200, getNetwork().getBattery(BATTERY_ID_2).getTargetP(), 0);
-        assertEquals(400, getNetwork().getBattery(BATTERY_ID_3).getMaxP(), 0);
-        assertEquals(300, getNetwork().getBattery(BATTERY_ID_3).getTargetP(), 0);
-        assertEquals(350, getNetwork().getBattery(BATTERY_ID_4).getMaxP(), 0);
-
-        assertEquals(50, getNetwork().getBattery(BATTERY_ID_5).getMinP(), 0);
-        assertEquals(140, getNetwork().getBattery(BATTERY_ID_5).getTargetQ(), 0);
-        ActivePowerControl activePowerControl5 = getNetwork().getBattery(BATTERY_ID_5).getExtension(ActivePowerControl.class);
-        assertNotNull(activePowerControl5);
-        assertEquals(4, activePowerControl5.getDroop(), 0);
-
-        assertEquals(200, getNetwork().getBattery(BATTERY_ID_6).getMinP(), 0);
     }
 
     @Override

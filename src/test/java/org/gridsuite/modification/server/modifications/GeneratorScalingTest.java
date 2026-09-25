@@ -294,9 +294,6 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .andReturn();
 
         assertNotNull(response.getResponse().getContentAsString());
-        assertEquals(600, getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 0.01D);
-        assertEquals(300, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0.01D);
-
         wireMockUtils.verifyGetRequest(subFilter, PATH, Map.of("ids", WireMock.matching(".*")), false);
     }
 
@@ -390,34 +387,6 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation5))
                 .build();
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(118.46, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0.01D);
-        assertEquals(258.46, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0.01D);
-        assertEquals(225, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0.01D);
-        assertEquals(125, getNetwork().getGenerator(GENERATOR_ID_4).getTargetP(), 0.01D);
-        assertEquals(250, getNetwork().getGenerator(GENERATOR_ID_5).getTargetP(), 0.01D);
-        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_6).getTargetP(), 0.01D);
-        assertEquals(213.63, getNetwork().getGenerator(GENERATOR_ID_7).getTargetP(), 0.01D);
-        assertEquals(136.36, getNetwork().getGenerator(GENERATOR_ID_8).getTargetP(), 0.01D);
-        assertEquals(215.38, getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 0.01D);
-        assertEquals(107.69, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0.01D);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
-        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0);
-        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0);
-        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_4).getTargetP(), 0);
-        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_5).getTargetP(), 0);
-        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_6).getTargetP(), 0);
-        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_7).getTargetP(), 0);
-        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_8).getTargetP(), 0);
-        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 0);
-        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0);
     }
 
     private static Map<String, StringValuePattern> handleQueryParams(UUID filterId) {

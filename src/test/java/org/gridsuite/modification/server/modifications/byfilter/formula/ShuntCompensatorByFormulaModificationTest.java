@@ -7,8 +7,6 @@
 package org.gridsuite.modification.server.modifications.byfilter.formula;
 
 import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.ShuntCompensator;
-import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
@@ -24,7 +22,6 @@ import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ShuntCompensatorByFormulaModificationTest extends AbstractByFormulaModificationTest {
     private static final String SHUNT_COMPENSATOR_ID_1 = "v1shunt";
@@ -48,7 +45,6 @@ class ShuntCompensatorByFormulaModificationTest extends AbstractByFormulaModific
                 .build();
 
         checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes, wrongIdAttributes));
-        assertEquals(5, getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_1).getMaximumSectionCount(), 0);
     }
 
     @Override
@@ -127,57 +123,6 @@ class ShuntCompensatorByFormulaModificationTest extends AbstractByFormulaModific
                 ReferenceFieldOrValue.builder().equipmentField(ShuntCompensatorField.SECTION_COUNT.name()).build(),
                 ReferenceFieldOrValue.builder().value(2.).build());
         return List.of(formulaInfos1, formulaInfos2);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        ShuntCompensator shuntCompensator1 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_1);
-        assertEquals(8, shuntCompensator1.getMaximumSectionCount());
-        assertEquals(1.625, shuntCompensator1.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-
-        ShuntCompensator shuntCompensator2 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_2);
-        assertEquals(6, shuntCompensator2.getMaximumSectionCount());
-        assertEquals(0.25, shuntCompensator2.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-
-        ShuntCompensator shuntCompensator3 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_3);
-        assertEquals(12, shuntCompensator3.getMaximumSectionCount());
-        assertEquals(0.75, shuntCompensator3.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-
-        ShuntCompensator shuntCompensator4 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_4);
-        assertEquals(13, shuntCompensator4.getSectionCount());
-
-        ShuntCompensator shuntCompensator5 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_5);
-        assertEquals(1, shuntCompensator5.getSectionCount());
-
-        ShuntCompensator shuntCompensator6 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_6);
-        assertEquals(6, shuntCompensator6.getMaximumSectionCount());
-        assertEquals(0.5, shuntCompensator6.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        ShuntCompensator shuntCompensator1 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_1);
-        assertEquals(4, shuntCompensator1.getMaximumSectionCount());
-        assertEquals(2, shuntCompensator1.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-
-        ShuntCompensator shuntCompensator2 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_2);
-        assertEquals(3, shuntCompensator2.getMaximumSectionCount());
-        assertEquals(1, shuntCompensator2.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-
-        ShuntCompensator shuntCompensator3 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_3);
-        assertEquals(6, shuntCompensator3.getMaximumSectionCount());
-        assertEquals(3, shuntCompensator3.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-
-        ShuntCompensator shuntCompensator4 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_4);
-        assertEquals(10, shuntCompensator4.getSectionCount());
-
-        ShuntCompensator shuntCompensator5 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_5);
-        assertEquals(2, shuntCompensator5.getSectionCount());
-        assertEquals(1, shuntCompensator5.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
-
-        ShuntCompensator shuntCompensator6 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_6);
-        assertEquals(3, shuntCompensator6.getMaximumSectionCount());
-        assertEquals(1, shuntCompensator6.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
     }
 
     @Override

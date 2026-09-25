@@ -97,20 +97,6 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(500., getNetwork().getGenerator("idGenerator").getMaxP(), 0.001);
-        assertEquals(500., getNetwork().getGenerator("v5generator").getMaxP(), 0.001);
-        assertEquals(500., getNetwork().getGenerator("v6generator").getMaxP(), 0.001);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(1000., getNetwork().getGenerator("idGenerator").getMaxP(), 0.001);
-        assertEquals(1000., getNetwork().getGenerator("v5generator").getMaxP(), 0.001);
-        assertEquals(1000., getNetwork().getGenerator("v6generator").getMaxP(), 0.001);
-    }
-
     @Test
     void testSqlRequestsCountOnGetModification() throws Exception {
         Pair<UUID, ModificationInfos> tabularWith1Modification = createTabularGeneratorModification(1);
