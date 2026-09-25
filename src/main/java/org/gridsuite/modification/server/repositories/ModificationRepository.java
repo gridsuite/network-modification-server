@@ -101,6 +101,12 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findReferencedModificationIds(@Param("ids") Collection<UUID> ids);
 
     /**
+     * @return true if at least one modification reference points to {@code referencedId}
+     */
+    @Query("SELECT COUNT(r) > 0 FROM ModificationReferenceEntity r WHERE r.referencedId = :referencedId")
+    boolean existsReferenceToModification(@Param("referencedId") UUID referencedId);
+
+    /**
      * Copies the applicability of {@code fromTag} to {@code toTag}, skipping the modifications that already have an
      * entry for {@code toTag}.
      */

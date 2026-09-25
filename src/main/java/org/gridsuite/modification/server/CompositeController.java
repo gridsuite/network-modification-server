@@ -69,9 +69,10 @@ public class CompositeController {
     @Operation(summary = "Assemble some network modifications into a new composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})
     public ResponseEntity<UUID> assembleNetworkModificationsIntoNewComposite(
-            @RequestBody List<UUID> assembledModificationsUuids) {
+            @RequestBody List<UUID> assembledModificationsUuids,
+            @RequestHeader("userId") String userId) {
         return ResponseEntity.ok().body(
-                networkModificationService.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids)
+                networkModificationService.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids, userId)
         );
     }
 
@@ -149,8 +150,9 @@ public class CompositeController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
     public ResponseEntity<Void> replaceNetworkCompositeModification(@PathVariable("uuid") UUID compositeModificationUuid,
                                                                     @Parameter(description = "New composite name") @RequestParam(value = "name") String name,
-                                                                    @RequestBody List<UUID> modificationUuids) {
-        networkModificationService.replaceCompositeModification(compositeModificationUuid, name, modificationUuids);
+                                                                    @RequestBody List<UUID> modificationUuids,
+                                                                    @RequestHeader("userId") String userId) {
+        networkModificationService.replaceCompositeModification(compositeModificationUuid, name, modificationUuids, userId);
         return ResponseEntity.ok().build();
     }
 }

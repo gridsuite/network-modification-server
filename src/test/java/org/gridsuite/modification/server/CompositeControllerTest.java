@@ -689,6 +689,7 @@ class CompositeControllerTest {
         // Update the composite modification with the new modifications
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeModificationUuid + "/replace")
                         .param("name", "new name")
+                        .header("userId", "userId")
                         .content(mapper.writeValueAsString(newModificationUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -712,6 +713,7 @@ class CompositeControllerTest {
 
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + nonExistentUuid + "/replace")
                         .param("name", "new name")
+                        .header("userId", "userId")
                         .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -730,6 +732,7 @@ class CompositeControllerTest {
         // Update the composite with an empty list of modifications
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeModificationUuid + "/replace")
                         .param("name", "new name")
+                        .header("userId", "userId")
                         .content(mapper.writeValueAsString(Collections.emptyList())).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -764,7 +767,8 @@ class CompositeControllerTest {
         // was [0,1,2] → [1,2,0]
         mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
                         .content(getJsonBodyMove(List.of(subUuids.getFirst()), compositeUuid, compositeUuid, null))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
                 .andExpect(status().isOk());
 
         Map<UUID, List<ModificationInfos>> afterFirstMove = mapper.readValue(
@@ -781,7 +785,8 @@ class CompositeControllerTest {
         // current [1,2,0] → move 0 before 1 → [0,1,2]
         mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
                         .content(getJsonBodyMove(List.of(orderAfterFirst.get(2)), compositeUuid, compositeUuid, orderAfterFirst.get(0)))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
                 .andExpect(status().isOk());
 
         Map<UUID, List<ModificationInfos>> afterSecondMove = mapper.readValue(
@@ -827,7 +832,8 @@ class CompositeControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
                         .queryParam("build", "false")
                         .content(getJsonBodyMove(List.of(movingUuid), compositeUuid, null, null))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
                 .andExpect(status().isOk());
 
         // Composite should now contain only 1 sub-modification
@@ -863,7 +869,8 @@ class CompositeControllerTest {
         List<UUID> assembledModificationUuids = originalRootModUuids.subList(0, 2);
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(assembledModificationUuids))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
                 .andExpect(status().isOk()).andReturn();
 
         UUID firstCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
@@ -911,7 +918,8 @@ class CompositeControllerTest {
         assembledModificationUuids = List.of(compositeContent.getFirst().getUuid(), remainingInGroupEntity.getId());
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(assembledModificationUuids))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
                 .andExpect(status().isOk()).andReturn();
 
         // this new composite will be generated inside the other composite because its first element was inside it
@@ -958,7 +966,8 @@ class CompositeControllerTest {
         // Create a shared composite modification with the switch modification
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(List.of(leafUuid)))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
                 .andExpect(status().isOk()).andReturn();
         UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
@@ -984,6 +993,52 @@ class CompositeControllerTest {
                 .andExpect(status().isOk());
 
         verify(notificationService).emitElementUpdated(sharedCompositeUuid, TEST_USER_ID);
+    }
+
+    @Test
+    void testNotificationWhenSharedCompositeReplaced() throws Exception {
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
+        UUID sharedCompositeUuid = mapper.readValue(mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
+                        .content(mapper.writeValueAsString(List.of(modificationList.getFirst().getUuid())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Create a modification reference to the composite, making it shared
+        ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
+            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referencedId(sharedCompositeUuid)
+            .stashed(false)
+            .build();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(modificationReferenceInfo)));
+
+        // Replacing the content of a shared composite must notify directory-server
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + sharedCompositeUuid + "/replace")
+                        .param("name", "new name")
+                        .header("userId", TEST_USER_ID)
+                        .content(mapper.writeValueAsString(List.of(modificationList.getLast().getUuid()))).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(notificationService).emitElementUpdated(sharedCompositeUuid, TEST_USER_ID);
+    }
+
+    @Test
+    void testNoNotificationWhenNotSharedCompositeReplaced() throws Exception {
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
+        UUID compositeUuid = mapper.readValue(mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
+                        .content(mapper.writeValueAsString(List.of(modificationList.getFirst().getUuid())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // The composite is not referenced anywhere : nothing to notify
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeUuid + "/replace")
+                        .param("name", "new name")
+                        .header("userId", TEST_USER_ID)
+                        .content(mapper.writeValueAsString(List.of(modificationList.getLast().getUuid()))).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(notificationService, never()).emitElementUpdated(any(), any());
     }
 
     @Test
@@ -1104,7 +1159,8 @@ class CompositeControllerTest {
         // Move root-level modification into the composite (origin = root group), append at end
         mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
                         .content(getJsonBodyMove(List.of(rootModUuid), null, compositeUuid, null))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
                 .andExpect(status().isOk());
 
         // Composite should now contain 2 sub-modifications; moved mod is appended at the end
@@ -1181,19 +1237,22 @@ class CompositeControllerTest {
         // Case 1: direct child — move composite1 into composite2 (direct child of composite1)
         mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
                         .content(getJsonBodyMove(List.of(actualComposite1Uuid), composite0Uuid, actualComposite2Uuid, null))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
                 .andExpect(status().isBadRequest());
 
         // Case 2: recursive — move composite1 into composite3 (grandchild of composite1)
         mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
                         .content(getJsonBodyMove(List.of(actualComposite1Uuid), composite0Uuid, actualComposite3Uuid, null))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
                 .andExpect(status().isBadRequest());
 
         // Case 3: self — move composite1 into itself
         mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
                         .content(getJsonBodyMove(List.of(actualComposite1Uuid), composite0Uuid, actualComposite1Uuid, null))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
                 .andExpect(status().isBadRequest());
     }
 

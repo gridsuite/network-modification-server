@@ -252,7 +252,8 @@ public abstract class AbstractNetworkModificationTest {
         String body = TestUtils.getJsonBody(List.of(modificationUuid), AbstractNetworkModificationTest.TEST_NETWORK_ID, null);
         ResultActions mockMvcResultActions = mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
                         .content(body)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
