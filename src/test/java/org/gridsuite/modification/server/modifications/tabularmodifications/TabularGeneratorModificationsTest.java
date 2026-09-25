@@ -191,7 +191,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
     }
 
     /*
-    PUT /v1/groups/{groupUuid}?action=COPY SQL requests analysis
+    PUT /v1/groups/{groupUuid}/network-modifications/copy SQL requests analysis
 
     Given an example with 2 tabular modifications having 1000 modifications each
 
@@ -247,7 +247,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
     }
 
     /*
-    PUT /v1/groups/{groupUuid}?action=COPY SQL requests analysis
+    PUT /v1/groups/{groupUuid}/network-modifications/copy SQL requests analysis
 
     Given an example with 2 tabular modifications having 1000 modifications each
 
@@ -409,7 +409,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         - delete modification for tabular modifications
      */
     @Test
-    void testSqlRequestsCountOnDeleteStashedInGroup() throws Exception {
+    void testSqlRequestsCountOnDeleteStashedInGroups() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
         ApiUtils.stashNetworkModifications(mockMvc, modifications.stream().map(Pair::getLeft).toList());
 
@@ -421,7 +421,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
     }
 
     @Test
-    void testSqlRequestsCountOnDeleteStashedInGroup2() throws Exception {
+    void testSqlRequestsCountOnDeleteStashedInGroups2() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
         ApiUtils.stashNetworkModifications(mockMvc, modifications.stream().map(Pair::getLeft).toList());
 
