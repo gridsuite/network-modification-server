@@ -111,7 +111,8 @@ public class NetworkModificationController {
                 @RequestParam(value = "sourceContainerType", required = false) ModificationContainerType sourceContainerType,
             @Parameter(description = "modifications can be applied (default true; ignored for COMPOSITE targets)")
             @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
-            @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
+            @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos,
+            @RequestHeader("userId") String userId) {
         return switch (action) {
             case COPY -> networkModificationService.duplicateModifications(
                     targetContainerId, sourceContainerId,
@@ -133,7 +134,8 @@ public class NetworkModificationController {
                     beforeModificationUuid,
                         modificationUuidsToMove,
                         applicationContexts,
-                        canApply
+                        canApply,
+                        userId
                 ).thenApply(ResponseEntity.ok()::body);
             }
         };
@@ -276,9 +278,10 @@ public class NetworkModificationController {
     public ResponseEntity<Void> stashNetworkModifications(
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
-            @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "stashed", defaultValue = "true") Boolean stashed) {
+            @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "stashed", defaultValue = "true") Boolean stashed,
+            @RequestHeader("userId") String userId) {
         if (Boolean.TRUE.equals(stashed)) {
-            networkModificationService.stashNetworkModifications(groupUuid, networkModificationUuids);
+            networkModificationService.stashNetworkModifications(groupUuid, networkModificationUuids, userId);
             networkModificationService.reorderNetworkModifications(groupUuid, Boolean.FALSE);
         } else {
             networkModificationService.restoreNetworkModifications(groupUuid, networkModificationUuids);
@@ -331,7 +334,7 @@ public class NetworkModificationController {
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @RequestBody ModificationInfos metadata, @RequestHeader("userId") String userId) {
 
-        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata);
+        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata, userId);
         return ResponseEntity.ok().build();
     }
 

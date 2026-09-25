@@ -262,7 +262,8 @@ class ModificationIndexationTest {
                 null,
                 modifications.stream().map(ModificationInfos::getUuid).toList(),
                 List.of(TestUtils.contextOnAnyRootNetwork(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID())),
-                true
+                true,
+                "userId"
         ).join();
 
         /*

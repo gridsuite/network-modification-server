@@ -986,6 +986,14 @@ public class NetworkModificationRepository {
     }
 
     /**
+     * @return true if {@code modificationUuid} is referenced by at least one modification reference (i.e. it is shared)
+     */
+    @Transactional(readOnly = true)
+    public boolean isReferenced(@NonNull UUID modificationUuid) {
+        return modificationRepository.existsReferenceToModification(modificationUuid);
+    }
+
+    /**
      * @return ReferenceData : modification and elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
