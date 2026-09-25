@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.service;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import org.gridsuite.modification.server.dto.ElementAttributes;
 import org.gridsuite.modification.server.dto.PermissionType;
 import org.gridsuite.modification.server.dto.ReferenceAttributes;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +26,7 @@ import java.util.UUID;
  */
 @Service
 public class DirectoryService {
+
     private static final String DIRECTORY_API_VERSION = "v1";
     private static final String DELIMITER = "/";
     public static final String HEADER_USER_ID = "userId";
@@ -35,9 +37,24 @@ public class DirectoryService {
     private final RestClient restClient;
 
     public DirectoryService(@Value("${gridsuite.services.directory-server.base-uri:http://directory-server/}") String directoryServerBaseUri,
-                         RestClient restClient) {
+                            RestClient restClient) {
         setDirectoryServerBaseUri(directoryServerBaseUri);
         this.restClient = restClient;
+    }
+
+    public void updateElement(@NonNull ElementAttributes elementAttributes, String userId) {
+        var path = UriComponentsBuilder.fromPath(
+                        DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}")
+                .buildAndExpand(elementAttributes.getUuid())
+                .toUriString();
+
+        restClient.put()
+                .uri(getDirectoryServerBaseUri() + path)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HEADER_USER_ID, userId)
+                .body(elementAttributes)
+                .retrieve()
+                .toBodilessEntity();
     }
 
     /**

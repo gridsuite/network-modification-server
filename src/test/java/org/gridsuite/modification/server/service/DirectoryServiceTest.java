@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.service;
 
+import org.gridsuite.modification.server.dto.ElementAttributes;
 import org.gridsuite.modification.server.dto.PermissionType;
 import org.gridsuite.modification.server.dto.ReferenceAttributes;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PUT;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withForbiddenRequest;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 class DirectoryServiceTest {
     private static final String DIRECTORY_SERVER_BASE_URI = "http://directory-server-test";
@@ -62,6 +64,24 @@ class DirectoryServiceTest {
                 .andRespond(withSuccess());
 
         directoryService.updateElementReference(elementUuid, referenceAttributes, userId);
+
+        directoryServer.verify();
+    }
+
+    @Test
+    void testUpdateElement() {
+        UUID elementUuid = UUID.randomUUID();
+        String userId = "userId";
+        ElementAttributes elementAttributes = ElementAttributes.createElementAttributes(elementUuid, "name", "description");
+
+        String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/" + elementUuid;
+        directoryServer.expect(requestTo(expectedUrl))
+                .andExpect(method(PUT))
+                .andExpect(header(HEADER_USER_ID, userId))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andRespond(withSuccess());
+
+        directoryService.updateElement(elementAttributes, userId);
 
         directoryServer.verify();
     }

@@ -20,10 +20,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.dto.CompositeModificationInfos;
-import org.gridsuite.modification.dto.EquipmentModificationInfos;
-import org.gridsuite.modification.dto.GenerationDispatchInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
@@ -284,6 +281,15 @@ public class NetworkModificationService {
     @Transactional
     public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
         networkModificationRepository.updateNetworkModificationMetadata(modificationUuids, metadata);
+    }
+
+    @Transactional
+    public void updateModificationReferencedMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationReferenceInfos metadata, String userId) {
+        List<ElementAttributes> elementAttributesList = networkModificationRepository.updateModificationReferencedMetadata(modificationUuids, metadata);
+        if (!elementAttributesList.isEmpty()) {
+            elementAttributesList.forEach(elementAttributes -> directoryService.updateElement(elementAttributes, userId));
+        }
+
     }
 
     @Transactional
@@ -590,8 +596,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
-        return networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name);
+    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name, String description) {
+        return networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name, description);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {
@@ -599,8 +605,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
-        networkModificationRepository.updateCompositeModification(compositeUuid, name);
+    public void updateCompositeModification(@NonNull UUID compositeUuid, String name, String description) {
+        networkModificationRepository.updateCompositeModification(compositeUuid, name, description);
     }
 
     @Transactional

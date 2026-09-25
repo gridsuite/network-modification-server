@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
@@ -324,9 +325,13 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The metadata of the network modifications has been successfully updated")
     public ResponseEntity<Void> updateNetworkModificationMetadata(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
-            @RequestBody ModificationInfos metadata, @RequestHeader("userId") String userId) {
-
-        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata);
+            @Parameter(description = "User id") @RequestHeader("userId") String userId,
+            @RequestBody ModificationInfos metadata) {
+        if (metadata instanceof ModificationReferenceInfos modificationReferenceInfos) {
+            networkModificationService.updateModificationReferencedMetadata(networkModificationUuids, modificationReferenceInfos, userId);
+        } else {
+            networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata);
+        }
         return ResponseEntity.ok().build();
     }
 
