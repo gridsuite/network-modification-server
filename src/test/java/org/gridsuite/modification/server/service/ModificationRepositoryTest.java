@@ -574,7 +574,7 @@ class ModificationRepositoryTest {
                 new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP),
                 new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP),
                 List.of(modificationOriginal.get(5).getUuid()), modificationOriginal.get(1).getUuid());
-        assertRequestsCount(6, 0, 2, 0);
+        assertRequestsCount(7, 0, 2, 0);
 
         var modification = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         // [0:1, 1:6, 2:2, 3:3, 4:4 ,5:5 ]
@@ -588,7 +588,7 @@ class ModificationRepositoryTest {
                 new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP),
                 new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP),
                 List.of(modificationOriginal.get(2).getUuid(), modificationOriginal.get(5).getUuid()), null);
-        assertRequestsCount(6, 0, 2, 0);
+        assertRequestsCount(7, 0, 2, 0);
 
         // [0:1, 1:2, 2:4, 3:5, 4:6, 5:3 ]
         modification = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -626,7 +626,7 @@ class ModificationRepositoryTest {
             new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
             uuidsToMove, null);
         assertEquals(uuidsToMove.size(), movedModifications.size());
-        assertRequestsCount(5, 0, 1, 0);
+        assertRequestsCount(6, 0, 1, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
@@ -645,7 +645,7 @@ class ModificationRepositoryTest {
             new ModificationContainerInfos(TEST_GROUP_ID_3, ModificationContainerType.GROUP),
             uuidsToMove, null);
         assertEquals(uuidsToMove.size(), movedModifications.size());
-        assertRequestsCount(4, 1, 1, 0);
+        assertRequestsCount(5, 1, 1, 0);
 
         modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
         var modification3 = networkModificationRepository.getModifications(TEST_GROUP_ID_3, true, true);
@@ -684,7 +684,7 @@ class ModificationRepositoryTest {
             new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
             uuidsToMove, groovyScriptEntity6.getId());
         assertEquals(uuidsToMove.size(), movedModifications.size());
-        assertRequestsCount(5, 0, 1, 0);
+        assertRequestsCount(6, 0, 1, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
@@ -727,7 +727,7 @@ class ModificationRepositoryTest {
                 new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP),
                 new ModificationContainerInfos(TEST_GROUP_ID_3, ModificationContainerType.GROUP),
                 modificationsToMoveUuid, null);
-        assertRequestsCount(5, 0, 1, 0);
+        assertRequestsCount(6, 0, 1, 0);
         // only the valid modification is moved
         assertEquals(1, movedModifications.size());
         assertEquals(groovyScriptEntity1.getId(), movedModifications.get(0).getUuid());
@@ -751,7 +751,7 @@ class ModificationRepositoryTest {
                 source, target,
                 modificationsToMoveUuid2, referenceNodeUuid),
                 new NetworkModificationServerException(MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR).getMessage());
-        assertRequestsCount(5, 0, 0, 0);
+        assertRequestsCount(4, 0, 0, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
@@ -1887,7 +1887,7 @@ class ModificationRepositoryTest {
         assertEquals(contentApplicabilities, extracted.stream().map(ModificationInfos::getApplicabilityByRootNetworkTag).toList(),
                 "Splitting a composite returns its content with the applicabilities it was given");
 
-        List<ModificationInfos> moved = networkModificationRepository.moveModificationsFromGroup(
+        List<ModificationInfos> moved = networkModificationRepository.moveModifications(
                 new ModificationContainerInfos(TEST_GROUP_ID_3, ModificationContainerType.GROUP),
                 new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
                 extracted.stream().map(ModificationInfos::getUuid).toList(), null);
