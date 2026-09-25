@@ -250,9 +250,38 @@ public class NetworkModificationRepository {
             @NonNull List<UUID> modificationUuids, UUID beforeModificationUuid) {
         var sourceContainer = getContainer(source);
         var targetContainer = getContainer(target);
+        if (!sourceContainer.getId().equals(targetContainer.getId()) && targetContainer.isComposite()) {
+            assertContainerIsOutOfReach(targetContainer.getId(), modificationUuids);
+        }
         var moved = moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid);
         deleteStaleApplicationInfos(sourceContainer, targetContainer, moved);
         return addApplicabilities(moved.stream().map(this::toModificationInfos).toList());
+    }
+
+    /**
+     * Refuses putting into a composite modifications that can reach it, be it by containment or by following the
+     * shared modifications they reference: the composite would end up containing itself, and any full conversion of
+     * its content would then recurse forever. The cycle has to be refused here, at write time: a cyclic DTO would
+     * make the reading, the JSON serialization and the application on the network loop just as much.
+     * <p>
+     * {@link CompositeContainerEntity#insertModifications} only looks at containment, and only at the modifications
+     * handed to it; a reference designating the target ({@link #resolveContainerId}) or pointing back at one of its
+     * ancestors is precisely what slips through it.
+     */
+    private void assertContainerIsOutOfReach(@NonNull UUID targetCompositeUuid, @NonNull List<UUID> modificationUuids) {
+        if (modificationUuids.isEmpty()) {
+            return;
+        }
+        Set<UUID> reachable = new HashSet<>(modificationUuids);
+        reachable.addAll(getContainedModificationUuids(modificationUuids));
+        // the shared modifications reachable from there, at any depth, come with all of their content: a target
+        // nested in one of them closes a cycle too
+        reachable.addAll(getSharedModificationTrees(List.copyOf(reachable)).allUuids());
+        if (reachable.contains(targetCompositeUuid)) {
+            throw new NetworkModificationServerException(MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR,
+                String.format("Putting modifications %s into (%s) would create a cycle", modificationUuids, targetCompositeUuid),
+                Map.of("modificationIds", modificationUuids, "containerId", targetCompositeUuid));
+        }
     }
 
     private List<ModificationEntity> moveModificationsNonTransactional(AbstractModificationContainerEntity sourceContainer, AbstractModificationContainerEntity targetContainer,
@@ -1161,6 +1190,13 @@ public class NetworkModificationRepository {
     @Transactional
     public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         ModificationEntity entity = getModificationEntity(modificationUuid);
+        // repointing a reference is the last way to close a cycle: the reference stays where it is, only its target
+        // moves, so no insertion check is involved
+        if (entity instanceof ModificationReferenceEntity reference && modificationInfos instanceof ModificationReferenceInfos referenceInfos
+                && !reference.getReferencedId().equals(referenceInfos.getReferencedId())
+                && entity.getContainer() != null && entity.getContainer().isComposite()) {
+            assertContainerIsOutOfReach(entity.getContainer().getId(), List.of(referenceInfos.getReferencedId()));
+        }
         // Tabular modifications optimization:
         // Before updating/adding with new sub-modifications, we delete and clear existing sub-modifications manually
         // to avoid JPA to make a huge query to find them (no need to read them, they are going to be replaced).
@@ -1498,6 +1534,10 @@ public class NetworkModificationRepository {
             targetGroup = modificationGroupRepository.findById(firstModificationEntity.getContainerUuid()).orElse(null);
         } else {
             targetComposite = compositeContainerRepository.findById(firstModificationEntity.getContainerUuid()).orElse(null);
+        }
+        if (targetComposite != null) {
+            // the new composite lands in that one, so whatever it assembles must not lead back to it
+            assertContainerIsOutOfReach(targetComposite.getId(), assembledModificationsUuids);
         }
 
         List<ModificationEntity> assembledModifications = assembledModificationsUuids.stream()
