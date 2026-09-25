@@ -43,6 +43,7 @@ import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -332,6 +333,20 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public boolean hasModificationReferences(@NonNull List<UUID> containerUuids) {
         return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
+    }
+
+    public void assertReferencedModificationsAreWritable(@NonNull List<UUID> containerUuids, @NonNull String userId) {
+        Set<UUID> sharedModificationUuids = networkModificationRepository.getReferencedModificationUuids(containerUuids);
+        if (sharedModificationUuids.isEmpty()) {
+            return;
+        }
+        try {
+            directoryService.checkPermission(sharedModificationUuids, userId, PermissionType.WRITE);
+        } catch (HttpClientErrorException.Forbidden _) {
+            throw new NetworkModificationServerException(MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED,
+                    String.format(MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED.messageTemplate(), sharedModificationUuids),
+                    Map.of("sharedModificationUuids", sharedModificationUuids));
+        }
     }
 
     @Transactional

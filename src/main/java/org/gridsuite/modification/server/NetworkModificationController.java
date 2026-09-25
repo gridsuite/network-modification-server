@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static org.gridsuite.modification.server.service.DirectoryService.HEADER_USER_ID;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -303,6 +305,19 @@ public class NetworkModificationController {
     public ResponseEntity<Boolean> hasModificationReferences(
             @Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids) {
         return ResponseEntity.ok().body(networkModificationService.hasModificationReferences(containerUuids));
+    }
+
+    @GetMapping(value = "/containers/references/authorized")
+    @Operation(summary = "Check the write permission on the shared modifications the containers (groups or composites) point to")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The user can write on all of them"),
+        @ApiResponse(responseCode = "403", description = "The user cannot write on at least one of them")
+    })
+    public ResponseEntity<Void> areReferencedModificationsWritable(
+            @Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.assertReferencedModificationsAreWritable(containerUuids, userId);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
