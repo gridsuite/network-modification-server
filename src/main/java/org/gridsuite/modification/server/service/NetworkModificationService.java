@@ -268,8 +268,13 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
+    public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos, @NonNull String userId) {
         networkModificationRepository.updateModification(modificationUuid, modificationInfos);
+
+        // Notify directory-server once per shared ancestor composite (closest first)
+        List<UUID> sharedAncestorUuids = networkModificationRepository.getAllSharedCompositeAncestorsUuids(modificationUuid);
+        sharedAncestorUuids
+            .forEach(sharedUuid -> notificationService.emitElementUpdated(sharedUuid, userId));
     }
 
     @Transactional
