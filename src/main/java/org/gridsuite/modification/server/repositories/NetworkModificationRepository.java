@@ -950,8 +950,15 @@ public class NetworkModificationRepository {
      * @return ReferenceData : modification and elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
-    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids) {
-        List<ModificationEntity> modificationEntities = this.modificationRepository.findAllByIdIn(modificationUuids);
+    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids, boolean fetchSubModifications) {
+        List<ModificationEntity> modificationEntities;
+        if (fetchSubModifications) {
+            List<UUID> testedModificationUuids = new ArrayList<>(modificationUuids);
+            testedModificationUuids.addAll(modificationRepository.findAllDescendantModificationIdsByContainerIds(modificationUuids));
+            modificationEntities = this.modificationRepository.findAllByIdIn(testedModificationUuids);
+        } else {
+            modificationEntities = this.modificationRepository.findAllByIdIn(modificationUuids);
+        }
         List<ModificationReferenceData> references = new ArrayList<>(List.of());
         modificationEntities.forEach(modificationEntity -> {
             if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {
