@@ -286,7 +286,7 @@ public class NetworkModificationService {
     public void updateModificationReferencedMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationReferenceInfos metadata, String userId) {
         List<ElementAttributes> elementAttributesList = networkModificationRepository.updateModificationReferencedMetadata(modificationUuids, metadata);
         if (!elementAttributesList.isEmpty()) {
-            elementAttributesList.forEach((elementAttributes) -> directoryService.updateElement(elementAttributes, userId));
+            elementAttributesList.forEach(elementAttributes -> directoryService.updateElement(elementAttributes, userId));
         }
 
     }
