@@ -6,8 +6,9 @@
  */
 package org.gridsuite.modification.server.service;
 
-import org.gridsuite.modification.server.dto.PermissionType;
+import org.gridsuite.modification.dto.PermissionType;
 import org.gridsuite.modification.server.dto.ReferenceAttributes;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -15,10 +16,14 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.ResponseActions;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.service.DirectoryService.HEADER_USER_ID;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.HttpMethod.GET;
@@ -37,6 +42,11 @@ class DirectoryServiceTest {
         RestClient.Builder restClientBuilder = RestClient.builder();
         directoryServer = MockRestServiceServer.bindTo(restClientBuilder).build();
         directoryService = new DirectoryService(DIRECTORY_SERVER_BASE_URI, restClientBuilder.build());
+    }
+
+    @AfterEach
+    void tearDown() {
+        directoryServer.verify();
     }
 
     @Test
@@ -62,8 +72,6 @@ class DirectoryServiceTest {
                 .andRespond(withSuccess());
 
         directoryService.updateElementReference(elementUuid, referenceAttributes, userId);
-
-        directoryServer.verify();
     }
 
     @Test
@@ -89,8 +97,6 @@ class DirectoryServiceTest {
                 .andRespond(withSuccess());
 
         directoryService.createElementReference(elementUuid, referenceAttributes, userId);
-
-        directoryServer.verify();
     }
 
     @Test
@@ -102,8 +108,6 @@ class DirectoryServiceTest {
         expectPermissionCheck(firstElementUuid, secondElementUuid, userId).andRespond(withSuccess());
 
         directoryService.checkPermission(List.of(firstElementUuid, secondElementUuid), userId, PermissionType.WRITE);
-
-        directoryServer.verify();
     }
 
     @Test
@@ -116,8 +120,41 @@ class DirectoryServiceTest {
 
         assertThrows(HttpClientErrorException.Forbidden.class,
                 () -> directoryService.checkPermission(List.of(firstElementUuid, secondElementUuid), userId, PermissionType.WRITE));
+    }
 
-        directoryServer.verify();
+    @Test
+    void testGetElementsPermissions() {
+        UUID readOnlyElementUuid = UUID.randomUUID();
+        UUID writableElementUuid = UUID.randomUUID();
+        String userId = "userId";
+
+        String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/permissions"
+                + "?ids=" + readOnlyElementUuid + "&ids=" + writableElementUuid;
+        directoryServer.expect(requestTo(expectedUrl))
+                .andExpect(method(GET))
+                .andExpect(header(HEADER_USER_ID, userId))
+                .andRespond(withSuccess("{\"" + readOnlyElementUuid + "\":\"READ\",\"" + writableElementUuid + "\":\"WRITE\"}",
+                        MediaType.APPLICATION_JSON));
+
+        assertThat(directoryService.getElementsPermissions(List.of(readOnlyElementUuid, writableElementUuid), userId))
+                .containsExactlyInAnyOrderEntriesOf(Map.of(readOnlyElementUuid, PermissionType.READ, writableElementUuid, PermissionType.WRITE));
+    }
+
+    @Test
+    void testGetElementsPermissionsAsksNothingWithoutElement() {
+        assertThat(directoryService.getElementsPermissions(Set.of(), "userId")).isEmpty();
+    }
+
+    @Test
+    void testGetElementsPermissionsThrowsWhenTheDirectoryFails() {
+        UUID elementUuid = UUID.randomUUID();
+        String userId = "userId";
+
+        directoryServer.expect(requestTo(DIRECTORY_SERVER_BASE_URI + "/v1/elements/permissions?ids=" + elementUuid))
+                .andExpect(method(GET))
+                .andRespond(withServerError());
+
+        assertThrows(RestClientException.class, () -> directoryService.getElementsPermissions(List.of(elementUuid), userId));
     }
 
     private ResponseActions expectPermissionCheck(UUID firstElementUuid, UUID secondElementUuid, String userId) {

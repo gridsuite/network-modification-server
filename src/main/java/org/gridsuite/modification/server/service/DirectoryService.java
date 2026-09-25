@@ -9,15 +9,17 @@ package org.gridsuite.modification.server.service;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import org.gridsuite.modification.server.dto.PermissionType;
+import org.gridsuite.modification.dto.PermissionType;
 import org.gridsuite.modification.server.dto.ReferenceAttributes;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -94,5 +96,29 @@ public class DirectoryService {
                 .header(HEADER_USER_ID, userId)
                 .retrieve()
                 .toBodilessEntity();
+    }
+
+    /**
+     * Get the permissions for a given list of directory elements and a given user.
+     * @param elementUuids uuids of the elements in the directory-server
+     * @param userId id of the user the permissions are read for
+     * @return the strongest permission held on each element, an element held no permission at all on and an element
+     * unknown to the directory-server being left out
+     */
+    public Map<UUID, PermissionType> getElementsPermissions(@NonNull Collection<UUID> elementUuids, @NonNull String userId) {
+        if (elementUuids.isEmpty()) {
+            return Map.of();
+        }
+        var path = UriComponentsBuilder.fromPath(DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/permissions")
+                .queryParam("ids", elementUuids)
+                .buildAndExpand()
+                .toUriString();
+
+        Map<UUID, PermissionType> permissions = restClient.get()
+                .uri(getDirectoryServerBaseUri() + path)
+                .header(HEADER_USER_ID, userId)
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() { });
+        return permissions == null ? Map.of() : permissions;
     }
 }

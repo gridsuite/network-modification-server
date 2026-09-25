@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.service.ModificationPermissionService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
@@ -26,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+
+import static org.gridsuite.modification.server.service.DirectoryService.HEADER_USER_ID;
 
 /**
  * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
@@ -42,8 +45,12 @@ public class CompositeController {
 
     private final NetworkModificationService networkModificationService;
 
-    public CompositeController(NetworkModificationService networkModificationService) {
+    private final ModificationPermissionService modificationPermissionService;
+
+    public CompositeController(NetworkModificationService networkModificationService,
+                               ModificationPermissionService modificationPermissionService) {
         this.networkModificationService = networkModificationService;
+        this.modificationPermissionService = modificationPermissionService;
     }
 
     @PutMapping(value = "/groups/{groupUuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -99,11 +106,13 @@ public class CompositeController {
     public ResponseEntity<Map<UUID,
             List<ModificationInfos>>> getNetworkModificationsFromComposite(@Parameter(description = "Composite modifications uuids list") @RequestParam("uuids") List<UUID> compositeModificationUuids,
                                                                                         @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false,
-                                                                                                defaultValue = "true") Boolean onlyMetadata) {
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(networkModificationService.getNetworkModificationsFromComposite(compositeModificationUuids, onlyMetadata)
-                );
+                                                                                                defaultValue = "true") Boolean onlyMetadata,
+                                                                                        @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
+        Map<UUID, List<ModificationInfos>> modificationsByComposite =
+                networkModificationService.getNetworkModificationsFromComposite(compositeModificationUuids, onlyMetadata);
+        modificationPermissionService.addPermissions(
+                modificationsByComposite.values().stream().flatMap(List::stream).toList(), userId);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(modificationsByComposite);
     }
 
     @GetMapping(value = "/children-uuids", produces = MediaType.APPLICATION_JSON_VALUE)
