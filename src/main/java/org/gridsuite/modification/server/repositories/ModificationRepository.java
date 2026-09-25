@@ -233,26 +233,27 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findOnlyCompositeChildrenUuids(@Param("compositeUuids") Collection<UUID> compositeUuids);
 
     /**
-     * @return ancestor composite modification uuids of {@code modificationUuid}, closest first;
-     * empty if the modification is a direct child of a group (not nested in any composite)
+     * @return distinct shared ancestor composite modification uuids of {@code modificationUuids},
+     * closest first; empty if none of the modifications is nested in a shared composite
      */
     @NativeQuery("""
         WITH RECURSIVE ancestors(id, level) AS (
             SELECT m.container_id, 1
               FROM modification m
-             WHERE m.id = :modificationUuid
+             WHERE m.id IN (:modificationUuids)
             UNION ALL
             SELECT comp.container_id, a.level + 1
               FROM ancestors a
               JOIN modification_container c ON c.id = a.id AND c.type = 'COMPOSITE'
               JOIN modification comp ON comp.id = a.id
         )
-        SELECT DISTINCT on (a.id, a.level) CAST(a.id AS VARCHAR)
+        SELECT CAST(a.id AS VARCHAR)
           FROM ancestors a
-          JOIN modification_reference r ON r.referenced_id = a.id
-         ORDER BY a.level
+         WHERE EXISTS (SELECT 1 FROM modification_reference r WHERE r.referenced_id = a.id)
+         GROUP BY a.id
+         ORDER BY MIN(a.level)
         """)
-    List<UUID> findAllSharedCompositeAncestorsUuids(@Param("modificationUuid") UUID modificationUuid);
+    List<UUID> findAllSharedCompositeAncestorsUuids(@Param("modificationUuids") Collection<UUID> modificationUuids);
 
     /**
      * Returns the composite UUID followed by every descendant UUID (composites <em>and</em> leaves),
