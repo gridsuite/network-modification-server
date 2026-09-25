@@ -9,6 +9,8 @@ package org.gridsuite.modification.server.dto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.UUID;
+
 /**
  * @author Etienne Lesot <etienne.lesot at rte-france.com>
  *
@@ -17,10 +19,11 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class ElementAttributes {
+    private UUID uuid;
     private String name;
     private String description;
 
-    public static ElementAttributes createElementAttributes(String name, String description) {
-        return new ElementAttributes(name, description);
+    public static ElementAttributes createElementAttributes(UUID uuid, String name, String description) {
+        return new ElementAttributes(uuid, name, description);
     }
 }

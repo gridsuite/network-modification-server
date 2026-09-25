@@ -72,7 +72,7 @@ class DirectoryServiceTest {
     void testUpdateElement() {
         UUID elementUuid = UUID.randomUUID();
         String userId = "userId";
-        ElementAttributes elementAttributes = ElementAttributes.createElementAttributes("name", "description");
+        ElementAttributes elementAttributes = ElementAttributes.createElementAttributes(elementUuid, "name", "description");
 
         String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/" + elementUuid;
         directoryServer.expect(requestTo(expectedUrl))
@@ -81,7 +81,7 @@ class DirectoryServiceTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andRespond(withSuccess());
 
-        directoryService.updateElement(elementUuid, elementAttributes, userId);
+        directoryService.updateElement(elementAttributes, userId);
 
         directoryServer.verify();
     }

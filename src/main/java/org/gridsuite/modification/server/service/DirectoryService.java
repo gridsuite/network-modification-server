@@ -42,10 +42,10 @@ public class DirectoryService {
         this.restClient = restClient;
     }
 
-    public void updateElement(@NonNull UUID elementUuid, @NonNull ElementAttributes elementAttributes, String userId) {
+    public void updateElement(@NonNull ElementAttributes elementAttributes, String userId) {
         var path = UriComponentsBuilder.fromPath(
                         DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}")
-                .buildAndExpand(elementUuid)
+                .buildAndExpand(elementAttributes.getUuid())
                 .toUriString();
 
         restClient.put()

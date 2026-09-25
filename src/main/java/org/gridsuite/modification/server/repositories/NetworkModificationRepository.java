@@ -1028,8 +1028,8 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public Map<UUID, ElementAttributes> updateModificationReferencedMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationReferenceInfos metadata) {
-        Map<UUID, ElementAttributes> modificationToBeUpdatedInDirectory = new HashMap<>();
+    public List<ElementAttributes> updateModificationReferencedMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationReferenceInfos metadata) {
+        List<ElementAttributes> modificationToBeUpdatedInDirectory = new ArrayList<>();
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
@@ -1042,8 +1042,7 @@ public class NetworkModificationRepository {
                         .findById(modificationReferenceEntity.getReferencedId())
                         .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
                 referencedModificationEntity.setDescription(metadata.getDescription());
-                modificationToBeUpdatedInDirectory.put(referencedModificationEntity.getId(),
-                        new ElementAttributes(null, metadata.getDescription()));
+                modificationToBeUpdatedInDirectory.add(new ElementAttributes(referencedModificationEntity.getId(), null, metadata.getDescription()));
             }
             if (metadata.getActivated() != null) {
                 updateActivated(modificationEntity, metadata.getActivated());
