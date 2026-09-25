@@ -264,42 +264,33 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         """)
     List<UUID> findAllChildrenUuids(@Param("compositeUuid") UUID compositeUuid);
 
-    interface CompositeDepth {
+    interface MaxDepth {
         String getId();
-
         Integer getDepth();
     }
 
+    /**
+     * For each of {@code uuids}, the number of levels below it the way the modification tree unfolds it: the unstashed
+     * content of a composite, a reference standing for the composite it points to, at any level. 0 when nothing is below.
+     */
     @NativeQuery("""
-            WITH RECURSIVE
-            roots(input_id, composite_id) AS (
-                SELECT m.id, m.id
-                  FROM modification m
-                 WHERE m.id IN (:uuids)
-                   AND m.type = 'COMPOSITE_MODIFICATION'
-                UNION ALL
-                SELECT m.id, mr.referenced_id
-                  FROM modification m
-                  JOIN modification_reference mr ON mr.id = m.id
-                 WHERE m.id IN (:uuids)
-                   AND m.type = 'MODIFICATION_REFERENCE'
-            ),
-            hierarchy(input_id, id, level) AS (
-                SELECT r.input_id, m.id, 1
-                  FROM modification m
-                  JOIN roots r ON m.container_id = r.composite_id
-                 WHERE m.stashed = false
-                UNION ALL
-                SELECT h.input_id, m.id, h.level + 1
-                  FROM modification m
-                  JOIN hierarchy h ON m.container_id = h.id
-                 WHERE m.stashed = false
-            )
-            SELECT CAST(input_id AS VARCHAR) AS id, MAX(level) AS depth
-              FROM hierarchy
-             GROUP BY input_id
-            """)
-    List<CompositeDepth> getModificationsMaxDepth(@Param("uuids") List<UUID> uuids);
+    WITH RECURSIVE tree(root_id, node_id, depth) AS (
+        SELECT m.id, COALESCE(r.referenced_id, m.id), 0
+          FROM modification m
+          LEFT JOIN modification_reference r ON r.id = m.id
+         WHERE m.id IN (:uuids)
+        UNION ALL
+        SELECT t.root_id, COALESCE(r.referenced_id, m.id), t.depth + 1
+          FROM tree t
+          JOIN modification m ON m.container_id = t.node_id
+          LEFT JOIN modification_reference r ON r.id = m.id
+         WHERE m.stashed = false
+    )
+    SELECT CAST(root_id AS VARCHAR) AS id, MAX(depth) AS depth
+      FROM tree
+     GROUP BY root_id
+    """)
+    List<MaxDepth> findMaxDepths(@Param("uuids") Collection<UUID> uuids);
 
     @EntityGraph(attributePaths = {"content.modifications"}, type = EntityGraph.EntityGraphType.LOAD)
     List<CompositeModificationEntity> findAllCompositesWithModificationsByIdIn(List<UUID> compositeUuids);

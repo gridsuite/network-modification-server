@@ -2167,4 +2167,109 @@ class ModificationRepositoryTest {
 
         assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getStandaloneNetworkModifications(nonExistingUuids, true));
     }
+
+    private static EquipmentAttributeModificationInfos switchInfos(String equipmentId) {
+        return EquipmentAttributeModificationInfos.builder()
+                .equipmentId(equipmentId).equipmentAttributeName("open").equipmentAttributeValue(true)
+                .equipmentType(IdentifiableType.SWITCH).build();
+    }
+
+    /** The max depth each composite or reference of a container gets in the metadata listing, as the front end reads it */
+    private Map<UUID, Integer> metadataMaxDepths(UUID containerUuid) {
+        return networkModificationRepository.getModifications(containerUuid, true, false).stream()
+                .filter(infos -> maxDepthOf(infos) != null)
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationRepositoryTest::maxDepthOf));
+    }
+
+    private static Integer maxDepthOf(ModificationInfos infos) {
+        return switch (infos) {
+            case CompositeModificationInfos composite -> composite.getMaxDepth();
+            case ModificationReferenceInfos reference -> reference.getMaxDepth();
+            default -> null;
+        };
+    }
+
+    private void moveFromGroupInto(UUID groupUuid, UUID compositeOrReferenceUuid, UUID modificationUuid) {
+        networkModificationRepository.moveModifications(
+                new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP),
+                new ModificationContainerInfos(compositeOrReferenceUuid, ModificationContainerType.COMPOSITE),
+                List.of(modificationUuid), null);
+    }
+
+    @Test
+    void testMaxDepthOfCompositesAndReferences() {
+        UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d3");
+        UUID emptyUuid = networkModificationRepository.saveModificationInfos(TEST_GROUP_ID_2, List.of(
+                CompositeModificationInfos.builder().name("empty").modificationsInfos(List.of()).build())).getFirst().getUuid();
+
+        assertEquals(Map.of(compositeUuid, 1, referenceUuid, 1, emptyUuid, 0), metadataMaxDepths(TEST_GROUP_ID_2),
+                "a reference stands for the composite it points to, an empty composite has nothing below it");
+    }
+
+    @Test
+    void testMaxDepthOfACompositeUnfoldsTheReferencesItHolds() {
+        // outer ── reference ⇢ shared ── leaf : the leaf is shown two levels below outer
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID outerUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d2");
+        moveFromGroupInto(TEST_GROUP_ID_2, outerUuid, referenceUuid);
+
+        assertEquals(Map.of(outerUuid, 2), metadataMaxDepths(TEST_GROUP_ID_2), "#906 answers 1 here");
+        assertEquals(Map.of(referenceUuid, 1), metadataMaxDepths(outerUuid));
+    }
+
+    @Test
+    void testMaxDepthOfAReferenceUnfoldsTheReferencesItsSharedCompositeHolds() {
+        UUID outerReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID innerReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d2");
+        // targeting a reference moves into the shared composite it points to
+        moveFromGroupInto(TEST_GROUP_ID_2, outerReferenceUuid, innerReferenceUuid);
+
+        assertEquals(Map.of(outerReferenceUuid, 2), metadataMaxDepths(TEST_GROUP_ID_2));
+    }
+
+    @Test
+    void testMaxDepthIgnoresStashedContentWhicheverWayItIsRead() {
+        CompositeModificationInfos stashedInner = CompositeModificationInfos.builder().name("inner").stashed(true)
+                .modificationsInfos(List.of(switchInfos("v1d1"))).build();
+        UUID outerUuid = networkModificationRepository.saveModificationInfos(TEST_GROUP_ID, List.of(
+                CompositeModificationInfos.builder().name("outer")
+                        .modificationsInfos(List.of(stashedInner, switchInfos("v1d2"))).build())).getFirst().getUuid();
+
+        assertEquals(Map.of(outerUuid, 1), metadataMaxDepths(TEST_GROUP_ID));
+        assertEquals(1, ((CompositeModificationInfos) networkModificationRepository.getModificationInfo(outerUuid)).getMaxDepth());
+    }
+
+    @Test
+    void testFullInfosOfAReferenceCarryTheSameMaxDepthsAsTheMetadata() {
+        // group ── reference ⇢ shared ── [ inner ── leaf, leaf ] : what the front end unfolds when expanding the reference
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID innerUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d2");
+        moveFromGroupInto(TEST_GROUP_ID_2, referenceUuid, innerUuid);
+
+        ModificationReferenceInfos reference = (ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid);
+        CompositeModificationInfos shared = (CompositeModificationInfos) reference.getReferencedInfos();
+
+        assertEquals(2, reference.getMaxDepth());
+        assertEquals(metadataMaxDepths(TEST_GROUP_ID_2).get(referenceUuid), reference.getMaxDepth());
+        assertEquals(metadataMaxDepths(shared.getUuid()), shared.getModificationsInfos().stream()
+                        .filter(CompositeModificationInfos.class::isInstance)
+                        .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationRepositoryTest::maxDepthOf)),
+                "a composite nested in a shared one carries its max depth whichever path reads it");
+    }
+
+    @Test
+    void testMaxDepthsCostOneQueryWhateverTheNumberOfComposites() {
+        insertComposite(TEST_GROUP_ID_2, false, "v1d1");
+        long selectsForOne = countSelects(() -> networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true));
+        insertComposite(TEST_GROUP_ID_2, false, "v1d2");
+        insertComposite(TEST_GROUP_ID_2, false, "v1d3");
+        assertEquals(selectsForOne, countSelects(() -> networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true)));
+    }
+
+    private static long countSelects(Runnable runnable) {
+        SQLStatementCountValidator.reset();
+        runnable.run();
+        return net.ttddyy.dsproxy.QueryCountHolder.getGrandTotal().getSelect();
+    }
 }
