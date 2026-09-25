@@ -1208,6 +1208,86 @@ class CompositeControllerTest {
     }
 
     @Test
+    void testMovingAReferenceIntoTheSharedCompositeItPointsToIsRefused() throws Exception {
+        UUID referenceUuid = shareACompositeOfTheGroup(TEST_GROUP_ID, "shared composite");
+
+        // moving the reference into its own target: the target is designated through the reference itself, so it
+        // resolves to the shared composite, which would then contain a reference to itself
+        mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
+                        .content(getJsonBodyMove(List.of(referenceUuid), null, referenceUuid, null))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testMovingAReferenceIntoASharedCompositeThatAlreadyReachesItIsRefused() throws Exception {
+        UUID referenceToA = shareACompositeOfTheGroup(TEST_GROUP_ID, "shared A");
+        UUID referenceToB = shareACompositeOfTheGroup(TEST_GROUP2_ID, "shared B");
+
+        // A ends up containing a reference to B: allowed, nothing loops yet
+        runRequestAsync(
+                mockMvc,
+                put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
+                        .queryParam("originGroupUuid", TEST_GROUP2_ID.toString())
+                        .content(getJsonBodyMove(List.of(referenceToB), null, referenceToA, null))
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+
+        // moving the reference to A into B closes the loop, A → B → A: only following the references, at two levels,
+        // shows it
+        mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
+                        .content(getJsonBodyMove(List.of(referenceToA), null, referenceToB, null))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testAssemblingAReferenceIntoItsOwnTargetIsRefused() throws Exception {
+        UUID referenceUuid = shareACompositeOfTheGroup(TEST_GROUP_ID, "shared composite");
+        UUID sharedCompositeUuid = assertInstanceOf(ModificationReferenceInfos.class,
+                networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).getLast()).getReferencedId();
+        UUID childOfTheSharedComposite = networkModificationRepository.getModifications(sharedCompositeUuid, true, false).getFirst().getUuid();
+
+        // the new composite is created in the container of the first assembled modification, here the shared composite
+        // itself: assembling the reference into it would make the shared composite contain a reference to itself
+        mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
+                        .content(mapper.writeValueAsString(List.of(childOfTheSharedComposite, referenceUuid)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * Puts a composite in {@code groupUuid}, shares it under {@code sharedName}, and returns the uuid of the reference that
+     * took its place in the group. The shared composite keeps the uuid the composite had in the group.
+     */
+    private UUID shareACompositeOfTheGroup(UUID groupUuid, String sharedName) throws Exception {
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(groupUuid, 2);
+
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "composite name")
+                        .content(mapper.writeValueAsString(modificationList.stream().map(ModificationInfos::getUuid).toList()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID standaloneCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        runRequestAsync(
+                mockMvc,
+                put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + groupUuid + "?action=INSERT")
+                        .content(getJsonBodyModificationCompositeToBeInserted(
+                                List.of(new CompositeInfos(standaloneCompositeUuid, "composite in the study", false, "description"))))
+                        .contentType(MediaType.APPLICATION_JSON),
+                status().isOk());
+        UUID compositeInGroupUuid = networkModificationRepository.getModifications(groupUuid, true, true).getLast().getUuid();
+
+        mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeInGroupUuid + "/share")
+                        .queryParam("groupUuid", groupUuid.toString())
+                        .queryParam("name", sharedName))
+                .andExpect(status().isOk());
+
+        return networkModificationRepository.getModifications(groupUuid, true, true).getLast().getUuid();
+    }
+
+    @Test
     void testCreateCompositeFromSingleCompositeDoesNotWrap() throws Exception {
         // Create a composite modification
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
