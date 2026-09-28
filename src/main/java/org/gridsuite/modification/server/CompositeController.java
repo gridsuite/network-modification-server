@@ -90,7 +90,7 @@ public class CompositeController {
             @PathVariable("uuid") UUID compositeModificationUuid,
             @Parameter(description = "Group owning the composite modification", required = true) @RequestParam("groupUuid") UUID groupUuid,
             @Parameter(description = "New name of the shared composite modification") @RequestParam(value = "name", required = false) String name,
-            @Parameter(description = "New description of the shared composite modification") @RequestParam(value = "description", required = false) String description) {
+            @Parameter(description = "New description of the shared composite modification") @RequestBody(required = false) String description) {
         return ResponseEntity.ok().body(networkModificationService.extractCompositeModificationToShare(groupUuid, compositeModificationUuid, name, description));
     }
 
@@ -127,7 +127,7 @@ public class CompositeController {
     public ResponseEntity<Void> updateNetworkCompositeModification(
             @PathVariable("uuid") UUID compositeModificationUuid,
             @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name,
-            @Parameter(description = "New composite description") @RequestParam(value = "description", required = false) String description) {
+            @Parameter(description = "New composite description") @RequestBody(required = false) String description) {
         networkModificationService.updateCompositeModification(compositeModificationUuid, name, description);
         return ResponseEntity.ok().build();
     }
