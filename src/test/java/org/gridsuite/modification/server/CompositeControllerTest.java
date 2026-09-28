@@ -167,7 +167,7 @@ class CompositeControllerTest {
         assertEquals(modificationsNumber, modificationInfosList.size());
 
         // get the composite modification (metadata only)
-        mvcResult = mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", compositeModificationUuid))
+        mvcResult = mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeModificationUuid))
                 .andExpect(status().isOk()).andReturn();
         Map<UUID, List<ModificationInfos>> compositeModificationsMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         List<ModificationInfos> compositeModificationContent = compositeModificationsMap.get(compositeModificationUuid);
@@ -195,7 +195,7 @@ class CompositeControllerTest {
         assertThat(networkModificationRepository.getModificationInfo(otherCompositeModificationUuid)).recursivelyEquals(otherCompositeModificationInfos);
 
         // get both composite modifications
-        mvcResult = mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids=" + compositeModificationUuid + "&uuids=" + otherCompositeModificationUuid + "&onlyMetadata=true"))
+        mvcResult = mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids=" + compositeModificationUuid + "&uuids=" + otherCompositeModificationUuid))
                 .andExpect(status().isOk()).andReturn();
         Map<UUID, List<ModificationInfos>> bothCompositesMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(2, bothCompositesMap.size());
@@ -764,7 +764,7 @@ class CompositeControllerTest {
 
         // Fetch the actual sub-modification UUIDs as stored inside the composite
         Map<UUID, List<ModificationInfos>> initialMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", compositeUuid))
+                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         List<UUID> subUuids = initialMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
@@ -778,7 +778,7 @@ class CompositeControllerTest {
                 .andExpect(status().isOk());
 
         Map<UUID, List<ModificationInfos>> afterFirstMove = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", compositeUuid))
+                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         List<UUID> orderAfterFirst = afterFirstMove.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
@@ -795,7 +795,7 @@ class CompositeControllerTest {
                 .andExpect(status().isOk());
 
         Map<UUID, List<ModificationInfos>> afterSecondMove = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", compositeUuid))
+                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         List<UUID> orderAfterSecond = afterSecondMove.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
@@ -824,7 +824,7 @@ class CompositeControllerTest {
 
         // Fetch the actual sub-modification UUIDs as stored inside the composite
         Map<UUID, List<ModificationInfos>> initialMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", compositeUuid))
+                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         List<UUID> actualSubUuids = initialMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
@@ -842,7 +842,7 @@ class CompositeControllerTest {
 
         // Composite should now contain only 1 sub-modification
         Map<UUID, List<ModificationInfos>> resultMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", compositeUuid))
+                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         assertEquals(1, resultMap.get(compositeUuid).size());
@@ -888,7 +888,7 @@ class CompositeControllerTest {
 
         // The new composite should contain the assembled modifications in the same order
         Map<UUID, List<ModificationInfos>> compositeContentMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", firstCompositeUuid))
+                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", firstCompositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         List<ModificationInfos> compositeContent = compositeContentMap.get(firstCompositeUuid);
@@ -934,7 +934,7 @@ class CompositeControllerTest {
 
         // The first composite should contain the new composite, then the other untouched modification
         compositeContentMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", firstCompositeUuid))
+                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", firstCompositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         compositeContent = compositeContentMap.get(firstCompositeUuid);
@@ -947,7 +947,7 @@ class CompositeControllerTest {
         CompositeModificationEntity twoDepthComposite = compositeRepository.findById(twodepthCompositeUuid).orElseThrow();
         assertEquals(ModificationContainerType.COMPOSITE, networkModificationRepository.getContainerType(twoDepthComposite));
         compositeContentMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", firstCompositeUuid))
+                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", firstCompositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         assertTrue(compositeContentMap.get(firstCompositeUuid).stream()
@@ -1029,7 +1029,7 @@ class CompositeControllerTest {
 
         // Fetch actual sub-UUIDs of the inner composite
         Map<UUID, List<ModificationInfos>> innerMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", innerCompositeUuid))
+                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", innerCompositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         List<UUID> actualInnerSubUuids = innerMap.get(innerCompositeUuid).stream().map(ModificationInfos::getUuid).toList();
@@ -1045,7 +1045,7 @@ class CompositeControllerTest {
 
         // Fetch actual sub-UUIDs of the outer composite (includes innerComposite and leaf3 copies)
         Map<UUID, List<ModificationInfos>> outerMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", outerCompositeUuid))
+                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", outerCompositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         List<ModificationInfos> outerSubMods = outerMap.get(outerCompositeUuid);
@@ -1063,7 +1063,7 @@ class CompositeControllerTest {
 
         // Fetch actual sub-UUIDs of the inner composite as nested under the outer composite
         Map<UUID, List<ModificationInfos>> nestedInnerMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", actualInnerCompositeUuid))
+                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", actualInnerCompositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         List<UUID> actualNestedInnerSubUuids = nestedInnerMap.get(actualInnerCompositeUuid).stream().map(ModificationInfos::getUuid).toList();
@@ -1103,7 +1103,7 @@ class CompositeControllerTest {
 
         // Fetch actual sub-modification UUID inside the composite (copy created by INSERT)
         Map<UUID, List<ModificationInfos>> initialMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", compositeUuid))
+                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         List<UUID> actualSubUuids = initialMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
@@ -1119,7 +1119,7 @@ class CompositeControllerTest {
 
         // Composite should now contain 2 sub-modifications; moved mod is appended at the end
         Map<UUID, List<ModificationInfos>> afterMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", compositeUuid))
+                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
                         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                 new TypeReference<>() { });
         List<UUID> newSubUuids = afterMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
@@ -1168,21 +1168,21 @@ class CompositeControllerTest {
         UUID composite0Uuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
         UUID actualComposite1Uuid = mapper.readValue(
-                        mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", composite0Uuid))
+                        mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", composite0Uuid))
                                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                         new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
                 .get(composite0Uuid).stream()
                 .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
 
         UUID actualComposite2Uuid = mapper.readValue(
-                        mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", actualComposite1Uuid))
+                        mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", actualComposite1Uuid))
                                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                         new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
                 .get(actualComposite1Uuid).stream()
                 .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
 
         UUID actualComposite3Uuid = mapper.readValue(
-                        mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=true", actualComposite2Uuid))
+                        mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", actualComposite2Uuid))
                                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
                         new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
                 .get(actualComposite2Uuid).stream()

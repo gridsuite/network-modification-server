@@ -63,7 +63,7 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "Modifications of each container, an empty list for a container that does not exist")
     public ResponseEntity<Map<UUID, List<ModificationInfos>>> getNetworkModifications(@Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids,
                                                                                       @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false,
-                                                                                              defaultValue = "false") Boolean onlyMetadata,
+                                                                                              defaultValue = "true") Boolean onlyMetadata,
                                                                                       @Parameter(description = "Stashed modifications") @RequestParam(name = "onlyStashed", required = false,
                                                                                               defaultValue = "false") Boolean onlyStashed) {
         return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(containerUuids, onlyMetadata,

@@ -2092,7 +2092,7 @@ class ModificationControllerTest {
     /** Ordered sub-modification UUIDs stored inside a composite (its copied children). */
     private List<UUID> fetchCompositeSubUuids(UUID compositeUuid) throws Exception {
         MvcResult result = mockMvc.perform(
-                        get("/v1/containers/network-modifications?uuids={id}&onlyMetadata=true", compositeUuid))
+                        get("/v1/containers/network-modifications?uuids={id}", compositeUuid))
                 .andExpect(status().isOk()).andReturn();
         Map<UUID, List<ModificationInfos>> map =
                 mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
