@@ -490,7 +490,8 @@ class CompositeControllerTest {
         mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeInGroupUuid + "/share")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("name", "shared composite")
-                        .queryParam("description", "shared description"))
+                        .content("shared description")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
 
