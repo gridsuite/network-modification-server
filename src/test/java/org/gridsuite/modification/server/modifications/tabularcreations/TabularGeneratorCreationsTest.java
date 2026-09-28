@@ -209,7 +209,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         reset();
 
         // We get the modifications of the group (so the 2 tabular creations)
-        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
+        mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications", getGroupId()))
                 .andExpect(status().isOk());
         // We check that the request count is not dependent on the number of sub creations of the tabular creation (the JPA N+1 problem is correctly solved)
         assertSelectCount(11);
@@ -351,7 +351,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         // try to get via the group
         UnsupportedOperationException exception = assertThrows(
             UnsupportedOperationException.class,
-            () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+            () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false)
         );
         assertEquals("No sub-modifications loading for modification type: SUBSTATION_CREATION", exception.getMessage());
 

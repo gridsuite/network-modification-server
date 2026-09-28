@@ -36,7 +36,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -305,41 +304,25 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getModifications(UUID containerUuid, boolean onlyMetadata, boolean errorOnContainerNotFound) {
-        return getModifications(containerUuid, onlyMetadata, errorOnContainerNotFound, StashedFilter.ALL);
+    public List<ModificationInfos> getModifications(UUID containerUuid, boolean onlyMetadata) {
+        return getModifications(containerUuid, onlyMetadata, StashedFilter.ALL);
     }
 
     /**
      * @param containerUuid a group or a composite modification
+     * @return its modifications, and an empty list when the container does not exist
      */
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getModifications(UUID containerUuid, boolean onlyMetadata, boolean errorOnContainerNotFound, StashedFilter stashedFilter) {
-        return emptyIfContainerNotFound(errorOnContainerNotFound, () -> onlyMetadata
+    public List<ModificationInfos> getModifications(UUID containerUuid, boolean onlyMetadata, StashedFilter stashedFilter) {
+        return onlyMetadata
                 ? getModificationsMetadata(containerUuid, stashedFilter)
-                : getModificationsInfos(containerUuid, stashedFilter));
-    }
-
-    /**
-     * @return what {@code modificationsSupplier} reads, or no modification when a container is not found and
-     * {@code errorOnContainerNotFound} is false
-     * TODO : will be deleted soon
-     */
-    private static List<ModificationInfos> emptyIfContainerNotFound(boolean errorOnContainerNotFound, Supplier<List<ModificationInfos>> modificationsSupplier) {
-        try {
-            return modificationsSupplier.get();
-        } catch (NetworkModificationServerException e) {
-            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND && !errorOnContainerNotFound) {
-                return List.of();
-            }
-            throw e;
-        }
+                : getModificationsInfos(containerUuid, stashedFilter);
     }
 
     public List<ModificationInfos> getModificationsMetadata(UUID containerUuid, StashedFilter stashedFilter) {
-        UUID containerId = getModificationContainer(containerUuid).getId();
         List<ModificationEntity> base = stashedFilter == StashedFilter.STASHED
-                ? modificationRepository.findAllBaseByContainerIdReverse(containerId)
-                : modificationRepository.findAllBaseByContainerId(containerId);
+                ? modificationRepository.findAllBaseByContainerIdReverse(containerUuid)
+                : modificationRepository.findAllBaseByContainerId(containerUuid);
         // TODO : move depth handling in specific code for composite
         Map<UUID, Integer> depths = batchCompositeDepths(base);
         Map<UUID, Map<String, Boolean>> applicabilities = batchApplicabilities(base);
@@ -780,8 +763,18 @@ public class NetworkModificationRepository {
         return toModificationsInfosWithApplicabilities(modificationsEntities);
     }
 
+    /**
+     * @return the modifications of the group or the composite content with the given uuid, none when it does not exist
+     */
     private List<ModificationInfos> getModificationsInfos(UUID containerUuid, StashedFilter stashedFilter) {
-        return toModificationsInfosWithApplicabilities(getModificationEntityStream(containerUuid)
+        return modificationContainerRepository.findById(containerUuid)
+                .map(container -> getModificationsInfos(container, stashedFilter))
+                .orElse(List.of());
+    }
+
+    private List<ModificationInfos> getModificationsInfos(AbstractModificationContainerEntity container, StashedFilter stashedFilter) {
+        return toModificationsInfosWithApplicabilities(container.getModifications().stream()
+                .filter(Objects::nonNull)
                 .filter(m -> stashedFilter.accepts(m.getStashed()))
                 .toList());
     }
@@ -835,25 +828,14 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void deleteModificationGroups(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
-        try {
-            List<ModificationGroupEntity> groupEntities = getModificationGroups(groupUuids);
-            if (groupEntities.size() != groupUuids.size()) {
-                List<UUID> notFoundGroups = groupUuids.stream().filter(uuid -> groupEntities.stream().noneMatch(groupEntity -> uuid.equals(groupEntity.getId()))).toList();
-                throw new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, notFoundGroups.toString());
-            }
-            List<ModificationEntity> modifications = groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList();
-            if (!modifications.isEmpty()) {
-                deleteModifications(modifications);
-            }
-            // deleting the group deletes its modification_container row (JOINED subtype delete)
-            modificationGroupRepository.deleteAll(groupEntities);
-        } catch (NetworkModificationServerException e) {
-            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND && !errorOnGroupNotFound) {
-                return;
-            }
-            throw e;
+    public void deleteModificationGroups(List<UUID> groupUuids) {
+        List<ModificationGroupEntity> groupEntities = getModificationGroups(groupUuids);
+        List<ModificationEntity> modifications = groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList();
+        if (!modifications.isEmpty()) {
+            deleteModifications(modifications);
         }
+        // deleting the group deletes its modification_container row (JOINED subtype delete)
+        modificationGroupRepository.deleteAll(groupEntities);
     }
 
     @Transactional // To have the find and delete in the same transaction (atomic)
@@ -892,24 +874,30 @@ public class NetworkModificationRepository {
         return this.modificationGroupRepository.findAllById(groupUuids);
     }
 
+    public void assertContainerExists(UUID containerUuid) {
+        if (!modificationContainerRepository.existsById(containerUuid)) {
+            throw getModificationContainerNotFoundException(containerUuid);
+        }
+    }
+
+    private AbstractModificationContainerEntity getModificationContainer(UUID containerUuid) {
+        return modificationContainerRepository.findById(containerUuid)
+            .orElseThrow(() -> getModificationContainerNotFoundException(containerUuid));
+    }
+
+    /**
+     * Unknown container type here: the error does not tell whether a group or a composite was expected
+     */
+    private static NetworkModificationServerException getModificationContainerNotFoundException(UUID containerUuid) {
+        return new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND,
+            String.format("Modification container '%s' not found", containerUuid),
+            Map.of("containerId", containerUuid.toString()));
+    }
+
     private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid)
                 .orElseGet(
                         () -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
-    }
-
-    private Stream<ModificationEntity> getModificationEntityStream(UUID containerUuid) {
-        return getModificationContainer(containerUuid).getModifications().stream().filter(Objects::nonNull);
-    }
-
-    /**
-     * @return the group or the composite content with the given uuid
-     */
-    private AbstractModificationContainerEntity getModificationContainer(UUID containerUuid) {
-        // reported as a group: the reads of a composite content do not fail on a missing container yet
-        // TODO : exception will be removed soon
-        return modificationContainerRepository.findById(containerUuid)
-            .orElseThrow(() -> getModificationContainerNotFoundException(containerUuid.toString(), ModificationContainerType.GROUP));
     }
 
     @Transactional(readOnly = true)
@@ -1176,18 +1164,11 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void deleteStashedModificationFromGroups(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
-        try {
-            List<ModificationEntity> modifications = getModificationGroups(groupUuids).stream()
-                    .flatMap(group -> group.removeAllStashedModifications().stream()).collect(Collectors.toList());
-            if (!modifications.isEmpty()) {
-                deleteModifications(modifications);
-            }
-        } catch (NetworkModificationServerException e) {
-            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND && !errorOnGroupNotFound) {
-                return;
-            }
-            throw e;
+    public void deleteStashedModificationFromGroups(List<UUID> groupUuids) {
+        List<ModificationEntity> modifications = getModificationGroups(groupUuids).stream()
+                .flatMap(group -> group.removeAllStashedModifications().stream()).collect(Collectors.toList());
+        if (!modifications.isEmpty()) {
+            deleteModifications(modifications);
         }
     }
 
@@ -1316,19 +1297,22 @@ public class NetworkModificationRepository {
 
     @Transactional
     public List<ModificationInfos> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = originGroupUuid != null ? getModificationsInfos(originGroupUuid, StashedFilter.UNSTASHED) : getModificationsInfosInGivenOrder(
-                modificationsUuids);
+        List<ModificationInfos> modificationInfos = originGroupUuid != null
+                ? getModificationsInfos(getModificationContainer(originGroupUuid), StashedFilter.UNSTASHED)
+                : getModificationsInfosInGivenOrder(modificationsUuids);
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
         // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
         return toModificationsInfosAlreadySaved(newEntities);
     }
 
     /**
-     * Copies the unstashed modifications of the source group, applicabilities included, at the end of the target group
+     * Copies the unstashed modifications of the source group, applicabilities included, at the end of the target group.
+     * Nothing is done, not even creating the target group, when the source group does not exist.
      */
     @Transactional
     public void duplicateUnstashedModifications(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
-        saveModificationInfosNonTransactional(targetGroupUuid, getModificationsInfos(sourceGroupUuid, StashedFilter.UNSTASHED));
+        modificationContainerRepository.findById(sourceGroupUuid).ifPresent(sourceGroup ->
+            saveModificationInfosNonTransactional(targetGroupUuid, getModificationsInfos(sourceGroup, StashedFilter.UNSTASHED)));
     }
 
     @Transactional
