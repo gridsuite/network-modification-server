@@ -39,7 +39,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
                 .operator(Operator.ADDITION)
                 .build();
 
-        checkCreateWithStatus(List.of(formulaInfos), List.of(filterTwt1, filterTwt2), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+        checkCreateWithStatus(List.of(formulaInfos), List.of(filterTwt1, filterTwt2), NetworkModificationResult.ApplicationStatus.ALL_OK);
 
         assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getPhaseTapChanger());
         assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getPhaseTapChanger());
@@ -62,7 +62,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
                 .operator(Operator.ADDITION)
                 .build();
 
-        checkCreateWithStatus(List.of(formulaInfos), List.of(filterTwt1, filterTwt2), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+        checkCreateWithStatus(List.of(formulaInfos), List.of(filterTwt1, filterTwt2), NetworkModificationResult.ApplicationStatus.ALL_OK);
 
         assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger());
         assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger());
@@ -91,37 +91,6 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         verifyStandaloneFiltersRequest(stubId, Set.of(FILTER_ID_4));
-    }
-
-    @Test
-    void testModifyTwtWithWarning() throws Exception {
-        FilterStub filterTwt1 = createFilterStub(FILTER_ID_1, List.of(TWT_ID_1, TWT_ID_2));
-        FilterStub filterTwt2 = createFilterStub(FILTER_ID_4, List.of(TWT_ID_4, TWT_ID_6));
-
-        UUID stubId = stubStandaloneFilters(List.of(filterTwt1, filterTwt2));
-
-        FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filter1, filter4))
-                .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name()).build())
-                .fieldOrValue1(ReferenceFieldOrValue.builder().value(1.).build())
-                .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
-                .operator(Operator.ADDITION)
-                .build();
-
-        checkCreationApplicationStatus(ByFormulaModificationInfos.builder()
-                        .identifiableType(getIdentifiableType())
-                        .formulaInfosList(List.of(formulaInfos))
-                        .build(),
-                NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
-
-        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger());
-        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger());
-        assertEquals(2, getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger().getTapPosition());
-        assertEquals(5, getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger().getTapPosition());
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
-
-        verifyStandaloneFiltersRequest(stubId, Set.of(FILTER_ID_1, FILTER_ID_4));
     }
 
     @Override

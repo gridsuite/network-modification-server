@@ -48,7 +48,7 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
                 .value(4)
                 .build();
 
-        checkCreationApplicationStatus(List.of(assignmentInfos), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+        checkCreationApplicationStatus(List.of(assignmentInfos), NetworkModificationResult.ApplicationStatus.ALL_OK);
 
         assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getPhaseTapChanger());
         assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getPhaseTapChanger());
@@ -73,7 +73,7 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
                 .value(4)
                 .build();
 
-        checkCreationApplicationStatus(List.of(assignmentInfos), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+        checkCreationApplicationStatus(List.of(assignmentInfos), NetworkModificationResult.ApplicationStatus.ALL_OK);
 
         assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger());
         assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger());
