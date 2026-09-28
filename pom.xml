@@ -57,7 +57,9 @@
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
+        <!-- FIXME remove this in the next gridsuite-dependencies update -->
         <network-modification.version>1.11.0-SNAPSHOT</network-modification.version>
+        <!-- FIXME remove this in the next gridsuite-dependencies update -->
         <filter.version>1.32.0</filter.version>
         <!-- FIXME remove this in the next powsybl release update -->
         <network-store.version>1.51.0</network-store.version>
@@ -96,11 +98,13 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
+            <!-- FIXME remove this in the next gridsuite-dependencies update -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
                 <artifactId>gridsuite-network-modification</artifactId>
                 <version>${network-modification.version}</version>
             </dependency>
+            <!-- FIXME remove this in the next gridsuite-dependencies update -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
                 <artifactId>gridsuite-filter</artifactId>
