@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="elcheikhbas (generated)" id="20260415T134200Z-1">
+
+        <update tableName="modification_reference">
+            <column name="reference_type" value="COMPOSITE"/>
+            <where>reference_type = 'BASIC'</where>
+        </update>
+
+        <rollback>
+            <update tableName="modification_reference">
+                <column name="reference_type" value="BASIC"/>
+                <where>reference_type = 'COMPOSITE'</where>
+            </update>
+        </rollback>
+
+    </changeSet>
+</databaseChangeLog>

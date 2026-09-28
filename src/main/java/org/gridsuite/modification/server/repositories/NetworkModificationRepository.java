@@ -1356,7 +1356,7 @@ public class NetworkModificationRepository {
                     // inserting a shared composite modification means that we create a new reference to it
                     ModificationReferenceInfos newModificationReference = ModificationReferenceInfos.builder()
                             .referencedId(compositeToBeInserted.id())
-                            .referenceType(ModificationReferenceInfos.Type.BASIC)
+                            .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
                             .referencedInfos(compositeModification)
                             .description(compositeToBeInserted.description())
                             .build();
@@ -1404,7 +1404,7 @@ public class NetworkModificationRepository {
 
         ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
             .referencedId(modificationUuid)
-            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
             .referencedInfos(loadCompositeModificationMetadata(compositeEntity, null))
             .build();
         ModificationEntity referenceEntity = ModificationEntity.fromDTO(referenceInfos);
