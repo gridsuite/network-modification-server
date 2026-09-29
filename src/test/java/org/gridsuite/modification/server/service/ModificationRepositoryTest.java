@@ -2182,11 +2182,7 @@ class ModificationRepositoryTest {
     }
 
     private static Integer maxDepthOf(ModificationInfos infos) {
-        return switch (infos) {
-            case CompositeModificationInfos composite -> composite.getMaxDepth();
-            case ModificationReferenceInfos reference -> reference.getMaxDepth();
-            default -> null;
-        };
+        return infos instanceof MaxDepthHolderInfos holder ? holder.getMaxDepth() : null;
     }
 
     private void moveFromGroupInto(UUID groupUuid, UUID compositeOrReferenceUuid, UUID modificationUuid) {

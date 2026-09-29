@@ -12,6 +12,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.context.ModificationContext;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
+import org.gridsuite.modification.dto.MaxDepthHolderInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.dto.tabular.LimitSetsTabularModificationInfos;
@@ -343,24 +344,14 @@ public class NetworkModificationRepository {
      * @return the modifications it was given, filled with their max depth
      */
     private List<ModificationInfos> withMaxDepths(List<ModificationInfos> modificationsInfos) {
-        List<UUID> uuids = modificationsInfos.stream()
-                .filter(infos -> infos instanceof CompositeModificationInfos || infos instanceof ModificationReferenceInfos)
-                .map(ModificationInfos::getUuid)
-                .toList();
-        if (!uuids.isEmpty()) {
-            Map<UUID, Integer> maxDepths = modificationRepository.findMaxDepths(uuids).stream()
-                    .collect(Collectors.toMap(d -> UUID.fromString(d.getId()), ModificationRepository.MaxDepth::getDepth));
-            modificationsInfos.forEach(infos -> setMaxDepth(infos, maxDepths.get(infos.getUuid())));
+        Map<UUID, MaxDepthHolderInfos> holders = modificationsInfos.stream()
+                .filter(MaxDepthHolderInfos.class::isInstance)
+                .collect(Collectors.toMap(ModificationInfos::getUuid, MaxDepthHolderInfos.class::cast));
+        if (!holders.isEmpty()) {
+            modificationRepository.findMaxDepths(holders.keySet())
+                    .forEach(maxDepth -> holders.get(UUID.fromString(maxDepth.getId())).setMaxDepth(maxDepth.getDepth()));
         }
         return modificationsInfos;
-    }
-
-    private static void setMaxDepth(ModificationInfos modificationInfos, Integer maxDepth) {
-        if (modificationInfos instanceof CompositeModificationInfos composite) {
-            composite.setMaxDepth(maxDepth);
-        } else if (modificationInfos instanceof ModificationReferenceInfos reference) {
-            reference.setMaxDepth(maxDepth);
-        }
     }
 
     /**
@@ -381,11 +372,7 @@ public class NetworkModificationRepository {
      * @return the max depth the modification carries, 0 for a modification holding nothing
      */
     private static int maxDepthOf(ModificationInfos modificationInfos) {
-        return switch (modificationInfos) {
-            case CompositeModificationInfos composite -> Objects.requireNonNullElse(composite.getMaxDepth(), 0);
-            case ModificationReferenceInfos reference -> Objects.requireNonNullElse(reference.getMaxDepth(), 0);
-            default -> 0;
-        };
+        return modificationInfos instanceof MaxDepthHolderInfos holder ? Objects.requireNonNullElse(holder.getMaxDepth(), 0) : 0;
     }
 
     /**
