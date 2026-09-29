@@ -294,12 +294,8 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references data were returned")})
     public ResponseEntity<List<ModificationReferenceData>> getAllReferencesDataFromContainer(
             @Parameter(description = "Container UUID") @PathVariable("containerUuid") UUID containerUuid) {
-        List<UUID> netModUuids = networkModificationService.getNetworkModifications(containerUuid, true, StashedFilter.ALL)
-                .stream().map(ModificationInfos::getUuid)
-                .toList();
-        List<ModificationReferenceData> referencesData = networkModificationService.getModificationsReferences(netModUuids);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(referencesData);
+                .body(networkModificationService.getModificationReferencesFromContainer(containerUuid));
     }
 
     @GetMapping(value = "/containers/references/exists", produces = MediaType.APPLICATION_JSON_VALUE)
