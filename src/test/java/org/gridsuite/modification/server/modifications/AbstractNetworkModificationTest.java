@@ -75,7 +75,7 @@ public abstract class AbstractNetworkModificationTest {
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     public static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
-    private static final String URI_NETWORK_MODIF_COPY = "/v1/containers/" + TEST_GROUP_ID + "?action=COPY";
+    private static final String URI_NETWORK_MODIF_COPY = "/v1/groups/" + TEST_GROUP_ID + "/network-modifications/copy";
 
     @Autowired
     protected MockMvc mockMvc;
@@ -210,7 +210,8 @@ public abstract class AbstractNetworkModificationTest {
 
         String modificationToUpdateJson = mapper.writeValueAsString(modificationToUpdate);
 
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", "userId"))
                 .andExpect(status().isOk());
 
         // TODO Need a test for substations impacted

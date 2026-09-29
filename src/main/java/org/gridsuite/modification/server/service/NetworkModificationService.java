@@ -43,6 +43,7 @@ import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -268,8 +269,13 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
+    public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos, @NonNull String userId) {
         networkModificationRepository.updateModification(modificationUuid, modificationInfos);
+
+        // Notify directory-server once per shared ancestor composite (closest first)
+        List<UUID> sharedAncestorUuids = networkModificationRepository.getAllSharedCompositeAncestorsUuids(modificationUuid);
+        sharedAncestorUuids
+            .forEach(sharedUuid -> notificationService.emitElementUpdated(sharedUuid, userId));
     }
 
     @Transactional
@@ -343,6 +349,20 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public boolean hasModificationReferences(@NonNull List<UUID> containerUuids) {
         return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
+    }
+
+    public void assertReferencedModificationsAreWritable(@NonNull List<UUID> containerUuids, @NonNull String userId) {
+        Set<UUID> sharedModificationUuids = networkModificationRepository.getReferencedModificationUuids(containerUuids);
+        if (sharedModificationUuids.isEmpty()) {
+            return;
+        }
+        try {
+            directoryService.checkPermission(sharedModificationUuids, userId, PermissionType.WRITE);
+        } catch (HttpClientErrorException.Forbidden _) {
+            throw new NetworkModificationServerException(MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED,
+                    String.format(MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED.messageTemplate(), sharedModificationUuids),
+                    Map.of("sharedModificationUuids", sharedModificationUuids));
+        }
     }
 
     @Transactional
@@ -493,28 +513,32 @@ public class NetworkModificationService {
     }
 
     public CompletableFuture<NetworkModificationsResult> moveModifications(
-            @NonNull ModificationContainerInfos sourceContainerInfos,
-            @NonNull ModificationContainerInfos targetContainerInfos,
-            UUID beforeModificationUuid,
-            @NonNull List<UUID> modificationUuids,
+            @NonNull UUID originGroupUuid,
+            @NonNull UUID targetGroupUuid,
+            @NonNull List<ModificationMoveInfos> moveInfos,
             @NonNull List<ModificationApplicationContext> applicationContexts,
             boolean canApply) {
-        List<ModificationInfos> modifications = networkModificationRepository.moveModificationsFromGroup(
-            sourceContainerInfos, targetContainerInfos, modificationUuids, beforeModificationUuid);
+        List<ModificationInfos> allMoved = new ArrayList<>();
+        // one transaction per move, through the repository proxy
+        moveInfos.forEach(m -> allMoved.addAll(networkModificationRepository.moveModifications(
+                toContainerInfos(originGroupUuid, m.sourceCompositeUuid()), toContainerInfos(targetGroupUuid, m.targetCompositeUuid()),
+                List.of(m.modificationUuid()), m.insertBeforeUuid())));
+        List<UUID> movedUuids = allMoved.stream().map(ModificationInfos::getUuid).toList();
 
-        boolean shouldApply = canApply
-                && !sourceContainerInfos.id().equals(targetContainerInfos.id())
-                && targetContainerInfos.type() == ModificationContainerType.GROUP
-                && !modifications.isEmpty();
+        // only modifications entering the target group need to be applied
+        if (!canApply || allMoved.isEmpty() || originGroupUuid.equals(targetGroupUuid)) {
+            return CompletableFuture.completedFuture(new NetworkModificationsResult(movedUuids, List.of()));
+        }
 
-        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = shouldApply
-                ? applyModifications(targetContainerInfos.id(), modifications, applicationContexts)
-                : CompletableFuture.completedFuture(List.of());
+        return applyModifications(targetGroupUuid, allMoved, applicationContexts)
+                .thenApply(r -> new NetworkModificationsResult(movedUuids, r));
+    }
 
-        return futureResult.thenApply(result ->
-                new NetworkModificationsResult(
-                        modifications.stream().map(ModificationInfos::getUuid).toList(),
-                        result));
+    /** A null composite designates the group itself */
+    private static ModificationContainerInfos toContainerInfos(UUID groupUuid, UUID compositeUuid) {
+        return compositeUuid != null
+                ? new ModificationContainerInfos(compositeUuid, ModificationContainerType.COMPOSITE)
+                : new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP);
     }
 
     public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid, UUID nodeContainerUuid, UUID studyContainerUuid, String userId) {

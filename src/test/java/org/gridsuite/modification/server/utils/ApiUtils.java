@@ -22,9 +22,8 @@ import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
@@ -63,9 +62,8 @@ public final class ApiUtils {
         ModificationApplicationContext applicationContext = TestUtils.contextOnAnyRootNetwork(networkUuid, UUID.randomUUID().toString(), UUID.randomUUID(), UUID.randomUUID());
         String bodyJson = getObjectMapper().writeValueAsString(org.springframework.data.util.Pair.of(List.of(), List.of(applicationContext)));
         ResultActions mockMvcResultActions = mockMvc.perform(
-                put("/v1/containers/{targetContainerId}", targetGroupUuid)
-                    .param("action", "COPY")
-                    .param("sourceContainerId", originGroupUuid.toString())
+                put("/v1/groups/{targetContainerUuid}/network-modifications/copy", targetGroupUuid)
+                        .param("sourceContainerUuid", originGroupUuid.toString())
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON)
             )
@@ -83,7 +81,7 @@ public final class ApiUtils {
         String body = getObjectMapper().writeValueAsString(org.springframework.data.util.Pair.of(modificationUuids, List.of(applicationContext)));
 
         ResultActions mockMvcResultActions = mockMvc.perform(
-                put("/v1/containers/{targetContainerId}", targetGroupUuid)
+                put("/v1/groups/{targetContainerUuid}/network-modifications/copy", targetGroupUuid)
                     .param("action", "COPY")
                     .contentType("application/json")
                     .content(body)
@@ -99,7 +97,7 @@ public final class ApiUtils {
         MvcResult mvcResult = mockMvc.perform(
                 post("/v1/network-composite-modifications/duplication")
                     .contentType("application/json")
-                    .content(new ObjectMapper().writeValueAsString(modificationUuids))
+                    .content(getObjectMapper().writeValueAsString(modificationUuids))
             )
             .andExpectAll(status().isOk())
             .andReturn();
@@ -111,7 +109,11 @@ public final class ApiUtils {
     }
 
     public static void deleteStashedInGroup(MockMvc mockMvc, UUID groupUuid) throws Exception {
-        mockMvc.perform(delete("/v1/groups/{groupUuid}/stashed-modifications", groupUuid)).andExpectAll(status().isOk());
+        String body = getObjectMapper().writeValueAsString(List.of(groupUuid.toString()));
+        mockMvc.perform(delete("/v1/groups/stashed-modifications")
+                .content(body)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk());
     }
 
     public static void deleteNetworkModificationsInGroup(MockMvc mockMvc, UUID groupUuid) throws Exception {

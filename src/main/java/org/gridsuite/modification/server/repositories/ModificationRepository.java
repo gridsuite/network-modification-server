@@ -9,11 +9,7 @@ package org.gridsuite.modification.server.repositories;
 import org.gridsuite.modification.server.dto.ModificationApplicability;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.NativeQuery;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -105,8 +101,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findReferencedModificationIds(@Param("ids") Collection<UUID> ids);
 
     /**
-     * Copies the applicability of {@code fromTag} to {@code toTag}, skipping the modifications that already have an
-     * entry for {@code toTag}.
+     * Copies the applicability of {@code fromTag} to {@code toTag}.
      */
     @Modifying
     @Query("""
@@ -114,23 +109,8 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         SELECT a.modification, :toTag, a.applicable
           FROM ModificationRootNetworkApplicabilityEntity a
          WHERE a.modification.id IN (:ids) AND a.rootNetworkTag = :fromTag
-           AND NOT EXISTS (SELECT 1 FROM ModificationRootNetworkApplicabilityEntity b
-                            WHERE b.modification = a.modification AND b.rootNetworkTag = :toTag)
         """)
     void copyRootNetworkApplicability(@Param("ids") Collection<UUID> ids, @Param("fromTag") String fromTag, @Param("toTag") String toTag);
-
-    /**
-     * Deletes the {@code toTag} entries of the given modifications, restricted to those also holding a
-     * {@code fromTag} entry. Useful to prepare renaming with {@link #renameRootNetworkApplicability}.
-     */
-    @Modifying
-    @Query("""
-        DELETE FROM ModificationRootNetworkApplicabilityEntity a
-         WHERE a.modification.id IN (:ids) AND a.rootNetworkTag = :toTag
-           AND EXISTS (SELECT 1 FROM ModificationRootNetworkApplicabilityEntity b
-                        WHERE b.modification = a.modification AND b.rootNetworkTag = :fromTag)
-        """)
-    void deleteRootNetworkApplicabilitiesTakenOverBy(@Param("ids") Collection<UUID> ids, @Param("fromTag") String fromTag, @Param("toTag") String toTag);
 
     @Modifying
     @Query("""
@@ -229,6 +209,28 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
          WHERE c.id IN (SELECT id FROM descendants)
         """)
     List<UUID> findOnlyCompositeChildrenUuids(@Param("compositeUuids") Collection<UUID> compositeUuids);
+
+    /**
+     * @return ancestor composite modification uuids of {@code modificationUuid}, closest first;
+     * empty if the modification is a direct child of a group (not nested in any composite)
+     */
+    @NativeQuery("""
+        WITH RECURSIVE ancestors(id, level) AS (
+            SELECT m.container_id, 1
+              FROM modification m
+             WHERE m.id = :modificationUuid
+            UNION ALL
+            SELECT comp.container_id, a.level + 1
+              FROM ancestors a
+              JOIN modification_container c ON c.id = a.id AND c.type = 'COMPOSITE'
+              JOIN modification comp ON comp.id = a.id
+        )
+        SELECT DISTINCT on (a.id, a.level) CAST(a.id AS VARCHAR)
+          FROM ancestors a
+          JOIN modification_reference r ON r.referenced_id = a.id
+         ORDER BY a.level
+        """)
+    List<UUID> findAllSharedCompositeAncestorsUuids(@Param("modificationUuid") UUID modificationUuid);
 
     /**
      * Returns the composite UUID followed by every descendant UUID (composites <em>and</em> leaves),
