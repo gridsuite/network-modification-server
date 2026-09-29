@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
+
 /**
  * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
  */
@@ -30,7 +32,6 @@ import java.util.UUID;
 public class DirectoryService {
     private static final String DIRECTORY_API_VERSION = "v1";
     private static final String DELIMITER = "/";
-    public static final String HEADER_USER_ID = "userId";
 
     @Setter
     @Getter
@@ -79,13 +80,18 @@ public class DirectoryService {
                 .toBodilessEntity();
     }
 
+    public void removeElementReferences(@NonNull List<ModificationReferenceData> referencesData, String userId) {
+        //TODO modify endpoint in directory-server to allow batch deletion of references
+        referencesData.forEach(referenceData -> removeElementReference(referenceData.referencedId(), referenceData.modificationUuid(), userId));
+    }
+
     /**
      * remove reference from the shared modification in directory server
      * @param referenceUuid uuid of the composite or group where the 'Modification reference' is located
      * @param userId id of the user who caused the unreferencing
      * @param sharedElementUuid uuid of the referenced shared element in the directory-server
      */
-    public void removeElementReference(UUID sharedElementUuid, UUID referenceUuid, String userId) {
+    private void removeElementReference(UUID sharedElementUuid, UUID referenceUuid, String userId) {
         Objects.requireNonNull(referenceUuid);
         Objects.requireNonNull(sharedElementUuid);
 
@@ -121,7 +127,7 @@ public class DirectoryService {
                 .toBodilessEntity();
     }
 
-    public void recreateReferences(@NonNull UUID nodeContainerUuid, @NonNull UUID studyRootContainerUuid, String userId, List<ModificationReferenceData> referencesData) {
+    public void createElementReferences(@NonNull UUID nodeContainerUuid, @NonNull UUID studyRootContainerUuid, String userId, List<ModificationReferenceData> referencesData) {
         referencesData.forEach(ref -> {
             // local ModificationReferenceData data don't hold the node UUID so when containerId is null it means that this reference modification is at the root level
             // otherwise, the reference modification is inside a composite

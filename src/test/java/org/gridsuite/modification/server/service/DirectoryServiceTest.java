@@ -20,7 +20,7 @@ import org.springframework.web.client.RestClient;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.service.DirectoryService.HEADER_USER_ID;
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.HttpMethod.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
@@ -105,7 +105,7 @@ class DirectoryServiceTest {
                 .andExpect(header(HEADER_USER_ID, userId))
                 .andRespond(withSuccess());
 
-        directoryService.removeElementReference(sharedElementUuid, referenceUuid, userId);
+        directoryService.removeElementReferences(List.of(new ModificationReferenceData(referenceUuid, sharedElementUuid, null)), userId);
 
         directoryServer.verify();
     }
@@ -147,7 +147,7 @@ class DirectoryServiceTest {
                 .andExpect(jsonPath("$.referenceType").value(ReferenceAttributes.ReferenceType.STUDY_NODE.toString()))
                 .andRespond(withSuccess());
 
-        directoryService.recreateReferences(nodeContainerUuid, studyRootContainerUuid, userId, referencesData);
+        directoryService.createElementReferences(nodeContainerUuid, studyRootContainerUuid, userId, referencesData);
 
         directoryServer.verify();
     }

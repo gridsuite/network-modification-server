@@ -26,8 +26,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static org.gridsuite.modification.server.service.DirectoryService.HEADER_USER_ID;
-
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -295,30 +293,30 @@ public class NetworkModificationController {
     @GetMapping(value = "/groups/{groupUuid}/references", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Fetches references data of all the network modifications in a group, including in the composites' submodifications")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references data were returned")})
-    public ResponseEntity<List<ModificationReferenceData>> getAllReferencesDataFromGroup(
+    public ResponseEntity<List<ModificationReferenceData>> getModificationReferences(
             @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        return ResponseEntity.ok(networkModificationService.getAllReferencesDataFromGroup(groupUuid));
+        return ResponseEntity.ok(networkModificationService.getModificationReferences(groupUuid));
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}/references", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Removes the references pointing to any modification in the given group from directory-server")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references have been removed")})
-    public ResponseEntity<Void> removeAllReferencesToGroup(
+    public ResponseEntity<Void> removeElementReferences(
             @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
             @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.removeReferencesToGroup(groupUuid, userId);
+        networkModificationService.removeElementReferences(groupUuid, userId);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping(value = "/groups/{groupUuid}/references", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Restore the references pointing to any modification in the given group")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references have been restored")})
-    public ResponseEntity<Void> restoreReferencesToGroup(
+    public ResponseEntity<Void> createElementReferences(
             @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
             @RequestParam("nodeContainerUuid") UUID nodeContainerUuid,
             @RequestParam("studyRootContainerUuid") UUID studyRootContainerUuid,
             @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.recreateReferencesToGroup(groupUuid, nodeContainerUuid, studyRootContainerUuid, userId);
+        networkModificationService.createElementReferences(groupUuid, nodeContainerUuid, studyRootContainerUuid, userId);
         return ResponseEntity.ok().build();
     }
 

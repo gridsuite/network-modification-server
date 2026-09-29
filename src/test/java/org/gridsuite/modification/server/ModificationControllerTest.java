@@ -88,8 +88,7 @@ import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -2394,7 +2393,7 @@ class ModificationControllerTest {
         assertEquals(activeReferenceInfo.getUuid(), referenceData.modificationUuid());
 
         // call the deletion of references through directory service
-        doNothing().when(directoryService).removeElementReference(referenceData.referencedId(), referenceData.modificationUuid(), "testUserId");
+        doNothing().when(directoryService).removeElementReferences(List.of(referenceData), "testUserId");
 
         mockMvc.perform(delete("/v1/groups/{groupUuid}/references", TEST_GROUP_ID)
                         .header(HEADER_USER_ID, "testUserId")

@@ -961,24 +961,22 @@ public class NetworkModificationRepository {
      * @return ReferenceData : modification and elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
-    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids, boolean fetchSubModifications) {
-        List<ModificationEntity> modificationEntities;
-        if (fetchSubModifications) {
-            List<UUID> testedModificationUuids = new ArrayList<>(modificationUuids);
-            testedModificationUuids.addAll(modificationRepository.findAllDescendantModificationIdsByContainerIds(modificationUuids));
-            modificationEntities = this.modificationRepository.findAllByIdIn(testedModificationUuids);
-        } else {
-            modificationEntities = this.modificationRepository.findAllByIdIn(modificationUuids);
+    // TODO use recursive CTE
+    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> initialModificationUuids, boolean withChildren) {
+        List<UUID> modificationUuids = new ArrayList<>(initialModificationUuids);
+        if (withChildren) {
+            modificationUuids.addAll(modificationRepository.findAllDescendantModificationIdsByContainerIds(modificationUuids));
         }
-        List<ModificationReferenceData> references = new ArrayList<>(List.of());
-        modificationEntities.forEach(modificationEntity -> {
-            if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {
-                UUID containerId = modificationRepository.findCompositeContainerIdByModificationId(modificationEntity.getId());
-                references.add(new ModificationReferenceData(modificationEntity.getId(), modificationReference.getReferencedId(), containerId));
-            }
-        });
+        List<ModificationEntity> modificationEntities = modificationRepository.findAllByIdIn(modificationUuids);
 
-        return references;
+        return modificationEntities.stream()
+            .filter(ModificationReferenceEntity.class::isInstance)
+            .map(m -> (ModificationReferenceEntity) m)
+            .map(ref -> {
+                UUID containerId = modificationRepository.findCompositeContainerIdByModificationId(ref.getId());
+                return new ModificationReferenceData(ref.getId(), ref.getReferencedId(), containerId);
+            })
+            .toList();
     }
 
     @Transactional

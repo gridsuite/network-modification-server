@@ -308,25 +308,14 @@ public class NetworkModificationService {
         }
     }
 
-    /**
-     * @return all the references in the group including, recursively, from all the sub composites in the group
-     */
-    private List<ModificationReferenceData> getAllReferencesDataFromGroupNonTransactional(@NonNull UUID groupUuid) {
-        List<UUID> allModificationUuids = modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(groupUuid));
-        return networkModificationRepository.getModificationsReferences(allModificationUuids, false);
+    @Transactional(readOnly = true)
+    public List<ModificationReferenceData> getModificationReferences(@NonNull UUID groupUuid) {
+        return getModificationReferencesNonTransactional(groupUuid);
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationReferenceData> getAllReferencesDataFromGroup(@NonNull UUID groupUuid) {
-        return getAllReferencesDataFromGroupNonTransactional(groupUuid);
-    }
-
-    @Transactional(readOnly = true)
-    public void removeReferencesToGroup(@NonNull UUID groupUuid, String userId) {
-        List<ModificationReferenceData> referencesData = getAllReferencesDataFromGroupNonTransactional(groupUuid);
-        referencesData.forEach(referenceData ->
-                directoryService.removeElementReference(referenceData.referencedId(), referenceData.modificationUuid(), userId)
-        );
+    public void removeElementReferences(@NonNull UUID groupUuid, String userId) {
+        directoryService.removeElementReferences(getModificationReferencesNonTransactional(groupUuid), userId);
     }
 
     @Transactional
@@ -336,6 +325,11 @@ public class NetworkModificationService {
 
     public List<ModificationReferenceData> getModificationsReferencesNonTransactional(@NonNull List<UUID> modificationUuids, boolean fetchSubModifications) {
         return networkModificationRepository.getModificationsReferences(modificationUuids, fetchSubModifications);
+    }
+
+    private List<ModificationReferenceData> getModificationReferencesNonTransactional(@NonNull UUID groupUuid) {
+        List<UUID> allModificationUuids = modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(groupUuid));
+        return networkModificationRepository.getModificationsReferences(allModificationUuids, false);
     }
 
     @Transactional(readOnly = true)
@@ -379,10 +373,7 @@ public class NetworkModificationService {
         networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
 
         // break all the references pointing to those stashed modification references
-        List<ModificationReferenceData> referencesData = getModificationsReferencesNonTransactional(modificationUuids, true);
-        referencesData.forEach(referenceData ->
-                directoryService.removeElementReference(referenceData.referencedId(), referenceData.modificationUuid(), userId)
-        );
+        directoryService.removeElementReferences(getModificationsReferencesNonTransactional(modificationUuids, true), userId);
     }
 
     @Transactional
@@ -397,7 +388,7 @@ public class NetworkModificationService {
         if (studyUuid != null && nodeUuid != null) {
             // recreate references
             List<ModificationReferenceData> referencesData = getModificationsReferencesNonTransactional(modificationUuids, true);
-            directoryService.recreateReferences(nodeUuid, studyUuid, userId, referencesData);
+            directoryService.createElementReferences(nodeUuid, studyUuid, userId, referencesData);
         }
     }
 
@@ -544,7 +535,7 @@ public class NetworkModificationService {
     public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid, UUID nodeContainerUuid, UUID studyContainerUuid, String userId) {
         try {
             networkModificationRepository.duplicateUnstashedModifications(sourceGroupUuid, targetGroupUuid);
-            recreateReferencesToGroup(targetGroupUuid, nodeContainerUuid, studyContainerUuid, userId);
+            createElementReferences(targetGroupUuid, nodeContainerUuid, studyContainerUuid, userId);
         } catch (NetworkModificationServerException e) {
             if (e.getBusinessErrorCode() != MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
                 throw e;
@@ -552,10 +543,9 @@ public class NetworkModificationService {
         }
     }
 
-    public void recreateReferencesToGroup(@NonNull UUID targetGroupUuid, UUID nodeContainerUuid, UUID studyContainerUuid, String userId) {
+    public void createElementReferences(@NonNull UUID targetGroupUuid, UUID nodeContainerUuid, UUID studyContainerUuid, String userId) {
         if (nodeContainerUuid != null && studyContainerUuid != null) {
-            List<ModificationReferenceData> referencesData = getAllReferencesDataFromGroupNonTransactional(targetGroupUuid);
-            directoryService.recreateReferences(nodeContainerUuid, studyContainerUuid, userId, referencesData);
+            directoryService.createElementReferences(nodeContainerUuid, studyContainerUuid, userId, getModificationReferencesNonTransactional(targetGroupUuid));
         }
     }
 
@@ -623,23 +613,28 @@ public class NetworkModificationService {
                 networkModificationRepository.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids).toModificationInfos();
 
         // update the references whose container is now the new composite (and the root container is the node)
-        List<ModificationReferenceData> references = getModificationsReferencesNonTransactional(assembledModificationsUuids, false);
+        moveReferenceElementsToCompositeFrom(assembledModificationsUuids, newComposite.getUuid(), nodeUuid, userId);
+
+        return newComposite.getUuid();
+    }
+
+    private void moveReferenceElementsToCompositeFrom(@NonNull List<UUID> modificationsUuids, @NonNull UUID compositeUuid, @NonNull UUID nodeUuid, String userId) {
+        // update the references whose container is now the new composite (and the root container is the node)
+        List<ModificationReferenceData> references = getModificationsReferencesNonTransactional(modificationsUuids, false);
         references.forEach(ref -> {
-            ReferenceAttributes referenceAttributes = ReferenceAttributes.createReferenceAttributes(
+                ReferenceAttributes referenceAttributes = ReferenceAttributes.createReferenceAttributes(
                     ref.modificationUuid(),
                     nodeUuid,
-                    newComposite.getUuid(),
+                    compositeUuid,
                     ReferenceAttributes.ReferenceType.STUDY_NODE_NETWORK_MODIFICATION
-            );
-            directoryService.updateElementReference(
+                );
+                directoryService.updateElementReference(
                     ref.referencedId(),
                     referenceAttributes,
                     userId
-            );
-        }
+                );
+            }
         );
-
-        return newComposite.getUuid();
     }
 
     @Transactional
