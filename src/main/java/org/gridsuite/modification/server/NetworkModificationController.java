@@ -298,18 +298,6 @@ public class NetworkModificationController {
         return ResponseEntity.ok(networkModificationService.getModificationReferences(groupUuid));
     }
 
-    @PutMapping(value = "/groups/{groupUuid}/references", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Restore the references pointing to any modification in the given group")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references have been restored")})
-    public ResponseEntity<Void> createElementReferences(
-            @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
-            @RequestParam("nodeContainerUuid") UUID nodeContainerUuid,
-            @RequestParam("studyRootContainerUuid") UUID studyRootContainerUuid,
-            @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.createElementReferences(groupUuid, nodeContainerUuid, studyRootContainerUuid, userId);
-        return ResponseEntity.ok().build();
-    }
-
     @GetMapping(value = "/containers/references/exists", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Whether any of the containers (groups or composites) holds a modification reference, including nested in their composites")
     @ApiResponse(responseCode = "200", description = "true if at least one modification reference is found")
