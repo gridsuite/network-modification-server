@@ -298,16 +298,6 @@ public class NetworkModificationController {
         return ResponseEntity.ok(networkModificationService.getModificationReferences(groupUuid));
     }
 
-    @DeleteMapping(value = "/groups/{groupUuid}/references", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Removes the references pointing to any modification in the given group from directory-server")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references have been removed")})
-    public ResponseEntity<Void> removeElementReferences(
-            @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
-            @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.removeElementReferences(groupUuid, userId);
-        return ResponseEntity.ok().build();
-    }
-
     @PutMapping(value = "/groups/{groupUuid}/references", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Restore the references pointing to any modification in the given group")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references have been restored")})
@@ -358,8 +348,10 @@ public class NetworkModificationController {
     public ResponseEntity<Void> deleteStashedModificationFromGroups(
                                                                  @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false,
                                                                          defaultValue = "true") Boolean errorOnGroupNotFound,
-                                                                 @Parameter(description = "Group UUIDs") @RequestBody List<UUID> groupUuids) {
+                                                                 @Parameter(description = "Group UUIDs") @RequestBody List<UUID> groupUuids,
+                                                                 @RequestHeader(HEADER_USER_ID) String userId) {
         networkModificationService.deleteStashedModificationFromGroups(groupUuids, errorOnGroupNotFound);
+        groupUuids.forEach(groupUuid -> networkModificationService.removeElementReferences(groupUuid, userId));
         return ResponseEntity.ok().build();
     }
 
