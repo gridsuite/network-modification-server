@@ -90,7 +90,6 @@ class CompositeControllerTest {
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String USER_ID = "userId";
     private static final String URI_NETWORK_MODIF_MOVE = "/v1/groups/{groupUuid}/network-modifications/move";
-    private static final String USER_ID = "userId";
 
     @Autowired
     private MockMvc mockMvc;
