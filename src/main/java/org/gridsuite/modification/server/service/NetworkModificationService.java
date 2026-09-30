@@ -461,14 +461,8 @@ public class NetworkModificationService {
         List<ModificationApplicationGroup> modificationGroupsInfos = new ArrayList<>();
         Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReportsInfos().stream(),
             (groupUuid, reportInfos) -> {
-                List<ModificationInfos> modifications = List.of();
-                try {
-                    modifications = networkModificationRepository.getActiveModifications(groupUuid, buildInfos.getRootNetworkTag());
-                } catch (NetworkModificationServerException e) {
-                    if (e.getBusinessErrorCode() != MODIFICATION_CONTAINER_NOT_FOUND) { // May not exist
-                        throw e;
-                    }
-                }
+                // a group that does not exist has no modifications
+                List<ModificationInfos> modifications = networkModificationRepository.getActiveModifications(groupUuid, buildInfos.getRootNetworkTag());
                 modificationGroupsInfos.add(new ModificationApplicationGroup(groupUuid, modifications, reportInfos, buildInfos.getRootNetworkTag()));
 
             }
