@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
+
 /**
  * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
  */
@@ -69,10 +71,11 @@ public class CompositeController {
     @Operation(summary = "Assemble some network modifications into a new composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})
     public ResponseEntity<UUID> assembleNetworkModificationsIntoNewComposite(
-            @RequestBody List<UUID> assembledModificationsUuids,
-            @RequestHeader("userId") String userId) {
+            @RequestParam("nodeContainerUuid") UUID nodeContainerUuid,
+            @RequestHeader(HEADER_USER_ID) String userId,
+            @RequestBody List<UUID> assembledModificationsUuids) {
         return ResponseEntity.ok().body(
-                networkModificationService.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids, userId)
+                networkModificationService.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids, nodeContainerUuid, userId)
         );
     }
 
