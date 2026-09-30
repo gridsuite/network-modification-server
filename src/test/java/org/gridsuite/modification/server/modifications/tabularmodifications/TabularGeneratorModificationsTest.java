@@ -621,7 +621,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         // try to get via the group
         UnsupportedOperationException exception = assertThrows(
             UnsupportedOperationException.class,
-            () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+            () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false)
         );
         assertEquals("No sub-modifications loading for modification type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
 
