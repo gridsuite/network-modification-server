@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.service;
 import jakarta.annotation.Nullable;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
-import org.gridsuite.modification.dto.PermissionType;
+import org.gridsuite.modification.server.dto.PermissionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -27,9 +27,6 @@ import java.util.stream.Collectors;
 import static org.gridsuite.modification.server.utils.ModificationInfosUtils.contentOf;
 
 /**
- * Fills the modification references of a payload with the permission its reader holds on the shared modification
- * they point to, so that the client doesn't have to ask the directory-server itself.
- *
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
 @Service
@@ -43,7 +40,7 @@ public class ModificationPermissionService {
     }
 
     /**
-     * @return the modification it was given, its references filled with their permission
+     * @return the modification it was given, its references telling whether they are editable
      */
     public ModificationInfos addPermissions(ModificationInfos modification, @Nullable String userId) {
         resolvePermissions(List.of(modification), userId);
@@ -51,7 +48,7 @@ public class ModificationPermissionService {
     }
 
     /**
-     * @return the modifications it was given, their references filled with their permission
+     * @return the modifications it was given, their references telling whether they are editable
      */
     public List<ModificationInfos> addPermissions(List<ModificationInfos> modifications, @Nullable String userId) {
         resolvePermissions(modifications, userId);
@@ -62,7 +59,7 @@ public class ModificationPermissionService {
      * Reads the permissions of every reference of the given modifications, nested ones included, in a single call
      * to the directory-server.
      * <p>
-     * A permission is left unresolved when there is no user to read it for and when the directory-server cannot
+     * Nothing is told when there is no user to read the permissions for and when the directory-server cannot
      * answer.
      */
     private void resolvePermissions(Collection<ModificationInfos> modifications, @Nullable String userId) {
@@ -86,8 +83,12 @@ public class ModificationPermissionService {
             LOGGER.warn("Could not read the permissions of the shared modifications", e);
             return;
         }
-        // directory server leaves out the elements without permission, and the ones it does not know : they stay unresolved
-        references.forEach(reference -> reference.setPermission(permissions.get(reference.getReferencedId())));
+        // directory server leaves out the elements without permission, and the ones it does not know : they are not editable
+        references.forEach(reference -> reference.setEditable(isEditable(permissions.get(reference.getReferencedId()))));
+    }
+
+    private static boolean isEditable(@Nullable PermissionType permission) {
+        return permission != null && permission.grants(PermissionType.WRITE);
     }
 
     private static void collectReferences(ModificationInfos modification, List<ModificationReferenceInfos> references) {

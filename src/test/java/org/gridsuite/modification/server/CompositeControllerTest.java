@@ -18,7 +18,6 @@ import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
-import org.gridsuite.modification.dto.PermissionType;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationMoveInfos;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
@@ -1289,7 +1288,7 @@ class CompositeControllerTest {
     }
 
     @Test
-    void testTheReferencesCarryThePermissionOfTheirReader() throws Exception {
+    void testTheReferencesTellWhetherTheirReaderMayEditThem() throws Exception {
         List<ModificationInfos> switchMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "shared")
                         .content(mapper.writeValueAsString(switchMods.stream().map(ModificationInfos::getUuid).toList()))
@@ -1302,29 +1301,29 @@ class CompositeControllerTest {
         UUID referenceUuid = networkModificationRepository.getModifications(TEST_GROUP2_ID, true, true).getLast().getUuid();
         when(directoryService.getElementsPermissions(any(), eq(USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ));
 
-        // the group lists the reference with the permission its reader holds on the shared modification
+        // the group lists the reference as not editable, its reader holding no more than READ on the shared modification
         mockMvc.perform(get("/v1/groups/" + TEST_GROUP2_ID + "/network-modifications?onlyMetadata=true")
                         .header(HEADER_USER_ID, USER_ID))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].permission").value(PermissionType.READ.name()));
+                .andExpect(jsonPath("$[0].editable").value(false));
 
         // and so does the reference read on its own, unfolded
         mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/" + referenceUuid).header(HEADER_USER_ID, USER_ID))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.permission").value(PermissionType.READ.name()));
+                .andExpect(jsonPath("$.editable").value(false));
 
-        // a shared modification the directory knows nothing about is left without permission, which grants nothing
+        // a shared modification the directory knows nothing about is not editable either
         when(directoryService.getElementsPermissions(any(), eq(USER_ID))).thenReturn(Map.of());
         mockMvc.perform(get("/v1/groups/" + TEST_GROUP2_ID + "/network-modifications?onlyMetadata=true")
                         .header(HEADER_USER_ID, USER_ID))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].permission").doesNotExist());
+                .andExpect(jsonPath("$[0].editable").value(false));
 
-        // if no user is supplied, the directory is not even asked, and no permission is answered
+        // if no user is supplied, the directory is not even asked, and nothing is answered
         clearInvocations(directoryService);
         mockMvc.perform(get("/v1/groups/" + TEST_GROUP2_ID + "/network-modifications?onlyMetadata=true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].permission").doesNotExist());
+                .andExpect(jsonPath("$[0].editable").doesNotExist());
         verifyNoInteractions(directoryService);
     }
 

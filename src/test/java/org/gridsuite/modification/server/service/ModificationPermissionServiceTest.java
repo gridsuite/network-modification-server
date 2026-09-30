@@ -10,7 +10,7 @@ import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.LoadCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
-import org.gridsuite.modification.dto.PermissionType;
+import org.gridsuite.modification.server.dto.PermissionType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -61,7 +61,7 @@ class ModificationPermissionServiceTest {
         modificationPermissionService.addPermissions(List.of(reference), null);
 
         verifyNoInteractions(directoryService);
-        assertThat(reference.getPermission()).isNull();
+        assertThat(reference.getEditable()).isNull();
     }
 
     @Test
@@ -76,12 +76,12 @@ class ModificationPermissionServiceTest {
         ArgumentCaptor<Collection<UUID>> askedUuids = ArgumentCaptor.captor();
         verify(directoryService, times(1)).getElementsPermissions(askedUuids.capture(), eq(USER_ID));
         assertThat(askedUuids.getValue()).containsExactly(sharedUuid);
-        assertThat(firstReference.getPermission()).isEqualTo(PermissionType.WRITE);
-        assertThat(secondReference.getPermission()).isEqualTo(PermissionType.WRITE);
+        assertThat(firstReference.getEditable()).isTrue();
+        assertThat(secondReference.getEditable()).isTrue();
     }
 
     @Test
-    void aNestedReferenceGetsItsOwnPermission() {
+    void aNestedReferenceGetsItsOwnFlag() {
         UUID outerUuid = UUID.randomUUID();
         UUID nestedUuid = UUID.randomUUID();
         ModificationReferenceInfos nestedReference = reference(nestedUuid, null);
@@ -94,12 +94,12 @@ class ModificationPermissionServiceTest {
         ArgumentCaptor<Collection<UUID>> askedUuids = ArgumentCaptor.captor();
         verify(directoryService, times(1)).getElementsPermissions(askedUuids.capture(), eq(USER_ID));
         assertThat(askedUuids.getValue()).containsExactlyInAnyOrder(outerUuid, nestedUuid);
-        assertThat(outerReference.getPermission()).isEqualTo(PermissionType.WRITE);
-        assertThat(nestedReference.getPermission()).isEqualTo(PermissionType.READ);
+        assertThat(outerReference.getEditable()).isTrue();
+        assertThat(nestedReference.getEditable()).isFalse();
     }
 
     @Test
-    void anElementTheDirectoryLeavesOutHoldsNoPermission() {
+    void anElementTheDirectoryLeavesOutIsNotEditable() {
         UUID knownUuid = UUID.randomUUID();
         ModificationReferenceInfos knownReference = reference(knownUuid, null);
         ModificationReferenceInfos unknownReference = reference(UUID.randomUUID(), null);
@@ -108,18 +108,18 @@ class ModificationPermissionServiceTest {
         modificationPermissionService.addPermissions(List.of(knownReference, unknownReference), USER_ID);
 
         verify(directoryService, times(1)).getElementsPermissions(any(), eq(USER_ID));
-        assertThat(knownReference.getPermission()).isEqualTo(PermissionType.MANAGE);
-        assertThat(unknownReference.getPermission()).isNull();
+        assertThat(knownReference.getEditable()).isTrue();
+        assertThat(unknownReference.getEditable()).isFalse();
     }
 
     @Test
-    void anUnreachableDirectoryLeavesThePermissionUnresolved() {
+    void anUnreachableDirectoryTellsNothing() {
         ModificationReferenceInfos reference = reference(UUID.randomUUID(), null);
         when(directoryService.getElementsPermissions(any(), eq(USER_ID))).thenThrow(new RestClientException("directory-server is down"));
 
         modificationPermissionService.addPermissions(List.of(reference), USER_ID);
 
-        assertThat(reference.getPermission()).isNull();
+        assertThat(reference.getEditable()).isNull();
     }
 
     private static ModificationReferenceInfos reference(UUID referencedId, ModificationInfos referencedInfos) {
