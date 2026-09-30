@@ -24,6 +24,7 @@ import org.gridsuite.modification.server.dto.ModificationMoveInfos;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.PermissionType;
 import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
@@ -47,11 +48,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.util.Pair;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -84,6 +88,7 @@ class CompositeControllerTest {
     private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/network-composite-modifications";
     private static final String URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT = "/v1/network-composite-modifications/";
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
+    private static final String USER_ID = "userId";
     private static final String URI_NETWORK_MODIF_MOVE = "/v1/groups/{groupUuid}/network-modifications/move";
     private static final String USER_ID = "userId";
 
@@ -1243,6 +1248,29 @@ class CompositeControllerTest {
 
     @Test
     void testHasReferences() throws Exception {
+        insertSharedCompositeInSecondGroup();
+
+        assertFalse(hasReferences(TEST_GROUP_ID));
+        assertTrue(hasReferences(TEST_GROUP2_ID));
+        assertTrue(hasReferences(TEST_GROUP_ID, TEST_GROUP2_ID));
+    }
+
+    @Test
+    void testReferencedModificationsAreWritable() throws Exception {
+        UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
+        doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null))
+                .when(directoryService).checkPermission(Set.of(sharedCompositeUuid), USER_ID, PermissionType.WRITE);
+
+        // a container pointing at a shared modification the user cannot write on is refused
+        mockMvc.perform(areReferencedModificationsWritable(TEST_GROUP2_ID)).andExpect(status().isForbidden());
+        verify(directoryService, times(1)).checkPermission(any(), any(), any());
+
+        // a container pointing at no shared modification does not even need the permission to be checked
+        mockMvc.perform(areReferencedModificationsWritable(TEST_GROUP_ID)).andExpect(status().isOk());
+        verify(directoryService, times(1)).checkPermission(any(), any(), any());
+    }
+
+    private UUID insertSharedCompositeInSecondGroup() throws Exception {
         List<ModificationInfos> switchMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "shared")
                         .content(mapper.writeValueAsString(switchMods.stream().map(ModificationInfos::getUuid).toList()))
@@ -1252,10 +1280,13 @@ class CompositeControllerTest {
         runRequestAsync(mockMvc, put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP2_ID + "?action=INSERT")
                 .content(getJsonBodyModificationCompositeToBeInserted(List.of(new CompositeInfos(sharedCompositeUuid, "shared", true, null))))
                 .contentType(MediaType.APPLICATION_JSON), status().isOk());
+        return sharedCompositeUuid;
+    }
 
-        assertFalse(hasReferences(TEST_GROUP_ID));
-        assertTrue(hasReferences(TEST_GROUP2_ID));
-        assertTrue(hasReferences(TEST_GROUP_ID, TEST_GROUP2_ID));
+    private static MockHttpServletRequestBuilder areReferencedModificationsWritable(UUID containerUuid) {
+        return get("/v1/containers/references/authorized")
+                .queryParam("uuids", containerUuid.toString())
+                .header(HEADER_USER_ID, USER_ID);
     }
 
     @Test

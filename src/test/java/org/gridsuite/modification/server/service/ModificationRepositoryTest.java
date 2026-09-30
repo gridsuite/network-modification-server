@@ -2046,7 +2046,7 @@ class ModificationRepositoryTest {
     }
 
     @Test
-    void testRenameRootNetworkTagReusesAnEntryTheSharedModificationAlreadyHas() {
+    void testRenameRootNetworkTagOverwritesAnEntryTheSharedModificationAlreadyHas() {
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
         UUID sharedUuid = sharedModificationOf(referenceUuid);
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), ROOT_NETWORK_TAG, false);
@@ -2055,9 +2055,55 @@ class ModificationRepositoryTest {
 
         networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
 
-        assertEquals(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, true),
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, false),
                 getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
-                "A shared modification is never overwritten: the entry the other group set is reused as it is");
+                "The renamed root network keeps its applicability, overwriting the entry the other group set");
+    }
+
+    @Test
+    void testRenameRootNetworkTagDropsTheEntryOfAModificationHoldingNoneForTheOldTag() {
+        UUID modificationUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d1"))).getFirst().getUuid();
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), RENAMED_ROOT_NETWORK_TAG, false);
+
+        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_3), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+
+        assertEquals(Map.of(), getApplicabilities(TEST_GROUP_ID_3).get(modificationUuid),
+                "The modification was applicable on the renamed root network, it must stay so");
+        assertEquals(List.of(modificationUuid), activeModificationUuids(TEST_GROUP_ID_3, RENAMED_ROOT_NETWORK_TAG));
+    }
+
+    @Test
+    void testRenameRootNetworkTagDropsTheEntryOfASharedModificationHoldingNoneForTheOldTag() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), RENAMED_ROOT_NETWORK_TAG, false);
+
+        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+
+        assertEquals(Map.of(), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
+                "The shared modification was applicable on the renamed root network, it must stay so");
+        assertEquals(List.of(Map.of()), List.copyOf(getApplicabilitiesByModificationsInside(sharedUuid).values()));
+    }
+
+    @Test
+    void testGetReferencedModificationUuidsFollowsTheSharedModifications() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID nestedReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d2");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+        UUID nestedSharedUuid = sharedModificationOf(nestedReferenceUuid);
+        // the second shared modification is only reached through the first one
+        networkModificationRepository.moveModifications(
+                new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
+                new ModificationContainerInfos(sharedUuid, ModificationContainerType.COMPOSITE),
+                List.of(nestedReferenceUuid), null);
+        insertComposite(TEST_GROUP_ID_3, false, "v1d3");
+
+        assertEquals(Set.of(sharedUuid, nestedSharedUuid), networkModificationRepository.getReferencedModificationUuids(List.of(TEST_GROUP_ID_2)),
+                "Both shared modifications, the nested one included, but none of their children");
+        assertEquals(Set.of(), networkModificationRepository.getReferencedModificationUuids(List.of(TEST_GROUP_ID_3)),
+                "A group containing no reference leads to no shared modification");
     }
 
     @Test
