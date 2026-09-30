@@ -87,7 +87,6 @@ class CompositeControllerTest {
     private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/network-composite-modifications";
     private static final String URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT = "/v1/network-composite-modifications/";
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
-    private static final String USER_ID = "userId";
     private static final String URI_NETWORK_MODIF_MOVE = "/v1/groups/{groupUuid}/network-modifications/move";
 
     @Autowired
@@ -1257,7 +1256,7 @@ class CompositeControllerTest {
     void testReferencedModificationsAreWritable() throws Exception {
         UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
         doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null))
-                .when(directoryService).checkPermission(Set.of(sharedCompositeUuid), USER_ID, PermissionType.WRITE);
+                .when(directoryService).checkPermission(Set.of(sharedCompositeUuid), TEST_USER_ID, PermissionType.WRITE);
 
         // a container pointing at a shared modification the user cannot write on is refused
         mockMvc.perform(areReferencedModificationsWritable(TEST_GROUP2_ID)).andExpect(status().isForbidden());
@@ -1284,7 +1283,7 @@ class CompositeControllerTest {
     private static MockHttpServletRequestBuilder areReferencedModificationsWritable(UUID containerUuid) {
         return get("/v1/containers/references/authorized")
                 .queryParam("uuids", containerUuid.toString())
-                .header(HEADER_USER_ID, USER_ID);
+                .header(HEADER_USER_ID, TEST_USER_ID);
     }
 
     @Test
@@ -1299,23 +1298,23 @@ class CompositeControllerTest {
                 .content(getJsonBodyModificationCompositeToBeInserted(List.of(new CompositeInfos(sharedCompositeUuid, "shared", true, null))))
                 .contentType(MediaType.APPLICATION_JSON), status().isOk());
         UUID referenceUuid = networkModificationRepository.getModifications(TEST_GROUP2_ID, true, true).getLast().getUuid();
-        when(directoryService.getElementsPermissions(any(), eq(USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ));
+        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ));
 
         // the group lists the reference as not editable, its reader holding no more than READ on the shared modification
         mockMvc.perform(get("/v1/groups/" + TEST_GROUP2_ID + "/network-modifications?onlyMetadata=true")
-                        .header(HEADER_USER_ID, USER_ID))
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].editable").value(false));
 
         // and so does the reference read on its own, unfolded
-        mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/" + referenceUuid).header(HEADER_USER_ID, USER_ID))
+        mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/" + referenceUuid).header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.editable").value(false));
 
         // a shared modification the directory knows nothing about is not editable either
-        when(directoryService.getElementsPermissions(any(), eq(USER_ID))).thenReturn(Map.of());
+        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of());
         mockMvc.perform(get("/v1/groups/" + TEST_GROUP2_ID + "/network-modifications?onlyMetadata=true")
-                        .header(HEADER_USER_ID, USER_ID))
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].editable").value(false));
 
