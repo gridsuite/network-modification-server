@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
@@ -327,11 +326,18 @@ public class NetworkModificationController {
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "User id") @RequestHeader("userId") String userId,
             @RequestBody ModificationInfos metadata) {
-        if (metadata instanceof ModificationReferenceInfos modificationReferenceInfos) {
-            networkModificationService.updateModificationReferencedMetadata(networkModificationUuids, modificationReferenceInfos, userId);
-        } else {
-            networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata);
-        }
+        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping(value = "/network-modifications/name-and-description/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Update a modification name and description")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
+    public ResponseEntity<Void> updateModificationNameAndDescription(
+            @PathVariable("uuid") UUID modificationUuid,
+            @RequestHeader(HEADER_USER_ID) String userId,
+            @Parameter(description = "New composite metadata") @RequestBody ModificationMetadata modificationMetadata) {
+        networkModificationService.updateModificationNameAndDescription(modificationUuid, modificationMetadata, userId);
         return ResponseEntity.ok().build();
     }
 

@@ -121,17 +121,6 @@ public class CompositeController {
         return ResponseEntity.ok().body(networkModificationService.duplicateCompositeModifications(sourceModificationUuids));
     }
 
-    @PutMapping(value = "/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Update a network composite modification")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
-    public ResponseEntity<Void> updateNetworkCompositeModification(
-            @PathVariable("uuid") UUID compositeModificationUuid,
-            @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name,
-            @Parameter(description = "New composite description") @RequestBody(required = false) String description) {
-        networkModificationService.updateCompositeModification(compositeModificationUuid, name, description);
-        return ResponseEntity.ok().build();
-    }
-
     /**
      * @return modification uuid -> uuid of the composite currently containing it; modifications sitting directly
      * under a group (or not found) have no entry, letting the caller resolve the ambiguous case (unlike

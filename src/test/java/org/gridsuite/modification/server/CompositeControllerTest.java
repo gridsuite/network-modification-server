@@ -465,6 +465,7 @@ class CompositeControllerTest {
         int modificationsNumber = 2;
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, modificationsNumber);
 
+        // create modification
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
                         .queryParam("name", "composite name")
                         .queryParam("description", "composite description")
@@ -502,15 +503,15 @@ class CompositeControllerTest {
 
         ModificationReferenceInfos reference = assertInstanceOf(ModificationReferenceInfos.class, newModificationList.getLast());
         assertEquals(compositeInGroupUuid, reference.getReferencedId());
-        assertEquals("shared composite", ((CompositeModificationInfos) reference.getReferencedInfos()).getName());
-        assertEquals("shared description", reference.getReferencedInfos().getDescription());
+        assertInstanceOf(CompositeModificationInfos.class, reference.getReferencedInfos());
+        CompositeModificationInfos compositeModificationInfos = (CompositeModificationInfos) reference.getReferencedInfos();
+        assertEquals("shared composite", compositeModificationInfos.getName());
+        assertEquals("shared description", compositeModificationInfos.getDescription());
         assertEquals(ModificationReferenceInfos.Type.BASIC, reference.getReferenceType());
 
         // update metadata of shared composite
-        ModificationReferenceInfos metadata = new ModificationReferenceInfos();
-        metadata.setDescription("new shared description");
-        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
-                        .queryParam("uuids", reference.getUuid().toString())
+        ModificationMetadata metadata = ModificationMetadata.builder().name("new shared composite name").description("new shared description").build();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/name-and-description/" + reference.getUuid().toString())
                         .header("userId", TEST_USER_ID)
                         .content(mapper.writeValueAsString(metadata))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -519,7 +520,9 @@ class CompositeControllerTest {
 
         List<ModificationInfos> updatedModificationList = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         ModificationReferenceInfos updatedReference = assertInstanceOf(ModificationReferenceInfos.class, updatedModificationList.getLast());
-        assertEquals("new shared description", updatedReference.getReferencedInfos().getDescription());
+        CompositeModificationInfos updatedCompositeModificationInfos = (CompositeModificationInfos) updatedReference.getReferencedInfos();
+        assertEquals("new shared composite name", updatedCompositeModificationInfos.getName());
+        assertEquals("new shared description", updatedCompositeModificationInfos.getDescription());
     }
 
     @Test
@@ -706,10 +709,13 @@ class CompositeControllerTest {
 
         // Update the composite modification name
         String newCompositeName = "new composite name";
-        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeModificationUuid)
-                        .param("name", newCompositeName)
+        ModificationMetadata metadata = ModificationMetadata.builder().name(newCompositeName).build();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/name-and-description/" + compositeModificationUuid)
+                        .header("userId", TEST_USER_ID)
+                        .content(mapper.writeValueAsString(metadata))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
 
         // verify that the composite has not been emptied (modifications_uuids is missing so modifications have been ignored)
         mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}&onlyMetadata=false", compositeModificationUuid))

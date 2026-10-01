@@ -284,15 +284,6 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateModificationReferencedMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationReferenceInfos metadata, String userId) {
-        List<ElementAttributes> elementAttributesList = networkModificationRepository.updateModificationReferencedMetadata(modificationUuids, metadata);
-        if (!elementAttributesList.isEmpty()) {
-            elementAttributesList.forEach(elementAttributes -> directoryService.updateElement(elementAttributes, userId));
-        }
-
-    }
-
-    @Transactional
     public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable) {
         assertRootNetworkTagFits(rootNetworkTag);
         networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
@@ -604,9 +595,15 @@ public class NetworkModificationService {
         return networkModificationRepository.duplicateCompositeModifications(sourceModificationUuids);
     }
 
-    @Transactional
-    public void updateCompositeModification(@NonNull UUID compositeUuid, String name, String description) {
-        networkModificationRepository.updateCompositeModification(compositeUuid, name, description);
+    public void updateModificationNameAndDescription(@NonNull UUID modificationUuid, ModificationMetadata modificationMetadata, String userId) {
+        UUID referencedModificationId = networkModificationRepository.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
+        if (referencedModificationId != null) {
+            notificationService.emitElementUpdated(referencedModificationId, userId);
+            return;
+        }
+        if (networkModificationRepository.hasReferencedModification(modificationUuid)) {
+            notificationService.emitElementUpdated(modificationUuid, userId);
+        }
     }
 
     @Transactional

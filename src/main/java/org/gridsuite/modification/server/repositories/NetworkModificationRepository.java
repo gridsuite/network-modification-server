@@ -194,14 +194,34 @@ public class NetworkModificationRepository {
         compositeModificationRepository.renameCompositeModification(compositeEntity, name);
     }
 
-    public void updateCompositeModification(@NonNull UUID compositeUuid, String name, String description) {
-        CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
-                .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
-        if (name != null) {
-            compositeModificationRepository.renameCompositeModification(compositeEntity, name);
+    @Transactional
+    public UUID updateModificationNameAndDescription(@NonNull UUID modificationUuid, ModificationMetadata modificationMetadata) {
+        ModificationEntity modificationEntity = getModificationEntity(modificationUuid);
+        if (ModificationType.MODIFICATION_REFERENCE.toString().equals(modificationEntity.getType())) {
+            ModificationReferenceEntity modificationReferenceEntity = (ModificationReferenceEntity) modificationEntity;
+            ModificationEntity referencedModificationEntity = getModificationEntity(modificationReferenceEntity.getReferencedId());
+            if (ModificationType.COMPOSITE_MODIFICATION.toString().equals(referencedModificationEntity.getType())) {
+                CompositeModificationEntity compositeEntity = (CompositeModificationEntity) referencedModificationEntity;
+                if (modificationMetadata.getName() != null) {
+                    compositeModificationRepository.renameCompositeModification(compositeEntity, modificationMetadata.getName());
+                }
+            }
+            updateModificationEntityDescription(modificationMetadata, referencedModificationEntity);
+            return referencedModificationEntity.getId();
         }
-        if (description != null) {
-            compositeModificationRepository.changeDescriptionOfCompositeModification(compositeEntity, description);
+        if (ModificationType.COMPOSITE_MODIFICATION.toString().equals(modificationEntity.getType())) {
+            CompositeModificationEntity compositeEntity = (CompositeModificationEntity) modificationEntity;
+            if (modificationMetadata.getName() != null) {
+                compositeModificationRepository.renameCompositeModification(compositeEntity, modificationMetadata.getName());
+            }
+        }
+        updateModificationEntityDescription(modificationMetadata, modificationEntity);
+        return null;
+    }
+
+    private void updateModificationEntityDescription(ModificationMetadata modificationMetadata, ModificationEntity modificationEntity) {
+        if (modificationMetadata.getDescription() != null) {
+            modificationEntity.setDescription(modificationMetadata.getDescription());
         }
     }
 
@@ -569,6 +589,11 @@ public class NetworkModificationRepository {
         ModificationReferenceInfos modificationReferenceInfos = referenceEntity.toModificationInfos();
         modificationReferenceInfos.setReferencedInfos(refInfos);
         return modificationReferenceInfos;
+    }
+
+    public boolean hasReferencedModification(UUID modificationId) {
+        Integer referencedTimes = modificationRepository.countTimesElementIsReferenced(modificationId);
+        return referencedTimes > 0;
     }
 
     private ModificationReferenceInfos loadModificationReferenceMetadata(ModificationEntity modificationEntity) {
@@ -1038,30 +1063,6 @@ public class NetworkModificationRepository {
         }
     }
 
-    @Transactional
-    public List<ElementAttributes> updateModificationReferencedMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationReferenceInfos metadata) {
-        List<ElementAttributes> modificationToBeUpdatedInDirectory = new ArrayList<>();
-        for (UUID modificationUuid : modificationUuids) {
-            ModificationEntity modificationEntity = this.modificationRepository
-                    .findById(modificationUuid)
-                    .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
-            if (metadata.getDescription() != null) {
-                // we need to update the referenced modification contained in the modificationEntity
-                assert modificationEntity instanceof ModificationReferenceEntity;
-                ModificationReferenceEntity modificationReferenceEntity = (ModificationReferenceEntity) modificationEntity;
-                ModificationEntity referencedModificationEntity = this.modificationRepository
-                        .findById(modificationReferenceEntity.getReferencedId())
-                        .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
-                referencedModificationEntity.setDescription(metadata.getDescription());
-                modificationToBeUpdatedInDirectory.add(new ElementAttributes(referencedModificationEntity.getId(), null, metadata.getDescription()));
-            }
-            if (metadata.getActivated() != null) {
-                updateActivated(modificationEntity, metadata.getActivated());
-            }
-        }
-        return modificationToBeUpdatedInDirectory;
-    }
-
     // TODO remove when activation for a sub modification (composite) is implemented : no need optimized load
     private void updateActivated(ModificationEntity entity, boolean activated) {
         entity.setActivated(activated);
@@ -1219,6 +1220,7 @@ public class NetworkModificationRepository {
                 .stream()
                 .map(entity -> ModificationMetadata.builder()
                         .id(entity.getId())
+                        .description(entity.getDescription())
                         .type(ModificationType.valueOf(entity.getType()))
                         .build())
                 .toList();
