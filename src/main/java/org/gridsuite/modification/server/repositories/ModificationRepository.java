@@ -264,10 +264,10 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         """)
     List<UUID> findAllChildrenUuids(@Param("compositeUuid") UUID compositeUuid);
 
-    interface MaxDepth {
+    interface ContainerDepth {
         String getId();
 
-        Integer getDepth();
+        Integer getMaxDepth();
     }
 
     /**
@@ -291,7 +291,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
               FROM tree
              GROUP BY root_id
             """)
-    List<MaxDepth> findMaxDepths(@Param("uuids") Collection<UUID> uuids);
+    List<ContainerDepth> findMaxDepths(@Param("uuids") Collection<UUID> uuids);
 
     @EntityGraph(attributePaths = {"content.modifications"}, type = EntityGraph.EntityGraphType.LOAD)
     List<CompositeModificationEntity> findAllCompositesWithModificationsByIdIn(List<UUID> compositeUuids);

@@ -354,7 +354,7 @@ public class NetworkModificationRepository {
             return Map.of();
         }
         return modificationRepository.findMaxDepths(uuids).stream()
-                .collect(Collectors.toMap(d -> UUID.fromString(d.getId()), ModificationRepository.MaxDepth::getDepth));
+                .collect(Collectors.toMap(d -> UUID.fromString(d.getId()), ModificationRepository.ContainerDepth::getMaxDepth));
     }
 
     /**
@@ -363,9 +363,10 @@ public class NetworkModificationRepository {
      *
      * @return how many levels the given content of a composite spans, its stashed modifications left out
      */
-    private static int contentDepth(List<ModificationInfos> content) {
+    private static int getMaxDepthIn(List<ModificationInfos> content) {
         return content.stream()
                 .filter(modificationInfos -> !Boolean.TRUE.equals(modificationInfos.getStashed()))
+                // one level for the child itself, plus its own max depth (0 for a plain modification)
                 .mapToInt(modificationInfos -> 1 + maxDepthOf(modificationInfos))
                 .max()
                 .orElse(0);
@@ -565,7 +566,7 @@ public class NetworkModificationRepository {
                 .uuid(compositeEntity.getId())
                 .stashed(compositeEntity.getStashed())
                 .modificationsInfos(content)
-                .maxDepth(contentDepth(content))
+                .maxDepth(getMaxDepthIn(content))
                 .build();
     }
 
