@@ -107,7 +107,7 @@ public class NetworkModificationController {
             @Parameter(description = "apply modifications entering the target group (default true)")
             @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
             @RequestBody Pair<List<ModificationMoveInfos>, List<ModificationApplicationContext>> moveContextInfos,
-            @RequestHeader("userId") String userId) {
+            @RequestHeader(HEADER_USER_ID) String userId) {
         return networkModificationService.moveModifications(Objects.requireNonNullElse(originGroupUuid, targetGroupUuid), targetGroupUuid,
                         moveContextInfos.getFirst(), moveContextInfos.getSecond(), canApply, userId)
                 .thenApply(ResponseEntity.ok()::body);
@@ -188,7 +188,7 @@ public class NetworkModificationController {
     public ResponseEntity<Void> updateNetworkModification(
             @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid,
             @RequestBody ModificationInfos modificationInfos,
-            @RequestHeader("userId") String userId) {
+            @RequestHeader(HEADER_USER_ID) String userId) {
         networkModificationService.updateNetworkModification(networkModificationUuid, modificationInfos, userId);
         return ResponseEntity.ok().build();
     }
@@ -325,7 +325,7 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The metadata of the network modifications has been successfully updated")
     public ResponseEntity<Void> updateNetworkModificationMetadata(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
-            @RequestBody ModificationInfos metadata, @RequestHeader("userId") String userId) {
+            @RequestBody ModificationInfos metadata, @RequestHeader(HEADER_USER_ID) String userId) {
 
         networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata, userId);
         return ResponseEntity.ok().build();

@@ -217,12 +217,13 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findOnlyCompositeChildrenUuids(@Param("compositeUuids") Collection<UUID> compositeUuids);
 
     /**
-     * @return distinct shared ancestor composite modification uuids of {@code modificationUuids},
-     * closest first; empty if none of the modifications is nested in a shared composite
+     * @param ancestorsOnly if true, only the ancestors of {@code modificationUuids} are candidates,
+     *                      otherwise {@code modificationUuids} themselves (e.g. composites) are candidates too
+     * @return distinct shared composite modification uuids among the candidates, closest first; empty if none is shared
      */
     @NativeQuery("""
         WITH RECURSIVE ancestors(id, level) AS (
-            SELECT m.container_id, 1
+            SELECT CASE WHEN :ancestorsOnly THEN m.container_id ELSE m.id END, 0
               FROM modification m
              WHERE m.id IN (:modificationUuids)
             UNION ALL
@@ -237,7 +238,8 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
          GROUP BY a.id
          ORDER BY MIN(a.level)
         """)
-    List<UUID> findAllSharedCompositeAncestorsUuids(@Param("modificationUuids") Collection<UUID> modificationUuids);
+    List<UUID> findAllSharedCompositesUuids(@Param("modificationUuids") Collection<UUID> modificationUuids,
+                                           @Param("ancestorsOnly") boolean ancestorsOnly);
 
     /**
      * Returns the composite UUID followed by every descendant UUID (composites <em>and</em> leaves),
