@@ -271,7 +271,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
                   LEFT JOIN modification_reference r ON r.id = m.id
                  WHERE m.stashed = false
             )
-            SELECT CAST(root_id AS VARCHAR) AS id, MAX(depth) AS depth
+            SELECT CAST(root_id AS VARCHAR) AS id, MAX(depth) AS sublevelCount
               FROM tree
              GROUP BY root_id
             """)
