@@ -983,17 +983,22 @@ public class NetworkModificationRepository {
      * @return ReferenceData : modification and elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
-    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids) {
-        List<ModificationEntity> modificationEntities = this.modificationRepository.findAllByIdIn(modificationUuids);
-        List<ModificationReferenceData> references = new ArrayList<>(List.of());
-        modificationEntities.forEach(modificationEntity -> {
-            if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {
-                UUID containerId = modificationRepository.findCompositeContainerIdByModificationId(modificationEntity.getId());
-                references.add(new ModificationReferenceData(modificationEntity.getId(), modificationReference.getReferencedId(), containerId));
-            }
-        });
+    // TODO use recursive CTE
+    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> initialModificationUuids, boolean withChildren) {
+        List<UUID> modificationUuids = new ArrayList<>(initialModificationUuids);
+        if (withChildren) {
+            modificationUuids.addAll(modificationRepository.findAllDescendantModificationIdsByContainerIds(modificationUuids));
+        }
+        List<ModificationEntity> modificationEntities = modificationRepository.findAllByIdIn(modificationUuids);
 
-        return references;
+        return modificationEntities.stream()
+            .filter(ModificationReferenceEntity.class::isInstance)
+            .map(m -> (ModificationReferenceEntity) m)
+            .map(ref -> {
+                UUID containerId = modificationRepository.findCompositeContainerIdByModificationId(ref.getId());
+                return new ModificationReferenceData(ref.getId(), ref.getReferencedId(), containerId);
+            })
+            .toList();
     }
 
     @Transactional
