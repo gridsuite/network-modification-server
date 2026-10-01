@@ -187,7 +187,7 @@ public class NetworkModificationController {
     public ResponseEntity<Void> updateNetworkModification(
             @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid,
             @RequestBody ModificationInfos modificationInfos,
-            @RequestHeader("userId") String userId) {
+            @RequestHeader(HEADER_USER_ID) String userId) {
         networkModificationService.updateNetworkModification(networkModificationUuid, modificationInfos, userId);
         return ResponseEntity.ok().build();
     }
