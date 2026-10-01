@@ -18,17 +18,21 @@ import org.springframework.stereotype.Service;
 public class ModificationContextFactory {
 
     private final FilterLoaderService filterLoaderService;
+    private final FilterWithDistributionKeysLoaderService filterWithDistributionKeysLoaderService;
     private final LoadFlowParametersLoaderService loadFlowParametersLoaderService;
 
     public ModificationContextFactory(FilterLoaderService filterLoaderService,
+                                      FilterWithDistributionKeysLoaderService filterWithDistributionKeysLoaderService,
                                       LoadFlowParametersLoaderService loadFlowParametersLoaderService) {
         this.filterLoaderService = filterLoaderService;
+        this.filterWithDistributionKeysLoaderService = filterWithDistributionKeysLoaderService;
         this.loadFlowParametersLoaderService = loadFlowParametersLoaderService;
     }
 
     public ModificationContext create() {
         return ModificationContext.builder()
                 .filterLoader(filterLoaderService)
+                .filterWithDistributionKeysLoader(filterWithDistributionKeysLoaderService)
                 .loadFlowParametersLoader(loadFlowParametersLoaderService)
                 .build();
     }

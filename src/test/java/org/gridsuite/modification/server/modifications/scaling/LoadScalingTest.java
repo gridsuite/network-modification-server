@@ -4,45 +4,45 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.modifications;
+package org.gridsuite.modification.server.modifications.scaling;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.ReactiveVariationMode;
 import org.gridsuite.modification.VariationMode;
 import org.gridsuite.modification.VariationType;
 import org.gridsuite.modification.dto.FilterInfos;
-import org.gridsuite.modification.dto.LoadScalingInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ScalingVariationInfos;
+import org.gridsuite.modification.dto.scaling.LoadScalingInfos;
+import org.gridsuite.modification.dto.scaling.ScalingVariationInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
+import org.gridsuite.modification.server.utils.FilterWithDistributionKeysStub;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.StubbedFilterRequest;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogNthMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -54,7 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 @Tag("IntegrationTest")
-class LoadScalingTest extends AbstractNetworkModificationTest {
+class LoadScalingTest extends AbstractScalingTest {
     private static final UUID LOAD_SCALING_ID = UUID.randomUUID();
     private static final UUID FILTER_ID_1 = UUID.randomUUID();
     private static final UUID FILTER_ID_2 = UUID.randomUUID();
@@ -76,7 +76,6 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
     private static final String LOAD_ID_9 = "load9";
     private static final String LOAD_ID_10 = "load10";
     private static final String LOAD_WRONG_ID_1 = "wrongId1";
-    private static final String PATH = "/v1/filters/metadata";
 
     @BeforeEach
     void specificSetUp() {
@@ -96,29 +95,15 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
         getNetwork().getLoad(LOAD_ID_10).setP0(100).setQ0(1.0);
     }
 
-    private static List<AbstractFilter> getTestFilters() {
-        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_1, 1.0),
-                new IdentifierListFilterEquipmentAttributes(LOAD_ID_2, 2.0)))
-            .build();
-        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_3, 2.0),
-                new IdentifierListFilterEquipmentAttributes(LOAD_ID_4, 5.0)))
-            .build();
-        IdentifierListFilter filter3 = IdentifierListFilter.builder().id(FILTER_ID_3).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_5, 6.0),
-                new IdentifierListFilterEquipmentAttributes(LOAD_ID_6, 7.0)))
-            .build();
-        IdentifierListFilter filter4 = IdentifierListFilter.builder().id(FILTER_ID_4).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_7, 3.0),
-                new IdentifierListFilterEquipmentAttributes(LOAD_ID_8, 8.0)))
-            .build();
-        IdentifierListFilter filter5 = IdentifierListFilter.builder().id(FILTER_ID_5).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_9, 0.0),
-                new IdentifierListFilterEquipmentAttributes(LOAD_ID_10, 9.0)))
-            .build();
-
-        return List.of(filter1, filter2, filter3, filter4, filter5);
+    @Override
+    protected List<FilterWithDistributionKeysStub> getTestFilters() {
+        return List.of(
+                createFilterStub(EquipmentType.LOAD, FILTER_ID_1, Map.of(LOAD_ID_1, 1.0, LOAD_ID_2, 2.0)),
+                createFilterStub(EquipmentType.LOAD, FILTER_ID_2, Map.of(LOAD_ID_3, 2.0, LOAD_ID_4, 5.0)),
+                createFilterStub(EquipmentType.LOAD, FILTER_ID_3, Map.of(LOAD_ID_5, 6.0, LOAD_ID_6, 7.0)),
+                createFilterStub(EquipmentType.LOAD, FILTER_ID_4, Map.of(LOAD_ID_7, 3.0, LOAD_ID_8, 8.0)),
+                createFilterStub(EquipmentType.LOAD, FILTER_ID_5, Map.of(LOAD_ID_9, 0.0, LOAD_ID_10, 9.0)),
+                createFilterStub(EquipmentType.LOAD, FILTER_WRONG_ID_2, Map.of(LOAD_WRONG_ID_1, 2.0, LOAD_ID_10, 9.0)));
     }
 
     @Override
@@ -129,42 +114,33 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
     @Test
     @Override
     public void testCreate() throws Exception {
-        List<AbstractFilter> filters = getTestFilters();
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + "(.+,){4}.*"))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(filters))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        List<StubbedFilterRequest> stubbedFilterRequests = stubScalingFilters(
+                List.of(List.of(FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_4, FILTER_ID_5)));
 
         super.testCreate();
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
+        verifyFiltersWithDistributionKeysRequests(stubbedFilterRequests);
     }
 
     @Test
     @Override
     public void testCopy() throws Exception {
-        List<AbstractFilter> filters = getTestFilters();
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + "(.+,){4}.*"))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(filters))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        List<StubbedFilterRequest> stubbedFilterRequests = stubScalingFilters(
+                List.of(List.of(FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_4, FILTER_ID_5)));
 
         super.testCopy();
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
+        verifyFiltersWithDistributionKeysRequests(stubbedFilterRequests);
     }
 
     @Test
     void testVentilationModeWithoutDistributionKey() throws Exception {
-        IdentifierListFilter noDistributionKeyFilter = IdentifierListFilter.builder().id(FILTER_NO_DK).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_2, null),
-                new IdentifierListFilterEquipmentAttributes(LOAD_ID_3, null)))
-            .build();
+        Map<String, Double> noDistributionKeys = new LinkedHashMap<>();
+        noDistributionKeys.put(LOAD_ID_2, null);
+        noDistributionKeys.put(LOAD_ID_3, null);
 
-        UUID stubNonDistributionKey = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_NO_DK)
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(noDistributionKeyFilter)))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        UUID stubNonDistributionKey = stubFiltersWithDistributionKeys(
+                List.of(createFilterStub(EquipmentType.LOAD, FILTER_NO_DK, noDistributionKeys)));
         FilterInfos filter = FilterInfos.builder()
             .id(FILTER_NO_DK)
             .name("filter")
@@ -191,18 +167,17 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
             .andExpect(status().isOk());
 
-        wireMockUtils.verifyGetRequest(stubNonDistributionKey, PATH, handleQueryParams(FILTER_NO_DK), false);
+        verifyFiltersWithDistributionKeysRequest(stubNonDistributionKey, List.of(FILTER_NO_DK));
 
         assertEquals(200, getNetwork().getLoad(LOAD_ID_2).getP0(), 0.01D);
         assertEquals(200, getNetwork().getLoad(LOAD_ID_3).getP0(), 0.01D);
+        assertLogMessage("This mode is only available for equipment with valid distribution keys. Distribution keys are considered valid "
+                + "if all selected filters are of type IdentifierFilter, no filters are missing, and each equipment has a unique distribution key.",
+                "network.modification.distributionKeysIssue", reportService);
     }
 
     @Test
     void testFilterWithWrongIds() throws Exception {
-        IdentifierListFilter wrongIdFilter1 = IdentifierListFilter.builder().id(FILTER_WRONG_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
-            .filterEquipmentsAttributes(List.of())
-            .build();
-
         FilterInfos filter = FilterInfos.builder()
             .name("filter")
             .id(FILTER_WRONG_ID_1)
@@ -219,34 +194,20 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation))
             .build();
-        UUID stubWithWrongId = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_WRONG_ID_1)
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        UUID stubWithWrongId = stubFiltersWithDistributionKeys(
+                List.of(createFilterStub(EquipmentType.LOAD, FILTER_WRONG_ID_1, Map.of())));
         String body = getJsonBody(loadScalingInfo, null);
 
         mockMvc.perform(post(getNetworkModificationUri())
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(loadScalingInfo.toModification().getName() + ": There is no valid equipment ID among the provided filter(s)",
-                "network.modification.invalidFilters", reportService);
-        wireMockUtils.verifyGetRequest(stubWithWrongId, PATH, handleQueryParams(FILTER_WRONG_ID_1), false);
+        assertLogMessage("No equipment evaluated by filters", "network.modification.filterEvaluationResult.noResult", reportService);
+        verifyFiltersWithDistributionKeysRequest(stubWithWrongId, List.of(FILTER_WRONG_ID_1));
     }
 
     @Test
     void testScalingCreationWithWarning() throws Exception {
-        String params = "(" + FILTER_ID_5 + "|" + FILTER_WRONG_ID_2 + ")";
-
-        IdentifierListFilter filter5 = IdentifierListFilter.builder().id(FILTER_ID_5).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_9, 0.0),
-                new IdentifierListFilterEquipmentAttributes(LOAD_ID_10, 9.0)))
-            .build();
-
-        IdentifierListFilter wrongIdFilter2 = IdentifierListFilter.builder().id(FILTER_WRONG_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_WRONG_ID_1, 2.0)))
-            .build();
-
         FilterInfos filter = FilterInfos.builder()
             .name("filter")
             .id(FILTER_WRONG_ID_2)
@@ -269,15 +230,12 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
             .variations(List.of(variation))
             .build();
 
-        UUID stubMultipleWrongIds = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + params + "," + params))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(wrongIdFilter2, filter5)))
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        List<StubbedFilterRequest> stubbedFilterRequests = stubScalingFilters(List.of(List.of(FILTER_WRONG_ID_2, FILTER_ID_5)));
         String body = getJsonBody(loadScalingInfo, null);
 
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri())
-                .content(body)
-                .contentType(MediaType.APPLICATION_JSON))
+            .content(body)
+            .contentType(MediaType.APPLICATION_JSON))
             .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
             .andExpectAll(
@@ -285,9 +243,15 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 content().string(IsNull.notNullValue())
             );
 
-        wireMockUtils.verifyGetRequest(stubMultipleWrongIds, PATH, Map.of("ids", WireMock.matching(".*")), false);
+        verifyFiltersWithDistributionKeysRequests(stubbedFilterRequests);
         assertEquals(600, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
         assertEquals(300, getNetwork().getLoad(LOAD_ID_10).getP0(), 0.01D);
+
+        assertLogNthMessage("Evaluate filter filter", "network.modification.filterEvaluation", reportService, 1);
+        assertLogNthMessage("Evaluate filter filter2", "network.modification.filterEvaluation", reportService, 2);
+        assertLogMessage("Equipment " + LOAD_ID_10 + " already seen in previous filter evaluation, skipping it",
+                "network.modification.filterEvaluation.equipmentAlreadySeen", reportService);
+        assertLogMessage("2 equipment(s) evaluated by filters", "network.modification.filterEvaluationResult", reportService);
     }
 
     @Override
@@ -417,19 +381,14 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
         assertEquals(100.0, getNetwork().getLoad(LOAD_ID_10).getP0(), 0);
     }
 
-    private static Map<String, StringValuePattern> handleQueryParams(UUID filterId) {
-        return Map.of("ids", WireMock.equalTo(filterId.toString()));
+    @Test
+    void testRegularDistributionAllConnected() throws Exception {
+        testVariationWithSomeDisconnections(VariationMode.REGULAR_DISTRIBUTION, List.of());
     }
 
-    private static Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
-        return Map.of("ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
-    }
-
-    private static String getPath(boolean isRegexPhat) {
-        if (isRegexPhat) {
-            return "/v1/filters/metadata\\?ids=";
-        }
-        return "/v1/filters/metadata?ids=";
+    @Test
+    void testRegularDistributionOnlyLD6Connected() throws Exception {
+        testVariationWithSomeDisconnections(VariationMode.REGULAR_DISTRIBUTION, List.of("LD1", "LD2", "LD3", "LD4", "LD5"));
     }
 
     @Test
@@ -458,20 +417,16 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 .filter(l -> !loadsToDisconnect.contains(l))
                 .toList();
 
-        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_ALL_LOADS).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
-            .filterEquipmentsAttributes(List.of(
-                    new IdentifierListFilterEquipmentAttributes("LD1", 0.0),
-                    new IdentifierListFilterEquipmentAttributes("LD2", 100.0),
-                    new IdentifierListFilterEquipmentAttributes("LD3", 100.0),
-                    new IdentifierListFilterEquipmentAttributes("LD4", 100.0),
-                    new IdentifierListFilterEquipmentAttributes("LD5", 100.0),
-                    new IdentifierListFilterEquipmentAttributes("LD6", 100.0)))
-            .build();
+        Map<String, Double> distributionKeys = new LinkedHashMap<>();
+        distributionKeys.put("LD1", 0.0);
+        distributionKeys.put("LD2", 100.0);
+        distributionKeys.put("LD3", 100.0);
+        distributionKeys.put("LD4", 100.0);
+        distributionKeys.put("LD5", 100.0);
+        distributionKeys.put("LD6", 100.0);
 
-        UUID subFilter = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_ALL_LOADS)
-            .willReturn(WireMock.ok()
-                .withBody(mapper.writeValueAsString(List.of(filter1)))
-                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        UUID subFilter = stubFiltersWithDistributionKeys(
+                List.of(createFilterStub(EquipmentType.LOAD, FILTER_ID_ALL_LOADS, distributionKeys)));
 
         FilterInfos filter = FilterInfos.builder()
                 .name("filter")
@@ -508,6 +463,6 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 .reduce(0D, Double::sum);
         assertEquals(variationValue, connectedLoadsConstantP, 0.001D);
 
-        wireMockUtils.verifyGetRequest(subFilter, PATH, Map.of("ids", WireMock.matching(".*")), false);
+        verifyFiltersWithDistributionKeysRequest(subFilter, List.of(FILTER_ID_ALL_LOADS));
     }
 }

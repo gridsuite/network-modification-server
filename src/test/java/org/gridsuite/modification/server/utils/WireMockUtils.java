@@ -14,6 +14,7 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,6 +27,11 @@ public class WireMockUtils {
 
     public WireMockUtils(WireMockServer wireMockServer) {
         this.wireMockServer = wireMockServer;
+    }
+
+    public static MultiValuePattern havingExactlyIdsIgnoringOrder(Collection<UUID> filterIds) {
+        String[] expectedIds = filterIds.stream().map(UUID::toString).distinct().toArray(String[]::new);
+        return WireMock.havingExactly(expectedIds);
     }
 
     public void verifyGetRequest(UUID stubId, String urlPath, Map<String, StringValuePattern> queryParams, boolean regexMatching) {

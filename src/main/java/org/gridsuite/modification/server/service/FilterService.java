@@ -12,6 +12,7 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.utils.FilterServiceUtils;
 import org.gridsuite.filter.wip.Filter;
 import org.gridsuite.modification.IFilterService;
+import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
 import org.gridsuite.modification.dto.FilterEquipments;
 import org.gridsuite.modification.dto.IdentifiableAttributes;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,9 +41,13 @@ public class FilterService implements IFilterService {
 
     private static final String STANDALONE_FILTERS_URI = "/standalone-filters";
 
+    private static final String WITH_DISTRIBUTION_KEYS_URI = STANDALONE_FILTERS_URI + "/with-distribution-keys";
+
     private static final String IDS_PARAM = "ids";
 
     private static final ParameterizedTypeReference<Map<UUID, Filter>> STANDALONE_FILTERS_BY_ID = new ParameterizedTypeReference<>() { };
+
+    private static final ParameterizedTypeReference<Map<UUID, FilterWithDistributionKeys>> STANDALONE_FILTERS_WITH_DISTRIBUTION_KEYS_BY_ID = new ParameterizedTypeReference<>() { };
 
     private static String filterServerBaseUri;
 
@@ -90,6 +95,27 @@ public class FilterService implements IFilterService {
                 .uri(filterServerBaseUri + path)
                 .retrieve()
                 .body(STANDALONE_FILTERS_BY_ID);
+        return filters == null ? Map.of() : filters;
+    }
+
+    /**
+     * Retrieves self-contained filter definitions along with the distribution key of each equipment they
+     * select, which can then be evaluated locally against a network.
+     *
+     * @return the filters found, indexed by their identifier; identifiers with no matching filter are omitted
+     */
+    public Map<UUID, FilterWithDistributionKeys> getStandaloneFiltersWithDistributionKeys(List<UUID> filtersUuids) {
+        if (CollectionUtils.isEmpty(filtersUuids)) {
+            return Map.of();
+        }
+        String path = UriComponentsBuilder.fromPath(DELIMITER + FILTER_SERVER_API_VERSION + WITH_DISTRIBUTION_KEYS_URI)
+                .queryParam(IDS_PARAM, filtersUuids)
+                .buildAndExpand()
+                .toUriString();
+        Map<UUID, FilterWithDistributionKeys> filters = restClient.get()
+                .uri(filterServerBaseUri + path)
+                .retrieve()
+                .body(STANDALONE_FILTERS_WITH_DISTRIBUTION_KEYS_BY_ID);
         return filters == null ? Map.of() : filters;
     }
 

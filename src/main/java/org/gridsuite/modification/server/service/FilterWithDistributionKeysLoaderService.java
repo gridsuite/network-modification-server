@@ -6,8 +6,8 @@
  */
 package org.gridsuite.modification.server.service;
 
-import org.gridsuite.filter.wip.Filter;
-import org.gridsuite.modification.context.loaders.FilterLoader;
+import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
+import org.gridsuite.modification.context.loaders.FilterWithDistributionKeysLoader;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,19 +17,19 @@ import java.util.UUID;
 /**
  * Adapts the filter server client to the loader contract expected by the modification library.
  *
- * @author Achour BERRAHMA <achour.berrahma at rte-france.com>
+ * @author Kamil MARUT <kamil.marut at rte-france.com>
  */
 @Service
-public class FilterLoaderService implements FilterLoader {
+public class FilterWithDistributionKeysLoaderService implements FilterWithDistributionKeysLoader {
 
     private final FilterService filterService;
 
-    public FilterLoaderService(FilterService filterService) {
+    public FilterWithDistributionKeysLoaderService(FilterService filterService) {
         this.filterService = filterService;
     }
 
     @Override
-    public Map<UUID, Filter> load(List<UUID> filterUuids) {
-        return filterService.getStandaloneFilters(filterUuids);
+    public Map<UUID, FilterWithDistributionKeys> load(List<UUID> filterUuids) {
+        return filterService.getStandaloneFiltersWithDistributionKeys(filterUuids);
     }
 }

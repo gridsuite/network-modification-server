@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.dto.GeneratorScalingInfos;
+import org.gridsuite.modification.dto.scaling.GeneratorScalingInfos;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
