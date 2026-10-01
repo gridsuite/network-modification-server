@@ -364,8 +364,6 @@ public class NetworkModificationService {
 
     @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids, @NonNull String userId) {
-        // Collect shared ancestor composites before stashing, since stashed modifications are moved out of their composite
-        List<UUID> sharedAncestorUuids = networkModificationRepository.getAllSharedCompositeAncestorsUuids(modificationUuids);
         for (UUID modificationUuid : modificationUuids) {
             UUID parentCompositeUuid = modificationRepository.findCompositeContainerIdByModificationId(modificationUuid);
             if (parentCompositeUuid != null) {
@@ -376,10 +374,14 @@ public class NetworkModificationService {
             }
         }
         networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
-        emitSharedElementsUpdated(sharedAncestorUuids, userId);
 
         // break all the references pointing to those stashed modification references
         directoryService.removeElementReferences(getModificationsReferencesNonTransactional(modificationUuids, true), userId);
+
+        // Collect shared ancestor composites before stashing, since stashed modifications are moved out of their composite
+        List<UUID> sharedAncestorUuids = networkModificationRepository.getAllSharedCompositeAncestorsUuids(modificationUuids);
+        emitSharedElementsUpdated(sharedAncestorUuids, userId);
+
     }
 
     @Transactional
@@ -622,14 +624,14 @@ public class NetworkModificationService {
 
     @Transactional
     public UUID assembleNetworkModificationsIntoNewComposite(@NonNull List<UUID> assembledModificationsUuids, UUID nodeUuid, @NonNull String userId) {
-        // Collect shared ancestor composites before assembling, since assembled modifications are moved out of their composite
-        List<UUID> sharedAncestorUuids = networkModificationRepository.getAllSharedCompositeAncestorsUuids(assembledModificationsUuids);
         CompositeModificationInfos newComposite =
                 networkModificationRepository.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids).toModificationInfos();
-        emitSharedElementsUpdated(sharedAncestorUuids, userId);
-
         // update the references whose container is now the new composite (and the root container is the node)
         moveReferenceElementsToCompositeFrom(assembledModificationsUuids, newComposite.getUuid(), nodeUuid, userId);
+
+        // Collect shared ancestor composites before assembling, since assembled modifications are moved out of their composite
+        List<UUID> sharedAncestorUuids = networkModificationRepository.getAllSharedCompositeAncestorsUuids(assembledModificationsUuids);
+        emitSharedElementsUpdated(sharedAncestorUuids, userId);
 
         return newComposite.getUuid();
     }
