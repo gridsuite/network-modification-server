@@ -131,9 +131,6 @@ public class NetworkModificationRepository {
         this.modificationContextFactory = modificationContextFactory;
     }
 
-    /**
-     * @param containerType null when the caller does not know whether a group or a composite was expected
-     */
     private static NetworkModificationServerException getModificationContainerNotFoundException(UUID containerUuid, ModificationContainerType containerType) {
         String containerId = containerUuid.toString();
         String containerTypeName = containerType != null ? containerType.name() : "UNKNOWN";
