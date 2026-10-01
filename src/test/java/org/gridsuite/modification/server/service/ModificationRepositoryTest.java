@@ -2220,15 +2220,15 @@ class ModificationRepositoryTest {
                 .equipmentType(IdentifiableType.SWITCH).build();
     }
 
-    /** The max depth each composite or reference of a container gets in the metadata listing, as the front end reads it */
-    private Map<UUID, Integer> metadataMaxDepths(UUID containerUuid) {
+    /** The sublevel count each composite or reference of a container gets in the metadata listing, as the front end reads it */
+    private Map<UUID, Integer> metadataSublevelCounts(UUID containerUuid) {
         return networkModificationRepository.getModifications(containerUuid, true, false).stream()
-                .filter(infos -> maxDepthOf(infos) != null)
-                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationRepositoryTest::maxDepthOf));
+                .filter(infos -> sublevelCountOf(infos) != null)
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationRepositoryTest::sublevelCountOf));
     }
 
-    private static Integer maxDepthOf(ModificationInfos infos) {
-        return infos instanceof MaxDepthHolderInfos holder ? holder.getMaxDepth() : null;
+    private static Integer sublevelCountOf(ModificationInfos infos) {
+        return infos instanceof SublevelCountHolderInfos holder ? holder.getSublevelCount() : null;
     }
 
     private void moveFromGroupInto(UUID groupUuid, UUID compositeOrReferenceUuid, UUID modificationUuid) {
@@ -2239,51 +2239,51 @@ class ModificationRepositoryTest {
     }
 
     @Test
-    void testMaxDepthOfCompositesAndReferences() {
+    void testSublevelCountOfCompositesAndReferences() {
         UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d3");
         UUID emptyUuid = networkModificationRepository.saveModificationInfos(TEST_GROUP_ID_2, List.of(
                 CompositeModificationInfos.builder().name("empty").modificationsInfos(List.of()).build())).getFirst().getUuid();
 
-        assertEquals(Map.of(compositeUuid, 1, referenceUuid, 1, emptyUuid, 0), metadataMaxDepths(TEST_GROUP_ID_2),
+        assertEquals(Map.of(compositeUuid, 1, referenceUuid, 1, emptyUuid, 0), metadataSublevelCounts(TEST_GROUP_ID_2),
                 "a reference stands for the composite it points to, an empty composite has nothing below it");
     }
 
     @Test
-    void testMaxDepthOfACompositeUnfoldsTheReferencesItHolds() {
+    void testSublevelCountOfACompositeUnfoldsTheReferencesItHolds() {
         // outer ── reference ⇢ shared ── leaf : the leaf is shown two levels below outer
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
         UUID outerUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d2");
         moveFromGroupInto(TEST_GROUP_ID_2, outerUuid, referenceUuid);
 
-        assertEquals(Map.of(outerUuid, 2), metadataMaxDepths(TEST_GROUP_ID_2), "#906 answers 1 here");
-        assertEquals(Map.of(referenceUuid, 1), metadataMaxDepths(outerUuid));
+        assertEquals(Map.of(outerUuid, 2), metadataSublevelCounts(TEST_GROUP_ID_2), "#906 answers 1 here");
+        assertEquals(Map.of(referenceUuid, 1), metadataSublevelCounts(outerUuid));
     }
 
     @Test
-    void testMaxDepthOfAReferenceUnfoldsTheReferencesItsSharedCompositeHolds() {
+    void testSublevelCountOfAReferenceUnfoldsTheReferencesItsSharedCompositeHolds() {
         UUID outerReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
         UUID innerReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d2");
         // targeting a reference moves into the shared composite it points to
         moveFromGroupInto(TEST_GROUP_ID_2, outerReferenceUuid, innerReferenceUuid);
 
-        assertEquals(Map.of(outerReferenceUuid, 2), metadataMaxDepths(TEST_GROUP_ID_2));
+        assertEquals(Map.of(outerReferenceUuid, 2), metadataSublevelCounts(TEST_GROUP_ID_2));
     }
 
     @Test
-    void testMaxDepthIgnoresStashedContentWhicheverWayItIsRead() {
+    void testSublevelCountIgnoresStashedContentWhicheverWayItIsRead() {
         CompositeModificationInfos stashedInner = CompositeModificationInfos.builder().name("inner").stashed(true)
                 .modificationsInfos(List.of(switchInfos("v1d1"))).build();
         UUID outerUuid = networkModificationRepository.saveModificationInfos(TEST_GROUP_ID, List.of(
                 CompositeModificationInfos.builder().name("outer")
                         .modificationsInfos(List.of(stashedInner, switchInfos("v1d2"))).build())).getFirst().getUuid();
 
-        assertEquals(Map.of(outerUuid, 1), metadataMaxDepths(TEST_GROUP_ID));
-        assertEquals(1, ((CompositeModificationInfos) networkModificationRepository.getModificationInfo(outerUuid)).getMaxDepth());
+        assertEquals(Map.of(outerUuid, 1), metadataSublevelCounts(TEST_GROUP_ID));
+        assertEquals(1, ((CompositeModificationInfos) networkModificationRepository.getModificationInfo(outerUuid)).getSublevelCount());
     }
 
     @Test
-    void testFullInfosOfAReferenceCarryTheSameMaxDepthsAsTheMetadata() {
+    void testFullInfosOfAReferenceCarryTheSameSublevelCountsAsTheMetadata() {
         // group ── reference ⇢ shared ── [ inner ── leaf, leaf ] : what the front end unfolds when expanding the reference
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
         UUID innerUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d2");
@@ -2292,16 +2292,16 @@ class ModificationRepositoryTest {
         ModificationReferenceInfos reference = (ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid);
         CompositeModificationInfos shared = (CompositeModificationInfos) reference.getReferencedInfos();
 
-        assertEquals(2, reference.getMaxDepth());
-        assertEquals(metadataMaxDepths(TEST_GROUP_ID_2).get(referenceUuid), reference.getMaxDepth());
-        assertEquals(metadataMaxDepths(shared.getUuid()), shared.getModificationsInfos().stream()
+        assertEquals(2, reference.getSublevelCount());
+        assertEquals(metadataSublevelCounts(TEST_GROUP_ID_2).get(referenceUuid), reference.getSublevelCount());
+        assertEquals(metadataSublevelCounts(shared.getUuid()), shared.getModificationsInfos().stream()
                         .filter(CompositeModificationInfos.class::isInstance)
-                        .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationRepositoryTest::maxDepthOf)),
-                "a composite nested in a shared one carries its max depth whichever path reads it");
+                        .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationRepositoryTest::sublevelCountOf)),
+                "a composite nested in a shared one carries its sublevel count whichever path reads it");
     }
 
     @Test
-    void testMaxDepthsCostOneQueryWhateverTheNumberOfComposites() {
+    void testSublevelCountsCostOneQueryWhateverTheNumberOfComposites() {
         insertComposite(TEST_GROUP_ID_2, false, "v1d1");
         long selectsForOne = countSelects(() -> networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true));
         insertComposite(TEST_GROUP_ID_2, false, "v1d2");

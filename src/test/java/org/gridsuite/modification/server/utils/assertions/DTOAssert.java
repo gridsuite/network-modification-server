@@ -42,8 +42,8 @@ public class DTOAssert<T> extends AbstractAssert<DTOAssert<T>, T> {
             .withEqualsForFieldsMatchingRegexes(DTOAssert::activationFlagsAreEqualWithDefaultValue, ".*activated")
             // same for the applicabilities, left null by the DTO builders while an entity always has a (possibly empty) map
             .withEqualsForFieldsMatchingRegexes(DTOAssert::applicabilitiesAreEqualWithDefaultValue, ".*applicabilityByRootNetworkTag")
-            // max depths are derived by the server from the content and left null by the DTO builders: only compared when expected
-            .withEqualsForFieldsMatchingRegexes(DTOAssert::maxDepthsAreEqualWhenExpected, ".*maxDepth");
+            // sublevel counts are derived by the server from the content and left null by the DTO builders: only compared when expected
+            .withEqualsForFieldsMatchingRegexes(DTOAssert::sublevelCountsAreEqualWhenExpected, ".*sublevelCount");
         if (ignoreCollectionOrder) {
             builder.withIgnoreCollectionOrder(true);                                // For collection order test, need specific tests
         }
@@ -66,7 +66,7 @@ public class DTOAssert<T> extends AbstractAssert<DTOAssert<T>, T> {
         return value == null ? Map.of() : value;
     }
 
-    private static boolean maxDepthsAreEqualWhenExpected(Object actual, Object expected) {
+    private static boolean sublevelCountsAreEqualWhenExpected(Object actual, Object expected) {
         return expected == null || Objects.equals(actual, expected);
     }
 }
