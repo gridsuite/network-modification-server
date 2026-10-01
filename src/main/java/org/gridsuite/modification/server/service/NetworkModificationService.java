@@ -154,6 +154,7 @@ public class NetworkModificationService {
             .map(ModificationInfos::getUuid)
             .collect(Collectors.toSet());
 
+        // TODO : les sous modifications de références sont indirectement part d'un groupe et ne doivent donc pas être bloquées
         childrenUuids.addAll(networkModificationRepository.findAllChildrenUuids(
             rootModifications.stream()
                 .filter(m -> ModificationType.COMPOSITE_MODIFICATION == m.getType())
