@@ -136,7 +136,6 @@ public class NetworkModificationRepository {
      */
     private static NetworkModificationServerException getModificationContainerNotFoundException(UUID containerUuid, ModificationContainerType containerType) {
         String containerId = containerUuid.toString();
-        // the front end fills both parameters in its message: never leave one out
         String containerTypeName = containerType != null ? containerType.name() : "UNKNOWN";
         return new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND,
             String.format(MODIFICATION_CONTAINER_NOT_FOUND.messageTemplate(), containerId, containerTypeName),
