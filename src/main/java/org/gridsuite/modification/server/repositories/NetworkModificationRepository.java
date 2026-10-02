@@ -88,6 +88,7 @@ public class NetworkModificationRepository {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationRepository.class);
     private static final String MODIFICATION_ID = "modificationId";
+    private static final String CONTAINER_ID = "containerId";
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
@@ -136,7 +137,7 @@ public class NetworkModificationRepository {
         String containerTypeName = containerType != null ? containerType.name() : "UNKNOWN";
         return new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND,
             String.format(MODIFICATION_CONTAINER_NOT_FOUND.messageTemplate(), containerId, containerTypeName),
-            Map.of("containerId", containerId, "containerType", containerTypeName));
+            Map.of(CONTAINER_ID, containerId, "containerType", containerTypeName));
     }
 
     private NetworkModificationServerException getModificationNotFoundException(String modificationId) {
@@ -1440,7 +1441,7 @@ public class NetworkModificationRepository {
         if (!containerInfos.type().name().equals(containerEntity.getType())) {
             throw new NetworkModificationServerException(MODIFICATION_CONTAINER_BAD_TYPE,
                 String.format(MODIFICATION_CONTAINER_BAD_TYPE.messageTemplate(), containerInfos.id(), containerEntity.getType(), containerInfos.type().name()),
-                Map.of("containerId", containerInfos.id(), "containerType", containerEntity.getType(), "expectedContainerType", containerInfos.type().name()));
+                Map.of(CONTAINER_ID, containerInfos.id(), "containerType", containerEntity.getType(), "expectedContainerType", containerInfos.type().name()));
         }
         return containerEntity;
     }
@@ -1464,7 +1465,7 @@ public class NetworkModificationRepository {
         if (containerType == null) {
             throw new NetworkModificationServerException(MODIFICATION_CONTAINER_TYPE_NOT_FOUND,
                 String.format(MODIFICATION_CONTAINER_TYPE_NOT_FOUND.messageTemplate(), m.getId()),
-                Map.of("containerId", m.getId()));
+                Map.of(CONTAINER_ID, m.getId()));
         }
         return containerType;
     }
