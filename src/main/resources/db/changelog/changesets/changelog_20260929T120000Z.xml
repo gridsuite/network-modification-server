@@ -10,13 +10,5 @@
             <column name="reference_type" value="COMPOSITE"/>
             <where>reference_type = 'BASIC'</where>
         </update>
-
-        <rollback>
-            <update tableName="modification_reference">
-                <column name="reference_type" value="BASIC"/>
-                <where>reference_type = 'COMPOSITE'</where>
-            </update>
-        </rollback>
-
     </changeSet>
 </databaseChangeLog>
