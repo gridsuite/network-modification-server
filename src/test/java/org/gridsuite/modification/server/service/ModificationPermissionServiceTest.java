@@ -55,16 +55,6 @@ class ModificationPermissionServiceTest {
     }
 
     @Test
-    void aPayloadReadWithoutUserAsksNothing() {
-        ModificationReferenceInfos reference = reference(UUID.randomUUID(), null);
-
-        modificationPermissionService.addPermissions(List.of(reference), null);
-
-        verifyNoInteractions(directoryService);
-        assertThat(reference.getEditable()).isNull();
-    }
-
-    @Test
     void theSameSharedModificationIsAskedOnlyOnce() {
         UUID sharedUuid = UUID.randomUUID();
         ModificationReferenceInfos firstReference = reference(sharedUuid, null);

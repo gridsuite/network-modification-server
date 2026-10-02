@@ -40,32 +40,26 @@ public class ModificationPermissionService {
     }
 
     /**
-     * @return the modification it was given, its references telling whether they are editable
+     * Tells, on the references of the given modification, whether they are editable by the given user.
      */
-    public ModificationInfos addPermissions(ModificationInfos modification, @Nullable String userId) {
+    public void addPermissions(ModificationInfos modification, String userId) {
         resolvePermissions(List.of(modification), userId);
-        return modification;
     }
 
     /**
-     * @return the modifications it was given, their references telling whether they are editable
+     * Tells, on the references of the given modifications, whether they are editable by the given user.
      */
-    public List<ModificationInfos> addPermissions(List<ModificationInfos> modifications, @Nullable String userId) {
+    public void addPermissions(List<ModificationInfos> modifications, String userId) {
         resolvePermissions(modifications, userId);
-        return modifications;
     }
 
     /**
      * Reads the permissions of every reference of the given modifications, nested ones included, in a single call
      * to the directory-server.
      * <p>
-     * Nothing is told when there is no user to read the permissions for and when the directory-server cannot
-     * answer.
+     * Nothing is told when the directory-server cannot answer.
      */
-    private void resolvePermissions(Collection<ModificationInfos> modifications, @Nullable String userId) {
-        if (userId == null) {
-            return;
-        }
+    private void resolvePermissions(Collection<ModificationInfos> modifications, String userId) {
         List<ModificationReferenceInfos> references = new ArrayList<>();
         modifications.forEach(modification -> collectReferences(modification, references));
         Set<UUID> referencedIds = references.stream()

@@ -112,8 +112,10 @@ public class CompositeController {
                                                                                         @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
         Map<UUID, List<ModificationInfos>> modificationsByComposite =
                 networkModificationService.getNetworkModificationsFromComposite(compositeModificationUuids, onlyMetadata);
-        modificationPermissionService.addPermissions(
-                modificationsByComposite.values().stream().flatMap(List::stream).toList(), userId);
+        if (userId != null) {
+            modificationPermissionService.addPermissions(
+                    modificationsByComposite.values().stream().flatMap(List::stream).toList(), userId);
+        }
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(modificationsByComposite);
     }
 
