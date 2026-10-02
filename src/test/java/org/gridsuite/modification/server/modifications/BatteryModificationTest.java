@@ -177,7 +177,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        BatteryModificationInfos createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+        BatteryModificationInfos createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
 
         assertThat(createdModification).recursivelyEquals(batteryModificationInfos);
         testNetworkModificationsCount(getGroupId(), 1);
@@ -191,7 +191,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
+        createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(1);
 
         assertThat(createdModification).recursivelyEquals(batteryModificationInfos);
         testNetworkModificationsCount(getGroupId(), 2);
@@ -206,7 +206,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(2);
+        createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(2);
 
         assertThat(createdModification).recursivelyEquals(batteryModificationInfos);
         testNetworkModificationsCount(getGroupId(), 3);
@@ -220,7 +220,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(3);
+        createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(3);
 
         assertThat(createdModification).recursivelyEquals(batteryModificationInfos);
         testNetworkModificationsCount(getGroupId(), 4);
@@ -235,7 +235,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
-        createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(4);
+        createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(4);
         assertThat(createdModification).recursivelyEquals(batteryModificationInfos);
         testNetworkModificationsCount(getGroupId(), 5);
     }
@@ -252,7 +252,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
 
-        BatteryModificationInfos createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+        BatteryModificationInfos createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
 
         assertThat(createdModification).recursivelyEquals(batteryModificationInfos);
 
@@ -265,7 +265,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
 
-        createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+        createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
 
         assertEquals(18f, createdModification.getDroop().getValue());
     }
@@ -418,7 +418,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        BatteryModificationInfos createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+        BatteryModificationInfos createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
 
         assertThat(createdModification).recursivelyEquals(batteryModificationInfos);
         testNetworkModificationsCount(getGroupId(), 1);
@@ -432,7 +432,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
+        createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(1);
 
         assertThat(createdModification).recursivelyEquals(batteryModificationInfos);
         testNetworkModificationsCount(getGroupId(), 2);
