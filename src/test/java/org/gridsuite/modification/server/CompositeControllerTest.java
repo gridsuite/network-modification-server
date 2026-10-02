@@ -18,11 +18,13 @@ import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
-import org.gridsuite.modification.server.dto.ActionType;
 import org.gridsuite.modification.server.dto.CompositeInfos;
+import org.gridsuite.modification.server.dto.ModificationMoveInfos;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.PermissionType;
+import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -31,6 +33,8 @@ import org.gridsuite.modification.server.error.NetworkModificationServerExceptio
 import org.gridsuite.modification.server.repositories.CompositeModificationRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.service.DirectoryService;
+import org.gridsuite.modification.server.service.NotificationService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
@@ -43,22 +47,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.util.Pair;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.ModificationType.COMPOSITE_MODIFICATION;
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 import static org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest.URI_NETWORK_MODIF_GET_PUT;
 import static org.gridsuite.modification.server.utils.NetworkCreation.VARIANT_ID;
 import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -67,14 +76,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @AutoConfigureMockMvc
 @SpringBootTest
+@ContextConfigurationWithTestChannel
 @DisableElasticsearch
 class CompositeControllerTest {
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
+    private static final String TEST_USER_ID = "userId";
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_GROUP2_ID = UUID.randomUUID();
     private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/network-composite-modifications";
     private static final String URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT = "/v1/network-composite-modifications/";
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
+    private static final String USER_ID = "userId";
+    private static final String URI_NETWORK_MODIF_MOVE = "/v1/groups/{groupUuid}/network-modifications/move";
 
     @Autowired
     private MockMvc mockMvc;
@@ -93,11 +106,17 @@ class CompositeControllerTest {
     @MockitoBean
     private ReportService reportService;
 
+    @MockitoBean
+    private DirectoryService directoryService;
+
     @Autowired
     private ObjectMapper mapper;
 
     @MockitoBean
     private NetworkStoreService networkStoreService;
+
+    @MockitoSpyBean
+    private NotificationService notificationService;
 
     private Network network;
 
@@ -114,6 +133,14 @@ class CompositeControllerTest {
     void tearOff() {
         // clean DB
         networkModificationRepository.deleteAll();
+    }
+
+    /** Body of the move endpoint: one move per modification (a null composite designates the group), with no application context. */
+    private String getJsonBodyMove(List<UUID> modificationUuids, UUID sourceCompositeUuid, UUID targetCompositeUuid, UUID insertBeforeUuid) throws JsonProcessingException {
+        List<ModificationMoveInfos> moves = modificationUuids.stream()
+                .map(uuid -> new ModificationMoveInfos(uuid, sourceCompositeUuid, targetCompositeUuid, insertBeforeUuid))
+                .toList();
+        return mapper.writeValueAsString(Pair.of(moves, List.of()));
     }
 
     @Test
@@ -591,7 +618,7 @@ class CompositeControllerTest {
         // compare duplicate with the source (same data except uuid)
         assertThat(sourceModificationInfos).recursivelyEquals(newModificationInfos);
         // source group has not changed
-        List<ModificationInfos> groupModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
+        List<ModificationInfos> groupModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.ALL);
         assertEquals(1, groupModifications.size());
         assertEquals(modificationUuidList.getFirst(), groupModifications.getFirst().getUuid());
 
@@ -601,7 +628,7 @@ class CompositeControllerTest {
                 .andExpect(status().isOk());
 
         // source group has not changed
-        groupModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
+        groupModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.ALL);
         assertEquals(1, groupModifications.size());
         assertEquals(modificationUuidList.getFirst(), groupModifications.getFirst().getUuid());
         // duplicate has been deleted
@@ -743,14 +770,10 @@ class CompositeControllerTest {
         List<UUID> subUuids = initialMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
         assertEquals(3, subUuids.size());
 
-        // Move the first sub-modification to the end (no beforeUuid = append)
+        // Move the first sub-modification to the end (no insertBeforeUuid = append)
         // was [0,1,2] → [1,2,0]
-        mockMvc.perform(put("/v1/containers/{targetContainerId}", compositeUuid)
-                        .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("sourceContainerId", compositeUuid.toString())
-                        .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
-                        .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
-                        .content(mapper.writeValueAsString(Pair.of(List.of(subUuids.getFirst()), List.of())))
+        mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
+                        .content(getJsonBodyMove(List.of(subUuids.getFirst()), compositeUuid, compositeUuid, null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -764,15 +787,10 @@ class CompositeControllerTest {
         assertEquals(subUuids.get(2), orderAfterFirst.get(1));
         assertEquals(subUuids.get(0), orderAfterFirst.get(2));
 
-        // Move the last sub-modification before the first using beforeUuid
+        // Move the last sub-modification before the first using insertBeforeUuid
         // current [1,2,0] → move 0 before 1 → [0,1,2]
-        mockMvc.perform(put("/v1/containers/{targetContainerId}", compositeUuid)
-                        .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("sourceContainerId", compositeUuid.toString())
-                        .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
-                        .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
-                        .queryParam("before", orderAfterFirst.get(0).toString())
-                        .content(mapper.writeValueAsString(Pair.of(List.of(orderAfterFirst.get(2)), List.of())))
+        mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
+                        .content(getJsonBodyMove(List.of(orderAfterFirst.get(2)), compositeUuid, compositeUuid, orderAfterFirst.get(0)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -816,13 +834,9 @@ class CompositeControllerTest {
 
         // Move first sub-modification from composite to root level (no targetCompositeUuid)
         UUID movingUuid = actualSubUuids.getFirst();
-        mockMvc.perform(put("/v1/containers/{targetContainerId}", TEST_GROUP_ID)
-                        .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("sourceContainerId", compositeUuid.toString())
-                        .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
-                        .queryParam("targetContainerType", ModificationContainerType.GROUP.name())
+        mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
                         .queryParam("build", "false")
-                        .content(mapper.writeValueAsString(Pair.of(List.of(movingUuid), List.of())))
+                        .content(getJsonBodyMove(List.of(movingUuid), compositeUuid, null, null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -859,6 +873,8 @@ class CompositeControllerTest {
         List<UUID> assembledModificationUuids = originalRootModUuids.subList(0, 2);
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(assembledModificationUuids))
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
@@ -904,9 +920,12 @@ class CompositeControllerTest {
         assertContiguousOrder(modificationRepository.findAllByContainer(firstCompositeUuid));
 
         // ---- 2. now assembles a modification which is inside a composite with something that is outside :
+        assertNotNull(remainingInGroupEntity.getId());
         assembledModificationUuids = List.of(compositeContent.getFirst().getUuid(), remainingInGroupEntity.getId());
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(assembledModificationUuids))
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
@@ -943,6 +962,66 @@ class CompositeControllerTest {
         assertContiguousOrder(modificationRepository.findAllByContainerId(TEST_GROUP_ID, false));
         assertContiguousOrder(modificationRepository.findAllByContainer(firstCompositeUuid));
         assertContiguousOrder(modificationRepository.findAllByContainer(twodepthCompositeUuid));
+    }
+
+    @Test
+    void testNotificationWhenSharedModificationUpdated() throws Exception {
+        // Create a switch modification directly in the group, then assemble it into a composite
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID leafUuid = modificationList.getFirst().getUuid();
+
+        // Create a shared composite modification with the switch modification
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
+                        .content(mapper.writeValueAsString(List.of(leafUuid)))
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Create a modification reference to shared composite modification
+        ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
+            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referencedId(sharedCompositeUuid)
+            .stashed(false)
+            .build();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(modificationReferenceInfo))).getFirst();
+
+        // Editing the leaf while it is nested in the composite must notify directory-server
+        EquipmentAttributeModificationInfos leafUpdate = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentId("v1b1")
+                .equipmentAttributeValue(true)
+                .build();
+        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + leafUuid)
+                        .content(mapper.writeValueAsString(leafUpdate))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        verify(notificationService).emitElementUpdated(sharedCompositeUuid, TEST_USER_ID);
+    }
+
+    @Test
+    void testNoNotificationWhenModificationUpdated() throws Exception {
+        // A modification sitting directly under a group is not nested in any composite : nothing to notify
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID leafUuid = modificationList.getFirst().getUuid();
+
+        EquipmentAttributeModificationInfos leafUpdate = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentId("v1b1")
+                .equipmentAttributeValue(true)
+                .build();
+        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + leafUuid)
+                        .content(mapper.writeValueAsString(leafUpdate))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        verifyNoInteractions(notificationService);
     }
 
     @Test
@@ -1040,12 +1119,8 @@ class CompositeControllerTest {
         int rootSizeBefore = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size();
 
         // Move root-level modification into the composite (origin = root group), append at end
-        mockMvc.perform(put("/v1/containers/{targetContainerId}", compositeUuid)
-                        .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("sourceContainerId", TEST_GROUP_ID.toString())
-                        .queryParam("sourceContainerType", ModificationContainerType.GROUP.name())
-                        .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
-                        .content(mapper.writeValueAsString(Pair.of(List.of(rootModUuid), List.of())))
+        mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
+                        .content(getJsonBodyMove(List.of(rootModUuid), null, compositeUuid, null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -1121,32 +1196,20 @@ class CompositeControllerTest {
                 .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
 
         // Case 1: direct child — move composite1 into composite2 (direct child of composite1)
-        mockMvc.perform(put("/v1/containers/{targetContainerId}", actualComposite2Uuid)
-                        .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("sourceContainerId", composite0Uuid.toString())
-                        .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
-                        .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
-                        .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
+        mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
+                        .content(getJsonBodyMove(List.of(actualComposite1Uuid), composite0Uuid, actualComposite2Uuid, null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
         // Case 2: recursive — move composite1 into composite3 (grandchild of composite1)
-        mockMvc.perform(put("/v1/containers/{targetContainerId}", actualComposite3Uuid)
-                        .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("sourceContainerId", composite0Uuid.toString())
-                        .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
-                        .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
-                        .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
+        mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
+                        .content(getJsonBodyMove(List.of(actualComposite1Uuid), composite0Uuid, actualComposite3Uuid, null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
         // Case 3: self — move composite1 into itself
-        mockMvc.perform(put("/v1/containers/{targetContainerId}", actualComposite1Uuid)
-                        .queryParam("action", ActionType.MOVE.name())
-                        .queryParam("sourceContainerId", composite0Uuid.toString())
-                        .queryParam("sourceContainerType", ModificationContainerType.COMPOSITE.name())
-                        .queryParam("targetContainerType", ModificationContainerType.COMPOSITE.name())
-                        .content(mapper.writeValueAsString(Pair.of(List.of(actualComposite1Uuid), List.of())))
+        mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
+                        .content(getJsonBodyMove(List.of(actualComposite1Uuid), composite0Uuid, actualComposite1Uuid, null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
@@ -1189,6 +1252,29 @@ class CompositeControllerTest {
 
     @Test
     void testHasReferences() throws Exception {
+        insertSharedCompositeInSecondGroup();
+
+        assertFalse(hasReferences(TEST_GROUP_ID));
+        assertTrue(hasReferences(TEST_GROUP2_ID));
+        assertTrue(hasReferences(TEST_GROUP_ID, TEST_GROUP2_ID));
+    }
+
+    @Test
+    void testReferencedModificationsAreWritable() throws Exception {
+        UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
+        doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null))
+                .when(directoryService).checkPermission(Set.of(sharedCompositeUuid), USER_ID, PermissionType.WRITE);
+
+        // a container pointing at a shared modification the user cannot write on is refused
+        mockMvc.perform(areReferencedModificationsWritable(TEST_GROUP2_ID)).andExpect(status().isForbidden());
+        verify(directoryService, times(1)).checkPermission(any(), any(), any());
+
+        // a container pointing at no shared modification does not even need the permission to be checked
+        mockMvc.perform(areReferencedModificationsWritable(TEST_GROUP_ID)).andExpect(status().isOk());
+        verify(directoryService, times(1)).checkPermission(any(), any(), any());
+    }
+
+    private UUID insertSharedCompositeInSecondGroup() throws Exception {
         List<ModificationInfos> switchMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "shared")
                         .content(mapper.writeValueAsString(switchMods.stream().map(ModificationInfos::getUuid).toList()))
@@ -1198,10 +1284,13 @@ class CompositeControllerTest {
         runRequestAsync(mockMvc, put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP2_ID + "?action=INSERT")
                 .content(getJsonBodyModificationCompositeToBeInserted(List.of(new CompositeInfos(sharedCompositeUuid, "shared", true, null))))
                 .contentType(MediaType.APPLICATION_JSON), status().isOk());
+        return sharedCompositeUuid;
+    }
 
-        assertFalse(hasReferences(TEST_GROUP_ID));
-        assertTrue(hasReferences(TEST_GROUP2_ID));
-        assertTrue(hasReferences(TEST_GROUP_ID, TEST_GROUP2_ID));
+    private static MockHttpServletRequestBuilder areReferencedModificationsWritable(UUID containerUuid) {
+        return get("/v1/containers/references/authorized")
+                .queryParam("uuids", containerUuid.toString())
+                .header(HEADER_USER_ID, USER_ID);
     }
 
     private boolean hasReferences(UUID... containerUuids) throws Exception {

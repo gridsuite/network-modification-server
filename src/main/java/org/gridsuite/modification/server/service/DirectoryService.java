@@ -9,6 +9,8 @@ package org.gridsuite.modification.server.service;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import org.gridsuite.modification.server.dto.ModificationReferenceData;
+import org.gridsuite.modification.server.dto.PermissionType;
 import org.gridsuite.modification.server.dto.ReferenceAttributes;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -16,7 +18,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 
 /**
  * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
@@ -25,7 +32,6 @@ import java.util.UUID;
 public class DirectoryService {
     private static final String DIRECTORY_API_VERSION = "v1";
     private static final String DELIMITER = "/";
-    public static final String HEADER_USER_ID = "userId";
 
     @Setter
     @Getter
@@ -65,12 +71,74 @@ public class DirectoryService {
                 .buildAndExpand(elementUuid)
                 .toUriString();
 
-        restClient.put()
+        restClient.post()
                 .uri(getDirectoryServerBaseUri() + path)
                 .header(HEADER_USER_ID, userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(referenceAttributes)
                 .retrieve()
                 .toBodilessEntity();
+    }
+
+    public void removeElementReferences(@NonNull List<ModificationReferenceData> referencesData, String userId) {
+        //TODO modify endpoint in directory-server to allow batch deletion of references
+        referencesData.forEach(referenceData -> removeElementReference(referenceData.referencedId(), referenceData.modificationUuid(), userId));
+    }
+
+    /**
+     * remove reference from the shared modification in directory server
+     * @param referenceUuid uuid of the composite or group where the 'Modification reference' is located
+     * @param userId id of the user who caused the unreferencing
+     * @param sharedElementUuid uuid of the referenced shared element in the directory-server
+     */
+    private void removeElementReference(UUID sharedElementUuid, UUID referenceUuid, String userId) {
+        Objects.requireNonNull(referenceUuid);
+        Objects.requireNonNull(sharedElementUuid);
+
+        var path = UriComponentsBuilder.fromPath(
+                        DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references/{referenceUuid}")
+                .buildAndExpand(sharedElementUuid, referenceUuid)
+                .toUriString();
+
+        restClient.delete()
+                .uri(getDirectoryServerBaseUri() + path)
+                .header(HEADER_USER_ID, userId)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    /**
+     * Checks that the user holds the given permission on every given element, and throws otherwise.
+     * @param elementUuids uuids of the elements in the directory-server
+     * @param userId id of the user the permission is checked for
+     * @param permissionType the permission the user must hold
+     */
+    public void checkPermission(@NonNull Collection<UUID> elementUuids, @NonNull String userId, @NonNull PermissionType permissionType) {
+        var path = UriComponentsBuilder.fromPath(DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/authorized")
+                .queryParam("ids", elementUuids)
+                .queryParam("accessType", permissionType)
+                .buildAndExpand()
+                .toUriString();
+
+        restClient.get()
+                .uri(getDirectoryServerBaseUri() + path)
+                .header(HEADER_USER_ID, userId)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    public void createElementReferences(@NonNull UUID nodeContainerUuid, @NonNull UUID studyRootContainerUuid, String userId, List<ModificationReferenceData> referencesData) {
+        referencesData.forEach(ref -> {
+            // local ModificationReferenceData data don't hold the node UUID so when containerId is null it means that this reference modification is at the root level
+            // otherwise, the reference modification is inside a composite
+            boolean insideComposite = ref.containerId() != null;
+            ReferenceAttributes referenceAttributes = ReferenceAttributes.createReferenceAttributes(
+                    ref.modificationUuid(),
+                    insideComposite ? nodeContainerUuid : studyRootContainerUuid,
+                    insideComposite ? ref.containerId() : nodeContainerUuid,
+                    insideComposite ? ReferenceAttributes.ReferenceType.STUDY_NODE_NETWORK_MODIFICATION
+                            : ReferenceAttributes.ReferenceType.STUDY_NODE);
+            createElementReference(ref.referencedId(), referenceAttributes, userId);
+        });
     }
 }

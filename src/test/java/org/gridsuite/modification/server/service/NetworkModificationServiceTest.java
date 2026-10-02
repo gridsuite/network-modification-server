@@ -13,6 +13,7 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -64,12 +65,12 @@ class NetworkModificationServiceTest {
         // sanity check: the modification is nested inside the composite before stashing
         assertEquals(compositeUuid, modificationRepository.findCompositeContainerIdByModificationId(childUuid));
 
-        networkModificationService.stashNetworkModifications(groupUuid, List.of(childUuid));
+        networkModificationService.stashNetworkModifications(groupUuid, List.of(childUuid), "userId");
 
         // the modification was moved out of the composite, into the group, before being stashed
         assertNull(modificationRepository.findCompositeContainerIdByModificationId(childUuid));
         assertEquals(1, networkModificationRepository.getModificationsCount(groupUuid, true));
-        assertTrue(networkModificationRepository.getModificationsMetadata(groupUuid, true).stream()
+        assertTrue(networkModificationRepository.getModificationsMetadata(groupUuid, StashedFilter.STASHED).stream()
                 .anyMatch(modificationInfos -> modificationInfos.getUuid().equals(childUuid)));
         // the composite itself is left in place, now empty
         assertEquals(List.of(compositeUuid), modificationRepository.findAllChildrenUuids(compositeUuid));
@@ -167,6 +168,6 @@ class NetworkModificationServiceTest {
 
         assertEquals(1, result.modificationUuids().size());
         assertEquals(1, result.modificationResults().size());
-        assertTrue(result.modificationResults().get(0).isEmpty());
+        assertTrue(result.modificationResults().getFirst().isEmpty());
     }
 }

@@ -212,7 +212,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
                 .andExpect(status().isOk());
         // We check that the request count is not dependent on the number of sub creations of the tabular creation (the JPA N+1 problem is correctly solved)
-        assertSelectCount(10);
+        assertSelectCount(11);
     }
 
     @Test

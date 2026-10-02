@@ -22,7 +22,6 @@ import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicati
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosRepository;
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
-import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
@@ -257,10 +256,8 @@ class ModificationIndexationTest {
         UUID groupUuid2 = UUID.randomUUID();
         modificationRepository.saveModifications(groupUuid2, List.of()); // create empty target group so getContainerType resolves it
         NetworkModificationsResult modificationsResult = networkModificationService.moveModifications(
-                new ModificationContainerInfos(groupUuid1, ModificationContainerType.GROUP),
-                new ModificationContainerInfos(groupUuid2, ModificationContainerType.GROUP),
-                null,
-                modifications.stream().map(ModificationInfos::getUuid).toList(),
+                groupUuid1, groupUuid2,
+                modifications.stream().map(m -> new ModificationMoveInfos(m.getUuid(), null, null, null)).toList(),
                 List.of(TestUtils.contextOnAnyRootNetwork(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID())),
                 true
         ).join();

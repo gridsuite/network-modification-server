@@ -16,15 +16,12 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
-import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.data.util.Pair;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -36,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping(value = "/" + NetworkModificationApi.API_VERSION + "/")
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
+    public static final String HEADER_USER_ID = "userId";
 
     private final NetworkModificationService networkModificationService;
 
@@ -57,7 +55,8 @@ public class NetworkModificationController {
                                                                                    defaultValue = "false") Boolean onlyStashed,
                                                                            @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound",
                                                                                    required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
-        return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, onlyStashed));
+        return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound,
+            onlyStashed ? StashedFilter.STASHED : StashedFilter.ALL));
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications/export", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -91,51 +90,37 @@ public class NetworkModificationController {
     @Operation(summary = "Create a modification group based on another group")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group and its modifications have been duplicated")})
     public ResponseEntity<Void> duplicateGroup(@RequestParam("groupUuid") UUID groupUuid,
-                                               @PathVariable("sourceGroupUuid") UUID sourceGroupUuid) {
-        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid);
+                                               @RequestParam("nodeContainerUuid") UUID nodeContainerUuid,
+                                               @RequestParam("studyRootContainerUuid") UUID studyRootContainerUuid,
+                                               @PathVariable("sourceGroupUuid") UUID sourceGroupUuid,
+                                               @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, nodeContainerUuid, studyRootContainerUuid, userId);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(value = "/containers/{targetContainerId}", consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Move or copy modifications between containers (groups or composites)")
-    @ApiResponse(responseCode = "200", description = "The container has been updated.")
-    public CompletableFuture<ResponseEntity<NetworkModificationsResult>> handleNetworkModifications(
-            @Parameter(description = "target container UUID") @PathVariable("targetContainerId") UUID targetContainerId,
-            @Parameter(description = "target container type (required for MOVE only)") @RequestParam(value = "targetContainerType", required = false) ModificationContainerType targetContainerType,
-            @Parameter(description = "action type", required = true) @RequestParam(value = "action") ActionType action,
-            @Parameter(description = "insert before this modification (MOVE only, empty = at end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
-            @Parameter(description = "source container UUID (defaults to target for same-container moves)") @RequestParam(value = "sourceContainerId", required = false) UUID sourceContainerId,
-            @Parameter(description = "source container type (defaults to target's type for same-container moves)")
-                @RequestParam(value = "sourceContainerType", required = false) ModificationContainerType sourceContainerType,
-            @Parameter(description = "modifications can be applied (default true; ignored for COMPOSITE targets)")
+    @PutMapping(value = "/groups/{groupUuid}/network-modifications/move", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Move modifications from a single origin group (or its composites) into a single target group (or its composites), in request order")
+    @ApiResponse(responseCode = "200", description = "The modifications have been moved.")
+    public CompletableFuture<ResponseEntity<NetworkModificationsResult>> moveModifications(
+            @Parameter(description = "target group UUID") @PathVariable("groupUuid") UUID targetGroupUuid,
+            @Parameter(description = "origin group UUID (defaults to the target group)") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
+            @Parameter(description = "apply modifications entering the target group (default true)")
             @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
-            @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
-        return switch (action) {
-            case COPY -> networkModificationService.duplicateModifications(
-                    targetContainerId, sourceContainerId,
-                    modificationContextInfos.getFirst(),
-                    modificationContextInfos.getSecond()
-            ).thenApply(ResponseEntity.ok()::body);
-            case MOVE -> {
-                if (targetContainerType == null || sourceContainerType == null) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "container types are required for MOVE");
-                }
-                List<UUID> modificationUuidsToMove = modificationContextInfos.getFirst();
-                List<ModificationApplicationContext> applicationContexts = modificationContextInfos.getSecond();
-                ModificationContainerInfos targetContainerInfos = new ModificationContainerInfos(targetContainerId, targetContainerType);
+            @RequestBody Pair<List<ModificationMoveInfos>, List<ModificationApplicationContext>> moveContextInfos) {
+        return networkModificationService.moveModifications(Objects.requireNonNullElse(originGroupUuid, targetGroupUuid), targetGroupUuid,
+                        moveContextInfos.getFirst(), moveContextInfos.getSecond(), canApply)
+                .thenApply(ResponseEntity.ok()::body);
+    }
 
-                yield networkModificationService.moveModifications(
-                    new ModificationContainerInfos(sourceContainerId == null ? targetContainerId : sourceContainerId, sourceContainerType),
-                        targetContainerInfos,
-                    beforeModificationUuid,
-                        modificationUuidsToMove,
-                        applicationContexts,
-                        canApply
-                ).thenApply(ResponseEntity.ok()::body);
-            }
-        };
+    @PutMapping(value = "/groups/{targetContainerUuid}/network-modifications/copy", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Copy modifications into a group, from a list or from a whole group")
+    @ApiResponse(responseCode = "200", description = "The modifications have been copied.")
+    public CompletableFuture<ResponseEntity<NetworkModificationsResult>> copyModifications(
+            @PathVariable("targetContainerUuid") UUID targetGroupUuid,
+            @RequestParam(value = "sourceContainerUuid", required = false) UUID sourceContainerUuid,
+            @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
+        return networkModificationService.duplicateModifications(targetGroupUuid, sourceContainerUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond())
+                .thenApply(ResponseEntity.ok()::body);
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}")
@@ -201,8 +186,9 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The network modification was updated")})
     public ResponseEntity<Void> updateNetworkModification(
             @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid,
-            @RequestBody ModificationInfos modificationInfos) {
-        networkModificationService.updateNetworkModification(networkModificationUuid, modificationInfos);
+            @RequestBody ModificationInfos modificationInfos,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.updateNetworkModification(networkModificationUuid, modificationInfos, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -272,14 +258,17 @@ public class NetworkModificationController {
     @Operation(summary = "stash or unstash network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were stashed")
     public ResponseEntity<Void> stashNetworkModifications(
+            @RequestHeader(HEADER_USER_ID) String userId,
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
+            @RequestParam(name = "nodeContainerUuid", required = false) UUID nodeContainerUuid,
+            @RequestParam(name = "studyRootContainerUuid", required = false) UUID studyRootContainerUuid,
             @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "stashed", defaultValue = "true") Boolean stashed) {
         if (Boolean.TRUE.equals(stashed)) {
-            networkModificationService.stashNetworkModifications(groupUuid, networkModificationUuids);
+            networkModificationService.stashNetworkModifications(groupUuid, networkModificationUuids, userId);
             networkModificationService.reorderNetworkModifications(groupUuid, Boolean.FALSE);
         } else {
-            networkModificationService.restoreNetworkModifications(groupUuid, networkModificationUuids);
+            networkModificationService.restoreNetworkModifications(groupUuid, networkModificationUuids, studyRootContainerUuid, nodeContainerUuid, userId);
             networkModificationService.reorderNetworkModifications(groupUuid, Boolean.TRUE);
         }
         return ResponseEntity.ok().build();
@@ -293,7 +282,7 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references data were returned")})
     public ResponseEntity<List<ModificationReferenceData>> getModificationsReferences(
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids) {
-        List<ModificationReferenceData> referencesData = networkModificationService.getModificationsReferences(networkModificationUuids);
+        List<ModificationReferenceData> referencesData = networkModificationService.getModificationsReferences(networkModificationUuids, false);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(referencesData);
     }
 
@@ -304,14 +293,9 @@ public class NetworkModificationController {
     @GetMapping(value = "/groups/{groupUuid}/references", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Fetches references data of all the network modifications in a group, including in the composites' submodifications")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The references data were returned")})
-    public ResponseEntity<List<ModificationReferenceData>> getAllReferencesDataFromGroup(
+    public ResponseEntity<List<ModificationReferenceData>> getModificationReferences(
             @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        List<UUID> netModUuids = networkModificationService.getNetworkModifications(groupUuid, true, false, false)
-                .stream().map(ModificationInfos::getUuid)
-                .toList();
-        List<ModificationReferenceData> referencesData = networkModificationService.getModificationsReferences(netModUuids);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(referencesData);
+        return ResponseEntity.ok(networkModificationService.getModificationReferences(groupUuid));
     }
 
     @GetMapping(value = "/containers/references/exists", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -320,6 +304,19 @@ public class NetworkModificationController {
     public ResponseEntity<Boolean> hasModificationReferences(
             @Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids) {
         return ResponseEntity.ok().body(networkModificationService.hasModificationReferences(containerUuids));
+    }
+
+    @GetMapping(value = "/containers/references/authorized")
+    @Operation(summary = "Check the write permission on the shared modifications the containers (groups or composites) point to")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The user can write on all of them"),
+        @ApiResponse(responseCode = "403", description = "The user cannot write on at least one of them")
+    })
+    public ResponseEntity<Void> areReferencedModificationsWritable(
+            @Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.assertReferencedModificationsAreWritable(containerUuids, userId);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -338,8 +335,10 @@ public class NetworkModificationController {
     public ResponseEntity<Void> deleteStashedModificationFromGroups(
                                                                  @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false,
                                                                          defaultValue = "true") Boolean errorOnGroupNotFound,
-                                                                 @Parameter(description = "Group UUIDs") @RequestBody List<UUID> groupUuids) {
+                                                                 @Parameter(description = "Group UUIDs") @RequestBody List<UUID> groupUuids,
+                                                                 @RequestHeader(HEADER_USER_ID) String userId) {
         networkModificationService.deleteStashedModificationFromGroups(groupUuids, errorOnGroupNotFound);
+        groupUuids.forEach(groupUuid -> networkModificationService.removeElementReferences(groupUuid, userId));
         return ResponseEntity.ok().build();
     }
 
@@ -372,16 +371,6 @@ public class NetworkModificationController {
             @Parameter(description = "Modification groups UUIDs") @RequestParam("groupUuids") List<UUID> groupUuids,
             @Parameter(description = "Root network tags") @RequestParam("rootNetworkTags") List<String> rootNetworkTags) {
         networkModificationService.deleteRootNetworkTags(groupUuids, rootNetworkTags);
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping(value = "/groups/{groupUuid}/stashed-modifications")
-    @Operation(summary = "Delete the stashed modifications in a group")
-    @ApiResponse(responseCode = "200", description = "Stashed modifications in the group deleted")
-    public ResponseEntity<Void> deleteStashedModificationInGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
-                                                        @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false,
-                                                                defaultValue = "true") Boolean errorOnGroupNotFound) {
-        networkModificationService.deleteStashedModificationFromGroups(List.of(groupUuid), errorOnGroupNotFound);
         return ResponseEntity.ok().build();
     }
 

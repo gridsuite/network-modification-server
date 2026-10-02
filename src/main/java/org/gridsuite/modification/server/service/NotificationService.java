@@ -17,6 +17,9 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.util.UUID;
+
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
  */
@@ -32,6 +35,9 @@ public class NotificationService {
     public static final String WORKFLOW_TYPE_HEADER = "workflowType";
     public static final String WORKFLOW_INFOS_HEADER = "workflowInfos";
     public static final String NETWORK_UUID_HEADER = "networkUuid";
+    public static final String HEADER_ELEMENT_UUID = "elementUuid";
+    public static final String HEADER_MODIFIED_BY = "modifiedBy";
+    public static final String HEADER_MODIFICATION_DATE = "modificationDate";
 
     @Autowired
     private StreamBridge publisher;
@@ -65,5 +71,20 @@ public class NotificationService {
                 .setHeader(RECEIVER_HEADER, receiver)
                 .build();
         sendMessage(message, "publishCancelBuild-out-0");
+    }
+
+    /**
+     * Tells directory-server that {@code elementUuid} (typically a composite modification's uuid,
+     * which is also its directory element uuid) was modified. directory-server is the sole holder
+     * of the "who references what" graph: it decides on its own whether {@code elementUuid} is a
+     * shared element and who needs to be notified further.
+     */
+    public void emitElementUpdated(@NonNull UUID elementUuid, @NonNull String userId) {
+        Message<String> message = MessageBuilder.withPayload("")
+                .setHeader(HEADER_ELEMENT_UUID, elementUuid)
+                .setHeader(HEADER_MODIFIED_BY, userId)
+                .setHeader(HEADER_MODIFICATION_DATE, Instant.now())
+                .build();
+        sendMessage(message, "publishElementUpdate-out-0");
     }
 }

@@ -132,7 +132,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         List<ModificationInfos> tabularModifications = ApiUtils.getGroupModifications(mockMvc, getGroupId()); // Getting two tabular modifications with respectively one and three sub-modifications
-        assertSelectCount(10);
+        assertSelectCount(11);
         assertTabularModificationsEquals(modifications.stream().map(Pair::getRight).toList(), tabularModifications);
     }
 
@@ -191,7 +191,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
     }
 
     /*
-    PUT /v1/groups/{groupUuid}?action=COPY SQL requests analysis
+    PUT /v1/groups/{groupUuid}/network-modifications/copy SQL requests analysis
 
     Given an example with 2 tabular modifications having 1000 modifications each
 
@@ -247,7 +247,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
     }
 
     /*
-    PUT /v1/groups/{groupUuid}?action=COPY SQL requests analysis
+    PUT /v1/groups/{groupUuid}/network-modifications/copy SQL requests analysis
 
     Given an example with 2 tabular modifications having 1000 modifications each
 
@@ -409,26 +409,26 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         - delete modification for tabular modifications
      */
     @Test
-    void testSqlRequestsCountOnDeleteStashedInGroup() throws Exception {
+    void testSqlRequestsCountOnDeleteStashedInGroups() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
         ApiUtils.stashNetworkModifications(mockMvc, modifications.stream().map(Pair::getLeft).toList());
 
         reset();
         ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
         // It is actually (6, 0, 0, 14) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(6, 0, 1, 0);
+        TestUtils.assertRequestsCount(7, 0, 1, 0);
         assertEquals(0, modificationRepository.count());
     }
 
     @Test
-    void testSqlRequestsCountOnDeleteStashedInGroup2() throws Exception {
+    void testSqlRequestsCountOnDeleteStashedInGroups2() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
         ApiUtils.stashNetworkModifications(mockMvc, modifications.stream().map(Pair::getLeft).toList());
 
         reset();
         ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
         // It is actually (10, 0, 0, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(10, 0, 1, 0);
+        TestUtils.assertRequestsCount(11, 0, 1, 0);
         assertEquals(0, modificationRepository.count());
     }
 
@@ -495,7 +495,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         // removing only first tabular modification in the group
-        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), List.of(modifications.get(0).getLeft()));
+        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), List.of(modifications.getFirst().getLeft()));
         // It is actually (4, 0, 1, 7) because deletes made in the native query are not counted
         TestUtils.assertRequestsCount(4, 0, 1, 0);
         assertEquals(4, modificationRepository.count()); // then second tabular still exists (and its sub-modifications)
@@ -616,7 +616,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         NetworkModificationsResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertNotNull(result);
         assertEquals(1, result.modificationUuids().size());
-        UUID modifId = result.modificationUuids().get(0);
+        UUID modifId = result.modificationUuids().getFirst();
 
         // try to get via the group
         UnsupportedOperationException exception = assertThrows(
