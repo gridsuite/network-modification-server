@@ -191,7 +191,7 @@ public class NetworkModificationController {
     public ResponseEntity<Void> updateNetworkModification(
             @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid,
             @RequestBody ModificationInfos modificationInfos,
-            @RequestHeader("userId") String userId) {
+            @RequestHeader(HEADER_USER_ID) String userId) {
         networkModificationService.updateNetworkModification(networkModificationUuid, modificationInfos, userId);
         return ResponseEntity.ok().build();
     }
@@ -328,8 +328,7 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The metadata of the network modifications has been successfully updated")
     public ResponseEntity<Void> updateNetworkModificationMetadata(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
-            @RequestBody ModificationInfos metadata, @RequestHeader("userId") String userId) {
-
+            @RequestBody ModificationInfos metadata) {
         networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata);
         return ResponseEntity.ok().build();
     }
