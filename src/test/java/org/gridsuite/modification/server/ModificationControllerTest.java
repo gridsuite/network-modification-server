@@ -454,7 +454,8 @@ class ModificationControllerTest {
                         .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
                         .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
-                        .queryParam("stashed", "true"))
+                        .queryParam("stashed", "true")
+                        .header(HEADER_USER_ID, "userId"))
                 .andExpect(status().isOk());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.STASHED).size());
 
@@ -464,7 +465,8 @@ class ModificationControllerTest {
                         .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
                         .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
-                        .queryParam("stashed", "false"))
+                        .queryParam("stashed", "false")
+                        .header(HEADER_USER_ID, "userId"))
                 .andExpect(status().isOk());
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.STASHED).size());
     }
@@ -492,7 +494,8 @@ class ModificationControllerTest {
                         .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
                         .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
-                        .queryParam("stashed", "true"))
+                        .queryParam("stashed", "true")
+                        .header(HEADER_USER_ID, "userId"))
                 .andExpect(status().isOk());
         assertEquals(true, modificationRepository.getModificationInfo(UUID.fromString(uuidString)).getStashed());
     }
@@ -526,7 +529,7 @@ class ModificationControllerTest {
                 .queryParam("uuids", uuidString)
                 .content(mapper.writeValueAsString(metadata))
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("userId", "userId")
+                .header(HEADER_USER_ID, "userId")
         ).andExpect(status().isOk());
         assertEquals(false, modificationRepository.getModifications(TEST_GROUP_ID, true, true).getFirst().getActivated());
     }
@@ -626,7 +629,7 @@ class ModificationControllerTest {
                         .queryParam("uuids", uuidString)
                         .content(mapper.writeValueAsString(metadata))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("userId", "userId")
+                        .header(HEADER_USER_ID, "userId")
                 ).andExpect(status().isOk());
 
         assertEquals("new description", modificationRepository.getModifications(TEST_GROUP_ID, true, true).getFirst().getDescription());
@@ -850,7 +853,8 @@ class ModificationControllerTest {
         mockMvc.perform(
                         put(copyUri(otherGroupId) + "?sourceContainerUuid=" + TEST_GROUP_ID)
                     .content(bodyJson)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header(HEADER_USER_ID, "userId"))
             .andExpect(status().isBadRequest())
                 .andExpect(result -> assertInstanceOf(NetworkModificationServerException.class, result.getResolvedException()))
                 .andExpect(result -> assertEquals(MODIFICATION_DUPLICATION_ARGUMENT_ERROR.messageTemplate(),
@@ -896,7 +900,7 @@ class ModificationControllerTest {
         duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
         String copyUrl = copyUri(otherGroupId);
         bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
-        mvcResult = runRequestAsync(mockMvc, put(copyUrl).content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        mvcResult = runRequestAsync(mockMvc, put(copyUrl).content(bodyJson).contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, "userId"), status().isOk());
         assertApplicationStatusOK(mvcResult);
 
         var newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, false, true);
@@ -936,7 +940,8 @@ class ModificationControllerTest {
         String bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
         String url = copyUri(TEST_GROUP_ID);
         mockMvc.perform(put(url).content(bodyJson)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "userId"))
                 .andExpect(status().isOk());
 
         var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -1033,7 +1038,8 @@ class ModificationControllerTest {
         String bodyJson = getJsonBodyMove(moves(movingModificationUuidList, modificationUuidList.get(0)), NetworkCreation.VARIANT_ID);
         String url = moveUri(TEST_GROUP_ID);
         mockMvc.perform(put(url).content(bodyJson)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "userId"))
                 .andExpect(status().isOk());
 
         var newModificationUuidList = modificationRepository.getModifications(TEST_GROUP_ID, true, true).
@@ -1062,7 +1068,7 @@ class ModificationControllerTest {
         List<UUID> movingModificationUuidList = List.of(originSingleModification);
         String bodyJson = getJsonBodyMove(moves(movingModificationUuidList, null), NetworkCreation.VARIANT_ID);
         String url = moveUri(TEST_GROUP_ID) + "?originGroupUuid=" + TEST_GROUP2_ID + "&build=true";
-        MvcResult mvcResult = runRequestAsync(mockMvc, put(url).content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        MvcResult mvcResult = runRequestAsync(mockMvc, put(url).content(bodyJson).contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, "userId"), status().isOk());
 
         // incremental build: deletion impacts expected, all related to the moved load deletion (dealing with "s1" substation)
         NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
@@ -1103,7 +1109,8 @@ class ModificationControllerTest {
         String url = moveUri(TEST_GROUP_ID);
 
         mockMvc.perform(put(url).content(bodyJson)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "userId"))
                 .andExpect(status().isOk());
 
         var newModificationUuidList = modificationRepository.getModifications(TEST_GROUP_ID, true, true).
@@ -1197,7 +1204,8 @@ class ModificationControllerTest {
                         .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
                         .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
-                        .queryParam("stashed", "true"))
+                        .queryParam("stashed", "true")
+                        .header(HEADER_USER_ID, "userId"))
                 .andExpect(status().isOk());
         List<ModificationInfos> stashedModifications = modificationRepository.getModificationsMetadata(TEST_GROUP_ID, StashedFilter.STASHED);
         List<ModificationInfos> modificationAfterStash = modificationRepository.getModificationsMetadata(TEST_GROUP_ID, StashedFilter.ALL)
@@ -1748,7 +1756,8 @@ class ModificationControllerTest {
                         .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
                         .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
-                        .queryParam("stashed", "true"))
+                        .queryParam("stashed", "true")
+                        .header(HEADER_USER_ID, "userId"))
                 .andExpect(status().isOk());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.STASHED).size());
         String body = objectMapper.writeValueAsString(List.of(TEST_GROUP_ID.toString()));
@@ -1817,7 +1826,8 @@ class ModificationControllerTest {
                         .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
                         .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString2)
-                        .queryParam("stashed", "true"))
+                        .queryParam("stashed", "true")
+                        .header(HEADER_USER_ID, "userId"))
                 .andExpect(status().isOk());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true, StashedFilter.STASHED).size());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP2_ID, true, true, StashedFilter.STASHED).size());
@@ -2172,7 +2182,8 @@ class ModificationControllerTest {
         MvcResult res = runRequestAsync(mockMvc,
                 put(moveUri(TEST_GROUP_ID))
                         .content(getJsonBodyMove(moveInfos, NetworkCreation.VARIANT_ID))
-                        .contentType(MediaType.APPLICATION_JSON),
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "userId"),
                 status().isOk());
 
         NetworkModificationsResult result =
@@ -2206,7 +2217,8 @@ class ModificationControllerTest {
         runRequestAsync(mockMvc,
                 put(moveUri(TEST_GROUP_ID) + "?originGroupUuid=" + TEST_GROUP2_ID)
                         .content(getJsonBodyMove(moveInfos, NetworkCreation.VARIANT_ID))
-                        .contentType(MediaType.APPLICATION_JSON),
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "userId"),
                 status().isOk());
 
         // origin keeps B and E(E2,E3)

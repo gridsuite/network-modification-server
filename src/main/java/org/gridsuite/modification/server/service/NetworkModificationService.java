@@ -272,15 +272,23 @@ public class NetworkModificationService {
     public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos, @NonNull String userId) {
         networkModificationRepository.updateModification(modificationUuid, modificationInfos);
 
-        // Notify directory-server once per shared ancestor composite (closest first)
-        List<UUID> sharedAncestorUuids = networkModificationRepository.getAllSharedCompositeAncestorsUuids(modificationUuid);
-        sharedAncestorUuids
-            .forEach(sharedUuid -> notificationService.emitElementUpdated(sharedUuid, userId));
+        emitSharedAncestorsUpdated(List.of(modificationUuid), userId);
     }
 
     @Transactional
-    public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
+    public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
         networkModificationRepository.updateNetworkModificationMetadata(modificationUuids, metadata);
+        emitSharedAncestorsUpdated(modificationUuids, userId);
+    }
+
+    /** Notify directory-server once per shared composite containing the given modifications */
+    private void emitSharedAncestorsUpdated(Collection<UUID> modificationUuids, String userId) {
+        emitSharedElementsUpdated(networkModificationRepository.getAllSharedCompositesUuids(modificationUuids, true), userId);
+    }
+
+    /** Notify directory-server once per shared element */
+    private void emitSharedElementsUpdated(List<UUID> sharedElementUuids, String userId) {
+        sharedElementUuids.forEach(sharedUuid -> notificationService.emitElementUpdated(sharedUuid, userId));
     }
 
     @Transactional
@@ -360,7 +368,7 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids, String userId) {
+    public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids, @NonNull String userId) {
         for (UUID modificationUuid : modificationUuids) {
             UUID parentCompositeUuid = modificationRepository.findCompositeContainerIdByModificationId(modificationUuid);
             if (parentCompositeUuid != null) {
@@ -374,6 +382,10 @@ public class NetworkModificationService {
 
         // break all the references pointing to those stashed modification references
         directoryService.removeElementReferences(getModificationsReferencesNonTransactional(modificationUuids, true), userId);
+
+        // Collect shared ancestor composites before stashing, since stashed modifications are moved out of their composite
+        emitSharedAncestorsUpdated(modificationUuids, userId);
+
     }
 
     @Transactional
@@ -508,13 +520,23 @@ public class NetworkModificationService {
             @NonNull UUID targetGroupUuid,
             @NonNull List<ModificationMoveInfos> moveInfos,
             @NonNull List<ModificationApplicationContext> applicationContexts,
-            boolean canApply) {
+            boolean canApply,
+            @NonNull String userId) {
         List<ModificationInfos> allMoved = new ArrayList<>();
         // one transaction per move, through the repository proxy
         moveInfos.forEach(m -> allMoved.addAll(networkModificationRepository.moveModifications(
                 toContainerInfos(originGroupUuid, m.sourceCompositeUuid()), toContainerInfos(targetGroupUuid, m.targetCompositeUuid()),
                 List.of(m.modificationUuid()), m.insertBeforeUuid())));
         List<UUID> movedUuids = allMoved.stream().map(ModificationInfos::getUuid).toList();
+
+        // notify the shared composites the modifications left or entered: composites don't move, so their
+        // ancestry is the same before and after the move (null composite = group root, no ancestors)
+        List<UUID> sourceAndTargetCompositeUuids = moveInfos.stream()
+                .flatMap(m -> Stream.of(m.sourceCompositeUuid(), m.targetCompositeUuid()))
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        emitSharedElementsUpdated(networkModificationRepository.getAllSharedCompositesUuids(sourceAndTargetCompositeUuids, false), userId);
 
         // only modifications entering the target group need to be applied
         if (!canApply || allMoved.isEmpty() || originGroupUuid.equals(targetGroupUuid)) {
@@ -608,12 +630,14 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public UUID assembleNetworkModificationsIntoNewComposite(@NonNull List<UUID> assembledModificationsUuids, UUID nodeUuid, String userId) {
+    public UUID assembleNetworkModificationsIntoNewComposite(@NonNull List<UUID> assembledModificationsUuids, UUID nodeUuid, @NonNull String userId) {
         CompositeModificationInfos newComposite =
                 networkModificationRepository.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids).toModificationInfos();
-
         // update the references whose container is now the new composite (and the root container is the node)
         moveReferenceElementsToCompositeFrom(assembledModificationsUuids, newComposite.getUuid(), nodeUuid, userId);
+
+        // Collect shared ancestor composites before assembling, since assembled modifications are moved out of their composite
+        emitSharedAncestorsUpdated(assembledModificationsUuids, userId);
 
         return newComposite.getUuid();
     }
@@ -657,8 +681,13 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void replaceCompositeModification(@NonNull UUID compositeUuid, String name, List<UUID> modificationUuids) {
+    public void replaceCompositeModification(@NonNull UUID compositeUuid, String name, List<UUID> modificationUuids, @NonNull String userId) {
         networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
+
+        // Notify directory-server if the replaced composite is itself shared, then once per shared ancestor composite (closest first)
+        if (networkModificationRepository.isReferenced(compositeUuid)) {
+            notificationService.emitElementUpdated(compositeUuid, userId);
+        }
     }
 
     public void deleteStashedModificationFromGroups(List<UUID> groupUuids, boolean errorOnGroupNotFound) {

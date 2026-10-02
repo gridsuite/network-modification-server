@@ -66,6 +66,7 @@ public final class ApiUtils {
                         .param("sourceContainerUuid", originGroupUuid.toString())
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("userId", "userId")
             )
             .andExpect(request().asyncStarted());
         MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
@@ -85,6 +86,7 @@ public final class ApiUtils {
                     .param("action", "COPY")
                     .contentType("application/json")
                     .content(body)
+                    .header("userId", "userId")
             )
             .andExpect(request().asyncStarted());
         MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
@@ -151,6 +153,7 @@ public final class ApiUtils {
                     .param("nodeContainerUuid", UUID.randomUUID().toString())
                     .param("studyRootContainerUuid", UUID.randomUUID().toString())
                     .param("stashed", "true")
+                    .header("userId", "userId")
             )
             .andExpectAll(status().isOk());
     }
