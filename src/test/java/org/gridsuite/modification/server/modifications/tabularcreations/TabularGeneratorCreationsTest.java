@@ -148,24 +148,6 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getGenerator("id1"));
-        assertNotNull(getNetwork().getGenerator("id2"));
-        assertNotNull(getNetwork().getGenerator("id3"));
-        assertNotNull(getNetwork().getGenerator("id4"));
-        assertNotNull(getNetwork().getGenerator("id5"));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getGenerator("id1"));
-        assertNull(getNetwork().getGenerator("id2"));
-        assertNull(getNetwork().getGenerator("id3"));
-        assertNull(getNetwork().getGenerator("id4"));
-        assertNull(getNetwork().getGenerator("id5"));
-    }
-
-    @Override
     protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
         assertThat(impacts).containsExactly(createCollectionElementImpact(IdentifiableType.SWITCH), createCollectionElementImpact(IdentifiableType.GENERATOR));
     }

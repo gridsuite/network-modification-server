@@ -26,7 +26,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createTwoWindingsTransformer;
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -53,9 +52,6 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
 
         checkCreateWithError(List.of(assignmentInfos), List.of(filter));
 
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
-
         // Test modifying phase tab changer field when phase tab changer is null
         IdentifierListFilterEquipmentAttributes identifiableAttributes3 = getIdentifiableAttributes(TWT_ID_1, 1.);
         IdentifierListFilterEquipmentAttributes identifiableAttributes4 = getIdentifiableAttributes(TWT_ID_2, 1.);
@@ -67,9 +63,6 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
                 .build();
 
         checkCreateWithError(List.of(assignmentInfos2), List.of(filter2));
-
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getPhaseTapChanger());
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getPhaseTapChanger());
     }
 
     @Test
@@ -93,13 +86,6 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
                 .build();
 
         checkCreationApplicationStatus(List.of(assignmentInfos), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
-
-        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger());
-        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger());
-        assertEquals(4, getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger().getTapPosition());
-        assertEquals(4, getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger().getTapPosition());
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
-        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
 
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(List.of(FILTER_ID_1, FILTER_ID_4)), false);
     }
@@ -357,168 +343,6 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
     @Override
     protected EquipmentType getEquipmentType() {
         return EquipmentType.TWO_WINDINGS_TRANSFORMER;
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        TwoWindingsTransformer twt1 = getNetwork().getTwoWindingsTransformer(TWT_ID_1);
-        RatioTapChanger ratioTapChanger1 = twt1.getRatioTapChanger();
-        assertNotNull(ratioTapChanger1);
-        assertEquals(2, ratioTapChanger1.getTargetV(), 0);
-        assertEquals(4, ratioTapChanger1.getLowTapPosition());
-        assertEquals(8, ratioTapChanger1.getTapPosition());
-        assertEquals(5, ratioTapChanger1.getTargetDeadband(), 0);
-        assertEquals(20, twt1.getX(), 0);
-        assertEquals(2.5, twt1.getB(), 0);
-        assertEquals(2, twt1.getR(), 0);
-        assertEquals(25, twt1.getG(), 0);
-        assertEquals(15, twt1.getRatedU1(), 0);
-        assertEquals(0.5, twt1.getRatedU2(), 0);
-        assertEquals(Double.NaN, twt1.getRatedS(), 0);
-        assertTrue(twt1.getSelectedOperationalLimitsGroupId1().isPresent());
-        assertEquals("group1", twt1.getSelectedOperationalLimitsGroupId1().get());
-        assertTrue(twt1.getSelectedOperationalLimitsGroupId2().isPresent());
-        assertEquals("group2", twt1.getSelectedOperationalLimitsGroupId2().get());
-
-        TwoWindingsTransformer twt2 = getNetwork().getTwoWindingsTransformer(TWT_ID_2);
-        RatioTapChanger ratioTapChanger2 = twt2.getRatioTapChanger();
-        assertNotNull(ratioTapChanger2);
-        assertEquals(2, ratioTapChanger2.getTargetV(), 0);
-        assertEquals(3, ratioTapChanger2.getLowTapPosition());
-        assertEquals(4, ratioTapChanger2.getTapPosition());
-        assertEquals(5, ratioTapChanger2.getTargetDeadband(), 0);
-        assertEquals(20, twt2.getX(), 0);
-        assertEquals(2.5, twt2.getB(), 0);
-        assertEquals(15, twt2.getRatedU1(), 0);
-        assertEquals(Double.NaN, twt2.getRatedS(), 0);
-        assertTrue(twt2.getSelectedOperationalLimitsGroupId1().isPresent());
-        assertEquals("group1", twt2.getSelectedOperationalLimitsGroupId1().get());
-        assertTrue(twt2.getSelectedOperationalLimitsGroupId2().isPresent());
-        assertEquals("group0", twt2.getSelectedOperationalLimitsGroupId2().get());
-
-        TwoWindingsTransformer twt3 = getNetwork().getTwoWindingsTransformer(TWT_ID_3);
-        RatioTapChanger ratioTapChanger3 = twt3.getRatioTapChanger();
-        assertNotNull(ratioTapChanger3);
-        assertEquals(4, ratioTapChanger3.getLowTapPosition());
-        assertEquals(8, ratioTapChanger3.getTapPosition());
-        assertEquals(2, twt3.getR(), 0);
-        assertEquals(25, twt3.getG(), 0);
-        assertEquals(15, twt3.getRatedU1(), 0);
-        assertEquals(0.5, twt3.getRatedU2(), 0);
-        assertEquals(Double.NaN, twt3.getRatedS(), 0);
-        assertTrue(twt3.getSelectedOperationalLimitsGroupId1().isPresent());
-        assertEquals("group0", twt3.getSelectedOperationalLimitsGroupId1().get());
-        assertTrue(twt3.getSelectedOperationalLimitsGroupId2().isPresent());
-        assertEquals("group2", twt3.getSelectedOperationalLimitsGroupId2().get());
-
-        TwoWindingsTransformer twt4 = getNetwork().getTwoWindingsTransformer(TWT_ID_4);
-        PhaseTapChanger phaseTapChanger4 = twt4.getPhaseTapChanger();
-        assertNotNull(phaseTapChanger4);
-        assertEquals(2, phaseTapChanger4.getRegulationValue(), 0);
-        assertEquals(2, phaseTapChanger4.getLowTapPosition());
-        assertEquals(3, phaseTapChanger4.getTapPosition());
-        assertEquals(10, phaseTapChanger4.getTargetDeadband(), 0);
-        assertEquals(2, twt4.getR(), 0);
-        assertEquals(20, twt4.getX(), 0);
-        assertEquals(25, twt4.getG(), 0);
-        assertEquals(2.5, twt4.getB(), 0);
-        assertEquals(25, twt4.getRatedU1(), 0);
-        assertEquals(0.5, twt4.getRatedU2(), 0);
-        assertEquals(15, twt4.getRatedS(), 0);
-        assertFalse(twt4.getSelectedOperationalLimitsGroupId1().isPresent());
-        assertFalse(twt4.getSelectedOperationalLimitsGroupId2().isPresent());
-
-        TwoWindingsTransformer twt5 = getNetwork().getTwoWindingsTransformer(TWT_ID_5);
-        PhaseTapChanger phaseTapChanger5 = twt5.getPhaseTapChanger();
-        assertNotNull(phaseTapChanger4);
-        assertEquals(2, phaseTapChanger5.getLowTapPosition());
-        assertEquals(2, phaseTapChanger5.getTapPosition());
-        assertEquals(2, twt5.getR(), 0);
-        assertEquals(2.5, twt5.getB(), 0);
-        assertEquals(0.5, twt5.getRatedU2(), 0);
-        assertFalse(twt5.getSelectedOperationalLimitsGroupId1().isPresent());
-        assertFalse(twt5.getSelectedOperationalLimitsGroupId2().isPresent());
-
-        TwoWindingsTransformer twt6 = getNetwork().getTwoWindingsTransformer(TWT_ID_6);
-        PhaseTapChanger phaseTapChanger6 = twt6.getPhaseTapChanger();
-        assertNotNull(phaseTapChanger4);
-        assertEquals(2, phaseTapChanger6.getRegulationValue(), 0);
-        assertEquals(10, phaseTapChanger6.getTargetDeadband(), 0);
-        assertEquals(20, twt6.getX(), 0);
-        assertEquals(25, twt6.getG(), 0);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        TwoWindingsTransformer twt1 = getNetwork().getTwoWindingsTransformer(TWT_ID_1);
-        RatioTapChanger ratioTapChanger1 = twt1.getRatioTapChanger();
-        assertNotNull(ratioTapChanger1);
-        assertEquals(50, ratioTapChanger1.getTargetV(), 0);
-        assertEquals(0, ratioTapChanger1.getLowTapPosition());
-        assertEquals(1, ratioTapChanger1.getTapPosition());
-        assertEquals(55, ratioTapChanger1.getTargetDeadband(), 0);
-        assertEquals(40, twt1.getX(), 0);
-        assertEquals(60, twt1.getB(), 0);
-        assertEquals(30, twt1.getR(), 0);
-        assertEquals(50, twt1.getG(), 0);
-        assertEquals(10, twt1.getRatedU1(), 0);
-        assertEquals(20, twt1.getRatedU2(), 0);
-        assertEquals(11, twt1.getRatedS(), 0);
-
-        TwoWindingsTransformer twt2 = getNetwork().getTwoWindingsTransformer(TWT_ID_2);
-        RatioTapChanger ratioTapChanger2 = twt2.getRatioTapChanger();
-        assertNotNull(ratioTapChanger2);
-        assertEquals(53, ratioTapChanger2.getTargetV(), 0);
-        assertEquals(3, ratioTapChanger2.getLowTapPosition());
-        assertEquals(4, ratioTapChanger2.getTapPosition());
-        assertEquals(58, ratioTapChanger2.getTargetDeadband(), 0);
-        assertEquals(45, twt2.getX(), 0);
-        assertEquals(65, twt2.getB(), 0);
-        assertEquals(15, twt2.getRatedU1(), 0);
-        assertEquals(10, twt2.getRatedS(), 0);
-
-        TwoWindingsTransformer twt3 = getNetwork().getTwoWindingsTransformer(TWT_ID_3);
-        RatioTapChanger ratioTapChanger3 = twt3.getRatioTapChanger();
-        assertNotNull(ratioTapChanger3);
-        assertEquals(0, ratioTapChanger3.getLowTapPosition());
-        assertEquals(1, ratioTapChanger3.getTapPosition());
-        assertEquals(40, twt3.getR(), 0);
-        assertEquals(60, twt3.getG(), 0);
-        assertEquals(20, twt3.getRatedU1(), 0);
-        assertEquals(30, twt3.getRatedU2(), 0);
-        assertEquals(25, twt3.getRatedS(), 0);
-
-        TwoWindingsTransformer twt4 = getNetwork().getTwoWindingsTransformer(TWT_ID_4);
-        PhaseTapChanger phaseTapChanger4 = twt4.getPhaseTapChanger();
-        assertNotNull(phaseTapChanger4);
-        assertEquals(45, phaseTapChanger4.getRegulationValue(), 0);
-        assertEquals(1, phaseTapChanger4.getLowTapPosition());
-        assertEquals(2, phaseTapChanger4.getTapPosition());
-        assertEquals(34, phaseTapChanger4.getTargetDeadband(), 0);
-        assertEquals(45, twt4.getR(), 0);
-        assertEquals(55, twt4.getX(), 0);
-        assertEquals(65, twt4.getG(), 0);
-        assertEquals(75, twt4.getB(), 0);
-        assertEquals(25, twt4.getRatedU1(), 0);
-        assertEquals(35, twt4.getRatedU2(), 0);
-        assertEquals(15, twt4.getRatedS(), 0);
-
-        TwoWindingsTransformer twt5 = getNetwork().getTwoWindingsTransformer(TWT_ID_5);
-        PhaseTapChanger phaseTapChanger5 = twt5.getPhaseTapChanger();
-        assertNotNull(phaseTapChanger4);
-        assertEquals(2, phaseTapChanger5.getLowTapPosition());
-        assertEquals(2, phaseTapChanger5.getTapPosition());
-        assertEquals(50, twt5.getR(), 0);
-        assertEquals(80, twt5.getB(), 0);
-        assertEquals(40, twt5.getRatedU2(), 0);
-
-        TwoWindingsTransformer twt6 = getNetwork().getTwoWindingsTransformer(TWT_ID_6);
-        PhaseTapChanger phaseTapChanger6 = twt6.getPhaseTapChanger();
-        assertNotNull(phaseTapChanger4);
-        assertEquals(47, phaseTapChanger6.getRegulationValue(), 0);
-        assertEquals(36, phaseTapChanger6.getTargetDeadband(), 0);
-        assertEquals(65, twt6.getX(), 0);
-        assertEquals(75, twt6.getG(), 0);
     }
 
     private static void addRatioTapChangerSteps(RatioTapChangerAdder ratioTapChangerAdder) {

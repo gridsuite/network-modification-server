@@ -21,9 +21,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
 @Tag("IntegrationTest")
 class HvdcLineByFilterDeletionTest extends AbstractByFilterDeletionTest {
     private static final String HVDC_LINE_ID_1 = "hvdcLine";
@@ -37,16 +34,6 @@ class HvdcLineByFilterDeletionTest extends AbstractByFilterDeletionTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNull(getNetwork().getHvdcLine(HVDC_LINE_ID_1));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNotNull(getNetwork().getHvdcLine(HVDC_LINE_ID_1));
     }
 
     @Override

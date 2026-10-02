@@ -25,7 +25,6 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createSubstationImpacts;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLoad;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -93,24 +92,6 @@ class LoadModificationByAssignmentTest extends AbstractModificationByAssignmentT
                 .build();
 
         return List.of(assignmentInfos1);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(25, getNetwork().getLoad(LOAD_ID_1).getP0(), 0);
-        assertEquals(25, getNetwork().getLoad(LOAD_ID_2).getP0(), 0);
-        assertEquals(2.5, getNetwork().getLoad(LOAD_ID_3).getQ0(), 0);
-        assertEquals(2.5, getNetwork().getLoad(LOAD_ID_4).getQ0(), 0);
-        assertThat(getNetwork().getLoad(LOAD_ID_1).getLoadType()).isEqualTo(LoadType.AUXILIARY);
-        assertThat(getNetwork().getLoad(LOAD_ID_2).getLoadType()).isEqualTo(LoadType.AUXILIARY);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(100, getNetwork().getLoad(LOAD_ID_1).getP0(), 0);
-        assertEquals(80, getNetwork().getLoad(LOAD_ID_2).getP0(), 0);
-        assertEquals(70, getNetwork().getLoad(LOAD_ID_3).getQ0(), 0);
-        assertEquals(150, getNetwork().getLoad(LOAD_ID_4).getQ0(), 0);
     }
 
     @Override

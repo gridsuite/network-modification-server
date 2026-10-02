@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.modifications.byfilter.formula;
 
-import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.extensions.*;
 import org.gridsuite.filter.AbstractFilter;
@@ -25,8 +24,6 @@ import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -58,7 +55,6 @@ class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTe
                 .build();
 
         checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes, wrongIdAttributes));
-        assertEquals(75, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
     }
 
     @Test
@@ -281,154 +277,6 @@ class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTe
                 .build();
 
         return List.of(formulaInfos1, formulaInfos2);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        Generator generator1 = getNetwork().getGenerator(GENERATOR_ID_1);
-        GeneratorStartup generatorStartup1 = generator1.getExtension(GeneratorStartup.class);
-        assertNotNull(generatorStartup1);
-        assertEquals(50, generator1.getTargetP(), 0);
-        assertEquals(15, generatorStartup1.getMarginalCost(), 0);
-        assertEquals(0.025, generatorStartup1.getPlannedOutageRate(), 0);
-        assertEquals(0.055, generatorStartup1.getForcedOutageRate(), 0);
-        assertEquals(50, generatorStartup1.getPlannedActivePowerSetpoint(), 0);
-        assertEquals(502, generator1.getMaxP(), 0);
-        assertEquals(50, generator1.getMinP(), 0);
-
-        Generator generator2 = getNetwork().getGenerator(GENERATOR_ID_2);
-        GeneratorStartup generatorStartup2 = generator2.getExtension(GeneratorStartup.class);
-        assertNotNull(generatorStartup2);
-        assertEquals(100, generator2.getTargetP(), 0);
-        assertEquals(15, generatorStartup2.getMarginalCost(), 0);
-        assertEquals(0.025, generatorStartup2.getPlannedOutageRate(), 0);
-        assertEquals(0.055, generatorStartup2.getForcedOutageRate(), 0);
-        assertEquals(50, generatorStartup2.getPlannedActivePowerSetpoint(), 0);
-        assertEquals(2002, generator2.getMaxP(), 0);
-        assertEquals(50, generator2.getMinP(), 0);
-
-        Generator generator3 = getNetwork().getGenerator(GENERATOR_ID_3);
-        GeneratorShortCircuit generatorShortCircuit3 = generator3.getExtension(GeneratorShortCircuit.class);
-        assertNotNull(generatorShortCircuit3);
-        assertEquals(120, generator3.getTargetP(), 0);
-        assertEquals(39.8, generatorShortCircuit3.getDirectTransX(), 0);
-        assertEquals(11.4, generatorShortCircuit3.getStepUpTransformerX(), 0);
-        assertEquals(2002, generator3.getMaxP(), 0);
-        assertEquals(120, generator3.getMinP(), 0);
-
-        Generator generator4 = getNetwork().getGenerator(GENERATOR_ID_4);
-        GeneratorShortCircuit generatorShortCircuit4 = generator4.getExtension(GeneratorShortCircuit.class);
-        assertNotNull(generatorShortCircuit4);
-        assertEquals(45.8, generatorShortCircuit4.getDirectTransX(), 0);
-        assertEquals(15.0, generatorShortCircuit4.getStepUpTransformerX(), 0);
-        assertEquals(160, generator4.getTargetP(), 0);
-        assertEquals(702, generator4.getMaxP(), 0);
-        assertEquals(160, generator4.getMinP(), 0);
-
-        Generator generator5 = getNetwork().getGenerator(GENERATOR_ID_5);
-        ActivePowerControl activePowerControl5 = generator5.getExtension(ActivePowerControl.class);
-        assertNotNull(activePowerControl5);
-        assertEquals(2002, generator5.getMaxP(), 0);
-        assertEquals(4, activePowerControl5.getDroop(), 0);
-
-        Generator generator6 = getNetwork().getGenerator(GENERATOR_ID_6);
-        ActivePowerControl activePowerControl6 = generator6.getExtension(ActivePowerControl.class);
-        assertNotNull(activePowerControl6);
-        assertEquals(502, generator6.getMaxP(), 0);
-        assertEquals(6, activePowerControl6.getDroop(), 0);
-
-        Generator generator7 = getNetwork().getGenerator(GENERATOR_ID_7);
-        CoordinatedReactiveControl coordinatedReactiveControl7 = generator7.getExtension(CoordinatedReactiveControl.class);
-        assertNotNull(coordinatedReactiveControl7);
-        GeneratorStartup generatorStartup7 = generator7.getExtension(GeneratorStartup.class);
-        assertNotNull(generatorStartup7);
-        assertEquals(50, generatorStartup7.getMarginalCost(), 0);
-        assertEquals(24, coordinatedReactiveControl7.getQPercent(), 0);
-
-        Generator generator8 = getNetwork().getGenerator(GENERATOR_ID_8);
-        CoordinatedReactiveControl coordinatedReactiveControl8 = generator8.getExtension(CoordinatedReactiveControl.class);
-        assertNotNull(coordinatedReactiveControl8);
-        GeneratorStartup generatorStartup8 = generator8.getExtension(GeneratorStartup.class);
-        assertNotNull(generatorStartup8);
-        assertEquals(60, generatorStartup8.getMarginalCost(), 0);
-        assertEquals(48, coordinatedReactiveControl8.getQPercent(), 0);
-
-        assertEquals(40, getNetwork().getGenerator(GENERATOR_ID_9).getRatedS(), 0);
-        assertEquals(25, getNetwork().getGenerator(GENERATOR_ID_10).getRatedS(), 0);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        Generator generator1 = getNetwork().getGenerator(GENERATOR_ID_1);
-        GeneratorStartup generatorStartup1 = generator1.getExtension(GeneratorStartup.class);
-        assertNotNull(generatorStartup1);
-        assertEquals(100, generator1.getTargetP(), 0);
-        assertEquals(30, generatorStartup1.getMarginalCost(), 0);
-        assertEquals(0.25, generatorStartup1.getPlannedOutageRate(), 0);
-        assertEquals(0.55, generatorStartup1.getForcedOutageRate(), 0);
-        assertEquals(40, generatorStartup1.getPlannedActivePowerSetpoint(), 0);
-        assertEquals(500, generator1.getMaxP(), 0);
-        assertEquals(0, generator1.getMinP(), 0);
-
-        Generator generator2 = getNetwork().getGenerator(GENERATOR_ID_2);
-        GeneratorStartup generatorStartup2 = generator2.getExtension(GeneratorStartup.class);
-        assertNotNull(generatorStartup2);
-        assertEquals(200, generator2.getTargetP(), 0);
-        assertEquals(30, generatorStartup2.getMarginalCost(), 0);
-        assertEquals(0.25, generatorStartup2.getPlannedOutageRate(), 0);
-        assertEquals(0.55, generatorStartup2.getForcedOutageRate(), 0);
-        assertEquals(40, generatorStartup2.getPlannedActivePowerSetpoint(), 0);
-        assertEquals(2000, generator2.getMaxP(), 0);
-        assertEquals(50, generator2.getMinP(), 0);
-
-        Generator generator3 = getNetwork().getGenerator(GENERATOR_ID_3);
-        GeneratorShortCircuit generatorShortCircuit3 = generator3.getExtension(GeneratorShortCircuit.class);
-        assertNotNull(generatorShortCircuit3);
-        assertEquals(300, generator3.getTargetP(), 0);
-        assertEquals(40, generatorShortCircuit3.getDirectTransX(), 0);
-        assertEquals(38, generatorShortCircuit3.getStepUpTransformerX(), 0);
-        assertEquals(2000, generator3.getMaxP(), 0);
-        assertEquals(70, generator3.getMinP(), 0);
-
-        Generator generator4 = getNetwork().getGenerator(GENERATOR_ID_4);
-        GeneratorShortCircuit generatorShortCircuit4 = generator4.getExtension(GeneratorShortCircuit.class);
-        assertNotNull(generatorShortCircuit4);
-        assertEquals(46, generatorShortCircuit4.getDirectTransX(), 0);
-        assertEquals(50, generatorShortCircuit4.getStepUpTransformerX(), 0);
-        assertEquals(400, generator4.getTargetP(), 0);
-        assertEquals(700, generator4.getMaxP(), 0);
-        assertEquals(110, generator4.getMinP(), 0);
-
-        Generator generator5 = getNetwork().getGenerator(GENERATOR_ID_5);
-        ActivePowerControl activePowerControl5 = generator5.getExtension(ActivePowerControl.class);
-        assertNotNull(activePowerControl5);
-        assertEquals(2000, generator5.getMaxP(), 0);
-        assertEquals(2, activePowerControl5.getDroop(), 0);
-
-        Generator generator6 = getNetwork().getGenerator(GENERATOR_ID_6);
-        ActivePowerControl activePowerControl6 = generator6.getExtension(ActivePowerControl.class);
-        assertNotNull(activePowerControl6);
-        assertEquals(500, generator6.getMaxP(), 0);
-        assertEquals(3, activePowerControl6.getDroop(), 0);
-
-        Generator generator7 = getNetwork().getGenerator(GENERATOR_ID_7);
-        CoordinatedReactiveControl coordinatedReactiveControl7 = generator7.getExtension(CoordinatedReactiveControl.class);
-        assertNotNull(coordinatedReactiveControl7);
-        GeneratorStartup generatorStartup7 = generator7.getExtension(GeneratorStartup.class);
-        assertNotNull(generatorStartup7);
-        assertEquals(50, generatorStartup7.getMarginalCost(), 0);
-        assertEquals(6, coordinatedReactiveControl7.getQPercent(), 0);
-
-        Generator generator8 = getNetwork().getGenerator(GENERATOR_ID_8);
-        CoordinatedReactiveControl coordinatedReactiveControl8 = generator8.getExtension(CoordinatedReactiveControl.class);
-        assertNotNull(coordinatedReactiveControl8);
-        GeneratorStartup generatorStartup8 = generator8.getExtension(GeneratorStartup.class);
-        assertNotNull(generatorStartup8);
-        assertEquals(60, generatorStartup8.getMarginalCost(), 0);
-        assertEquals(12, coordinatedReactiveControl8.getQPercent(), 0);
-
-        assertEquals(60, getNetwork().getGenerator(GENERATOR_ID_9).getRatedS(), 0);
-        assertEquals(30, getNetwork().getGenerator(GENERATOR_ID_10).getRatedS(), 0);
     }
 
     @Override

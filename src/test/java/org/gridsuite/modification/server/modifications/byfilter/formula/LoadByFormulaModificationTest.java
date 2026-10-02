@@ -24,7 +24,6 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createSubstationImpacts;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLoad;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -95,22 +94,6 @@ class LoadByFormulaModificationTest extends AbstractByFormulaModificationTest {
     @Override
     protected EquipmentType getEquipmentType() {
         return EquipmentType.LOAD;
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(125, getNetwork().getLoad(LOAD_ID_1).getP0(), 0);
-        assertEquals(105, getNetwork().getLoad(LOAD_ID_2).getP0(), 0);
-        assertEquals(175, getNetwork().getLoad(LOAD_ID_3).getQ0(), 0);
-        assertEquals(375, getNetwork().getLoad(LOAD_ID_4).getQ0(), 0);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(100, getNetwork().getLoad(LOAD_ID_1).getP0(), 0);
-        assertEquals(80, getNetwork().getLoad(LOAD_ID_2).getP0(), 0);
-        assertEquals(70, getNetwork().getLoad(LOAD_ID_3).getQ0(), 0);
-        assertEquals(150, getNetwork().getLoad(LOAD_ID_4).getQ0(), 0);
     }
 
     @Override

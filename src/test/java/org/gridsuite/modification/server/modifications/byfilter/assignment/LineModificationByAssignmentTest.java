@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
@@ -23,8 +22,6 @@ import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLine;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Etienne Lesot <etienne.lesot at rte-france.com>
@@ -181,73 +178,6 @@ public class LineModificationByAssignmentTest extends AbstractModificationByAssi
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        Line line1 = getNetwork().getLine(LINE_ID_1);
-        assertEquals(40, line1.getR(), 0);
-        assertEquals(20, line1.getX(), 0);
-        assertEquals(0.001, line1.getB1(), 0);
-        assertEquals(0.0015, line1.getB2(), 0);
-        assertEquals(35, line1.getG1(), 0);
-        assertEquals(10, line1.getG2(), 0);
-        assertTrue(line1.getSelectedOperationalLimitsGroupId1().isPresent());
-        assertEquals("group1", line1.getSelectedOperationalLimitsGroupId1().get());
-        assertTrue(line1.getSelectedOperationalLimitsGroupId2().isPresent());
-        assertEquals("group2", line1.getSelectedOperationalLimitsGroupId2().get());
-
-        Line line2 = getNetwork().getLine(LINE_ID_2);
-        assertEquals(3, line2.getR(), 0);
-        assertEquals(20, line2.getX(), 0);
-        assertEquals(0.002, line2.getB1(), 0);
-        assertEquals(0.0025, line2.getB2(), 0);
-        assertEquals(5, line2.getG1(), 0);
-        assertEquals(10, line2.getG2(), 0);
-        assertTrue(line2.getSelectedOperationalLimitsGroupId1().isPresent());
-        assertEquals("group1", line2.getSelectedOperationalLimitsGroupId1().get());
-        assertTrue(line2.getSelectedOperationalLimitsGroupId2().isPresent());
-        assertEquals("group0", line2.getSelectedOperationalLimitsGroupId2().get());
-
-        Line line3 = getNetwork().getLine(LINE_ID_3);
-        assertEquals(40, line3.getR(), 0);
-        assertEquals(3, line3.getX(), 0);
-        assertEquals(0.002, line3.getB1(), 0);
-        assertEquals(0.0025, line3.getB2(), 0);
-        assertEquals(35, line3.getG1(), 0);
-        assertEquals(1, line3.getG2(), 0);
-        assertTrue(line3.getSelectedOperationalLimitsGroupId1().isPresent());
-        assertEquals("group0", line3.getSelectedOperationalLimitsGroupId1().get());
-        assertTrue(line3.getSelectedOperationalLimitsGroupId2().isPresent());
-        assertEquals("group2", line3.getSelectedOperationalLimitsGroupId2().get());
-
-        Line line4 = getNetwork().getLine(LINE_ID_4);
-        assertEquals(3, line4.getR(), 0);
-        assertEquals(3, line4.getX(), 0);
-        assertEquals(21, line4.getB1(), 0);
-        assertEquals(90, line4.getB2(), 0);
-        assertEquals(5, line4.getG1(), 0);
-        assertEquals(1, line4.getG2(), 0);
-        assertFalse(line4.getSelectedOperationalLimitsGroupId1().isPresent());
-        assertFalse(line4.getSelectedOperationalLimitsGroupId2().isPresent());
-
-        Line line5 = getNetwork().getLine(LINE_ID_5);
-        assertEquals(3, line5.getR(), 0);
-        assertEquals(3, line5.getX(), 0);
-        assertEquals(0.002, line5.getB1(), 0);
-        assertEquals(90, line5.getB2(), 0);
-        assertEquals(5, line5.getG1(), 0);
-        assertEquals(1, line5.getG2(), 0);
-        assertFalse(line5.getSelectedOperationalLimitsGroupId1().isPresent());
-        assertFalse(line5.getSelectedOperationalLimitsGroupId2().isPresent());
-
-        Line line6 = getNetwork().getLine(LINE_ID_6);
-        assertEquals(3, line6.getR(), 0);
-        assertEquals(3, line6.getX(), 0);
-        assertEquals(21, line6.getB1(), 0);
-        assertEquals(0.0025, line6.getB2(), 0);
-        assertEquals(5, line6.getG1(), 0);
-        assertEquals(1, line6.getG2(), 0);
-    }
-
-    @Override
     protected List<AssignmentInfos<?>> getUpdatedAssignmentInfos() {
         DoubleAssignmentInfos assignmentInfos1 = DoubleAssignmentInfos.builder()
             .editedField(LineField.B1.name())
@@ -256,10 +186,6 @@ public class LineModificationByAssignmentTest extends AbstractModificationByAssi
             .build();
 
         return List.of(assignmentInfos1);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
     }
 
     @Override

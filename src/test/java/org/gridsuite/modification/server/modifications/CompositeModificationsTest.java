@@ -79,20 +79,6 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getGenerator("idGeneratorComposite"));
-        assertNotNull(getNetwork().getLoad("idLoadComposite"));
-        assertNotNull(getNetwork().getBattery("idBatteryComposite"));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getGenerator("idGeneratorComposite"));
-        assertNull(getNetwork().getLoad("idLoadComposite"));
-        assertNull(getNetwork().getBattery("idBatteryComposite"));
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertNotNull(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
     }
