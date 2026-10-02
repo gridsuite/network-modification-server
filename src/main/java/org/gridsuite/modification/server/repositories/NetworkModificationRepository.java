@@ -1221,14 +1221,21 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public List<ModificationMetadata> getModificationsMetadata(List<UUID> uuids) {
         // custom query to read only the required fields (id/type)
-        return modificationRepository.findMetadataIn(uuids)
-                .stream()
-                .map(entity -> ModificationMetadata.builder()
-                        .id(entity.getId())
-                        .description(entity.getDescription())
-                        .type(ModificationType.valueOf(entity.getType()))
-                        .build())
-                .toList();
+        return modificationRepository.findMetadataIn(uuids).stream().map(entity -> {
+            ModificationMetadata.ModificationMetadataBuilder builder = ModificationMetadata.builder()
+                    .id(entity.getId())
+                    .description(entity.getDescription())
+                    .type(ModificationType.valueOf(entity.getType()));
+            if (ModificationType.COMPOSITE_MODIFICATION.toString().equals(entity.getType())) {
+                assert entity.getId() != null;
+                CompositeModificationEntity modificationEntity =
+                        (CompositeModificationEntity) modificationRepository.findById(entity.getId()).orElse(null);
+                if (modificationEntity != null) {
+                    builder.name(modificationEntity.getName());
+                }
+            }
+            return builder.build();
+        }).toList();
     }
 
     private void deleteModifications(List<ModificationEntity> modificationEntities) {
