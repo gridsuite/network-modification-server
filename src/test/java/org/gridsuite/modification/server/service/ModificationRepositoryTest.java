@@ -2124,6 +2124,72 @@ class ModificationRepositoryTest {
                 "Another group may name a root network with that very tag, so a shared modification is never cleaned");
     }
 
+    @Test
+    void testInitRootNetworkTagFollowsTheApplicabilityOnTheExistingRootNetworks() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID_3,
+                List.of(switchModification("v1d1"), switchModification("v1d2"), switchModification("v1d3"), switchModification("v1d4")));
+        UUID activatedUuid = modifications.get(0).getUuid();
+        UUID deactivatedUuid = modifications.get(1).getUuid();
+        UUID deactivatedOnAnotherStudyTagUuid = modifications.get(2).getUuid();
+        UUID withLeftoverEntryUuid = modifications.get(3).getUuid();
+        UUID deactivatedCompositeUuid = insertComposite(TEST_GROUP_ID_3, false, "v1d5");
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid, deactivatedCompositeUuid), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedOnAnotherStudyTagUuid), OTHER_ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(withLeftoverEntryUuid), RENAMED_ROOT_NETWORK_TAG, false);
+
+        networkModificationRepository.initRootNetworkTag(List.of(TEST_GROUP_ID_3), List.of(ROOT_NETWORK_TAG), RENAMED_ROOT_NETWORK_TAG);
+
+        Map<UUID, Map<String, Boolean>> applicability = getApplicabilities(TEST_GROUP_ID_3);
+        assertEquals(Map.of(), applicability.get(activatedUuid),
+                "A modification activated on all the existing root networks is activated on the new one");
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, false), applicability.get(deactivatedUuid),
+                "A modification deactivated on an existing root network is deactivated on the new one");
+        assertEquals(Map.of(OTHER_ROOT_NETWORK_TAG, false), applicability.get(deactivatedOnAnotherStudyTagUuid),
+                "Only the tags of the existing root networks of the study are taken into account");
+        assertEquals(Map.of(), applicability.get(withLeftoverEntryUuid),
+                "A modification the study owns has no applicability to keep for a tag the study does not use yet");
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, false), applicability.get(deactivatedCompositeUuid),
+                "A composite deactivated on an existing root network is deactivated on the new one");
+        assertEquals(List.of(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, false)),
+                List.copyOf(getApplicabilitiesByModificationsInside(deactivatedCompositeUuid).values()),
+                "The content of the composite follows the same rule");
+        assertEquals(List.of(activatedUuid, deactivatedOnAnotherStudyTagUuid, withLeftoverEntryUuid),
+                activeModificationUuids(TEST_GROUP_ID_3, RENAMED_ROOT_NETWORK_TAG));
+    }
+
+    @Test
+    void testInitRootNetworkTagKeepsTheApplicabilityMemorizedByASharedModification() {
+        UUID memorizedActivatedUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID memorizedDeactivatedUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d2");
+        UUID notMemorizedUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d3");
+        // deactivated on the existing root network, but memorized as activated on the new tag
+        networkModificationRepository.updateRootNetworkApplicability(List.of(memorizedActivatedUuid), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(memorizedActivatedUuid), RENAMED_ROOT_NETWORK_TAG, true);
+        // activated on the existing root network, but memorized as deactivated on the new tag
+        networkModificationRepository.updateRootNetworkApplicability(List.of(memorizedDeactivatedUuid), RENAMED_ROOT_NETWORK_TAG, false);
+        // deactivated on the existing root network, nothing memorized on the new tag
+        networkModificationRepository.updateRootNetworkApplicability(List.of(notMemorizedUuid), ROOT_NETWORK_TAG, false);
+
+        networkModificationRepository.initRootNetworkTag(List.of(TEST_GROUP_ID_2), List.of(ROOT_NETWORK_TAG), RENAMED_ROOT_NETWORK_TAG);
+
+        Map<UUID, Map<String, Boolean>> applicabilities = getApplicabilities(TEST_GROUP_ID_2);
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, true), applicabilities.get(memorizedActivatedUuid),
+                "The applicability memorized as activated by the shared modification takes precedence");
+        assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), applicabilities.get(memorizedDeactivatedUuid),
+                "The applicability memorized as deactivated by the shared modification takes precedence");
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, false), applicabilities.get(notMemorizedUuid),
+                "Without a memorized applicability, the shared modification follows the existing root networks");
+        assertEquals(List.of(memorizedActivatedUuid), activeModificationUuids(TEST_GROUP_ID_2, RENAMED_ROOT_NETWORK_TAG));
+    }
+
+    @Test
+    void testInitRootNetworkTagWithoutModification() {
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.initRootNetworkTag(List.of(TEST_GROUP_ID_3), List.of(ROOT_NETWORK_TAG), RENAMED_ROOT_NETWORK_TAG);
+        // a group without modification leads to no applicability
+        assertRequestsCount(0, 0, 0, 0);
+    }
+
     private List<UUID> activeCompositeContentUuids(UUID groupUuid, String rootNetworkTag) {
         CompositeModificationInfos composite = (CompositeModificationInfos) networkModificationRepository
                 .getActiveModifications(groupUuid, rootNetworkTag).getFirst();
