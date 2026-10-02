@@ -296,6 +296,12 @@ public class NetworkModificationService {
     }
 
     @Transactional
+    public void initRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull List<String> existingTags, @NonNull String newTag) {
+        assertRootNetworkTagFits(newTag);
+        networkModificationRepository.initRootNetworkTag(groupUuids, existingTags, newTag);
+    }
+
+    @Transactional
     public void deleteRootNetworkTags(@NonNull List<UUID> groupUuids, @NonNull List<String> rootNetworkTags) {
         networkModificationRepository.deleteRootNetworkTags(groupUuids, rootNetworkTags);
     }
