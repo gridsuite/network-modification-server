@@ -17,6 +17,7 @@ import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
+import org.gridsuite.modification.server.service.ModificationPermissionService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
@@ -39,10 +40,14 @@ public class NetworkModificationController {
 
     private final LineTypesCatalogService lineTypesCatalogService;
 
+    private final ModificationPermissionService modificationPermissionService;
+
     public NetworkModificationController(NetworkModificationService networkModificationService,
-                                         LineTypesCatalogService lineTypesCatalogService) {
+                                         LineTypesCatalogService lineTypesCatalogService,
+                                         ModificationPermissionService modificationPermissionService) {
         this.networkModificationService = networkModificationService;
         this.lineTypesCatalogService = lineTypesCatalogService;
+        this.modificationPermissionService = modificationPermissionService;
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -54,9 +59,14 @@ public class NetworkModificationController {
                                                                            @Parameter(description = "Stashed modifications") @RequestParam(name = "onlyStashed", required = false,
                                                                                    defaultValue = "false") Boolean onlyStashed,
                                                                            @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound",
-                                                                                   required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
-        return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound,
-            onlyStashed ? StashedFilter.STASHED : StashedFilter.ALL));
+                                                                                   required = false, defaultValue = "true") Boolean errorOnGroupNotFound,
+                                                                           @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
+        List<ModificationInfos> modifications = networkModificationService.getNetworkModifications(groupUuid, onlyMetadata,
+            errorOnGroupNotFound, onlyStashed ? StashedFilter.STASHED : StashedFilter.ALL);
+        if (userId != null) {
+            modificationPermissionService.addPermissions(modifications, userId);
+        }
+        return ResponseEntity.ok().body(modifications);
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications/export", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -196,8 +206,13 @@ public class NetworkModificationController {
     @Operation(summary = "Get a network modification")
     @ApiResponse(responseCode = "200", description = "The network modifications were returned")
     public ResponseEntity<ModificationInfos> getNetworkModification(
-            @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid) {
-        return ResponseEntity.ok().body(networkModificationService.getNetworkModification(networkModificationUuid));
+            @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid,
+            @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
+        ModificationInfos modification = networkModificationService.getNetworkModification(networkModificationUuid);
+        if (userId != null) {
+            modificationPermissionService.addPermissions(modification, userId);
+        }
+        return ResponseEntity.ok().body(modification);
     }
 
     @DeleteMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
