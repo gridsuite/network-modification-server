@@ -144,13 +144,13 @@ public abstract class AbstractNetworkModificationTest {
         assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
         assertResultImpacts(getNetworkImpacts(networkModificationsResult));
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
-        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
         assertAfterNetworkModificationCreation();
 
-        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
     }
 
@@ -171,14 +171,14 @@ public abstract class AbstractNetworkModificationTest {
 
         assertEquals(0, getNetworkImpacts(networkModificationsResult).size());
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
-        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
         // when modification is not active, element created by the modifications should NOT be present in network
         assertAfterNetworkModificationDeletion();
 
-        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
         assertEquals(false, createdModificationWithOnlyMetadata.getActivated());
     }
@@ -217,11 +217,11 @@ public abstract class AbstractNetworkModificationTest {
         // TODO Need a test for substations impacted
         //assertThat(bsmListResult.get(0)).recursivelyEquals(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"));
 
-        ModificationInfos updatedModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        ModificationInfos updatedModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false).get(0);
         assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        ModificationInfos updatedModificationwithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationInfos updatedModificationwithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true).get(0);
         testUpdateModificationMessage(updatedModificationwithOnlyMetadata);
 
     }
@@ -237,7 +237,7 @@ public abstract class AbstractNetworkModificationTest {
                         .queryParam("uuids", modificationUuid.toString()))
                 .andExpect(status().isOk());
 
-        List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
 
         assertTrue(storedModifications.isEmpty());
         assertAfterNetworkModificationDeletion();
@@ -259,7 +259,7 @@ public abstract class AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
 
         List<ModificationInfos> modifications = networkModificationRepository
-                .getModifications(TEST_GROUP_ID, false, true);
+                .getModifications(TEST_GROUP_ID, false);
 
         assertEquals(2, modifications.size());
         assertThat(modifications.get(0)).recursivelyEquals(modificationToCopy);
@@ -270,7 +270,7 @@ public abstract class AbstractNetworkModificationTest {
         MvcResult mvcResult;
         String resultAsString;
         // get all modifications for the given group of a network
-        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });

@@ -113,7 +113,7 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         assertSelectCount(8);
 
         SQLStatementCountValidator.reset();
-        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
+        mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications", getGroupId()))
             .andExpect(status().isOk());
         SQLStatementCountValidator.assertSelectCount(9);
     }
@@ -137,7 +137,7 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(compositeInfo)));
 
         SQLStatementCountValidator.reset();
-        List<ModificationInfos> modifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertRequestsCount(9, 0, 0, 0);
 
         SQLStatementCountValidator.reset();

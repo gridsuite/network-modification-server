@@ -34,7 +34,7 @@ public final class ApiUtils {
     }
 
     public static List<ModificationInfos> getGroupModifications(MockMvc mockMvc, UUID groupUuid) throws Exception {
-        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", groupUuid))
+        MvcResult mvcResult = mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications", groupUuid))
             .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
         return getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });

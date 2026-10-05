@@ -378,10 +378,7 @@ class ModificationIndexationTest {
         /*
         Delete modification group
          */
-        networkModificationService.deleteModificationGroups(
-            List.of(groupUuid1),
-            true
-        );
+        networkModificationService.deleteModificationGroups(List.of(groupUuid1));
 
         /*
         check results in database and in elasticsearch
@@ -458,7 +455,7 @@ class ModificationIndexationTest {
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, TestUtils.groupOnAnyRootNetwork(groupUuid, modifications, reportInfos), networkInfos);
         assertNotNull(result);
 
-        assertEquals(1, modificationRepository.getModifications(groupUuid, true, true).size());
+        assertEquals(1, modificationRepository.getModifications(groupUuid, true).size());
         assertEquals(Collections.emptyList(), modificationApplicationRepository.findAll());
         assertEquals(Collections.emptyList(), IterableUtils.toList(modificationApplicationInfosRepository.findAll()));
     }
@@ -551,7 +548,7 @@ class ModificationIndexationTest {
                     networkInfos);
             assertNotNull(result);
 
-            assertEquals(1, modificationRepository.getModifications(groupUuid, true, true).size());
+            assertEquals(1, modificationRepository.getModifications(groupUuid, true).size());
             assertEquals(Collections.emptyList(), modificationApplicationRepository.findAll());
             assertEquals(Collections.emptyList(), IterableUtils.toList(modificationApplicationInfosRepository.findAll()));
         }
