@@ -148,7 +148,7 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
         String modificationToCreateJson = getJsonBody(dto, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        ShuntCompensatorCreationInfos createdModification = (ShuntCompensatorCreationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+        ShuntCompensatorCreationInfos createdModification = (ShuntCompensatorCreationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
         assertThat(createdModification).recursivelyEquals(dto);
         //REACTOR test
         dto.setShuntCompensatorType(ShuntCompensatorType.REACTOR);
@@ -157,7 +157,7 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
         modificationToCreateJson = getJsonBody(dto, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        createdModification = (ShuntCompensatorCreationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
+        createdModification = (ShuntCompensatorCreationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(1);
         assertThat(createdModification).recursivelyEquals(dto);
     }
 
