@@ -370,6 +370,9 @@ public class NetworkModificationService {
 
     @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids, @NonNull String userId) {
+        // Collect shared ancestor composites before stashing, since stashed modifications are moved out of their composite
+        List<UUID> sharedAncestorUuids = networkModificationRepository.getAllSharedCompositesUuids(modificationUuids, true);
+
         for (UUID modificationUuid : modificationUuids) {
             UUID parentCompositeUuid = modificationRepository.findCompositeContainerIdByModificationId(modificationUuid);
             if (parentCompositeUuid != null) {
@@ -384,9 +387,7 @@ public class NetworkModificationService {
         // break all the references pointing to those stashed modification references
         directoryService.removeElementReferences(getModificationsReferencesNonTransactional(modificationUuids, true), userId);
 
-        // Collect shared ancestor composites before stashing, since stashed modifications are moved out of their composite
-        emitSharedAncestorsUpdated(modificationUuids, userId);
-
+        emitSharedElementsUpdated(sharedAncestorUuids, userId);
     }
 
     @Transactional

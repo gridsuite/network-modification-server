@@ -1041,6 +1041,77 @@ class CompositeControllerTest {
     }
 
     @Test
+    void testNotificationWhenModificationMovedThroughReference() throws Exception {
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
+        UUID leafUuid = modificationList.getFirst().getUuid();
+        UUID sharedCompositeUuid = mapper.readValue(mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
+                        .content(mapper.writeValueAsString(modificationList.stream().map(ModificationInfos::getUuid).toList()))
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Create a modification reference to the composite, making it shared
+        ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
+            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referencedId(sharedCompositeUuid)
+            .stashed(false)
+            .build();
+        UUID referenceUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(modificationReferenceInfo)))
+            .getFirst().getUuid();
+
+        // Reordering inside the shared composite, designated by the reference, must notify directory-server
+        mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
+                        .queryParam("build", "false")
+                        .content(getJsonBodyMove(List.of(leafUuid), referenceUuid, referenceUuid, null))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", TEST_USER_ID))
+                .andExpect(status().isOk());
+        verify(notificationService).emitElementUpdated(sharedCompositeUuid, TEST_USER_ID);
+
+        // Moving a leaf out of the shared composite, designated by the reference, must notify directory-server
+        mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
+                        .queryParam("build", "false")
+                        .content(getJsonBodyMove(List.of(leafUuid), referenceUuid, null, null))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("userId", TEST_USER_ID))
+                .andExpect(status().isOk());
+        assertNull(modificationRepository.findCompositeContainerIdByModificationId(leafUuid));
+        verify(notificationService, times(2)).emitElementUpdated(sharedCompositeUuid, TEST_USER_ID);
+    }
+
+    @Test
+    void testNotificationWhenModificationStashedFromSharedComposite() throws Exception {
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
+        UUID leafUuid = modificationList.getFirst().getUuid();
+        UUID sharedCompositeUuid = mapper.readValue(mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
+                        .content(mapper.writeValueAsString(modificationList.stream().map(ModificationInfos::getUuid).toList()))
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Create a modification reference to the composite, making it shared
+        ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
+            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referencedId(sharedCompositeUuid)
+            .stashed(false)
+            .build();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(modificationReferenceInfo)));
+
+        // Stashing a leaf moves it out of the shared composite : directory-server must be notified
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", leafUuid.toString())
+                        .queryParam("stashed", "true")
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        assertNull(modificationRepository.findCompositeContainerIdByModificationId(leafUuid));
+        verify(notificationService).emitElementUpdated(sharedCompositeUuid, TEST_USER_ID);
+    }
+
+    @Test
     void testNotificationWhenSharedCompositeReplaced() throws Exception {
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
         UUID sharedCompositeUuid = mapper.readValue(mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")

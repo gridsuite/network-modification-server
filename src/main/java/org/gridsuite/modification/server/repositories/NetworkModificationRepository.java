@@ -932,7 +932,8 @@ public class NetworkModificationRepository {
 
     /**
      * @param ancestorsOnly if true, only the ancestors of the given modifications are candidates,
-     *                      otherwise the given modifications themselves (e.g. composites) are candidates too
+     *                      otherwise the given modifications themselves (e.g. composites) are candidates too,
+     *                      a modification reference standing for the shared modification it points to
      * @return distinct shared composite modification uuids among the candidates, closest first; empty if none is shared
      */
     @Transactional(readOnly = true)

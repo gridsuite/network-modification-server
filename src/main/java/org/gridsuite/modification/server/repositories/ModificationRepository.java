@@ -218,13 +218,15 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     /**
      * @param ancestorsOnly if true, only the ancestors of {@code modificationUuids} are candidates,
-     *                      otherwise {@code modificationUuids} themselves (e.g. composites) are candidates too
+     *                      otherwise {@code modificationUuids} themselves (e.g. composites) are candidates too,
+     *                      a modification reference standing for the shared modification it points to
      * @return distinct shared composite modification uuids among the candidates, closest first; empty if none is shared
      */
     @NativeQuery("""
         WITH RECURSIVE ancestors(id, level) AS (
-            SELECT CASE WHEN :ancestorsOnly THEN m.container_id ELSE m.id END, 0
+            SELECT CASE WHEN :ancestorsOnly THEN m.container_id ELSE COALESCE(ref.referenced_id, m.id) END, 0
               FROM modification m
+              LEFT JOIN modification_reference ref ON ref.id = m.id
              WHERE m.id IN (:modificationUuids)
             UNION ALL
             SELECT comp.container_id, a.level + 1
