@@ -440,8 +440,6 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
@@ -450,8 +448,6 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "false"))
                 .andExpect(status().isOk());
@@ -478,8 +474,6 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
@@ -1181,8 +1175,6 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
@@ -1198,8 +1190,6 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
-                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
                 ).andExpect(status().isOk());
         List<ModificationInfos> stashedCopiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, StashedFilter.STASHED);
         List<ModificationInfos> copiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, StashedFilter.ALL);
@@ -1223,8 +1213,6 @@ class ModificationControllerTest {
         String copyGroupUriString = "/v1/groups/" + TEST_GROUP_ID + "/duplicate?groupUuid=" + newGroupUuid + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(
                 post(copyGroupUriString)
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
-                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
                         .header(HEADER_USER_ID, "user1")
                 ).andExpect(status().isOk());
 
@@ -1256,8 +1244,6 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
-                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
                 ).andExpect(status().isOk());
         testNetworkModificationsCount(duplicatedGroupUuid, 1);
 
@@ -1267,8 +1253,6 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
-                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
         ).andExpect(status().isOk());
         assertFalse(networkModificationService.getModificationGroups().contains(targetOfUnexistingGroupUuid));
 
@@ -1746,8 +1730,6 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
@@ -1805,16 +1787,12 @@ class ModificationControllerTest {
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString)
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
         String uuidString2 = modificationsGroup2.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP2_ID.toString())
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString2)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());

@@ -233,6 +233,27 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findAllSharedCompositeAncestorsUuids(@Param("modificationUuid") UUID modificationUuid);
 
     /**
+     * @return uuid of the group holding {@code modificationUuid}, directly or through any number of composites;
+     * null if the modification doesn't belong to a group (e.g. it is inside a shared composite)
+     */
+    @NativeQuery("""
+        WITH RECURSIVE ancestors(id) AS (
+            SELECT m.container_id
+              FROM modification m
+             WHERE m.id = :modificationUuid
+            UNION ALL
+            SELECT comp.container_id
+              FROM ancestors a
+              JOIN modification_container c ON c.id = a.id AND c.type = 'COMPOSITE'
+              JOIN modification comp ON comp.id = a.id
+        )
+        SELECT CAST(a.id AS VARCHAR)
+          FROM ancestors a
+          JOIN modification_container c ON c.id = a.id AND c.type = 'GROUP'
+        """)
+    UUID findGroupIdByModificationId(@Param("modificationUuid") UUID modificationUuid);
+
+    /**
      * Returns the composite UUID followed by every descendant UUID (composites <em>and</em> leaves),
      * ordered depth-first by {@code modifications_order} at each level.
      */

@@ -7,8 +7,11 @@
 package org.gridsuite.modification.server.service;
 
 import lombok.NonNull;
+import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.ReferenceAction;
 import org.gridsuite.modification.server.dto.WorkflowType;
+import org.gridsuite.modification.server.utils.PostCompletion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +21,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -38,6 +42,9 @@ public class NotificationService {
     public static final String HEADER_ELEMENT_UUID = "elementUuid";
     public static final String HEADER_MODIFIED_BY = "modifiedBy";
     public static final String HEADER_MODIFICATION_DATE = "modificationDate";
+    public static final String HEADER_ACTION = "action";
+    public static final String HEADER_GROUP_UUID = "groupUuid";
+    public static final String HEADER_USER_ID = "userId";
 
     @Autowired
     private StreamBridge publisher;
@@ -86,5 +93,23 @@ public class NotificationService {
                 .setHeader(HEADER_MODIFICATION_DATE, Instant.now())
                 .build();
         sendMessage(message, "publishElementUpdate-out-0");
+    }
+
+    /**
+     * Tells the owner of the group (study-server) that some modification-references of the group were created, moved
+     * or deleted, so it can keep the references registered on the shared elements in directory-server up to date.
+     */
+    @PostCompletion
+    public void emitModificationReferencesChanged(@NonNull ReferenceAction action, @NonNull UUID groupUuid,
+                                                  @NonNull List<ModificationReferenceData> references, @NonNull String userId) {
+        if (references.isEmpty()) {
+            return;
+        }
+        Message<List<ModificationReferenceData>> message = MessageBuilder.withPayload(references)
+                .setHeader(HEADER_ACTION, action)
+                .setHeader(HEADER_GROUP_UUID, groupUuid)
+                .setHeader(HEADER_USER_ID, userId)
+                .build();
+        sendMessage(message, "publishCompositeReference-out-0");
     }
 }
