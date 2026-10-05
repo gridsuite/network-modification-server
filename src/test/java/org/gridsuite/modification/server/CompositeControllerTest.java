@@ -483,7 +483,7 @@ class CompositeControllerTest {
                                 List.of(new CompositeInfos(standaloneCompositeUuid, "composite name", false, "composite description in the study"))))
                         .contentType(MediaType.APPLICATION_JSON),
                 status().isOk());
-        ModificationInfos compositeInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).getLast();
+        ModificationInfos compositeInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true).getLast();
         assert compositeInfos instanceof CompositeModificationInfos;
         assertEquals("composite description in the study", compositeInfos.getDescription());
         UUID compositeInGroupUuid = compositeInfos.getUuid();
@@ -498,7 +498,7 @@ class CompositeControllerTest {
 
         // the composite modification is shared as it was, keeping its own uuid, and a reference to it took its place
         // in the group
-        List<ModificationInfos> newModificationList = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> newModificationList = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(modificationsNumber + 1, newModificationList.size());
 
         ModificationReferenceInfos reference = assertInstanceOf(ModificationReferenceInfos.class, newModificationList.getLast());
@@ -520,7 +520,7 @@ class CompositeControllerTest {
 
         verify(notificationService).emitElementUpdated(compositeInfos.getUuid(), TEST_USER_ID);
 
-        List<ModificationInfos> updatedModificationList = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> updatedModificationList = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         ModificationReferenceInfos updatedReference = assertInstanceOf(ModificationReferenceInfos.class, updatedModificationList.getLast());
         CompositeModificationInfos updatedCompositeModificationInfos = (CompositeModificationInfos) updatedReference.getReferencedInfos();
         assertEquals("new shared composite name", updatedCompositeModificationInfos.getName());
