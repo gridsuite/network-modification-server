@@ -653,13 +653,13 @@ public class NetworkModificationService {
 
     public void updateModificationNameAndDescription(@NonNull UUID modificationUuid, ModificationMetadata modificationMetadata, String userId) {
         UUID referencedModificationId = networkModificationRepository.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
+        // if modification is shared, emit notification about referenced modification
         if (referencedModificationId != null) {
             notificationService.emitElementUpdated(referencedModificationId, userId);
             return;
         }
-        if (networkModificationRepository.hasReferencedModification(modificationUuid)) {
-            notificationService.emitElementUpdated(modificationUuid, userId);
-        }
+        // emit notification about modification to update GridExplore
+        notificationService.emitElementUpdated(modificationUuid, userId);
     }
 
     @Transactional
