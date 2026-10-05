@@ -1023,7 +1023,7 @@ class BuildTest {
         UUID sourceUuid = modificationRepository.createNetworkCompositeModification(
                 sources.stream().map(ModificationInfos::getUuid).toList(), "source");
         // set on the source: the copy carries the applicabilities over, and is applied as it is returned
-        List<UUID> contentUuids = modificationRepository.getModifications(sourceUuid, true, false)
+        List<UUID> contentUuids = modificationRepository.getModifications(sourceUuid, true)
                 .stream().map(ModificationInfos::getUuid).toList();
         modificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(1)), TEST_ROOT_NETWORK_TAG, false);
         modificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(2)), TEST_ROOT_NETWORK_TAG, true);
@@ -1182,7 +1182,7 @@ class BuildTest {
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
-        assertEquals(actualSize, modificationRepository.getModifications(groupUuid, true, true).size());
+        assertEquals(actualSize, modificationRepository.getModifications(groupUuid, true).size());
     }
 
     @AfterEach

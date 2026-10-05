@@ -379,7 +379,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         String modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        TwoWindingsTransformerModificationInfos createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+        TwoWindingsTransformerModificationInfos createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -394,7 +394,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(1);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -406,7 +406,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(2);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(2);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -417,7 +417,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(3);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(3);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -428,7 +428,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(4);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(4);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -455,7 +455,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(5);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(5);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -465,7 +465,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(6);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(6);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -490,7 +490,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         String modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        TwoWindingsTransformerModificationInfos createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+        TwoWindingsTransformerModificationInfos createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -501,7 +501,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(1);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -512,7 +512,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(2);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(2);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -523,7 +523,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(3);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(3);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -534,7 +534,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(4);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(4);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -562,7 +562,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(5);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(5);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -574,7 +574,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(6);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(6);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -585,7 +585,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(7);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(7);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -595,7 +595,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
-        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(8);
+        createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(8);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
