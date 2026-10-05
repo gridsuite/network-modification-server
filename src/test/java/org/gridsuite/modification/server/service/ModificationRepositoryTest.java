@@ -2188,7 +2188,8 @@ class ModificationRepositoryTest {
         UUID deactivatedOnAnotherStudyTagUuid = modifications.get(2).getUuid();
         UUID withLeftoverEntryUuid = modifications.get(3).getUuid();
         UUID deactivatedCompositeUuid = insertComposite(TEST_GROUP_ID_3, false, "v1d5");
-        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid, deactivatedCompositeUuid), ROOT_NETWORK_TAG, false);
+        UUID deactivatedCompositeContentUuid = modificationUuidsInside(deactivatedCompositeUuid).getFirst();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid, deactivatedCompositeUuid, deactivatedCompositeContentUuid), ROOT_NETWORK_TAG, false);
         networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedOnAnotherStudyTagUuid), OTHER_ROOT_NETWORK_TAG, false);
         networkModificationRepository.updateRootNetworkApplicability(List.of(withLeftoverEntryUuid), RENAMED_ROOT_NETWORK_TAG, false);
 
