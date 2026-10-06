@@ -333,7 +333,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(value = "/network-modifications/name-and-description/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/network-modifications/{uuid}/name-and-description", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Update a modification name and description")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
     public ResponseEntity<Void> updateModificationNameAndDescription(

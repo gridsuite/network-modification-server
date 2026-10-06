@@ -511,7 +511,7 @@ class CompositeControllerTest {
 
         // update metadata of shared composite
         ModificationMetadata metadata = ModificationMetadata.builder().name("new shared composite name").description("new shared description").build();
-        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/name-and-description/" + reference.getUuid().toString())
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/" + reference.getUuid().toString() + "/name-and-description")
                         .header("userId", TEST_USER_ID)
                         .content(mapper.writeValueAsString(metadata))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -712,7 +712,7 @@ class CompositeControllerTest {
         // Update the composite modification name
         String newCompositeName = "new composite name";
         ModificationMetadata metadata = ModificationMetadata.builder().name(newCompositeName).build();
-        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/name-and-description/" + compositeModificationUuid)
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/" + compositeModificationUuid + "/name-and-description")
                         .header("userId", TEST_USER_ID)
                         .content(mapper.writeValueAsString(metadata))
                         .contentType(MediaType.APPLICATION_JSON))
