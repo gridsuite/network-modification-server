@@ -568,6 +568,10 @@ public class NetworkModificationRepository {
                 .build();
     }
 
+    private CompositeModificationInfos loadCompositeModificationMetadata(ModificationEntity compositeEntity) {
+        return loadCompositeModificationMetadata(compositeEntity, null);
+    }
+
     private CompositeModificationInfos loadCompositeModificationMetadata(ModificationEntity compositeEntity, Integer sublevelCount) {
         return CompositeModificationInfos.builder()
                 .activated(compositeEntity.getActivated())
@@ -774,7 +778,7 @@ public class NetworkModificationRepository {
             return loadModificationReference(referenceEntity);
         }
         // a plain modification, or a base projection that lost its subclass: only its metadata, depth unknown
-        return toModificationMetadataInfos(modificationEntity, null);
+        return toModificationMetadataInfos(modificationEntity);
     }
 
     private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Map<UUID, Integer> sublevelCounts,
@@ -783,6 +787,10 @@ public class NetworkModificationRepository {
         // the entity comes from a projection, which drops the applicability: it is set back from the batch read
         modificationInfos.setApplicabilityByRootNetworkTag(applicabilityOf(modificationEntity.getId(), applicabilities));
         return modificationInfos;
+    }
+
+    private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity) {
+        return toModificationMetadataInfos(modificationEntity, null);
     }
 
     private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Integer sublevelCount) {
@@ -1396,7 +1404,7 @@ public class NetworkModificationRepository {
         ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
             .referencedId(modificationUuid)
             .referenceType(ModificationReferenceInfos.Type.BASIC)
-            .referencedInfos(loadCompositeModificationMetadata(compositeEntity, null))
+            .referencedInfos(loadCompositeModificationMetadata(compositeEntity))
             .build();
         ModificationEntity referenceEntity = ModificationEntity.fromDTO(referenceInfos);
 
