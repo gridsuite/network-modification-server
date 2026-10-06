@@ -7,19 +7,17 @@
 package org.gridsuite.modification.server.modifications.byfilter.formula;
 
 import com.powsybl.iidm.network.IdentifiableType;
-import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.byfilter.equipmentfield.LoadField;
 import org.gridsuite.modification.dto.byfilter.formula.FormulaInfos;
-import org.gridsuite.modification.dto.byfilter.formula.Operator;
-import org.gridsuite.modification.dto.byfilter.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.modifications.data.assignment.Operator;
+import org.gridsuite.modification.modifications.data.assignment.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createSubstationImpacts;
@@ -43,18 +41,14 @@ class LoadByFormulaModificationTest extends AbstractByFormulaModificationTest {
         createLoad(getNetwork().getVoltageLevel("v4"), LOAD_ID_4, "load4", 400, 50, 150, null, 5, null);
     }
 
-    @Override
-    protected List<AbstractFilter> getTestFilters() {
-        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_1, 1.0),
-                new IdentifierListFilterEquipmentAttributes(LOAD_ID_2, 2.0)))
-            .build();
-        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
-            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_3, 2.0),
-                new IdentifierListFilterEquipmentAttributes(LOAD_ID_4, 5.0)))
-            .build();
+    private static final Map<UUID, Set<String>> FILTER_MAPPING = Map.of(
+            FILTER_ID_1, Set.of(LOAD_ID_1, LOAD_ID_2),
+            FILTER_ID_2, Set.of(LOAD_ID_3, LOAD_ID_4)
+    );
 
-        return List.of(filter1, filter2);
+    @Override
+    protected Map<UUID, Set<String>> getFilterMapping() {
+        return FILTER_MAPPING;
     }
 
     @Override

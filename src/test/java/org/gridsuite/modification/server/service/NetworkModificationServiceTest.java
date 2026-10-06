@@ -131,7 +131,7 @@ class NetworkModificationServiceTest {
     private static ModificationReferenceInfos referenceTo(UUID sharedCompositeUuid) {
         return ModificationReferenceInfos.builder()
                 .referencedId(sharedCompositeUuid)
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
                 .referencedInfos(CompositeModificationInfos.builder().uuid(sharedCompositeUuid).build())
                 .build();
     }

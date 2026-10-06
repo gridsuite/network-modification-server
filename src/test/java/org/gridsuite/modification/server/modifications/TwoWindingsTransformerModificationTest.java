@@ -911,6 +911,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
             .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
                 .enabled(new AttributeModification<>(true, OperationType.SET))
                 .regulating(new AttributeModification<>(true, OperationType.SET))
+                .regulationType(new AttributeModification<>(VoltageRegulationType.DISTANT, OperationType.SET))
                 .regulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET))
                 .regulationValue(new AttributeModification<>(10.0, OperationType.SET))
                 .lowTapPosition(new AttributeModification<>(0, OperationType.SET))
