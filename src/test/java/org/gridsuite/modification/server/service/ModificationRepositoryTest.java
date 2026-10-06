@@ -2277,7 +2277,7 @@ class ModificationRepositoryTest {
 
     /** The sublevel count each composite or reference of a container gets in the metadata listing, as the front end reads it */
     private Map<UUID, Integer> metadataSublevelCounts(UUID containerUuid) {
-        return networkModificationRepository.getModifications(containerUuid, true, false).stream()
+        return networkModificationRepository.getModifications(containerUuid, true).stream()
                 .filter(infos -> sublevelCountOf(infos) != null)
                 .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationRepositoryTest::sublevelCountOf));
     }
@@ -2358,10 +2358,10 @@ class ModificationRepositoryTest {
     @Test
     void testSublevelCountsCostOneQueryWhateverTheNumberOfComposites() {
         insertComposite(TEST_GROUP_ID_2, false, "v1d1");
-        long selectsForOne = countSelects(() -> networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true));
+        long selectsForOne = countSelects(() -> networkModificationRepository.getModifications(TEST_GROUP_ID_2, true));
         insertComposite(TEST_GROUP_ID_2, false, "v1d2");
         insertComposite(TEST_GROUP_ID_2, false, "v1d3");
-        assertEquals(selectsForOne, countSelects(() -> networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true)));
+        assertEquals(selectsForOne, countSelects(() -> networkModificationRepository.getModifications(TEST_GROUP_ID_2, true)));
     }
 
     private static long countSelects(Runnable runnable) {
