@@ -72,7 +72,6 @@ import java.util.stream.Stream;
 
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.ModificationType.LINE_MODIFICATION;
-import static org.gridsuite.modification.dto.ModificationReferenceInfos.Type.BASIC;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.BUSBAR_SECTION_NOT_FOUND;
@@ -938,7 +937,7 @@ class ModificationControllerTest {
         ModificationInfos loadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
         loadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(loadModificationInfo))).getFirst();
         ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
-            .referenceType(BASIC)
+            .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
             .referencedId(loadModificationInfo.getUuid())
             .referencedInfos(loadModificationInfo)
             .stashed(false)
@@ -2235,7 +2234,7 @@ class ModificationControllerTest {
 
         // Create an active reference to this modification
         ModificationInfos activeReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(BASIC)
+                .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
@@ -2244,7 +2243,7 @@ class ModificationControllerTest {
 
         // Create a stashed reference: it must also be ignored by getReferences
         ModificationInfos stashedReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(BASIC)
+                .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(true)
@@ -2282,7 +2281,7 @@ class ModificationControllerTest {
         referencedLoadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(referencedLoadModificationInfo))).getFirst();
 
         ModificationInfos firstReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(BASIC)
+                .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
@@ -2290,7 +2289,7 @@ class ModificationControllerTest {
         firstReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(firstReferenceInfo))).getFirst();
 
         ModificationInfos secondReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(BASIC)
+                .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
@@ -2326,7 +2325,7 @@ class ModificationControllerTest {
 
         // Create an active reference in the tested group: it must be returned
         ModificationInfos activeReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(BASIC)
+                .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
@@ -2335,7 +2334,7 @@ class ModificationControllerTest {
 
         // Create a stashed reference in the tested group: it must also be returned, as its own entry
         ModificationInfos stashedReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(BASIC)
+                .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(true)
@@ -2350,7 +2349,7 @@ class ModificationControllerTest {
         ).getFirst();
 
         ModificationInfos otherGroupReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(BASIC)
+                .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
                 .referencedId(otherGroupReferencedLoadModificationInfo.getUuid())
                 .referencedInfos(otherGroupReferencedLoadModificationInfo)
                 .stashed(false)
@@ -2493,7 +2492,7 @@ class ModificationControllerTest {
         referencedLoadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(referencedLoadModificationInfo))).getFirst();
 
         ModificationInfos referenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(BASIC)
+                .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
