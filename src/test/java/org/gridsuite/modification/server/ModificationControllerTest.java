@@ -512,7 +512,7 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                 .queryParam("groupUuid", TEST_GROUP_ID.toString())
                 .queryParam("uuids", uuidString)
-                .queryParam("userId", "userId")
+                .queryParam(HEADER_USER_ID, "userId")
                 .content(mapper.writeValueAsString(metadata))
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk());
@@ -612,7 +612,7 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString)
-                        .queryParam("userId", "userId")
+                        .queryParam(HEADER_USER_ID, "userId")
                         .content(mapper.writeValueAsString(metadata))
                         .contentType(MediaType.APPLICATION_JSON)
                 ).andExpect(status().isOk());
