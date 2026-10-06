@@ -613,6 +613,7 @@ public class NetworkModificationRepository {
             .messageType(referencedEntity.getMessageType())
             .messageValues(referencedEntity.getMessageValues())
             .referencedId(referencedEntity.getId())
+            .sublevelCount(sublevelCount)
             .build();
     }
 
