@@ -5,14 +5,20 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server.repositories;
+
 import com.google.common.collect.Lists;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.SetUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.context.ModificationContext;
-import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.dto.tabular.*;
+import org.gridsuite.modification.dto.CompositeModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.dto.tabular.LimitSetsTabularModificationInfos;
+import org.gridsuite.modification.dto.tabular.TabularBaseInfos;
+import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
+import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
@@ -575,11 +581,6 @@ public class NetworkModificationRepository {
         ModificationReferenceInfos modificationReferenceInfos = referenceEntity.toModificationInfos();
         modificationReferenceInfos.setReferencedInfos(refInfos);
         return modificationReferenceInfos;
-    }
-
-    public boolean hasReferencedModification(UUID modificationId) {
-        Integer referencedTimes = modificationRepository.countTimesElementIsReferenced(modificationId);
-        return referencedTimes > 0;
     }
 
     private ModificationReferenceInfos loadModificationReferenceMetadata(ModificationEntity modificationEntity) {
