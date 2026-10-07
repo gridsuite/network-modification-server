@@ -29,8 +29,7 @@ import static org.gridsuite.modification.server.NetworkModificationController.HE
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.HttpMethod.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withForbiddenRequest;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
 class DirectoryServiceTest {
     private static final String DIRECTORY_SERVER_BASE_URI = "http://directory-server-test";
