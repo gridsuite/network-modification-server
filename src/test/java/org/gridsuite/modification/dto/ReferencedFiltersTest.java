@@ -32,7 +32,7 @@ class ReferencedFiltersTest {
     void testReferencedFilters() {
         FilterInfos deletionFilter = filter();
         assertEquals(List.of(deletionFilter),
-                ByFilterDeletionInfos.builder().filters(List.of(deletionFilter)).build().referencedFilters().toList());
+                ByFilterDeletionInfos.builder().filters(List.of(deletionFilter)).build().collectFilters().toList());
 
         FilterInfos scalingFilter1 = filter();
         FilterInfos scalingFilter2 = filter();
@@ -40,7 +40,7 @@ class ReferencedFiltersTest {
                 GeneratorScalingInfos.builder().variations(List.of(
                         ScalingVariationInfos.builder().filters(List.of(scalingFilter1)).build(),
                         ScalingVariationInfos.builder().filters(List.of(scalingFilter2)).build())).build()
-                    .referencedFilters().toList());
+                    .collectFilters().toList());
 
         GeneratorsFilterInfos withoutOutage = generatorsFilter();
         GeneratorsFilterInfos withFixedSupply = generatorsFilter();
@@ -51,28 +51,28 @@ class ReferencedFiltersTest {
                     .generatorsWithFixedSupply(List.of(withFixedSupply))
                     .generatorsFrequencyReserve(List.of(GeneratorsFrequencyReserveInfos.builder().generatorsFilters(List.of(frequencyReserve)).build()))
                     .build()
-                    .referencedFilters().toList());
+                    .collectFilters().toList());
 
         FilterInfos formulaFilter = filter();
         assertEquals(List.of(formulaFilter),
                 ByFormulaModificationInfos.builder().formulaInfosList(List.of(FormulaInfos.builder().filters(List.of(formulaFilter)).build())).build()
-                    .referencedFilters().toList());
+                    .collectFilters().toList());
 
         FilterInfos assignmentFilter = filter();
         assertEquals(List.of(assignmentFilter),
                 ModificationByAssignmentInfos.builder().assignmentInfosList(List.of(DoubleAssignmentInfos.builder().filters(List.of(assignmentFilter)).build())).build()
-                    .referencedFilters().toList());
+                    .collectFilters().toList());
     }
 
     @Test
     void testNoReferencedFilters() {
-        assertEquals(0, new ModificationInfos().referencedFilters().count());
-        assertEquals(0, new ByFilterDeletionInfos().referencedFilters().count());
-        assertEquals(0, new GeneratorScalingInfos().referencedFilters().count());
-        assertEquals(0, GeneratorScalingInfos.builder().variations(List.of(new ScalingVariationInfos())).build().referencedFilters().count());
-        assertEquals(0, new GenerationDispatchInfos().referencedFilters().count());
-        assertEquals(0, new ByFormulaModificationInfos().referencedFilters().count());
-        assertEquals(0, new ModificationByAssignmentInfos().referencedFilters().count());
+        assertEquals(0, new ModificationInfos().collectFilters().count());
+        assertEquals(0, new ByFilterDeletionInfos().collectFilters().count());
+        assertEquals(0, new GeneratorScalingInfos().collectFilters().count());
+        assertEquals(0, GeneratorScalingInfos.builder().variations(List.of(new ScalingVariationInfos())).build().collectFilters().count());
+        assertEquals(0, new GenerationDispatchInfos().collectFilters().count());
+        assertEquals(0, new ByFormulaModificationInfos().collectFilters().count());
+        assertEquals(0, new ModificationByAssignmentInfos().collectFilters().count());
     }
 
     @Test

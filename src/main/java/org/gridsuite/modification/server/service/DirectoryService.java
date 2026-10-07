@@ -191,7 +191,7 @@ public class DirectoryService {
     }
 
     private static void collectFilters(ModificationInfos modification, List<FilterInfos> filters) {
-        modification.referencedFilters().forEach(filters::add);
+        modification.collectFilters().forEach(filters::add);
         contentOf(modification).forEach(content -> collectFilters(content, filters));
     }
 
