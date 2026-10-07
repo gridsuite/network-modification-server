@@ -1022,7 +1022,7 @@ class CompositeControllerTest {
 
         // Create a modification reference to the composite, making it shared
         ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
-            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
             .referencedId(sharedCompositeUuid)
             .stashed(false)
             .build();
@@ -1053,7 +1053,7 @@ class CompositeControllerTest {
 
         // Create a modification reference to the composite, making it shared
         ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
-            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
             .referencedId(sharedCompositeUuid)
             .stashed(false)
             .build();
@@ -1093,7 +1093,7 @@ class CompositeControllerTest {
 
         // Create a modification reference to the composite, making it shared
         ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
-            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
             .referencedId(sharedCompositeUuid)
             .stashed(false)
             .build();
@@ -1123,7 +1123,7 @@ class CompositeControllerTest {
 
         // Create a modification reference to the composite, making it shared
         ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
-            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
             .referencedId(sharedCompositeUuid)
             .stashed(false)
             .build();
