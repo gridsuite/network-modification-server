@@ -518,7 +518,7 @@ public class NetworkModificationService {
             boolean canApply,
             @NonNull String userId) {
         // Collect referenced ancestor composites before moving, since moved modifications may leave their referenced composite
-        Set<UUID> referencedAncestorUuids = new LinkedHashSet<>(networkModificationRepository.getAllReferencedModificationAncestorsUuids(
+        Set<UUID> referencedAncestorUuids = new HashSet<>(networkModificationRepository.getAllReferencedModificationAncestorsUuids(
                 moveInfos.stream().map(ModificationMoveInfos::modificationUuid).toList()));
         List<ModificationInfos> allMoved = new ArrayList<>();
         // one transaction per move, through the repository proxy
@@ -671,7 +671,7 @@ public class NetworkModificationService {
         networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
 
         // Notify directory-server if the replaced composite is itself referenced, then once per referenced ancestor composite (closest first)
-        if (networkModificationRepository.isReferenced(compositeUuid)) {
+        if (networkModificationRepository.isModificationReferenced(compositeUuid)) {
             notificationService.emitElementUpdated(compositeUuid, userId);
         }
     }

@@ -962,14 +962,14 @@ public class NetworkModificationRepository {
         if (modificationUuids.isEmpty()) {
             return List.of();
         }
-        return modificationRepository.findAlReferencedModificationAncestorsUuids(modificationUuids);
+        return modificationRepository.findAllReferencedModificationAncestorsUuids(modificationUuids);
     }
 
     /**
      * @return true if {@code modificationUuid} is referenced by at least one modification reference
      */
     @Transactional(readOnly = true)
-    public boolean isReferenced(@NonNull UUID modificationUuid) {
+    public boolean isModificationReferenced(@NonNull UUID modificationUuid) {
         return modificationRepository.isModificationReferenced(modificationUuid);
     }
 

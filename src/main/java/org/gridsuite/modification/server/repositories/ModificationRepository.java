@@ -217,7 +217,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findOnlyCompositeChildrenUuids(@Param("compositeUuids") Collection<UUID> compositeUuids);
 
     /**
-     * @return distinct shared ancestor composite modification uuids of {@code modificationUuids},
+     * @return distinct ancestor composite modifications uuids of {@code modificationUuids} which are referenced,
      * closest first; empty if none of the modifications is nested in a shared composite
      */
     @NativeQuery("""
@@ -237,7 +237,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
          GROUP BY a.id
          ORDER BY MIN(a.level)
         """)
-    List<UUID> findAlReferencedModificationAncestorsUuids(@Param("modificationUuids") Collection<UUID> modificationUuids);
+    List<UUID> findAllReferencedModificationAncestorsUuids(@Param("modificationUuids") Collection<UUID> modificationUuids);
 
     /**
      * Returns the composite UUID followed by every descendant UUID (composites <em>and</em> leaves),
