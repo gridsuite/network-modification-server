@@ -7,12 +7,17 @@
 package org.gridsuite.modification.server.dto;
 
 /**
- * The permissions the directory-server grants on an element.
+ * The permissions the directory-server grants on an element, from the weakest to the strongest: each one grants
+ * the previous ones.
  *
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
 public enum PermissionType {
     READ,
     WRITE,
-    MANAGE,
+    MANAGE;
+
+    public boolean grants(PermissionType permissionType) {
+        return compareTo(permissionType) >= 0;
+    }
 }
