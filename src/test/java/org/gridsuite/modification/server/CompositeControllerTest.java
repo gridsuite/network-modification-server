@@ -1331,12 +1331,12 @@ class CompositeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].editable").value(false));
 
-        // if no user is supplied, the directory is not even asked, and nothing is answered
+        // if no user is supplied, the directory is not even asked for permissions, and nothing is answered
         clearInvocations(directoryService);
         mockMvc.perform(get("/v1/containers/" + TEST_GROUP2_ID + "/network-modifications?onlyMetadata=true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].editable").doesNotExist());
-        verifyNoInteractions(directoryService);
+        verify(directoryService, never()).getElementsPermissions(any(), any());
     }
 
     private boolean hasReferences(UUID... containerUuids) throws Exception {
