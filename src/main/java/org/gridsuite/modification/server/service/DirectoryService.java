@@ -9,6 +9,8 @@ package org.gridsuite.modification.server.service;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import org.gridsuite.modification.dto.FilterInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.PermissionType;
 import org.gridsuite.modification.server.dto.ReferenceAttributes;
@@ -19,13 +21,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
+import static org.gridsuite.modification.server.utils.ModificationInfosUtils.contentOf;
 
 /**
  * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
@@ -166,5 +171,48 @@ public class DirectoryService {
                             : ReferenceAttributes.ReferenceType.STUDY_NODE);
             createElementReference(ref.referencedId(), referenceAttributes, userId);
         });
+    }
+
+    /**
+     * Sets on the filters the given modifications reference, nested ones included, their current name in the directory,
+     * read in a single call: the directory owns filter names, they are not stored. A filter the directory does not know
+     * anymore (deleted) gets a null name.
+     * <p>
+     * Remote call: never make it inside a transaction.
+     */
+    public void resolveFilterNames(@NonNull Collection<ModificationInfos> modifications) {
+        List<FilterInfos> filters = new ArrayList<>();
+        modifications.forEach(modification -> collectFilters(modification, filters));
+        if (filters.isEmpty()) {
+            return;
+        }
+        Map<UUID, String> names = getElementNames(filters.stream().map(FilterInfos::getId).collect(Collectors.toSet()));
+        filters.forEach(filter -> filter.setName(names.get(filter.getId())));
+    }
+
+    private static void collectFilters(ModificationInfos modification, List<FilterInfos> filters) {
+        modification.referencedFilters().forEach(filters::add);
+        contentOf(modification).forEach(content -> collectFilters(content, filters));
+    }
+
+    /**
+     * @param elementUuids uuids of the elements in the directory-server
+     * @return the name of each given element, an element unknown to the directory-server being left out
+     */
+    public Map<UUID, String> getElementNames(@NonNull Collection<UUID> elementUuids) {
+        if (elementUuids.isEmpty()) {
+            return Map.of();
+        }
+        var path = UriComponentsBuilder.fromPath(DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/names")
+                .queryParam("ids", elementUuids)
+                .queryParam("strictMode", false)
+                .buildAndExpand()
+                .toUriString();
+
+        Map<UUID, String> names = restClient.get()
+                .uri(getDirectoryServerBaseUri() + path)
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() { });
+        return names == null ? Map.of() : names;
     }
 }

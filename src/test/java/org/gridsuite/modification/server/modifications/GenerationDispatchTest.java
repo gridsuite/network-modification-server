@@ -693,12 +693,8 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
             .build();
 
         UUID modificationUuid = saveModification(modification);
-
-        UUID stubIdForGetFilters = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_2 + "," + FILTER_ID_3 + "," + FILTER_ID_NOT_FOUND + "," + FILTER_ID_4 + "," +
-                FILTER_ID_5 + "," + FILTER_ID_6)
-            .willReturn(WireMock.ok()
-                .withBody(mapper.writeValueAsString(getFilters123456()))
-                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        // filterNotFound has been deleted from the directory since the modification was saved
+        directoryFilterNames.remove(FILTER_ID_NOT_FOUND);
 
         MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/" + modificationUuid))
                 .andExpect(status().isOk()).andReturn();
@@ -714,8 +710,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertNull(receivedGenerationDispatch.getGeneratorsWithoutOutage().get(3).getName());
         assertNull(receivedGenerationDispatch.getGeneratorsWithFixedSupply().get(2).getName());
         assertNull(receivedGenerationDispatch.getGeneratorsFrequencyReserve().getFirst().getGeneratorsFilters().get(2).getName());
-
-        wireMockUtils.verifyGetRequest(stubIdForGetFilters, PATH, handleQueryParams(List.of(FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_NOT_FOUND, FILTER_ID_4, FILTER_ID_5, FILTER_ID_6)), false);
+        assertEquals("filter1", receivedGenerationDispatch.getGeneratorsWithoutOutage().getFirst().getName());
     }
 
     @Override

@@ -102,7 +102,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
 
     public static List<GeneratorsFilterEmbeddable> toEmbeddableGeneratorsFilters(List<GeneratorsFilterInfos> generators) {
         return generators == null ? null : generators.stream()
-            .map(generator -> new GeneratorsFilterEmbeddable(generator.getId(), generator.getName()))
+            .map(generator -> new GeneratorsFilterEmbeddable(generator.getId()))
             .collect(Collectors.toList());
     }
 
@@ -111,7 +111,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
         if (generators != null) {
             generatorsFrequencyReserveEntities = generators.stream().map(generator -> {
                 List<GeneratorsFilterEmbeddable> generatorsFilterEmbeddables = generator.getGeneratorsFilters().stream().map(filter ->
-                    new GeneratorsFilterEmbeddable(filter.getId(), filter.getName())).collect(Collectors.toList());
+                    new GeneratorsFilterEmbeddable(filter.getId())).collect(Collectors.toList());
                 return new GeneratorsFrequencyReserveEntity(generatorsFilterEmbeddables, generator.getFrequencyReserve());
             }).collect(Collectors.toList());
         }
@@ -121,7 +121,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
     private List<GeneratorsFilterInfos> toGeneratorsFilters(List<GeneratorsFilterEmbeddable> generatorsFilters) {
         return generatorsFilters != null ? generatorsFilters
                 .stream()
-                .map(generator -> new GeneratorsFilterInfos(generator.getId(), generator.getName()))
+                .map(GeneratorsFilterEmbeddable::toGeneratorsFilterInfos)
                 .collect(Collectors.toList()) : null;
     }
 
@@ -131,8 +131,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
             generatorsFrequencyReserveInfos = generatorsFrequencyReserve.stream()
                 .filter(Objects::nonNull)
                 .map(generator -> {
-                    List<GeneratorsFilterInfos> generatorsFilterInfos = generator.getGeneratorsFilters().stream().map(filter ->
-                        new GeneratorsFilterInfos(filter.getId(), filter.getName())).collect(Collectors.toList());
+                    List<GeneratorsFilterInfos> generatorsFilterInfos = generator.getGeneratorsFilters().stream().map(GeneratorsFilterEmbeddable::toGeneratorsFilterInfos).collect(Collectors.toList());
                     return new GeneratorsFrequencyReserveInfos(generatorsFilterInfos, generator.getFrequencyReserve());
                 }).collect(Collectors.toList());
         }
