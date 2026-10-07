@@ -967,17 +967,15 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @param ancestorsOnly if true, only the ancestors of the given modifications are candidates,
-     *                      otherwise the given modifications themselves (e.g. composites) are candidates too,
-     *                      a modification reference standing for the shared modification it points to
-     * @return distinct shared composite modification uuids among the candidates, closest first; empty if none is shared
+     * @return distinct shared ancestor composite modification uuids of the given modifications, closest first;
+     *         empty if none of them is nested in a shared composite
      */
     @Transactional(readOnly = true)
-    public List<UUID> getAllSharedCompositesUuids(@NonNull Collection<UUID> modificationUuids, boolean ancestorsOnly) {
+    public List<UUID> getAllSharedCompositeAncestorsUuids(@NonNull Collection<UUID> modificationUuids) {
         if (modificationUuids.isEmpty()) {
             return List.of();
         }
-        return modificationRepository.findAllSharedCompositesUuids(modificationUuids, ancestorsOnly);
+        return modificationRepository.findAllSharedCompositeAncestorsUuids(modificationUuids);
     }
 
     /**

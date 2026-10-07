@@ -140,7 +140,7 @@ public class CompositeController {
     public ResponseEntity<Void> replaceNetworkCompositeModification(@PathVariable("uuid") UUID compositeModificationUuid,
                                                                     @Parameter(description = "New composite name") @RequestParam(value = "name") String name,
                                                                     @RequestBody List<UUID> modificationUuids,
-                                                                    @RequestHeader(HEADER_USER_ID) String userId) {
+                                                                    @RequestHeader("userId") String userId) {
         networkModificationService.replaceCompositeModification(compositeModificationUuid, name, modificationUuids, userId);
         return ResponseEntity.ok().build();
     }
