@@ -507,7 +507,7 @@ class CompositeControllerTest {
         CompositeModificationInfos compositeModificationInfos = (CompositeModificationInfos) reference.getReferencedInfos();
         assertEquals("shared composite", compositeModificationInfos.getName());
         assertEquals("shared description", compositeModificationInfos.getDescription());
-        assertEquals(ModificationReferenceInfos.Type.BASIC, reference.getReferenceType());
+        assertEquals(ModificationReferenceInfos.Type.COMPOSITE, reference.getReferenceType());
 
         // update metadata of shared composite
         ModificationMetadata metadata = ModificationMetadata.builder().name("new shared composite name").description("new shared description").build();
