@@ -176,10 +176,8 @@ class GeneratorScalingTest extends AbstractScalingTest {
 
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0.01D);
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0.01D);
-        assertLogMessage("This mode is only available for equipment with valid distribution keys. " +
-                        "Distribution keys are considered valid if all selected filters are of type IdentifierFilter, " +
-                        "no filters are missing, and each equipment has a unique distribution key.",
-                "network.modification.distributionKeysIssue", reportService);
+        assertLogMessage("Ventilation mode could not be applied: at least one equipment is missing a distribution key",
+                "network.modification.distributionKeys.missingEquipmentKey", reportService);
 
         verifyFiltersWithDistributionKeysRequest(subNoDk, List.of(FILTER_NO_DK));
     }
