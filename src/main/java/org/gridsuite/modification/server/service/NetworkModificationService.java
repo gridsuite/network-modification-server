@@ -272,13 +272,17 @@ public class NetworkModificationService {
     @Transactional
     public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos, @NonNull String userId) {
         networkModificationRepository.updateModification(modificationUuid, modificationInfos);
-
-        emitSharedElementsUpdated(networkModificationRepository.getAllSharedCompositeAncestorsUuids(List.of(modificationUuid)), userId);
+        emitSharedAncestorsUpdated(List.of(modificationUuid), userId);
     }
 
     @Transactional
     public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
         networkModificationRepository.updateNetworkModificationMetadata(modificationUuids, metadata);
+        emitSharedAncestorsUpdated(modificationUuids, userId);
+    }
+
+    /** Notify directory-server once per shared ancestor composite of the given modifications */
+    private void emitSharedAncestorsUpdated(Collection<UUID> modificationUuids, String userId) {
         emitSharedElementsUpdated(networkModificationRepository.getAllSharedCompositeAncestorsUuids(modificationUuids), userId);
     }
 
@@ -619,8 +623,7 @@ public class NetworkModificationService {
         moveReferenceElementsToCompositeFrom(assembledModificationsUuids, newComposite.getUuid(), nodeUuid, userId);
 
         // Collect shared ancestor composites before assembling, since assembled modifications are moved out of their composite
-        List<UUID> sharedAncestorUuids = networkModificationRepository.getAllSharedCompositeAncestorsUuids(assembledModificationsUuids);
-        emitSharedElementsUpdated(sharedAncestorUuids, userId);
+        emitSharedAncestorsUpdated(assembledModificationsUuids, userId);
 
         return newComposite.getUuid();
     }
