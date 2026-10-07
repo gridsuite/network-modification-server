@@ -113,7 +113,7 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         assertSelectCount(8);
 
         SQLStatementCountValidator.reset();
-        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
+        mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications", getGroupId()))
             .andExpect(status().isOk());
         SQLStatementCountValidator.assertSelectCount(9);
     }
@@ -137,7 +137,7 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(compositeInfo)));
 
         SQLStatementCountValidator.reset();
-        List<ModificationInfos> modifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertRequestsCount(9, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
@@ -166,7 +166,7 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
             UUID sharedCompositeUuid = modificationRepository.save(ModificationEntity.fromDTO(CompositeModificationInfos.builder().name("shared" + i)
                 .modificationsInfos(List.of(GroovyScriptInfos.builder().script("shared script" + i).build())).build())).getId();
             modifications.add(ModificationEntity.fromDTO(ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC).referencedId(sharedCompositeUuid).stashed(false).build()));
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE).referencedId(sharedCompositeUuid).stashed(false).build()));
         }
         networkModificationRepository.saveModifications(groupUuid, modifications);
 
@@ -200,9 +200,9 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
             UUID innerSharedUuid = modificationRepository.save(ModificationEntity.fromDTO(CompositeModificationInfos.builder().name("inner shared" + i)
                 .modificationsInfos(List.of(GroovyScriptInfos.builder().script("inner script" + i).build())).build())).getId();
             UUID outerSharedUuid = modificationRepository.save(ModificationEntity.fromDTO(CompositeModificationInfos.builder().name("outer shared" + i)
-                .modificationsInfos(List.of(referenceTo(innerSharedUuid))).build())).getId();
+                .modificationsInfos(List.of(referenceTo(innerSharedUuid, ModificationReferenceInfos.Type.COMPOSITE))).build())).getId();
             modifications.add(ModificationEntity.fromDTO(CompositeModificationInfos.builder().name("composite" + i)
-                .modificationsInfos(List.of(referenceTo(outerSharedUuid))).stashed(false).build()));
+                .modificationsInfos(List.of(referenceTo(outerSharedUuid, ModificationReferenceInfos.Type.COMPOSITE))).stashed(false).build()));
             innerSharedUuids.add(innerSharedUuid);
         }
         networkModificationRepository.saveModifications(groupUuid, modifications);
@@ -219,8 +219,8 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         }
     }
 
-    private static ModificationReferenceInfos referenceTo(UUID sharedUuid) {
-        return ModificationReferenceInfos.builder().referenceType(ModificationReferenceInfos.Type.BASIC).referencedId(sharedUuid).stashed(false).build();
+    private static ModificationReferenceInfos referenceTo(UUID sharedUuid, ModificationReferenceInfos.Type type) {
+        return ModificationReferenceInfos.builder().referenceType(type).referencedId(sharedUuid).stashed(false).build();
     }
 
     private TabularModificationInfos createTabularModification() {
