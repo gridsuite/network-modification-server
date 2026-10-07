@@ -50,7 +50,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
         ModificationInfos referenceInfos = compositeEntity.toModificationInfos();
 
         return ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
                 .referencedId(compositeEntity.getId())
                 .referencedInfos(referenceInfos)
                 .stashed(false)
@@ -101,7 +101,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
         ModificationEntity compositeEntity = modificationRepository.save(ModificationEntity.fromDTO(compositeInfo));
 
         ModificationInfos referenceInfos = ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
                 .referencedId(compositeEntity.getId())
                 .referencedInfos(compositeEntity.toModificationInfos())
                 .stashed(false)
@@ -137,7 +137,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
         ModificationEntity loadEntity = modificationRepository.save(ModificationEntity.fromDTO(load));
 
         ModificationInfos referenceInfos = ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
                 .referencedId(loadEntity.getId())
                 .referencedInfos(loadEntity.toModificationInfos())
                 .stashed(false)
