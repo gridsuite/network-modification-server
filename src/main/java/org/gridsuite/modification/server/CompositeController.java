@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
@@ -26,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 
 /**
  * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
@@ -69,9 +70,11 @@ public class CompositeController {
     @Operation(summary = "Assemble some network modifications into a new composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})
     public ResponseEntity<UUID> assembleNetworkModificationsIntoNewComposite(
+            @RequestParam("nodeContainerUuid") UUID nodeContainerUuid,
+            @RequestHeader(HEADER_USER_ID) String userId,
             @RequestBody List<UUID> assembledModificationsUuids) {
         return ResponseEntity.ok().body(
-                networkModificationService.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids)
+                networkModificationService.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids, nodeContainerUuid, userId)
         );
     }
 
@@ -91,19 +94,6 @@ public class CompositeController {
             @Parameter(description = "Group the composite modification belongs to", required = true) @RequestParam("groupUuid") UUID groupUuid,
             @Parameter(description = "New name of the shared composite modification") @RequestParam(value = "name", required = false) String name) {
         return ResponseEntity.ok().body(networkModificationService.extractCompositeModificationToShare(groupUuid, compositeModificationUuid, name));
-    }
-
-    @GetMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get the list of all the network modifications inside a list of composite modifications")
-    @ApiResponse(responseCode = "200", description = "Map of modifications inside the composite modifications for each composite")
-    public ResponseEntity<Map<UUID,
-            List<ModificationInfos>>> getNetworkModificationsFromComposite(@Parameter(description = "Composite modifications uuids list") @RequestParam("uuids") List<UUID> compositeModificationUuids,
-                                                                                        @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false,
-                                                                                                defaultValue = "true") Boolean onlyMetadata) {
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(networkModificationService.getNetworkModificationsFromComposite(compositeModificationUuids, onlyMetadata)
-                );
     }
 
     @GetMapping(value = "/children-uuids", produces = MediaType.APPLICATION_JSON_VALUE)

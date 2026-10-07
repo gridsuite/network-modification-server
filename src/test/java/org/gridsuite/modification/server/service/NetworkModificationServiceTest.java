@@ -65,7 +65,7 @@ class NetworkModificationServiceTest {
         // sanity check: the modification is nested inside the composite before stashing
         assertEquals(compositeUuid, modificationRepository.findCompositeContainerIdByModificationId(childUuid));
 
-        networkModificationService.stashNetworkModifications(groupUuid, List.of(childUuid));
+        networkModificationService.stashNetworkModifications(groupUuid, List.of(childUuid), "userId");
 
         // the modification was moved out of the composite, into the group, before being stashed
         assertNull(modificationRepository.findCompositeContainerIdByModificationId(childUuid));
@@ -131,7 +131,7 @@ class NetworkModificationServiceTest {
     private static ModificationReferenceInfos referenceTo(UUID sharedCompositeUuid) {
         return ModificationReferenceInfos.builder()
                 .referencedId(sharedCompositeUuid)
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
                 .referencedInfos(CompositeModificationInfos.builder().uuid(sharedCompositeUuid).build())
                 .build();
     }

@@ -268,7 +268,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
     }
@@ -287,7 +287,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -301,7 +301,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(1);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -315,7 +315,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(2);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(2);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -329,7 +329,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(3);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(3);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -343,7 +343,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(4);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(4);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -357,7 +357,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(5);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(5);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -370,7 +370,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(6);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(6);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -389,7 +389,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                         .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true)
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false)
                         .get(7);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
@@ -432,7 +432,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -451,7 +451,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(1);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos1);
     }
@@ -539,7 +539,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
-        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
         assertEquals(1, createdModification.getConnectionPosition1().getValue());
         assertEquals(1, createdModification.getConnectionPosition2().getValue());
     }
@@ -558,7 +558,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
-        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
         assertEquals("line3", createdModification.getConnectionName1().getValue());
         assertEquals("line3", createdModification.getConnectionName2().getValue());
 
@@ -597,7 +597,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
-        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
         assertEquals("cnLine10", createdModification.getConnectionName1().getValue());
         assertEquals(2, createdModification.getConnectionPosition1().getValue());
         assertEquals(ConnectablePosition.Direction.TOP, createdModification.getConnectionDirection1().getValue());

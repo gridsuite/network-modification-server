@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
 
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -33,7 +34,7 @@ public final class ApiUtils {
     }
 
     public static List<ModificationInfos> getGroupModifications(MockMvc mockMvc, UUID groupUuid) throws Exception {
-        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", groupUuid))
+        MvcResult mvcResult = mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications", groupUuid))
             .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
         return getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
@@ -49,7 +50,10 @@ public final class ApiUtils {
     public static void postGroups(MockMvc mockMvc, UUID originGroupUuid, UUID targetGroupUuid) throws Exception {
         mockMvc.perform(
                 post("/v1/groups/{uuid}/duplicate", originGroupUuid)
+                    .header(HEADER_USER_ID, "userId")
                     .param("groupUuid", targetGroupUuid.toString())
+                    .param("nodeContainerUuid", UUID.randomUUID().toString())
+                    .param("studyRootContainerUuid", UUID.randomUUID().toString())
             )
             .andExpectAll(status().isOk());
     }
@@ -68,7 +72,7 @@ public final class ApiUtils {
             .andExpectAll(status().isOk())
             .andReturn();
         NetworkModificationsResult result = getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        return result.modificationResults().isEmpty() ? Optional.empty() : result.modificationResults().get(0);
+        return result.modificationResults().isEmpty() ? Optional.empty() : result.modificationResults().getFirst();
     }
 
     public static NetworkModificationsResult putGroupsWithCopy(MockMvc mockMvc, UUID targetGroupUuid, List<UUID> modificationUuids, UUID networkUuid) throws Exception {
@@ -107,6 +111,7 @@ public final class ApiUtils {
     public static void deleteStashedInGroup(MockMvc mockMvc, UUID groupUuid) throws Exception {
         String body = getObjectMapper().writeValueAsString(List.of(groupUuid.toString()));
         mockMvc.perform(delete("/v1/groups/stashed-modifications")
+                .header(HEADER_USER_ID, "userId")
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isOk());
@@ -140,8 +145,11 @@ public final class ApiUtils {
     public static void stashNetworkModifications(MockMvc mockMvc, List<UUID> uuids) throws Exception {
         mockMvc.perform(
                 put("/v1/network-modifications")
+                    .header(HEADER_USER_ID, "userId")
                     .param("uuids", uuids.stream().map(Objects::toString).toList().toArray(new String[0]))
                     .param("groupUuid", UUID.randomUUID().toString())
+                    .param("nodeContainerUuid", UUID.randomUUID().toString())
+                    .param("studyRootContainerUuid", UUID.randomUUID().toString())
                     .param("stashed", "true")
             )
             .andExpectAll(status().isOk());
