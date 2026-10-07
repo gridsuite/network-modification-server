@@ -104,7 +104,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      * @return true if at least one modification reference points to {@code referencedId}
      */
     @Query("SELECT COUNT(r) > 0 FROM ModificationReferenceEntity r WHERE r.referencedId = :referencedId")
-    boolean existsReferenceToModification(@Param("referencedId") UUID referencedId);
+    boolean isModificationReferenced(@Param("referencedId") UUID referencedId);
 
     /**
      * Copies the applicability of {@code fromTag} to {@code toTag}.
@@ -237,7 +237,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
          GROUP BY a.id
          ORDER BY MIN(a.level)
         """)
-    List<UUID> findAllSharedCompositeAncestorsUuids(@Param("modificationUuids") Collection<UUID> modificationUuids);
+    List<UUID> findAlReferencedModificationAncestorsUuids(@Param("modificationUuids") Collection<UUID> modificationUuids);
 
     /**
      * Returns the composite UUID followed by every descendant UUID (composites <em>and</em> leaves),

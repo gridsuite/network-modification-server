@@ -967,27 +967,27 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return distinct shared ancestor composite modification uuids of the given modifications, closest first;
-     *         empty if none of them is nested in a shared composite
+     * @return distinct referenced ancestor composite modification uuids of the given modifications, closest first;
+     *         empty if none of them is nested in a referenced composite
      */
     @Transactional(readOnly = true)
-    public List<UUID> getAllSharedCompositeAncestorsUuids(@NonNull Collection<UUID> modificationUuids) {
+    public List<UUID> getAllReferencedModificationAncestorsUuids(@NonNull Collection<UUID> modificationUuids) {
         if (modificationUuids.isEmpty()) {
             return List.of();
         }
-        return modificationRepository.findAllSharedCompositeAncestorsUuids(modificationUuids);
+        return modificationRepository.findAlReferencedModificationAncestorsUuids(modificationUuids);
     }
 
     /**
-     * @return true if {@code modificationUuid} is referenced by at least one modification reference (i.e. it is shared)
+     * @return true if {@code modificationUuid} is referenced by at least one modification reference
      */
     @Transactional(readOnly = true)
     public boolean isReferenced(@NonNull UUID modificationUuid) {
-        return modificationRepository.existsReferenceToModification(modificationUuid);
+        return modificationRepository.isModificationReferenced(modificationUuid);
     }
 
     /**
-     * @return ReferenceData : modification and elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
+     * @return ReferenceData : modification and elementUuid of the referenced modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
     // TODO use recursive CTE
@@ -1106,7 +1106,7 @@ public class NetworkModificationRepository {
 
     /**
      * Moves the applicability entries of {@code oldTag} to {@code newTag} for the modifications of the given groups.
-     * On a modification a group owns, the entry of the old tag is renamed; on a shared one, which other groups may
+     * On a modification a group owns, the entry of the old tag is renamed; on a referenced one, which other groups may
      * still use the old tag for, it is copied under the new tag.
      * Pre-existing applicabilities for the new tag are removed.
      */
@@ -1126,7 +1126,7 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return the shared modifications the given containers point to, directly or through other shared modifications
+     * @return the referenced modifications the given containers point to, directly or through other referenced modifications
      */
     @Transactional(readOnly = true)
     public Set<UUID> getReferencedModificationUuids(@NonNull List<UUID> containerUuids) {

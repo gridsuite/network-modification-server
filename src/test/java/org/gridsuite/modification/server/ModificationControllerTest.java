@@ -288,9 +288,9 @@ class ModificationControllerTest {
         UUID modificationUuid = UUID.randomUUID();
         ModificationInfos modificationInfos = LoadCreationInfos.builder().equipmentId("id").build();
         ModificationBusinessErrorCode businessErrorCode = assertThrows(NetworkModificationServerException.class,
-            () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos, "userId")).getBusinessErrorCode();
+            () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos, TEST_USER_ID)).getBusinessErrorCode();
         assertEquals(ModificationBusinessErrorCode.MODIFICATION_NOT_FOUND, businessErrorCode);
-        assertThrows(NullPointerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, null, "userId"));
+        assertThrows(NullPointerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, null, TEST_USER_ID));
     }
 
     @Test
@@ -889,7 +889,7 @@ class ModificationControllerTest {
         duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
         String copyUrl = copyUri(otherGroupId);
         bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
-        mvcResult = runRequestAsync(mockMvc, put(copyUrl).content(bodyJson).contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, "userId"), status().isOk());
+        mvcResult = runRequestAsync(mockMvc, put(copyUrl).content(bodyJson).contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, TEST_USER_ID), status().isOk());
         assertApplicationStatusOK(mvcResult);
 
         var newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, false);
@@ -1057,7 +1057,7 @@ class ModificationControllerTest {
         List<UUID> movingModificationUuidList = List.of(originSingleModification);
         String bodyJson = getJsonBodyMove(moves(movingModificationUuidList, null), NetworkCreation.VARIANT_ID);
         String url = moveUri(TEST_GROUP_ID) + "?originGroupUuid=" + TEST_GROUP2_ID + "&build=true";
-        MvcResult mvcResult = runRequestAsync(mockMvc, put(url).content(bodyJson).contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, "userId"), status().isOk());
+        MvcResult mvcResult = runRequestAsync(mockMvc, put(url).content(bodyJson).contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, TEST_USER_ID), status().isOk());
 
         // incremental build: deletion impacts expected, all related to the moved load deletion (dealing with "s1" substation)
         NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
