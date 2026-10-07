@@ -1185,8 +1185,8 @@ class ModificationControllerTest {
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
-        List<ModificationInfos> stashedModifications = modificationRepository.getModificationsMetadata(TEST_GROUP_ID, StashedFilter.STASHED);
-        List<ModificationInfos> modificationAfterStash = modificationRepository.getModificationsMetadata(TEST_GROUP_ID, StashedFilter.ALL)
+        List<ModificationInfos> stashedModifications = modificationRepository.getModifications(TEST_GROUP_ID, true, StashedFilter.STASHED);
+        List<ModificationInfos> modificationAfterStash = modificationRepository.getModifications(TEST_GROUP_ID, true, StashedFilter.ALL)
                 .stream().filter(modificationInfos -> !modificationInfos.getStashed()).toList();
         assertEquals(1, stashedModifications.size());
         assertEquals(4, modificationAfterStash.size());
@@ -1200,8 +1200,8 @@ class ModificationControllerTest {
                         .param("nodeContainerUuid", UUID.randomUUID().toString())
                         .param("studyRootContainerUuid", UUID.randomUUID().toString())
                 ).andExpect(status().isOk());
-        List<ModificationInfos> stashedCopiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, StashedFilter.STASHED);
-        List<ModificationInfos> copiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, StashedFilter.ALL);
+        List<ModificationInfos> stashedCopiedModifications = modificationRepository.getModifications(newGroupUuid, true, StashedFilter.STASHED);
+        List<ModificationInfos> copiedModifications = modificationRepository.getModifications(newGroupUuid, true, StashedFilter.ALL);
         assertEquals(0, stashedCopiedModifications.size());
         assertEquals(4, copiedModifications.size());
         testNetworkModificationsCount(newGroupUuid, 4);
@@ -2137,11 +2137,11 @@ class ModificationControllerTest {
     /** Ordered sub-modification UUIDs stored inside a composite (its copied children). */
     private List<UUID> fetchCompositeSubUuids(UUID compositeUuid) throws Exception {
         MvcResult result = mockMvc.perform(
-                        get("/v1/containers/network-modifications?uuids={id}", compositeUuid))
+                        get("/v1/containers/{containerUuid}/network-modifications?onlyMetadata=true", compositeUuid))
                 .andExpect(status().isOk()).andReturn();
-        Map<UUID, List<ModificationInfos>> map =
+        List<ModificationInfos> modifications =
                 mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
-        return map.get(compositeUuid).stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        return modifications.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
     }
 
     /** Builds [C(C1,C2), D, B, E(E1,E2,E3)] at the root of the group, in that order. */

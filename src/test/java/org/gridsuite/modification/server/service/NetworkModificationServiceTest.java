@@ -70,7 +70,7 @@ class NetworkModificationServiceTest {
         // the modification was moved out of the composite, into the group, before being stashed
         assertNull(modificationRepository.findCompositeContainerIdByModificationId(childUuid));
         assertEquals(1, networkModificationRepository.getModificationsCount(groupUuid, true));
-        assertTrue(networkModificationRepository.getModificationsMetadata(groupUuid, StashedFilter.STASHED).stream()
+        assertTrue(networkModificationRepository.getModifications(groupUuid, true, StashedFilter.STASHED).stream()
                 .anyMatch(modificationInfos -> modificationInfos.getUuid().equals(childUuid)));
         // the composite itself is left in place, now empty
         assertEquals(List.of(compositeUuid), modificationRepository.findAllChildrenUuids(compositeUuid));

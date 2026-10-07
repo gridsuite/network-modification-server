@@ -13,6 +13,7 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -23,18 +24,6 @@ import java.util.UUID;
  */
 @Repository
 public interface ModificationRepository extends JpaRepository<ModificationEntity, UUID> {
-
-    // select only the columns from the base class without any left join
-    //TODO This doesn't return a proper entity, it's actually just a DTO:
-    //See https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#projections.dtos
-    //TODO can we use the simpler interface based projections instead ? To avoid repeating the columns in @Query
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) "
-            + "FROM ModificationEntity m WHERE m.container.id = ?1 order by m.modificationsOrder")
-    List<ModificationEntity> findAllBaseByContainerId(UUID containerId);
-
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) "
-            + "FROM ModificationEntity m WHERE m.container.id = ?1 order by m.modificationsOrder desc")
-    List<ModificationEntity> findAllBaseByContainerIdReverse(UUID containerId);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.container.id = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
     List<ModificationEntity> findAllByContainerId(@Param("containerId") UUID containerId, @Param("stashed") Boolean stashed);
@@ -248,34 +237,59 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         """)
     List<UUID> findAllChildrenUuids(@Param("compositeUuid") UUID compositeUuid);
 
-    interface ContainerSublevel {
-        String getId();
+    /**
+     * The metadata of a modification, with its container: a group or a composite, or the reference pointing at it.
+     */
+    interface ChildModificationMetadata {
+        UUID getContainerId();
 
-        Integer getSublevelCount();
+        UUID getId();
+
+        String getType();
+
+        Instant getDate();
+
+        Boolean getStashed();
+
+        Boolean getActivated();
+
+        String getMessageType();
+
+        String getMessageValues();
+
+        String getDescription();
+
+        default ModificationEntity toModificationEntity() {
+            return new ModificationEntity(getId(), getType(), getDate(), getStashed(), getActivated(), getMessageType(), getMessageValues(), getDescription());
+        }
     }
 
     /**
-     * For each of {@code uuids}, the number of levels below it the way the modification tree unfolds it: the unstashed
-     * content of a composite, a reference standing for the composite it points to, at any level. 0 when nothing is below.
+     * @param containerId the group or the composite whose tree is read, the root of the result
+     * @param stashed the stashed state of the root modifications of the container to keep, all of them when null
+     * @return the ordered metadata of every child of the given container at any depth, each with its container: the children of
+     * a composite are its unstashed content, and a reference contains the shared modification it points to.
      */
     @NativeQuery("""
-            WITH RECURSIVE tree(root_id, node_id, depth) AS (
-                SELECT m.id, COALESCE(r.referenced_id, m.id), 0
-                  FROM modification m
-                  LEFT JOIN modification_reference r ON r.id = m.id
-                 WHERE m.id IN (:uuids)
-                UNION ALL
-                SELECT t.root_id, COALESCE(r.referenced_id, m.id), t.depth + 1
-                  FROM tree t
-                  JOIN modification m ON m.container_id = t.node_id
-                  LEFT JOIN modification_reference r ON r.id = m.id
-                 WHERE m.stashed = false
-            )
-            SELECT CAST(root_id AS VARCHAR) AS id, MAX(depth) AS sublevelCount
-              FROM tree
-             GROUP BY root_id
-            """)
-    List<ContainerSublevel> findSublevelCounts(@Param("uuids") Collection<UUID> uuids);
+        WITH RECURSIVE tree(container_id, id) AS (
+            SELECT m.container_id, m.id
+              FROM modification m
+             WHERE m.container_id = :containerId
+               AND (:stashed IS NULL OR m.stashed = :stashed)
+            UNION
+            SELECT t.id, m.id
+              FROM tree t
+              LEFT JOIN modification_reference r ON r.id = t.id
+              JOIN modification m ON (m.container_id = t.id AND m.stashed = false) OR m.id = r.referenced_id
+        )
+        SELECT CAST(t.container_id AS VARCHAR) AS containerId, CAST(t.id AS VARCHAR) AS id, m.type AS type, m.date AS date,
+               m.stashed AS stashed, m.activated AS activated, m.message_type AS messageType,
+               m.message_values AS messageValues, CAST(m.description AS VARCHAR) AS description
+          FROM tree t
+          JOIN modification m ON m.id = t.id
+         ORDER BY t.container_id, m.modifications_order
+        """)
+    List<ChildModificationMetadata> findAllChildrenMetadata(@Param("containerId") UUID containerId, @Param("stashed") Boolean stashed);
 
     @EntityGraph(attributePaths = {"content.modifications"}, type = EntityGraph.EntityGraphType.LOAD)
     List<CompositeModificationEntity> findAllCompositesWithModificationsByIdIn(List<UUID> compositeUuids);
