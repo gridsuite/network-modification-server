@@ -46,6 +46,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -71,6 +72,7 @@ public abstract class AbstractNetworkModificationTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.randomUUID();
     private static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
+    private static final String TEST_USER_ID = "userId";
     protected static final UUID TEST_GROUP_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
@@ -211,7 +213,7 @@ public abstract class AbstractNetworkModificationTest {
         String modificationToUpdateJson = mapper.writeValueAsString(modificationToUpdate);
 
         mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON)
-                        .header("userId", "userId"))
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         // TODO Need a test for substations impacted
@@ -252,7 +254,8 @@ public abstract class AbstractNetworkModificationTest {
         String body = TestUtils.getJsonBody(List.of(modificationUuid), AbstractNetworkModificationTest.TEST_NETWORK_ID, null);
         ResultActions mockMvcResultActions = mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
                         .content(body)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
