@@ -436,10 +436,11 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "List of modifications inside the composite modifications and list of missing composite modifications UUIDs")
     public ResponseEntity<NetworkModificationsWithMissingInfo> getNetworkModificationsFromCompositeWithMissingInfo(
             @Parameter(description = "Composite modifications uuids list") @RequestParam("uuids") List<UUID> compositeModificationUuids) {
+        NetworkModificationsWithMissingInfo modificationsWithMissingInfo = networkModificationService.getNetworkModificationsFromCompositeWithMissingInfo(compositeModificationUuids);
+        modificationFilterNameService.addFilterNamesForReports(modificationsWithMissingInfo.networkModifications());
         return ResponseEntity.ok()
             .contentType(MediaType.APPLICATION_JSON)
-            .body(networkModificationService.getNetworkModificationsFromCompositeWithMissingInfo(compositeModificationUuids)
-            );
+            .body(modificationsWithMissingInfo);
     }
 
     @GetMapping(value = "/network-modifications/busbar-sections-for-new-coupler", produces = MediaType.APPLICATION_JSON_VALUE)

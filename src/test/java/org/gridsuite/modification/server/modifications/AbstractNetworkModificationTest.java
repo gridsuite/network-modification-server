@@ -23,7 +23,6 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.DirectoryService;
-import org.gridsuite.modification.server.service.ModificationFilterNameService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.WireMockUtils;
@@ -99,9 +98,6 @@ public abstract class AbstractNetworkModificationTest {
 
     @MockitoSpyBean
     protected DirectoryService directoryService;
-
-    @Autowired
-    private ModificationFilterNameService modificationFilterNameService;
 
     /** Filter names as the directory knows them: filled with the filters the test sends, as the front picks them there */
     protected final Map<UUID, String> directoryFilterNames = new HashMap<>();
@@ -333,10 +329,10 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     /** Reads the modifications of the test group back as the front gets them: with the names of the filters they reference */
-    private List<ModificationInfos> getModificationsWithFilterNames() {
-        List<ModificationInfos> modifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
-        modificationFilterNameService.addFilterNames(modifications);
-        return modifications;
+    private List<ModificationInfos> getModificationsWithFilterNames() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications", TEST_GROUP_ID))
+                .andExpect(status().isOk()).andReturn();
+        return mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
     }
 
     /** What is sent to the server was picked in the directory: registers there the filters it references, with their names */

@@ -193,13 +193,13 @@ public class NetworkModificationService {
 
     public AbstractModification getStandaloneNetworkModification(UUID networkModificationUuid) {
         ModificationInfos modificationInfos = networkModificationRepository.getStandaloneModificationInfos(networkModificationUuid);
-        modificationFilterNameService.addFilterNames(modificationInfos);
+        modificationFilterNameService.addFilterNamesForReports(List.of(modificationInfos));
         return modificationInfos.toModification(modificationContextFactory.create());
     }
 
     public Map<UUID, AbstractModification> getStandaloneNetworkModifications(List<UUID> networkModificationUuids, boolean errorOnModificationNotFound) {
         List<ModificationInfos> modificationsInfos = networkModificationRepository.getStandaloneModificationsInfos(networkModificationUuids, errorOnModificationNotFound);
-        modificationFilterNameService.addFilterNames(modificationsInfos);
+        modificationFilterNameService.addFilterNamesForReports(modificationsInfos);
         ModificationContext modificationContext = modificationContextFactory.create();
         return modificationsInfos.stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, modificationInfos -> modificationInfos.toModification(modificationContext)));
@@ -781,10 +781,10 @@ public class NetworkModificationService {
         return boolQueryBuilder.build();
     }
 
+    @Transactional(readOnly = true)
     public NetworkModificationsWithMissingInfo getNetworkModificationsFromCompositeWithMissingInfo(List<UUID> compositeModificationUuids) {
         Set<UUID> foundUuids = modificationRepository.findExistingCompositeModificationIds(compositeModificationUuids);
         List<ModificationInfos> networkModifications = networkModificationRepository.getCompositeModificationsInfos(compositeModificationUuids);
-        modificationFilterNameService.addFilterNames(networkModifications);
         List<UUID> missingUuids = compositeModificationUuids.stream().filter(uuid -> !foundUuids.contains(uuid)).toList();
         return new NetworkModificationsWithMissingInfo(networkModifications, missingUuids);
     }
