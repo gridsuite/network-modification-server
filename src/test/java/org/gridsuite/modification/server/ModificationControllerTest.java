@@ -2148,7 +2148,7 @@ class ModificationControllerTest {
     }
 
     private String assembleModificationsIntoComposite(List<UUID> modificationsUuids) throws Exception {
-        MvcResult mvcResult =  mockMvc.perform(post("/v1/network-composite-modifications/")
+        MvcResult mvcResult = mockMvc.perform(post("/v1/network-composite-modifications/")
                         .content(mapper.writeValueAsString(modificationsUuids))
                         .header(HEADER_USER_ID, "user1")
                         .param("nodeContainerUuid", UUID.randomUUID().toString())
