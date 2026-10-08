@@ -15,6 +15,7 @@ import org.gridsuite.modification.context.ModificationContext;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.dto.SublevelCountHolderInfos;
 import org.gridsuite.modification.dto.tabular.LimitSetsTabularModificationInfos;
 import org.gridsuite.modification.dto.tabular.TabularBaseInfos;
 import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
@@ -43,6 +44,7 @@ import java.util.stream.Stream;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE;
+import static org.gridsuite.modification.server.utils.ModificationInfosUtils.contentOf;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -335,21 +337,53 @@ public class NetworkModificationRepository {
         List<ModificationEntity> base = stashedFilter == StashedFilter.STASHED
                 ? modificationRepository.findAllBaseByContainerIdReverse(containerUuid)
                 : modificationRepository.findAllBaseByContainerId(containerUuid);
-        // TODO : move depth handling in specific code for composite
-        Map<UUID, Integer> depths = batchCompositeDepths(base);
+        Map<UUID, Integer> sublevelCounts = batchSublevelCount(base);
         Map<UUID, Map<String, Boolean>> applicabilities = batchApplicabilities(base);
         return base.stream()
                 .filter(m -> stashedFilter.accepts(m.getStashed()))
-                .map(m -> toModificationMetadataInfos(m, depths, applicabilities))
+                .map(m -> toModificationMetadataInfos(m, sublevelCounts, applicabilities))
                 .toList();
     }
 
-    private Map<UUID, Integer> batchCompositeDepths(Collection<ModificationEntity> entities) {
-        List<UUID> compositeIds = entities.stream()
-                .filter(e -> ModificationType.COMPOSITE_MODIFICATION.name().equals(e.getType()))
+    /**
+     * Reads, in one query, the sublevel count of the composites and references among the given modifications, whose content
+     * is not loaded: see {@link ModificationRepository#findSublevelCounts}.
+     */
+    private Map<UUID, Integer> batchSublevelCount(Collection<ModificationEntity> entities) {
+        Set<String> sublevelCountHolderTypes = Set.of(
+                ModificationType.COMPOSITE_MODIFICATION.name(), ModificationType.MODIFICATION_REFERENCE.name());
+
+        List<UUID> uuids = entities.stream()
+                .filter(e -> sublevelCountHolderTypes.contains(e.getType()))
                 .map(ModificationEntity::getId)
                 .toList();
-        return getCompositesMaxDepthMap(compositeIds);
+        if (uuids.isEmpty()) {
+            return Map.of();
+        }
+        return modificationRepository.findSublevelCounts(uuids).stream()
+                .collect(Collectors.toMap(d -> UUID.fromString(d.getId()), ModificationRepository.ContainerSublevel::getSublevelCount));
+    }
+
+    /**
+     * The same definition as {@link ModificationRepository#findSublevelCounts}, read from a content already converted: each
+     * composite or reference in it carries its own sublevel count already, so the tree is not walked down again.
+     *
+     * @return how many levels the given content of a composite spans, its stashed modifications left out
+     */
+    private static int getSublevelCountIn(List<ModificationInfos> content) {
+        return content.stream()
+                .filter(modificationInfos -> !Boolean.TRUE.equals(modificationInfos.getStashed()))
+                // one level for the child itself, plus its own sublevel count (0 for a plain modification)
+                .mapToInt(modificationInfos -> 1 + sublevelCountOf(modificationInfos))
+                .max()
+                .orElse(0);
+    }
+
+    /**
+     * @return the sublevel count the modification carries, 0 for a modification holding nothing
+     */
+    private static int sublevelCountOf(ModificationInfos modificationInfos) {
+        return modificationInfos instanceof SublevelCountHolderInfos holder ? Objects.requireNonNullElse(holder.getSublevelCount(), 0) : 0;
     }
 
     /**
@@ -528,6 +562,9 @@ public class NetworkModificationRepository {
     }
 
     private CompositeModificationInfos loadCompositeModification(CompositeModificationEntity compositeEntity) {
+        List<ModificationInfos> content = compositeEntity.getModifications().stream()
+                .map(this::toModificationInfos)
+                .toList();
         return CompositeModificationInfos.builder()
                 .name(compositeEntity.getName())
                 .activated(compositeEntity.getActivated())
@@ -535,15 +572,16 @@ public class NetworkModificationRepository {
                 .date(compositeEntity.getDate())
                 .uuid(compositeEntity.getId())
                 .stashed(compositeEntity.getStashed())
-                .modificationsInfos(
-                        compositeEntity.getModifications()
-                                .stream()
-                                .map(this::toModificationInfos)
-                                .toList())
+                .modificationsInfos(content)
+                .sublevelCount(getSublevelCountIn(content))
                 .build();
     }
 
-    private CompositeModificationInfos loadCompositeModificationMetadata(ModificationEntity compositeEntity, Integer maxDepth) {
+    private CompositeModificationInfos loadCompositeModificationMetadata(ModificationEntity compositeEntity) {
+        return loadCompositeModificationMetadata(compositeEntity, null);
+    }
+
+    private CompositeModificationInfos loadCompositeModificationMetadata(ModificationEntity compositeEntity, Integer sublevelCount) {
         return CompositeModificationInfos.builder()
                 .activated(compositeEntity.getActivated())
                 .description(compositeEntity.getDescription())
@@ -552,7 +590,7 @@ public class NetworkModificationRepository {
                 .stashed(compositeEntity.getStashed())
                 .messageType(compositeEntity.getMessageType())
                 .messageValues(compositeEntity.getMessageValues())
-                .maxDepth(maxDepth)
+                .sublevelCount(sublevelCount)
                 .build();
     }
 
@@ -566,10 +604,12 @@ public class NetworkModificationRepository {
         }
         ModificationReferenceInfos modificationReferenceInfos = referenceEntity.toModificationInfos();
         modificationReferenceInfos.setReferencedInfos(refInfos);
+        // a reference stands for the composite it points to
+        modificationReferenceInfos.setSublevelCount(sublevelCountOf(refInfos));
         return modificationReferenceInfos;
     }
 
-    private ModificationReferenceInfos loadModificationReferenceMetadata(ModificationEntity modificationEntity) {
+    private ModificationReferenceInfos loadModificationReferenceMetadata(ModificationEntity modificationEntity, Integer sublevelCount) {
         ModificationEntity referencedEntity = modificationRepository.findReferencedModificationMetadataByReferenceId(modificationEntity.getId());
         if (referencedEntity == null) {
             throw getModificationNotFoundException(modificationEntity.getId() + " (referenced modification)");
@@ -583,6 +623,7 @@ public class NetworkModificationRepository {
             .messageType(referencedEntity.getMessageType())
             .messageValues(referencedEntity.getMessageValues())
             .referencedId(referencedEntity.getId())
+            .sublevelCount(sublevelCount)
             .build();
     }
 
@@ -688,20 +729,6 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return what a modification holds that carries an applicability of its own: the content of a composite, and the
-     * shared modification a reference points to. The content of a tabular is left out, applicabilities never reach it.
-     */
-    private static List<ModificationInfos> contentOf(ModificationInfos modificationInfos) {
-        if (modificationInfos instanceof CompositeModificationInfos composite) {
-            return composite.getModificationsInfos() == null ? List.of() : composite.getModificationsInfos();
-        }
-        if (modificationInfos instanceof ModificationReferenceInfos reference && reference.getReferencedInfos() != null) {
-            return List.of(reference.getReferencedInfos());
-        }
-        return List.of();
-    }
-
-    /**
      * Converts the given modification with {@link #toModificationsInfosWithApplicabilities(List)}.
      *
      * @return the infos of the given modification, with its applicabilities
@@ -747,23 +774,27 @@ public class NetworkModificationRepository {
             return loadModificationReference(referenceEntity);
         }
         // a plain modification, or a base projection that lost its subclass: only its metadata, depth unknown
-        return toModificationMetadataInfos(modificationEntity, Map.of());
+        return toModificationMetadataInfos(modificationEntity);
     }
 
-    private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Map<UUID, Integer> depths,
+    private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Map<UUID, Integer> sublevelCounts,
                                                           Map<UUID, Map<String, Boolean>> applicabilities) {
-        ModificationInfos modificationInfos = toModificationMetadataInfos(modificationEntity, depths);
+        ModificationInfos modificationInfos = toModificationMetadataInfos(modificationEntity, sublevelCounts.get(modificationEntity.getId()));
         // the entity comes from a projection, which drops the applicability: it is set back from the batch read
         modificationInfos.setApplicabilityByRootNetworkTag(applicabilityOf(modificationEntity.getId(), applicabilities));
         return modificationInfos;
     }
 
-    private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Map<UUID, Integer> depths) {
+    private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity) {
+        return toModificationMetadataInfos(modificationEntity, null);
+    }
+
+    private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Integer sublevelCount) {
         if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
-            return loadCompositeModificationMetadata(modificationEntity, depths.get(modificationEntity.getId()));
+            return loadCompositeModificationMetadata(modificationEntity, sublevelCount);
         }
         if (ModificationType.MODIFICATION_REFERENCE.name().equals(modificationEntity.getType())) {
-            return loadModificationReferenceMetadata(modificationEntity);
+            return loadModificationReferenceMetadata(modificationEntity, sublevelCount);
         }
         return modificationEntity.toModificationInfos();
     }
@@ -924,14 +955,6 @@ public class NetworkModificationRepository {
         return compositeUuids.stream().flatMap(uuid -> modificationRepository.findAllChildrenUuids(uuid).stream()).toList();
     }
 
-    public Map<UUID, Integer> getCompositesMaxDepthMap(@NonNull List<UUID> compositeUuids) {
-        if (compositeUuids.isEmpty()) {
-            return Map.of();
-        }
-        return modificationRepository.getCompositesMaxDepth(compositeUuids).stream()
-                .collect(Collectors.toMap(c -> UUID.fromString(c.getId()), ModificationRepository.CompositeDepth::getDepth));
-    }
-
     @Transactional(readOnly = true)
     public List<ModificationInfos> getCompositeModificationsInfos(@NonNull List<UUID> compositeUuids) {
         return toModificationsInfosWithApplicabilities(compositeUuids.stream()
@@ -940,16 +963,27 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return ancestor composite modification uuids, closest first; empty if the modification is a
-     *         direct child of a group (not nested in any composite)
+     * @return distinct referenced ancestor composite modification uuids of the given modifications, closest first;
+     *         empty if none of them is nested in a referenced composite
      */
     @Transactional(readOnly = true)
-    public List<UUID> getAllSharedCompositeAncestorsUuids(@NonNull UUID modificationUuid) {
-        return modificationRepository.findAllSharedCompositeAncestorsUuids(modificationUuid);
+    public List<UUID> getAllReferencedModificationAncestorsUuids(@NonNull Collection<UUID> modificationUuids) {
+        if (modificationUuids.isEmpty()) {
+            return List.of();
+        }
+        return modificationRepository.findAllReferencedModificationAncestorsUuids(modificationUuids);
     }
 
     /**
-     * @return ReferenceData : modification and elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
+     * @return true if {@code modificationUuid} is referenced by at least one modification reference
+     */
+    @Transactional(readOnly = true)
+    public boolean isModificationReferenced(@NonNull UUID modificationUuid) {
+        return modificationRepository.isModificationReferenced(modificationUuid);
+    }
+
+    /**
+     * @return ReferenceData : modification and elementUuid of the referenced modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
     public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> initialModificationUuids, boolean withChildren) {
@@ -1029,7 +1063,7 @@ public class NetworkModificationRepository {
                 modificationEntity.setDescription(metadata.getDescription());
             }
             if (metadata.getActivated() != null) {
-                updateActivated(modificationEntity, metadata.getActivated());
+                modificationEntity.setActivated(metadata.getActivated());
             }
             if (metadata instanceof CompositeModificationInfos compositeMetadata
                     && modificationEntity instanceof CompositeModificationEntity composite
@@ -1039,34 +1073,14 @@ public class NetworkModificationRepository {
         }
     }
 
-    // TODO remove when activation for a sub modification (composite) is implemented : no need optimized load
-    private void updateActivated(ModificationEntity entity, boolean activated) {
-        entity.setActivated(activated);
-        if (entity instanceof CompositeModificationEntity composite) {
-            composite.getModifications().forEach(sub -> updateActivated(sub, activated));
-        }
-    }
-
+    /**
+     * Sets the applicability of the given modifications, and of them only: a composite among them keeps the
+     * applicabilities of its content untouched, as a composite and what it holds each carry their own state.
+     */
     @Transactional
     public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable) {
-        setApplicabilityInDepth(getModificationEntitiesWithApplicabilities(modificationUuids), rootNetworkTag, applicable);
-    }
-
-    /**
-     * Sets the applicability of the given modifications and of everything the composites among them hold, one level
-     * of the tree at a time so that the references of a level are all resolved in a single query.
-     */
-    private void setApplicabilityInDepth(List<ModificationEntity> entities, String rootNetworkTag, boolean applicable) {
-        List<ModificationEntity> holders = getApplicabilityHolders(entities);
-        holders.forEach(holder -> holder.setApplicability(rootNetworkTag, applicable));
-        List<ModificationEntity> content = holders.stream()
-            .filter(CompositeModificationEntity.class::isInstance)
-            .map(CompositeModificationEntity.class::cast)
-            .flatMap(composite -> composite.getModifications().stream())
-            .toList();
-        if (!content.isEmpty()) {
-            setApplicabilityInDepth(content, rootNetworkTag, applicable);
-        }
+        getApplicabilityHolders(getModificationEntitiesWithApplicabilities(modificationUuids))
+            .forEach(holder -> holder.setApplicability(rootNetworkTag, applicable));
     }
 
     /**
@@ -1090,7 +1104,7 @@ public class NetworkModificationRepository {
 
     /**
      * Moves the applicability entries of {@code oldTag} to {@code newTag} for the modifications of the given groups.
-     * On a modification a group owns, the entry of the old tag is renamed; on a shared one, which other groups may
+     * On a modification a group owns, the entry of the old tag is renamed; on a referenced one, which other groups may
      * still use the old tag for, it is copied under the new tag.
      * Pre-existing applicabilities for the new tag are removed.
      */
@@ -1110,7 +1124,7 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return the shared modifications the given containers point to, directly or through other shared modifications
+     * @return the referenced modifications the given containers point to, directly or through other referenced modifications
      */
     @Transactional(readOnly = true)
     public Set<UUID> getReferencedModificationUuids(@NonNull List<UUID> containerUuids) {
@@ -1350,7 +1364,7 @@ public class NetworkModificationRepository {
                     // inserting a shared composite modification means that we create a new reference to it
                     ModificationReferenceInfos newModificationReference = ModificationReferenceInfos.builder()
                             .referencedId(compositeToBeInserted.id())
-                            .referenceType(ModificationReferenceInfos.Type.BASIC)
+                            .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
                             .referencedInfos(compositeModification)
                             .description(compositeToBeInserted.description())
                             .build();
@@ -1398,8 +1412,8 @@ public class NetworkModificationRepository {
 
         ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
             .referencedId(modificationUuid)
-            .referenceType(ModificationReferenceInfos.Type.BASIC)
-            .referencedInfos(loadCompositeModificationMetadata(compositeEntity, null))
+            .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
+            .referencedInfos(loadCompositeModificationMetadata(compositeEntity))
             .build();
         ModificationEntity referenceEntity = ModificationEntity.fromDTO(referenceInfos);
 

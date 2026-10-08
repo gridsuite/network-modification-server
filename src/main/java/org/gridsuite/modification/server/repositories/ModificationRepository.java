@@ -104,6 +104,12 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findReferencedModificationIds(@Param("ids") Collection<UUID> ids);
 
     /**
+     * @return true if at least one modification reference points to {@code referencedId}
+     */
+    @Query("SELECT COUNT(r) > 0 FROM ModificationReferenceEntity r WHERE r.referencedId = :referencedId")
+    boolean isModificationReferenced(@Param("referencedId") UUID referencedId);
+
+    /**
      * Copies the applicability of {@code fromTag} to {@code toTag}.
      */
     @Modifying
@@ -241,26 +247,27 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findOnlyCompositeChildrenUuids(@Param("compositeUuids") Collection<UUID> compositeUuids);
 
     /**
-     * @return ancestor composite modification uuids of {@code modificationUuid}, closest first;
-     * empty if the modification is a direct child of a group (not nested in any composite)
+     * @return distinct ancestor composite modifications uuids of {@code modificationUuids} which are referenced,
+     * closest first; empty if none of the modifications is nested in a shared composite
      */
     @NativeQuery("""
         WITH RECURSIVE ancestors(id, level) AS (
             SELECT m.container_id, 1
               FROM modification m
-             WHERE m.id = :modificationUuid
+             WHERE m.id IN (:modificationUuids)
             UNION ALL
             SELECT comp.container_id, a.level + 1
               FROM ancestors a
               JOIN modification_container c ON c.id = a.id AND c.type = 'COMPOSITE'
               JOIN modification comp ON comp.id = a.id
         )
-        SELECT DISTINCT on (a.id, a.level) CAST(a.id AS VARCHAR)
+        SELECT CAST(a.id AS VARCHAR)
           FROM ancestors a
-          JOIN modification_reference r ON r.referenced_id = a.id
-         ORDER BY a.level
+         WHERE EXISTS (SELECT 1 FROM modification_reference r WHERE r.referenced_id = a.id)
+         GROUP BY a.id
+         ORDER BY MIN(a.level)
         """)
-    List<UUID> findAllSharedCompositeAncestorsUuids(@Param("modificationUuid") UUID modificationUuid);
+    List<UUID> findAllReferencedModificationAncestorsUuids(@Param("modificationUuids") Collection<UUID> modificationUuids);
 
     /**
      * Returns the composite UUID followed by every descendant UUID (composites <em>and</em> leaves),
@@ -278,33 +285,34 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         """)
     List<UUID> findAllChildrenUuids(@Param("compositeUuid") UUID compositeUuid);
 
-    interface CompositeDepth {
+    interface ContainerSublevel {
         String getId();
 
-        Integer getDepth();
+        Integer getSublevelCount();
     }
 
     /**
-     * For each root composite in {@code compositeUuids}, returns the maximum depth of its
-     * (unstashed) descendant tree. Composites with no unstashed children do not appear in the result.
+     * For each of {@code uuids}, the number of levels below it the way the modification tree unfolds it: the unstashed
+     * content of a composite, a reference standing for the composite it points to, at any level. 0 when nothing is below.
      */
     @NativeQuery("""
-        WITH RECURSIVE hierarchy(root_id, id, level) AS (
-            SELECT m.container_id, m.id, 1
-              FROM modification m
-             WHERE m.container_id IN (:compositeUuids)
-               AND m.stashed = false
-            UNION ALL
-            SELECT h.root_id, m.id, h.level + 1
-              FROM modification m
-              JOIN hierarchy h ON m.container_id = h.id
-             WHERE m.stashed = false
-        )
-        SELECT CAST(root_id AS VARCHAR) AS id, MAX(level) AS depth
-          FROM hierarchy
-         GROUP BY root_id
-        """)
-    List<CompositeDepth> getCompositesMaxDepth(@Param("compositeUuids") List<UUID> compositeUuids);
+            WITH RECURSIVE tree(root_id, node_id, depth) AS (
+                SELECT m.id, COALESCE(r.referenced_id, m.id), 0
+                  FROM modification m
+                  LEFT JOIN modification_reference r ON r.id = m.id
+                 WHERE m.id IN (:uuids)
+                UNION ALL
+                SELECT t.root_id, COALESCE(r.referenced_id, m.id), t.depth + 1
+                  FROM tree t
+                  JOIN modification m ON m.container_id = t.node_id
+                  LEFT JOIN modification_reference r ON r.id = m.id
+                 WHERE m.stashed = false
+            )
+            SELECT CAST(root_id AS VARCHAR) AS id, MAX(depth) AS sublevelCount
+              FROM tree
+             GROUP BY root_id
+            """)
+    List<ContainerSublevel> findSublevelCounts(@Param("uuids") Collection<UUID> uuids);
 
     @EntityGraph(attributePaths = {"content.modifications"}, type = EntityGraph.EntityGraphType.LOAD)
     List<CompositeModificationEntity> findAllCompositesWithModificationsByIdIn(List<UUID> compositeUuids);
