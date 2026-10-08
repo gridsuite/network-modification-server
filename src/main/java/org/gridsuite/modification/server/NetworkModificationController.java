@@ -387,6 +387,17 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping(value = "/network-modifications/root-network-tag")
+    @Operation(summary = "Initializes the applicability of the modifications of the given groups for a new root network tag")
+    @ApiResponse(responseCode = "200", description = "The applicability for the new root network tag have been successfully initialized")
+    public ResponseEntity<Void> initRootNetworkTag(
+            @Parameter(description = "Modification groups UUIDs") @RequestParam("groupUuids") List<UUID> groupUuids,
+            @Parameter(description = "Root network tags already used by the study") @RequestParam(name = "existingTags", required = false) List<String> existingTags,
+            @Parameter(description = "New root network tag") @RequestParam("newTag") String newTag) {
+        networkModificationService.initRootNetworkTag(groupUuids, existingTags == null ? List.of() : existingTags, newTag);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping(value = "/network-modifications/root-network-tag")
     @Operation(summary = "Deletes root network tags from the applicabilities of the modifications of the given groups")
     @ApiResponse(responseCode = "200", description = "The root network tags have been successfully deleted")

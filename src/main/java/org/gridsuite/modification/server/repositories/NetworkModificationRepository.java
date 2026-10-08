@@ -1135,6 +1135,37 @@ public class NetworkModificationRepository {
         }
     }
 
+    @Transactional
+    public void initRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull List<String> existingTags, @NonNull String newTag) {
+        List<UUID> studyModificationUuids = getContainedModificationUuids(groupUuids);
+        if (studyModificationUuids.isEmpty()) {
+            return;
+        }
+        Set<UUID> sharedModificationUuids = getSharedModificationTrees(studyModificationUuids).allUuids();
+        modificationRepository.deleteRootNetworkApplicabilities(studyModificationUuids, List.of(newTag));
+
+        List<UUID> modificationUuidsToInit = new ArrayList<>(studyModificationUuids);
+        modificationUuidsToInit.addAll(sharedModificationUuids);
+        for (ModificationEntity modification : getModificationEntitiesWithApplicabilities(modificationUuidsToInit)) {
+            if (modification instanceof ModificationReferenceEntity) {
+                continue;
+            }
+            boolean hasMemorizedApplicability = false;
+            boolean isDeactivatedOnAnExistingRootNetwork = false;
+            for (ModificationRootNetworkApplicabilityEntity applicability : modification.getApplicabilities()) {
+                String rootNetworkTag = applicability.getRootNetworkTag();
+                if (rootNetworkTag.equals(newTag)) {
+                    hasMemorizedApplicability = true;
+                } else if (existingTags.contains(rootNetworkTag) && Boolean.FALSE.equals(applicability.getApplicable())) {
+                    isDeactivatedOnAnExistingRootNetwork = true;
+                }
+            }
+            if (!hasMemorizedApplicability && isDeactivatedOnAnExistingRootNetwork) {
+                modification.setApplicability(newTag, false);
+            }
+        }
+    }
+
     private List<UUID> getContainedModificationUuids(List<UUID> containerUuids) {
         return containerUuids.isEmpty() ? List.of() : modificationRepository.findAllDescendantModificationIdsByContainerIds(containerUuids);
     }
