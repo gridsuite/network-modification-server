@@ -163,12 +163,21 @@ public class NetworkModificationService {
             .map(ModificationInfos::getUuid)
             .collect(Collectors.toSet());
 
-        childrenUuids.addAll(networkModificationRepository.findAllChildrenUuids(
-            rootModifications.stream()
-                .filter(m -> ModificationType.COMPOSITE_MODIFICATION == m.getType())
-                .map(ModificationInfos::getUuid)
-                .toList())
-        );
+        // Fetches all the children of the composites in the container
+        List<UUID> compositeUuids = rootModifications.stream()
+                .filter(m -> ModificationType.COMPOSITE_MODIFICATION == m.getType() ||
+                        ModificationType.MODIFICATION_REFERENCE == m.getType())
+                .map(m -> {
+                    if (m.getType() == ModificationType.COMPOSITE_MODIFICATION) {
+                        return m.getUuid();
+                    } else {
+                        // adds the composites which are not directly in the container but referenced through a reference modification
+                        return ((ModificationReferenceInfos) m).getReferencedId();
+                    }
+                })
+                .distinct()
+                .toList();
+        childrenUuids.addAll(networkModificationRepository.findAllChildrenUuids(compositeUuids, true));
 
         if (!childrenUuids.containsAll(modificationUuids)) {
             throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
@@ -179,7 +188,7 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     public List<UUID> findAllChildrenUuids(List<UUID> compositeModificationUuids) {
-        return networkModificationRepository.findAllChildrenUuids(compositeModificationUuids);
+        return networkModificationRepository.findAllChildrenUuids(compositeModificationUuids, false);
     }
 
     private void checkGenerationDispatchFilters(GenerationDispatchInfos generationDispatchInfos) {

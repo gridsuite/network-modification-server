@@ -93,7 +93,7 @@ public class NetworkModificationController {
     }
 
     @GetMapping(value = "/containers/{containerUuid}/network-modifications/verify", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Check if all the modifications from a list belong to a container (group or composite)")
+    @Operation(summary = "Check if all the modifications from a list belong to a container (group or composite), including through modification references")
     @ApiResponse(responseCode = "200", description = "List of modifications")
     public ResponseEntity<List<ModificationInfos>> verifyNetworkModifications(@Parameter(description = "Container UUID") @PathVariable("containerUuid") UUID containerUuid,
                                                                               @Parameter(description = "Modifications UUID") @RequestParam(name = "uuids") Set<UUID> modificationUuids) {

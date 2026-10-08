@@ -941,9 +941,24 @@ public class NetworkModificationRepository {
         return toModificationsInfosWithApplicabilities(uuids.stream().map(entities::get).filter(Objects::nonNull).toList());
     }
 
-    @Transactional(readOnly = true)
-    public List<UUID> findAllChildrenUuids(@NonNull List<UUID> compositeUuids) {
-        return compositeUuids.stream().flatMap(uuid -> modificationRepository.findAllChildrenUuids(uuid).stream()).toList();
+    public List<UUID> findAllChildrenUuids(@NonNull List<UUID> compositeUuids, boolean includingReferencesChildren) {
+        List<UUID> children = compositeUuids.stream()
+                .flatMap(uuid -> modificationRepository.findAllChildrenUuids(uuid).stream())
+                .toList();
+
+        if (includingReferencesChildren) {
+            // get the reference modifications and extract the children of the composites they are pointing to
+            List<UUID> referencedModifications = modificationRepository.findReferencedModificationIds(children);
+            if (!referencedModifications.isEmpty()) {
+                // a reference modification may never contain another reference modification,
+                // therefore no need to recurse on them, but they still may contain composites so the recursive call is only for them
+                List<UUID> referencedChildrenUuids = findAllChildrenUuids(referencedModifications, false);
+                children = Stream.concat(children.stream(), referencedChildrenUuids.stream())
+                        .distinct()
+                        .toList();
+            }
+        }
+        return children;
     }
 
     @Transactional(readOnly = true)

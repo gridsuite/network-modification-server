@@ -141,7 +141,7 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         assertRequestsCount(9, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
-        List<UUID> uuids = networkModificationRepository.findAllChildrenUuids(List.of(modifications.get(0).getUuid()));
+        List<UUID> uuids = networkModificationRepository.findAllChildrenUuids(List.of(modifications.get(0).getUuid()), false);
         assertEquals(uuids.size(), uuids.stream().collect(Collectors.toSet()).size());
         assertEquals(8 + compositeInfos.size(), uuids.size());
     }
