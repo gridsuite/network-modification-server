@@ -36,12 +36,15 @@ public class VariationFilterEntity {
     @Column(name = "filterId")
     private UUID filterId;
 
-    @Column(name = "name")
-    private String name;
-
     public VariationFilterEntity(@NotNull FilterInfos filterInfos) {
         this.filterId = filterInfos.getId();
         this.id = null;
-        this.name = filterInfos.getName();
+    }
+
+    /**
+     * The filter name is not stored: the directory owns it and it is resolved on read.
+     */
+    public FilterInfos toFilterInfos() {
+        return FilterInfos.builder().id(filterId).build();
     }
 }

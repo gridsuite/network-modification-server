@@ -167,4 +167,25 @@ public class DirectoryService {
             createElementReference(ref.referencedId(), referenceAttributes, userId);
         });
     }
+
+    /**
+     * @param elementUuids uuids of the elements in the directory-server
+     * @return the name of each given element, an element unknown to the directory-server being left out
+     */
+    public Map<UUID, String> getElementNames(@NonNull Collection<UUID> elementUuids) {
+        if (elementUuids.isEmpty()) {
+            return Map.of();
+        }
+        var path = UriComponentsBuilder.fromPath(DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/names")
+                .queryParam("ids", elementUuids)
+                .queryParam("strictMode", false)
+                .buildAndExpand()
+                .toUriString();
+
+        Map<UUID, String> names = restClient.get()
+                .uri(getDirectoryServerBaseUri() + path)
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() { });
+        return names == null ? Map.of() : names;
+    }
 }

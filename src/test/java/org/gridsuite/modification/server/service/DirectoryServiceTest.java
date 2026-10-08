@@ -223,4 +223,36 @@ class DirectoryServiceTest {
                 .andExpect(method(GET))
                 .andExpect(header(HEADER_USER_ID, userId));
     }
+
+    @Test
+    void testGetElementNames() {
+        UUID existingElementUuid = UUID.randomUUID();
+        UUID deletedElementUuid = UUID.randomUUID();
+
+        String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/names"
+                + "?ids=" + existingElementUuid + "&ids=" + deletedElementUuid + "&strictMode=false";
+        directoryServer.expect(requestTo(expectedUrl))
+                .andExpect(method(GET))
+                .andRespond(withSuccess("{\"" + existingElementUuid + "\":\"filter name\"}", MediaType.APPLICATION_JSON));
+
+        // the directory-server leaves out the elements it does not know anymore
+        assertThat(directoryService.getElementNames(List.of(existingElementUuid, deletedElementUuid)))
+                .containsExactlyInAnyOrderEntriesOf(Map.of(existingElementUuid, "filter name"));
+    }
+
+    @Test
+    void testGetElementNamesAsksNothingWithoutElement() {
+        assertThat(directoryService.getElementNames(Set.of())).isEmpty();
+    }
+
+    @Test
+    void testGetElementNamesThrowsWhenTheDirectoryFails() {
+        UUID elementUuid = UUID.randomUUID();
+
+        directoryServer.expect(requestTo(DIRECTORY_SERVER_BASE_URI + "/v1/elements/names?ids=" + elementUuid + "&strictMode=false"))
+                .andExpect(method(GET))
+                .andRespond(withServerError());
+
+        assertThrows(RestClientException.class, () -> directoryService.getElementNames(List.of(elementUuid)));
+    }
 }

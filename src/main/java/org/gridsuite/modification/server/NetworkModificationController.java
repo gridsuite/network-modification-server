@@ -17,6 +17,7 @@ import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
+import org.gridsuite.modification.server.service.ModificationFilterNameService;
 import org.gridsuite.modification.server.service.ModificationPermissionService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.data.util.Pair;
@@ -42,12 +43,16 @@ public class NetworkModificationController {
 
     private final ModificationPermissionService modificationPermissionService;
 
+    private final ModificationFilterNameService modificationFilterNameService;
+
     public NetworkModificationController(NetworkModificationService networkModificationService,
                                          LineTypesCatalogService lineTypesCatalogService,
-                                         ModificationPermissionService modificationPermissionService) {
+                                         ModificationPermissionService modificationPermissionService,
+                                         ModificationFilterNameService modificationFilterNameService) {
         this.networkModificationService = networkModificationService;
         this.lineTypesCatalogService = lineTypesCatalogService;
         this.modificationPermissionService = modificationPermissionService;
+        this.modificationFilterNameService = modificationFilterNameService;
     }
 
     @GetMapping(value = "/containers/{containerUuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -61,6 +66,7 @@ public class NetworkModificationController {
                                                                            @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
         List<ModificationInfos> modifications = networkModificationService.getNetworkModifications(containerUuid, onlyMetadata,
             onlyStashed ? StashedFilter.STASHED : StashedFilter.ALL);
+        modificationFilterNameService.addFilterNames(modifications);
         if (userId != null) {
             modificationPermissionService.addPermissions(modifications, userId);
         }
@@ -78,9 +84,10 @@ public class NetworkModificationController {
                                                                                       @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
         Map<UUID, List<ModificationInfos>> modificationsByContainer = networkModificationService.getNetworkModifications(containerUuids, onlyMetadata,
             onlyStashed ? StashedFilter.STASHED : StashedFilter.ALL);
+        List<ModificationInfos> modifications = modificationsByContainer.values().stream().flatMap(List::stream).toList();
+        modificationFilterNameService.addFilterNames(modifications);
         if (userId != null) {
-            modificationPermissionService.addPermissions(
-                modificationsByContainer.values().stream().flatMap(List::stream).toList(), userId);
+            modificationPermissionService.addPermissions(modifications, userId);
         }
         return ResponseEntity.ok().body(modificationsByContainer);
     }
@@ -220,6 +227,7 @@ public class NetworkModificationController {
             @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid,
             @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
         ModificationInfos modification = networkModificationService.getNetworkModification(networkModificationUuid);
+        modificationFilterNameService.addFilterNames(modification);
         if (userId != null) {
             modificationPermissionService.addPermissions(modification, userId);
         }
@@ -428,10 +436,11 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "List of modifications inside the composite modifications and list of missing composite modifications UUIDs")
     public ResponseEntity<NetworkModificationsWithMissingInfo> getNetworkModificationsFromCompositeWithMissingInfo(
             @Parameter(description = "Composite modifications uuids list") @RequestParam("uuids") List<UUID> compositeModificationUuids) {
+        NetworkModificationsWithMissingInfo modificationsWithMissingInfo = networkModificationService.getNetworkModificationsFromCompositeWithMissingInfo(compositeModificationUuids);
+        modificationFilterNameService.addFilterNamesForReports(modificationsWithMissingInfo.networkModifications());
         return ResponseEntity.ok()
             .contentType(MediaType.APPLICATION_JSON)
-            .body(networkModificationService.getNetworkModificationsFromCompositeWithMissingInfo(compositeModificationUuids)
-            );
+            .body(modificationsWithMissingInfo);
     }
 
     @GetMapping(value = "/network-modifications/busbar-sections-for-new-coupler", produces = MediaType.APPLICATION_JSON_VALUE)
