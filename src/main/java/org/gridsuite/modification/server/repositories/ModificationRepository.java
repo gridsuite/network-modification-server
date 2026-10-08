@@ -156,8 +156,6 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     UUID findCompositeContainerIdByModificationId(@Param("uuid") UUID uuid);
 
     /**
-     * Same projection as {@link #findReferenceDataByContainerId(UUID)}, to maintain along with it.
-     *
      * @return the references among the given modifications, the others being ignored
      */
     @Query("""
@@ -168,21 +166,6 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
              WHERE r.id IN :uuids
             """)
     List<ModificationReferenceData> findReferenceDataByIdIn(@Param("uuids") Collection<UUID> uuids);
-
-    /**
-     * Same projection as {@link #findReferenceDataByIdIn(Collection)}, to maintain along with it.
-     *
-     * @return the references directly held by the container, a group or a composite
-     */
-    @Query("""
-            SELECT new org.gridsuite.modification.server.dto.ModificationReferenceData(r.id, r.referencedId,
-                       CASE WHEN TYPE(c) = CompositeContainerEntity THEN c.id ELSE NULL END)
-              FROM ModificationReferenceEntity r
-              LEFT JOIN r.container c
-             WHERE c.id = :containerId
-             ORDER BY r.modificationsOrder
-            """)
-    List<ModificationReferenceData> findReferenceDataByContainerId(@Param("containerId") UUID containerId);
 
     interface CompositeContainer {
         String getId();

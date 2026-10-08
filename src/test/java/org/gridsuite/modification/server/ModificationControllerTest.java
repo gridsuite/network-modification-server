@@ -38,6 +38,7 @@ import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.TestImpactUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.service.DirectoryService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.ModificationCreation;
@@ -71,10 +72,12 @@ import java.util.stream.Stream;
 
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.ModificationType.LINE_MODIFICATION;
+import static org.gridsuite.modification.dto.ModificationReferenceInfos.Type.BASIC;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.BUSBAR_SECTION_NOT_FOUND;
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
@@ -84,8 +87,7 @@ import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -134,6 +136,9 @@ class ModificationControllerTest {
 
     @MockitoBean
     private ReportService reportService;
+
+    @MockitoBean
+    private DirectoryService directoryService;
 
     @Autowired
     private NetworkModificationService networkModificationService;
@@ -433,14 +438,20 @@ class ModificationControllerTest {
 
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, StashedFilter.STASHED).size());
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "false"))
                 .andExpect(status().isOk());
@@ -465,7 +476,10 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
@@ -501,7 +515,6 @@ class ModificationControllerTest {
                 .queryParam("uuids", uuidString)
                 .content(mapper.writeValueAsString(metadata))
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("userId", "userId")
         ).andExpect(status().isOk());
         assertEquals(false, modificationRepository.getModifications(TEST_GROUP_ID, true).getFirst().getActivated());
     }
@@ -601,7 +614,6 @@ class ModificationControllerTest {
                         .queryParam("uuids", uuidString)
                         .content(mapper.writeValueAsString(metadata))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("userId", "userId")
                 ).andExpect(status().isOk());
 
         assertEquals("new description", modificationRepository.getModifications(TEST_GROUP_ID, true).getFirst().getDescription());
@@ -926,7 +938,7 @@ class ModificationControllerTest {
         ModificationInfos loadModificationInfo = ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED);
         loadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(loadModificationInfo))).getFirst();
         ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
-            .referenceType(ModificationReferenceInfos.Type.BASIC)
+            .referenceType(BASIC)
             .referencedId(loadModificationInfo.getUuid())
             .referencedInfos(loadModificationInfo)
             .stashed(false)
@@ -1167,7 +1179,10 @@ class ModificationControllerTest {
         String uuidString = modifications.getFirst().getUuid().toString();
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
@@ -1180,7 +1195,12 @@ class ModificationControllerTest {
         //test copy group with stashed modification
         UUID newGroupUuid = UUID.randomUUID();
         String uriStringGroups = "/v1/groups/" + TEST_GROUP_ID + "/duplicate?groupUuid=" + newGroupUuid + "&reportUuid=" + UUID.randomUUID();
-        mockMvc.perform(post(uriStringGroups)).andExpect(status().isOk());
+        mockMvc.perform(
+                post(uriStringGroups)
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
+                ).andExpect(status().isOk());
         List<ModificationInfos> stashedCopiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, StashedFilter.STASHED);
         List<ModificationInfos> copiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, StashedFilter.ALL);
         assertEquals(0, stashedCopiedModifications.size());
@@ -1201,8 +1221,12 @@ class ModificationControllerTest {
         // test copy group
         UUID newGroupUuid = UUID.randomUUID();
         String copyGroupUriString = "/v1/groups/" + TEST_GROUP_ID + "/duplicate?groupUuid=" + newGroupUuid + "&reportUuid=" + UUID.randomUUID();
-        mockMvc.perform(post(copyGroupUriString))
-                .andExpect(status().isOk());
+        mockMvc.perform(
+                post(copyGroupUriString)
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
+                        .header(HEADER_USER_ID, "user1")
+                ).andExpect(status().isOk());
 
         testNetworkModificationsCount(newGroupUuid, 1);
     }
@@ -1229,13 +1253,23 @@ class ModificationControllerTest {
 
         UUID duplicatedGroupUuid = UUID.randomUUID();
         String uriStringGroups = "/v1/groups/" + TEST_GROUP_ID + "/duplicate?groupUuid=" + duplicatedGroupUuid + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-        mockMvc.perform(post(uriStringGroups)).andExpect(status().isOk());
+        mockMvc.perform(
+                post(uriStringGroups)
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
+                ).andExpect(status().isOk());
         testNetworkModificationsCount(duplicatedGroupUuid, 1);
 
         // duplicating a group that does not exist does nothing, not even creating the target group
         UUID targetOfUnexistingGroupUuid = UUID.randomUUID();
         uriStringGroups = "/v1/groups/" + UUID.randomUUID() + "/duplicate?groupUuid=" + targetOfUnexistingGroupUuid + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-        mockMvc.perform(post(uriStringGroups).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        mockMvc.perform(
+                post(uriStringGroups)
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
+        ).andExpect(status().isOk());
         assertFalse(networkModificationService.getModificationGroups().contains(targetOfUnexistingGroupUuid));
 
         // copying from a container that does not exist fails, without creating the target group
@@ -1710,18 +1744,23 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, StashedFilter.STASHED).size());
         String body = objectMapper.writeValueAsString(List.of(TEST_GROUP_ID.toString()));
         mockMvc.perform(delete("/v1/groups/stashed-modifications")
+                .header(HEADER_USER_ID, "userId")
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, StashedFilter.STASHED).size());
         mockMvc.perform(delete("/v1/groups/stashed-modifications")
+                .header(HEADER_USER_ID, "userId")
                 .content(objectMapper.writeValueAsString(List.of(UUID.randomUUID().toString()).toArray(new String[0])))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -1763,13 +1802,19 @@ class ModificationControllerTest {
 
         // stash
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString)
+                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
         String uuidString2 = modificationsGroup2.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP2_ID.toString())
+                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString2)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
@@ -1781,7 +1826,8 @@ class ModificationControllerTest {
         String body = mapper.writeValueAsString(List.of(TEST_GROUP_ID, TEST_GROUP2_ID));
         mockMvc.perform(delete("/v1/groups/stashed-modifications")
                 .content(body)
-                        .contentType(MediaType.APPLICATION_JSON))
+                .header(HEADER_USER_ID, "userId")
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true).size());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP2_ID, true).size());
@@ -2189,7 +2235,7 @@ class ModificationControllerTest {
 
         // Create an active reference to this modification
         ModificationInfos activeReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceType(BASIC)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
@@ -2198,7 +2244,7 @@ class ModificationControllerTest {
 
         // Create a stashed reference: it must also be ignored by getReferences
         ModificationInfos stashedReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceType(BASIC)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(true)
@@ -2236,7 +2282,7 @@ class ModificationControllerTest {
         referencedLoadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(referencedLoadModificationInfo))).getFirst();
 
         ModificationInfos firstReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceType(BASIC)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
@@ -2244,7 +2290,7 @@ class ModificationControllerTest {
         firstReferenceInfo = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(firstReferenceInfo))).getFirst();
 
         ModificationInfos secondReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceType(BASIC)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
@@ -2280,7 +2326,7 @@ class ModificationControllerTest {
 
         // Create an active reference in the tested group: it must be returned
         ModificationInfos activeReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceType(BASIC)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)
@@ -2289,7 +2335,7 @@ class ModificationControllerTest {
 
         // Create a stashed reference in the tested group: it must also be returned, as its own entry
         ModificationInfos stashedReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceType(BASIC)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(true)
@@ -2304,7 +2350,7 @@ class ModificationControllerTest {
         ).getFirst();
 
         ModificationInfos otherGroupReferenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceType(BASIC)
                 .referencedId(otherGroupReferencedLoadModificationInfo.getUuid())
                 .referencedInfos(otherGroupReferencedLoadModificationInfo)
                 .stashed(false)
@@ -2447,7 +2493,7 @@ class ModificationControllerTest {
         referencedLoadModificationInfo = modificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(referencedLoadModificationInfo))).getFirst();
 
         ModificationInfos referenceInfo = ModificationReferenceInfos.builder()
-                .referenceType(ModificationReferenceInfos.Type.BASIC)
+                .referenceType(BASIC)
                 .referencedId(referencedLoadModificationInfo.getUuid())
                 .referencedInfos(referencedLoadModificationInfo)
                 .stashed(false)

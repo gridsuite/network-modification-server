@@ -2118,19 +2118,21 @@ class ModificationRepositoryTest {
         UUID firstReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
 
         SQLStatementCountValidator.reset();
-        List<ModificationReferenceData> references = networkModificationRepository.getModificationReferencesFromContainer(TEST_GROUP_ID_2);
-        // a single query, which reports the composite holding each reference along the way
-        assertRequestsCount(1, 0, 0, 0);
+        List<ModificationReferenceData> references = networkModificationRepository.getModificationsReferences(
+                modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(TEST_GROUP_ID_2)), false);
+        // the recursive query for the descendants, then a single one which reports the composite holding each reference along the way
+        assertRequestsCount(2, 0, 0, 0);
         assertEquals(List.of(firstReferenceUuid), references.stream().map(ModificationReferenceData::modificationUuid).toList());
 
         UUID secondReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d2");
         UUID thirdReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d3");
 
         SQLStatementCountValidator.reset();
-        references = networkModificationRepository.getModificationReferencesFromContainer(TEST_GROUP_ID_2);
-        assertRequestsCount(1, 0, 0, 0);
-        assertEquals(List.of(firstReferenceUuid, secondReferenceUuid, thirdReferenceUuid),
-                references.stream().map(ModificationReferenceData::modificationUuid).toList());
+        references = networkModificationRepository.getModificationsReferences(
+                modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(TEST_GROUP_ID_2)), false);
+        assertRequestsCount(2, 0, 0, 0);
+        assertEquals(Set.of(firstReferenceUuid, secondReferenceUuid, thirdReferenceUuid),
+                references.stream().map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet()));
     }
 
     @Test
@@ -2139,7 +2141,7 @@ class ModificationRepositoryTest {
         UUID ownedUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_2, List.of(switchModification("v1d4"))).getFirst().getUuid();
 
         SQLStatementCountValidator.reset();
-        List<ModificationReferenceData> references = networkModificationRepository.getModificationsReferences(List.of(referenceUuid, ownedUuid));
+        List<ModificationReferenceData> references = networkModificationRepository.getModificationsReferences(List.of(referenceUuid, ownedUuid), false);
         assertRequestsCount(1, 0, 0, 0);
         assertEquals(List.of(referenceUuid), references.stream().map(ModificationReferenceData::modificationUuid).toList(),
                 "a modification that is not a reference is ignored");
@@ -2152,7 +2154,7 @@ class ModificationRepositoryTest {
                 List.of(nestedReferenceUuid), null);
 
         SQLStatementCountValidator.reset();
-        references = networkModificationRepository.getModificationsReferences(List.of(referenceUuid, nestedReferenceUuid, ownedUuid));
+        references = networkModificationRepository.getModificationsReferences(List.of(referenceUuid, nestedReferenceUuid, ownedUuid), false);
         assertRequestsCount(1, 0, 0, 0);
         assertEquals(Map.of(referenceUuid, Optional.<UUID>empty(), nestedReferenceUuid, Optional.of(compositeUuid)),
                 references.stream().collect(Collectors.toMap(ModificationReferenceData::modificationUuid,
@@ -2160,7 +2162,7 @@ class ModificationRepositoryTest {
                 "only the nested reference reports a composite");
 
         SQLStatementCountValidator.reset();
-        assertEquals(List.of(), networkModificationRepository.getModificationsReferences(List.of(ownedUuid)));
+        assertEquals(List.of(), networkModificationRepository.getModificationsReferences(List.of(ownedUuid), false));
         assertRequestsCount(1, 0, 0, 0);
     }
 
