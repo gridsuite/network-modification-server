@@ -50,8 +50,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.gridsuite.modification.server.utils.ModificationInfosUtils.contentOf;
 import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
+import static org.gridsuite.modification.server.utils.ModificationInfosUtils.contentOf;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
