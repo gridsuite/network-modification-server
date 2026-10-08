@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.service;
 
-import org.gridsuite.modification.context.loaders.LoadFlowParametersLoader;
+import org.gridsuite.modification.context.LoadFlowParametersLoader;
 import org.gridsuite.modification.dto.LoadFlowParametersInfos;
 import org.springframework.stereotype.Service;
 

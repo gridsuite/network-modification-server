@@ -14,9 +14,9 @@ import org.gridsuite.modification.ReactiveVariationMode;
 import org.gridsuite.modification.VariationMode;
 import org.gridsuite.modification.VariationType;
 import org.gridsuite.modification.dto.FilterInfos;
+import org.gridsuite.modification.dto.LoadScalingInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.scaling.LoadScalingInfos;
-import org.gridsuite.modification.dto.scaling.ScalingVariationInfos;
+import org.gridsuite.modification.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.FilterWithDistributionKeysStub;
@@ -32,11 +32,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,9 +42,7 @@ import static org.gridsuite.modification.server.utils.TestUtils.assertLogNthMess
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>

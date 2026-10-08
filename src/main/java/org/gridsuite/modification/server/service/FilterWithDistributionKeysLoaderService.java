@@ -6,8 +6,8 @@
  */
 package org.gridsuite.modification.server.service;
 
+import org.gridsuite.modification.context.FilterWithDistributionKeysLoader;
 import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
-import org.gridsuite.modification.context.loaders.FilterWithDistributionKeysLoader;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

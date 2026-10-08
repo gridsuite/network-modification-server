@@ -13,7 +13,7 @@ import lombok.Setter;
 import org.gridsuite.modification.ReactiveVariationMode;
 import org.gridsuite.modification.VariationMode;
 import org.gridsuite.modification.dto.FilterInfos;
-import org.gridsuite.modification.dto.scaling.ScalingVariationInfos;
+import org.gridsuite.modification.dto.ScalingVariationInfos;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;

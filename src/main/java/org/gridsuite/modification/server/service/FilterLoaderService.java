@@ -7,7 +7,7 @@
 package org.gridsuite.modification.server.service;
 
 import org.gridsuite.filter.wip.Filter;
-import org.gridsuite.modification.context.loaders.FilterLoader;
+import org.gridsuite.modification.context.FilterLoader;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

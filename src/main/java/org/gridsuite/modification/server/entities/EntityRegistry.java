@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.entities;
 
 import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.dto.scaling.*;
 import org.gridsuite.modification.dto.tabular.*;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.*;

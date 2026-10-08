@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
-import org.gridsuite.modification.dto.scaling.LoadScalingInfos;
+import org.gridsuite.modification.dto.LoadScalingInfos;
 import java.util.stream.Collectors;
 
 /**
