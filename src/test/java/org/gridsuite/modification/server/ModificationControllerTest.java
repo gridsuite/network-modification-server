@@ -1968,7 +1968,7 @@ class ModificationControllerTest {
                 .andExpect(status().isOk());
 
         // the reference is inside a composite which is at the root level
-        String depthTwoCompositeUuid = assembleModificationsIntoComposite(List.of(refData.modificationUuid()));
+        assembleModificationsIntoComposite(List.of(refData.modificationUuid()));
         mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications/verify", TEST_GROUP_ID)
                         .param("uuids", leafUuid.toString()))
                 .andExpect(status().isOk());
