@@ -945,6 +945,7 @@ public class NetworkModificationRepository {
         List<UUID> children = compositeUuids.stream()
                 .flatMap(uuid -> modificationRepository.findAllChildrenUuids(uuid).stream())
                 .toList();
+
         if (includingReferencesChildren) {
             // get the reference modifications and extract the children of the composites they are pointing to
             List<UUID> referencedModifications = modificationRepository.findReferencedModificationIds(children);

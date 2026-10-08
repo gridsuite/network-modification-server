@@ -1949,6 +1949,18 @@ class ModificationControllerTest {
     }
 
     @Test
+    void testVerifyModificationsInsideComposite() throws Exception {
+        List<UUID> leafUuids = createSwitchModificationUuids(1);
+        UUID compositeUuid = createComposite(leafUuids);
+        insertCompositeIntoGroup(TEST_GROUP_ID, compositeUuid, "Test Composite");
+        UUID insertedCompositeUuid = groupRootUuids(TEST_GROUP_ID).getFirst();
+        UUID modificationInCompositeId = fetchCompositeSubUuids(insertedCompositeUuid).getFirst();
+        mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications/verify", TEST_GROUP_ID)
+                        .param("uuids", modificationInCompositeId.toString()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void testSearchModificationInfos() throws Exception {
         // Substation Modification ID : s1
         assertNotNull(network.getSubstation("s1"));

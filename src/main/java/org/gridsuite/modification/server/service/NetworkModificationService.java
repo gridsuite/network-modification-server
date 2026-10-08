@@ -163,7 +163,7 @@ public class NetworkModificationService {
             .map(ModificationInfos::getUuid)
             .collect(Collectors.toSet());
 
-        // Fetch all the children of the composites in the group
+        // Fetches all the children of the composites in the container
         List<UUID> compositeUuids = rootModifications.stream()
                 .filter(m -> ModificationType.COMPOSITE_MODIFICATION == m.getType() ||
                         ModificationType.MODIFICATION_REFERENCE == m.getType())
@@ -171,7 +171,7 @@ public class NetworkModificationService {
                     if (m.getType() == ModificationType.COMPOSITE_MODIFICATION) {
                         return m.getUuid();
                     } else {
-                        // adds the composites which are not directly in the group but referenced through a reference modification
+                        // adds the composites which are not directly in the container but referenced through a reference modification
                         return ((ModificationReferenceInfos) m).getReferencedId();
                     }
                 })
