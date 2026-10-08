@@ -6,9 +6,6 @@
  */
 package org.gridsuite.modification.server.service;
 
-import org.gridsuite.modification.dto.ByFilterDeletionInfos;
-import org.gridsuite.modification.dto.FilterInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.PermissionType;
 import org.gridsuite.modification.server.dto.ReferenceAttributes;
@@ -29,11 +26,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.HttpMethod.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
@@ -233,30 +225,34 @@ class DirectoryServiceTest {
     }
 
     @Test
-    void testResolveFilterNames() {
-        FilterInfos renamedFilter = FilterInfos.builder().id(UUID.randomUUID()).name("name when picked").build();
-        FilterInfos deletedFilter = FilterInfos.builder().id(UUID.randomUUID()).name("deleted since").build();
-        ModificationInfos modification = ByFilterDeletionInfos.builder().filters(List.of(renamedFilter, deletedFilter)).build();
+    void testGetElementNames() {
+        UUID existingElementUuid = UUID.randomUUID();
+        UUID deletedElementUuid = UUID.randomUUID();
 
-        directoryServer.expect(requestTo(allOf(
-                        startsWith(DIRECTORY_SERVER_BASE_URI + "/v1/elements/names?"),
-                        containsString("ids=" + renamedFilter.getId()),
-                        containsString("ids=" + deletedFilter.getId()),
-                        containsString("strictMode=false"))))
+        String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/names"
+                + "?ids=" + existingElementUuid + "&ids=" + deletedElementUuid + "&strictMode=false";
+        directoryServer.expect(requestTo(expectedUrl))
                 .andExpect(method(GET))
-                .andRespond(withSuccess("{\"" + renamedFilter.getId() + "\":\"current name\"}", MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess("{\"" + existingElementUuid + "\":\"filter name\"}", MediaType.APPLICATION_JSON));
 
-        directoryService.resolveFilterNames(List.of(modification));
-
-        directoryServer.verify();
-        assertEquals("current name", renamedFilter.getName());
-        assertNull(deletedFilter.getName());
+        // the directory-server leaves out the elements it does not know anymore
+        assertThat(directoryService.getElementNames(List.of(existingElementUuid, deletedElementUuid)))
+                .containsExactlyInAnyOrderEntriesOf(Map.of(existingElementUuid, "filter name"));
     }
 
     @Test
-    void testResolveFilterNamesWithoutFiltersCallsNothing() {
-        directoryService.resolveFilterNames(List.of(ModificationInfos.builder().build()));
+    void testGetElementNamesAsksNothingWithoutElement() {
+        assertThat(directoryService.getElementNames(Set.of())).isEmpty();
+    }
 
-        directoryServer.verify();
+    @Test
+    void testGetElementNamesThrowsWhenTheDirectoryFails() {
+        UUID elementUuid = UUID.randomUUID();
+
+        directoryServer.expect(requestTo(DIRECTORY_SERVER_BASE_URI + "/v1/elements/names?ids=" + elementUuid + "&strictMode=false"))
+                .andExpect(method(GET))
+                .andRespond(withServerError());
+
+        assertThrows(RestClientException.class, () -> directoryService.getElementNames(List.of(elementUuid)));
     }
 }

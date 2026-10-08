@@ -318,17 +318,6 @@ public class NetworkModificationRepository {
                 : getModificationsInfos(containerUuid, stashedFilter);
     }
 
-    /**
-     * @return the modifications of each given container, in the given order and all read in the same transaction;
-     * an empty list for a container that does not exist
-     */
-    @Transactional(readOnly = true)
-    public Map<UUID, List<ModificationInfos>> getModifications(List<UUID> containerUuids, boolean onlyMetadata, StashedFilter stashedFilter) {
-        Map<UUID, List<ModificationInfos>> modificationsByContainer = new LinkedHashMap<>();
-        containerUuids.forEach(containerUuid -> modificationsByContainer.put(containerUuid, getModifications(containerUuid, onlyMetadata, stashedFilter)));
-        return modificationsByContainer;
-    }
-
     public List<ModificationInfos> getModificationsMetadata(UUID containerUuid, StashedFilter stashedFilter) {
         List<ModificationEntity> base = stashedFilter == StashedFilter.STASHED
                 ? modificationRepository.findAllBaseByContainerIdReverse(containerUuid)

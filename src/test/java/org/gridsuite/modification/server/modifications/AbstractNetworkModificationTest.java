@@ -19,12 +19,11 @@ import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
-import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.DirectoryService;
-import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.gridsuite.modification.server.service.ModificationFilterNameService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.WireMockUtils;
@@ -102,7 +101,7 @@ public abstract class AbstractNetworkModificationTest {
     protected DirectoryService directoryService;
 
     @Autowired
-    protected NetworkModificationService networkModificationService;
+    private ModificationFilterNameService modificationFilterNameService;
 
     /** Filter names as the directory knows them: filled with the filters the test sends, as the front picks them there */
     protected final Map<UUID, String> directoryFilterNames = new HashMap<>();
@@ -163,7 +162,7 @@ public abstract class AbstractNetworkModificationTest {
         assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
         assertResultImpacts(getNetworkImpacts(networkModificationsResult));
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
-        ModificationInfos createdModification = networkModificationService.getNetworkModifications(TEST_GROUP_ID, false, StashedFilter.ALL).get(0);
+        ModificationInfos createdModification = getModificationsWithFilterNames().get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
@@ -190,7 +189,7 @@ public abstract class AbstractNetworkModificationTest {
 
         assertEquals(0, getNetworkImpacts(networkModificationsResult).size());
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
-        ModificationInfos createdModification = networkModificationService.getNetworkModifications(TEST_GROUP_ID, false, StashedFilter.ALL).get(0);
+        ModificationInfos createdModification = getModificationsWithFilterNames().get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
@@ -237,7 +236,7 @@ public abstract class AbstractNetworkModificationTest {
         // TODO Need a test for substations impacted
         //assertThat(bsmListResult.get(0)).recursivelyEquals(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"));
 
-        ModificationInfos updatedModification = networkModificationService.getNetworkModifications(TEST_GROUP_ID, false, StashedFilter.ALL).get(0);
+        ModificationInfos updatedModification = getModificationsWithFilterNames().get(0);
         assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
@@ -278,8 +277,7 @@ public abstract class AbstractNetworkModificationTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
 
-        List<ModificationInfos> modifications = networkModificationService
-                .getNetworkModifications(TEST_GROUP_ID, false, StashedFilter.ALL);
+        List<ModificationInfos> modifications = getModificationsWithFilterNames();
 
         assertEquals(2, modifications.size());
         assertThat(modifications.get(0)).recursivelyEquals(modificationToCopy);
@@ -332,6 +330,13 @@ public abstract class AbstractNetworkModificationTest {
     protected String getJsonBody(ModificationInfos modificationInfos, String variantId) throws JsonProcessingException {
         registerFilterNames(modificationInfos);
         return TestUtils.getJsonBody(modificationInfos, AbstractNetworkModificationTest.TEST_NETWORK_ID, variantId);
+    }
+
+    /** Reads the modifications of the test group back as the front gets them: with the names of the filters they reference */
+    private List<ModificationInfos> getModificationsWithFilterNames() {
+        List<ModificationInfos> modifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
+        modificationFilterNameService.addFilterNames(modifications);
+        return modifications;
     }
 
     /** What is sent to the server was picked in the directory: registers there the filters it references, with their names */

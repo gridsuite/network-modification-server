@@ -34,8 +34,6 @@ import org.gridsuite.modification.server.modifications.ModificationTypeWithPrelo
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
@@ -46,7 +44,6 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -64,8 +61,6 @@ import static org.gridsuite.modification.server.modifications.AsyncUtils.schedul
  */
 @Service
 public class NetworkModificationService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationService.class);
-
     private final NetworkStoreService networkStoreService;
 
     private final NetworkModificationRepository networkModificationRepository;
@@ -86,6 +81,8 @@ public class NetworkModificationService {
 
     private final ModificationContextFactory modificationContextFactory;
 
+    private final ModificationFilterNameService modificationFilterNameService;
+
     static final String NETWORK_UUID = "networkUuid.keyword";
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
@@ -103,7 +100,8 @@ public class NetworkModificationService {
                                       ElasticsearchOperations elasticsearchOperations,
                                       ModificationRepository modificationRepository,
                                       DirectoryService directoryService,
-                                      ModificationContextFactory modificationContextFactory) {
+                                      ModificationContextFactory modificationContextFactory,
+                                      ModificationFilterNameService modificationFilterNameService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -115,21 +113,24 @@ public class NetworkModificationService {
         this.modificationRepository = modificationRepository;
         this.directoryService = directoryService;
         this.modificationContextFactory = modificationContextFactory;
+        this.modificationFilterNameService = modificationFilterNameService;
     }
 
     public List<UUID> getModificationGroups() {
         return networkModificationRepository.getModificationGroupsUuids();
     }
 
+    @Transactional(readOnly = true)
+    // Need a transaction for collections lazy loading
     public List<ModificationInfos> getNetworkModifications(UUID containerUuid, boolean onlyMetadata, StashedFilter stashedFilter) {
-        List<ModificationInfos> modifications = networkModificationRepository.getModifications(containerUuid, onlyMetadata, stashedFilter);
-        directoryService.resolveFilterNames(modifications);
-        return modifications;
+        return networkModificationRepository.getModifications(containerUuid, onlyMetadata, stashedFilter);
     }
 
+    @Transactional(readOnly = true)
     public Map<UUID, List<ModificationInfos>> getNetworkModifications(List<UUID> containerUuids, boolean onlyMetadata, StashedFilter stashedFilter) {
-        Map<UUID, List<ModificationInfos>> modifications = networkModificationRepository.getModifications(containerUuids, onlyMetadata, stashedFilter);
-        directoryService.resolveFilterNames(modifications.values().stream().flatMap(List::stream).toList());
+        Map<UUID, List<ModificationInfos>> modifications = new LinkedHashMap<>();
+        containerUuids.forEach(containerUuid -> modifications.put(containerUuid,
+                networkModificationRepository.getModifications(containerUuid, onlyMetadata, stashedFilter)));
         return modifications;
     }
 
@@ -185,21 +186,20 @@ public class NetworkModificationService {
         return networkModificationRepository.findAllChildrenUuids(compositeModificationUuids);
     }
 
+    @Transactional(readOnly = true)
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
-        ModificationInfos modificationInfos = networkModificationRepository.getModificationInfo(networkModificationUuid);
-        directoryService.resolveFilterNames(List.of(modificationInfos));
-        return modificationInfos;
+        return networkModificationRepository.getModificationInfo(networkModificationUuid);
     }
 
     public AbstractModification getStandaloneNetworkModification(UUID networkModificationUuid) {
         ModificationInfos modificationInfos = networkModificationRepository.getStandaloneModificationInfos(networkModificationUuid);
-        directoryService.resolveFilterNames(List.of(modificationInfos));
+        modificationFilterNameService.addFilterNames(modificationInfos);
         return modificationInfos.toModification(modificationContextFactory.create());
     }
 
     public Map<UUID, AbstractModification> getStandaloneNetworkModifications(List<UUID> networkModificationUuids, boolean errorOnModificationNotFound) {
         List<ModificationInfos> modificationsInfos = networkModificationRepository.getStandaloneModificationsInfos(networkModificationUuids, errorOnModificationNotFound);
-        directoryService.resolveFilterNames(modificationsInfos);
+        modificationFilterNameService.addFilterNames(modificationsInfos);
         ModificationContext modificationContext = modificationContextFactory.create();
         return modificationsInfos.stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, modificationInfos -> modificationInfos.toModification(modificationContext)));
@@ -401,7 +401,7 @@ public class NetworkModificationService {
      */
     private CompletableFuture<List<Optional<NetworkModificationResult>>> applyModifications(UUID groupUuid, List<ModificationInfos> modifications,
             List<ModificationApplicationContext> applicationContexts) {
-        resolveFilterNamesForReports(modifications);
+        modificationFilterNameService.addFilterNamesForReports(modifications);
         // Do we want to do these all in parallel (CompletableFuture.allOf) or sequentially (like in Flux.concatMap) or something in between ?
         // sequentially like before for now
         return scheduleApplyModifications(
@@ -417,18 +417,6 @@ public class NetworkModificationService {
                 ),
             applicationContexts
         );
-    }
-
-    /**
-     * Filter names only feed the reports here: failing to resolve them must not prevent applying the modifications,
-     * the reports then show the filter ids instead.
-     */
-    private void resolveFilterNamesForReports(List<ModificationInfos> modifications) {
-        try {
-            directoryService.resolveFilterNames(modifications);
-        } catch (RestClientException e) {
-            LOGGER.warn("Could not resolve filter names from the directory, reports will show filter ids instead", e);
-        }
     }
 
     public Network cloneNetworkVariant(UUID networkUuid,
@@ -466,7 +454,7 @@ public class NetworkModificationService {
             }
         );
 
-        resolveFilterNamesForReports(modificationGroupsInfos.stream().flatMap(group -> group.modifications().stream()).toList());
+        modificationFilterNameService.addFilterNamesForReports(modificationGroupsInfos.stream().flatMap(group -> group.modifications().stream()).toList());
 
         PreloadingStrategy preloadingStrategy = modificationGroupsInfos.stream().map(ModificationApplicationGroup::modifications)
             .flatMap(Collection::stream)
@@ -796,7 +784,7 @@ public class NetworkModificationService {
     public NetworkModificationsWithMissingInfo getNetworkModificationsFromCompositeWithMissingInfo(List<UUID> compositeModificationUuids) {
         Set<UUID> foundUuids = modificationRepository.findExistingCompositeModificationIds(compositeModificationUuids);
         List<ModificationInfos> networkModifications = networkModificationRepository.getCompositeModificationsInfos(compositeModificationUuids);
-        directoryService.resolveFilterNames(networkModifications);
+        modificationFilterNameService.addFilterNames(networkModifications);
         List<UUID> missingUuids = compositeModificationUuids.stream().filter(uuid -> !foundUuids.contains(uuid)).toList();
         return new NetworkModificationsWithMissingInfo(networkModifications, missingUuids);
     }
