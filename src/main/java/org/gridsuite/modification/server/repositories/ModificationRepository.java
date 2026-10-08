@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.repositories;
 
 import org.gridsuite.modification.server.dto.ModificationApplicability;
+import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.springframework.data.jpa.repository.*;
@@ -15,8 +16,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -159,16 +162,43 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     UUID findCompositeContainerIdByModificationId(@Param("uuid") UUID uuid);
 
     /**
-     * @return one [modification id, composite container id] row per modification actually nested in a composite;
-     * modifications sitting directly under a group have no row
+     * @return the references among the given modifications, the others being ignored
+     */
+    @Query("""
+            SELECT new org.gridsuite.modification.server.dto.ModificationReferenceData(r.id, r.referencedId,
+                       CASE WHEN TYPE(c) = CompositeContainerEntity THEN c.id ELSE NULL END)
+              FROM ModificationReferenceEntity r
+              LEFT JOIN r.container c
+             WHERE r.id IN :uuids
+            """)
+    List<ModificationReferenceData> findReferenceDataByIdIn(@Param("uuids") Collection<UUID> uuids);
+
+    interface CompositeContainer {
+        String getId();
+
+        String getContainerId();
+    }
+
+    /**
+     * @return one row per modification actually nested in a composite; modifications sitting directly under a
+     * group have no row
      */
     @Query(value = """
-            SELECT CAST(m.id AS VARCHAR), CAST(m.container_id AS VARCHAR)
+            SELECT CAST(m.id AS VARCHAR) AS id, CAST(m.container_id AS VARCHAR) AS container_id
               FROM modification m
               JOIN modification_container c ON c.type = 'COMPOSITE' AND c.id = m.container_id
              WHERE m.id IN :uuids
             """, nativeQuery = true)
-    List<Object[]> findCompositeContainerIdsByModificationIds(@Param("uuids") Collection<UUID> uuids);
+    List<CompositeContainer> findCompositeContainersByModificationIds(@Param("uuids") Collection<UUID> uuids);
+
+    /**
+     * @return the composite holding each of the given modifications, keyed by modification id; a modification
+     * sitting directly under a group is absent from the map
+     */
+    default Map<UUID, UUID> findCompositeContainerIdByModificationIds(Collection<UUID> uuids) {
+        return findCompositeContainersByModificationIds(uuids).stream()
+                .collect(Collectors.toMap(c -> UUID.fromString(c.getId()), c -> UUID.fromString(c.getContainerId())));
+    }
 
     @Query("""
           SELECT COUNT(m) FROM ModificationEntity m

@@ -324,6 +324,15 @@ public class NetworkModificationRepository {
                 : getModificationsInfos(containerUuid, stashedFilter);
     }
 
+    /**
+     * @param containerUuid a group or a composite modification
+     * @return its modifications with their base columns only
+     */
+    @Transactional(readOnly = true)
+    public List<ModificationEntity> getBaseModifications(UUID containerUuid) {
+        return modificationRepository.findAllBaseByContainerId(containerUuid);
+    }
+
     public List<ModificationInfos> getModificationsMetadata(UUID containerUuid, StashedFilter stashedFilter) {
         List<ModificationEntity> base = stashedFilter == StashedFilter.STASHED
                 ? modificationRepository.findAllBaseByContainerIdReverse(containerUuid)
@@ -977,38 +986,43 @@ public class NetworkModificationRepository {
      * @return ReferenceData : modification and elementUuid of the referenced modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
-    // TODO use recursive CTE
     public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> initialModificationUuids, boolean withChildren) {
+        if (initialModificationUuids.isEmpty()) {
+            return List.of();
+        }
         List<UUID> modificationUuids = new ArrayList<>(initialModificationUuids);
         if (withChildren) {
             modificationUuids.addAll(modificationRepository.findAllDescendantModificationIdsByContainerIds(modificationUuids));
         }
-        List<ModificationEntity> modificationEntities = modificationRepository.findAllByIdIn(modificationUuids);
-
-        return modificationEntities.stream()
-            .filter(ModificationReferenceEntity.class::isInstance)
-            .map(m -> (ModificationReferenceEntity) m)
-            .map(ref -> {
-                UUID containerId = modificationRepository.findCompositeContainerIdByModificationId(ref.getId());
-                return new ModificationReferenceData(ref.getId(), ref.getReferencedId(), containerId);
-            })
-            .toList();
+        return modificationRepository.findReferenceDataByIdIn(modificationUuids);
     }
 
     @Transactional
     public void stashNetworkModifications(@NonNull List<UUID> modificationUuids, int stashedModificationCount) {
         int stashModificationOrder = -stashedModificationCount - 1;
-        List<ModificationEntity> modificationEntities = new ArrayList<>();
-        for (UUID modificationUuid : modificationUuids) {
-            ModificationEntity modificationEntity = this.modificationRepository
-                    .findById(modificationUuid)
-                    .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
+        List<ModificationEntity> modificationEntities = getModificationEntitiesInOrder(modificationUuids);
+        for (ModificationEntity modificationEntity : modificationEntities) {
             modificationEntity.setStashed(true);
-            modificationEntity.setModificationsOrder(stashModificationOrder);
-            modificationEntities.add(modificationEntity);
-            stashModificationOrder--;
+            modificationEntity.setModificationsOrder(stashModificationOrder--);
         }
         this.modificationRepository.saveAll(modificationEntities);
+    }
+
+    /**
+     * @return the given modifications, read in one query, in the order they were asked for — the order the
+     * stash gives them
+     * @throws NetworkModificationServerException when one of them does not exist
+     */
+    private List<ModificationEntity> getModificationEntitiesInOrder(List<UUID> modificationUuids) {
+        if (modificationUuids.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, ModificationEntity> entitiesByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+        return modificationUuids.stream()
+                .map(modificationUuid -> Optional.ofNullable(entitiesByUuid.get(modificationUuid))
+                        .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString())))
+                .toList();
     }
 
     @Transactional
@@ -1044,10 +1058,7 @@ public class NetworkModificationRepository {
 
     @Transactional
     public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
-        for (UUID modificationUuid : modificationUuids) {
-            ModificationEntity modificationEntity = this.modificationRepository
-                    .findById(modificationUuid)
-                    .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
+        for (ModificationEntity modificationEntity : getModificationEntitiesInOrder(modificationUuids)) {
             if (metadata.getDescription() != null) {
                 modificationEntity.setDescription(metadata.getDescription());
             }
