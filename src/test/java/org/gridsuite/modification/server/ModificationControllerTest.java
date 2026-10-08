@@ -1959,9 +1959,16 @@ class ModificationControllerTest {
 
     @Test
     void testVerifyModificationsThroughReference() throws Exception {
+        // the reference is at the root level
         UUID leafUuid = createSomeSwitchModifications(TEST_GROUP_ID, 1).getFirst().getUuid();
         String compositeUuid = assembleModificationsIntoComposite(List.of(leafUuid));
-        shareCompositeIntoGroup(TEST_GROUP_ID, compositeUuid, "Test Reference");
+        ModificationReferenceData refData = shareCompositeIntoGroup(TEST_GROUP_ID, compositeUuid, "Test Reference");
+        mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications/verify", TEST_GROUP_ID)
+                        .param("uuids", leafUuid.toString()))
+                .andExpect(status().isOk());
+
+        // the reference is inside a composite which is at the root level
+        String depthTwoCompositeUuid = assembleModificationsIntoComposite(List.of(refData.modificationUuid()));
         mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications/verify", TEST_GROUP_ID)
                         .param("uuids", leafUuid.toString()))
                 .andExpect(status().isOk());
@@ -2157,11 +2164,12 @@ class ModificationControllerTest {
         return mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
     }
 
-    private void shareCompositeIntoGroup(UUID groupUuid, String compositeUuid, String name) throws Exception {
-        mockMvc.perform(post("/v1/network-composite-modifications/" + compositeUuid + "/share")
+    private ModificationReferenceData shareCompositeIntoGroup(UUID groupUuid, String compositeUuid, String name) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(post("/v1/network-composite-modifications/" + compositeUuid + "/share")
                         .param("groupUuid", groupUuid.toString())
                         .param("name", name))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
+        return mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
     }
 
     /** Ordered root-level modification UUIDs of a group. */
