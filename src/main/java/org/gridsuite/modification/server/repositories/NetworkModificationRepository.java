@@ -812,17 +812,11 @@ public class NetworkModificationRepository {
         return toModificationsInfosWithApplicabilities(getModificationEntity(modificationUuid));
     }
 
-    /**
-     * @return the infos of the given modification, without applicabilities: what a standalone modification is built from
-     */
     @Transactional(readOnly = true)
     public ModificationInfos getStandaloneModificationInfos(UUID modificationUuid) {
         return toModificationsInfos(List.of(getModificationEntity(modificationUuid))).getFirst();
     }
 
-    /**
-     * @return the infos of the given modifications, without applicabilities: what standalone modifications are built from
-     */
     @Transactional(readOnly = true)
     public List<ModificationInfos> getStandaloneModificationsInfos(List<UUID> modificationUuids, boolean errorOnModificationNotFound) {
         return toModificationsInfos(getModificationEntities(modificationUuids, errorOnModificationNotFound));
