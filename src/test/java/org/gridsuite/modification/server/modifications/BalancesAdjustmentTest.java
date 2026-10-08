@@ -7,25 +7,36 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.loadflow.LoadFlowParameters;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.service.LoadFlowService;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
@@ -53,7 +64,7 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
 
         // Mock for non-existent parameters (404 case)
         when(loadFlowService.getLoadFlowParametersInfos(NON_EXISTENT_LOADFLOW_PARAMETERS_UUID))
-                .thenReturn(null);
+                .thenThrow(HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", null, null, null));
 
         // Mock for server error case
         when(loadFlowService.getLoadFlowParametersInfos(ERROR_LOADFLOW_PARAMETERS_UUID))
@@ -108,41 +119,52 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
-    /**
-     * Test LoadFlowService.getLoadFlowParametersInfos() method for successful case
-     */
-    @Test
-    void testGetLoadFlowParametersInfosSuccess() {
-        LoadFlowParametersInfos result = loadFlowService.getLoadFlowParametersInfos(LOADFLOW_PARAMETERS_UUID);
-
-        assertNotNull(result);
-        assertEquals("OpenLoadFlow", result.getProvider());
-        assertNotNull(result.getCommonParameters());
-        assertNotNull(result.getSpecificParametersPerProvider());
-        assertTrue(result.getSpecificParametersPerProvider().containsKey("OpenLoadFlow"));
+    private ApplicationStatus createModification(ModificationInfos modification) throws Exception {
+        MvcResult mvcResult = runRequestAsync(mockMvc, post(getNetworkModificationUri())
+                .content(getJsonBody(modification, null))
+                .contentType(MediaType.APPLICATION_JSON), status().isOk());
+        NetworkModificationsResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        return extractApplicationStatus(result).getFirst();
     }
 
-    /**
-     * Test LoadFlowService.getLoadFlowParametersInfos() method for not found case (404)
-     */
     @Test
-    void testGetLoadFlowParametersInfosNotFound() {
-        LoadFlowParametersInfos result = loadFlowService.getLoadFlowParametersInfos(NON_EXISTENT_LOADFLOW_PARAMETERS_UUID);
+    void testCreateLoadsLoadFlowParametersOnce() throws Exception {
+        assertEquals(ApplicationStatus.ALL_OK, createModification(buildModification()));
 
-        assertNull(result);
+        assertAfterNetworkModificationCreation();
+        verify(loadFlowService).getLoadFlowParametersInfos(LOADFLOW_PARAMETERS_UUID);
     }
 
-    /**
-     * Test LoadFlowService.getLoadFlowParametersInfos() method for server error case
-     */
-    // TODO Nothing is test here ?
     @Test
-    void testGetLoadFlowParametersInfosServerError() {
-        HttpServerErrorException exception = assertThrows(
-            HttpServerErrorException.class,
-                () -> loadFlowService.getLoadFlowParametersInfos(ERROR_LOADFLOW_PARAMETERS_UUID)
-        );
-        assertEquals("Internal server error", exception.getStatusText());
+    void testCreateWithLoadFlowParametersNotFound() throws Exception {
+        BalancesAdjustmentModificationInfos modification = (BalancesAdjustmentModificationInfos) buildModification();
+        modification.setLoadFlowParametersId(NON_EXISTENT_LOADFLOW_PARAMETERS_UUID);
+
+        assertEquals(ApplicationStatus.ALL_OK, createModification(modification));
+
+        assertLogMessage("Using default load flow parameters: Load flow parameters with id " + NON_EXISTENT_LOADFLOW_PARAMETERS_UUID + " not found",
+                "network.modification.balancesAdjustment.usingDefaultLoadFlowParameters", reportService);
+    }
+
+    @Test
+    void testCreateWithLoadFlowServerError() throws Exception {
+        BalancesAdjustmentModificationInfos modification = (BalancesAdjustmentModificationInfos) buildModification();
+        modification.setLoadFlowParametersId(ERROR_LOADFLOW_PARAMETERS_UUID);
+
+        // the parameters cannot be loaded: the modification fails without changing the network
+        assertEquals(ApplicationStatus.WITH_ERRORS, createModification(modification));
+
+        assertAfterNetworkModificationDeletion();
+    }
+
+    @Test
+    void testCreateWithoutLoadFlowDoesNotLoadParameters() throws Exception {
+        BalancesAdjustmentModificationInfos modification = (BalancesAdjustmentModificationInfos) buildModification();
+        modification.setWithLoadFlow(false);
+
+        assertEquals(ApplicationStatus.ALL_OK, createModification(modification));
+
+        verify(loadFlowService, never()).getLoadFlowParametersInfos(any());
     }
 
     @Override
