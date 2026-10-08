@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.service;
 import org.gridsuite.modification.context.LoadFlowParametersLoader;
 import org.gridsuite.modification.dto.LoadFlowParametersInfos;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -29,6 +30,11 @@ public class LoadFlowParametersLoaderService implements LoadFlowParametersLoader
 
     @Override
     public Optional<LoadFlowParametersInfos> load(UUID parametersUuid) {
-        return Optional.ofNullable(loadFlowService.getLoadFlowParametersInfos(parametersUuid));
+        try {
+            return Optional.ofNullable(loadFlowService.getLoadFlowParametersInfos(parametersUuid));
+        } catch (HttpClientErrorException.NotFound e) {
+            // the loader contract: parameters that do not exist are reported as absent, not as an error
+            return Optional.empty();
+        }
     }
 }

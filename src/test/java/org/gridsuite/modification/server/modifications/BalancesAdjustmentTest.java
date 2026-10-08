@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.List;
@@ -63,7 +64,7 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
 
         // Mock for non-existent parameters (404 case)
         when(loadFlowService.getLoadFlowParametersInfos(NON_EXISTENT_LOADFLOW_PARAMETERS_UUID))
-                .thenReturn(null);
+                .thenThrow(HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", null, null, null));
 
         // Mock for server error case
         when(loadFlowService.getLoadFlowParametersInfos(ERROR_LOADFLOW_PARAMETERS_UUID))
