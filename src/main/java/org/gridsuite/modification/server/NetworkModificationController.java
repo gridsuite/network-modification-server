@@ -130,9 +130,10 @@ public class NetworkModificationController {
             @Parameter(description = "origin group UUID (defaults to the target group)") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
             @Parameter(description = "apply modifications entering the target group (default true)")
             @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
-            @RequestBody Pair<List<ModificationMoveInfos>, List<ModificationApplicationContext>> moveContextInfos) {
+            @RequestBody Pair<List<ModificationMoveInfos>, List<ModificationApplicationContext>> moveContextInfos,
+            @RequestHeader(HEADER_USER_ID) String userId) {
         return networkModificationService.moveModifications(Objects.requireNonNullElse(originGroupUuid, targetGroupUuid), targetGroupUuid,
-                        moveContextInfos.getFirst(), moveContextInfos.getSecond(), canApply)
+                        moveContextInfos.getFirst(), moveContextInfos.getSecond(), canApply, userId)
                 .thenApply(ResponseEntity.ok()::body);
     }
 
@@ -349,8 +350,8 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The metadata of the network modifications has been successfully updated")
     public ResponseEntity<Void> updateNetworkModificationMetadata(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
-            @RequestBody ModificationInfos metadata) {
-        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata);
+            @RequestBody ModificationInfos metadata, @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata, userId);
         return ResponseEntity.ok().build();
     }
 
