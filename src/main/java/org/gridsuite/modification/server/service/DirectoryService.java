@@ -41,7 +41,7 @@ public class DirectoryService {
     private final RestClient restClient;
 
     public DirectoryService(@Value("${gridsuite.services.directory-server.base-uri:http://directory-server/}") String directoryServerBaseUri,
-                         RestClient restClient) {
+                        RestClient restClient) {
         setDirectoryServerBaseUri(directoryServerBaseUri);
         this.restClient = restClient;
     }

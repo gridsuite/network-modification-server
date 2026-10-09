@@ -70,6 +70,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.gridsuite.modification.ModificationType.*;
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.ModificationType.LINE_MODIFICATION;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
@@ -516,6 +517,7 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                 .queryParam("groupUuid", TEST_GROUP_ID.toString())
                 .queryParam("uuids", uuidString)
+                .queryParam(HEADER_USER_ID, "userId")
                 .content(mapper.writeValueAsString(metadata))
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HEADER_USER_ID, TEST_USER_ID)
@@ -616,6 +618,7 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString)
+                        .queryParam(HEADER_USER_ID, "userId")
                         .content(mapper.writeValueAsString(metadata))
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(HEADER_USER_ID, TEST_USER_ID)
@@ -1912,6 +1915,27 @@ class ModificationControllerTest {
         assertEquals(1, metadata.size());
         assertEquals(switchModificationId, metadata.getFirst().getId());
         assertEquals(EQUIPMENT_ATTRIBUTE_MODIFICATION, metadata.getFirst().getType());
+    }
+
+    @Test
+    void testGetCompositeMetadata() throws Exception {
+        // create a single switch attribute modification in a group
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID compositeUuid = createComposite(modificationList.stream().map(ModificationInfos::getUuid).toList());
+        // add a description
+        modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder()
+                .description("composite description")
+                .build());
+
+        MvcResult mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/metadata?ids={id}", compositeUuid)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        List<ModificationMetadata> metadata = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, metadata.size());
+        assertEquals(compositeUuid, metadata.getFirst().getId());
+        assertEquals(COMPOSITE_MODIFICATION, metadata.getFirst().getType());
+        assertEquals("composite name", metadata.getFirst().getName());
+        assertEquals("composite description", metadata.getFirst().getDescription());
     }
 
     @Test

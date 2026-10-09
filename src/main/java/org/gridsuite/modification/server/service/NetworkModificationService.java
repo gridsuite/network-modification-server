@@ -653,17 +653,23 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
-        return networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name);
+    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name, String description) {
+        return networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name, description);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {
         return networkModificationRepository.duplicateCompositeModifications(sourceModificationUuids);
     }
 
-    @Transactional
-    public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
-        networkModificationRepository.updateCompositeModification(compositeUuid, name);
+    public void updateModificationNameAndDescription(@NonNull UUID modificationUuid, ModificationMetadata modificationMetadata, String userId) {
+        UUID referencedModificationId = networkModificationRepository.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
+        // if modification is shared, emit notification about referenced modification
+        if (referencedModificationId != null) {
+            notificationService.emitElementUpdated(referencedModificationId, userId);
+            return;
+        }
+        // emit notification about modification to update GridExplore
+        notificationService.emitElementUpdated(modificationUuid, userId);
     }
 
     @Transactional
