@@ -114,11 +114,21 @@ public class NetworkModificationController {
     @Operation(summary = "Create a modification group based on another group")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group and its modifications have been duplicated")})
     public ResponseEntity<Void> duplicateGroup(@RequestParam("groupUuid") UUID groupUuid,
-                                               @RequestParam("nodeContainerUuid") UUID nodeContainerUuid,
-                                               @RequestParam("studyRootContainerUuid") UUID studyRootContainerUuid,
-                                               @PathVariable("sourceGroupUuid") UUID sourceGroupUuid,
-                                               @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, nodeContainerUuid, studyRootContainerUuid, userId);
+                                               @PathVariable("sourceGroupUuid") UUID sourceGroupUuid) {
+        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Fetches all the modification-references of the group, nested ones included, and asks the owner of the group (study-server)
+     * to recreate their references in directory-server. To be called once the group is resolvable by its owner (i.e. after a node duplication).
+     */
+    @PostMapping(value = "/groups/{groupUuid}/references")
+    @Operation(summary = "Notify the recreation of all the modification-references of a group, including in its composites")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The recreation of the references of the group has been notified")})
+    public ResponseEntity<Void> recreateElementReferences(@PathVariable("groupUuid") UUID groupUuid,
+                                                          @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.recreateElementReferences(groupUuid, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -287,14 +297,12 @@ public class NetworkModificationController {
             @RequestHeader(HEADER_USER_ID) String userId,
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
-            @RequestParam(name = "nodeContainerUuid", required = false) UUID nodeContainerUuid,
-            @RequestParam(name = "studyRootContainerUuid", required = false) UUID studyRootContainerUuid,
             @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "stashed", defaultValue = "true") Boolean stashed) {
         if (Boolean.TRUE.equals(stashed)) {
             networkModificationService.stashNetworkModifications(groupUuid, networkModificationUuids, userId);
             networkModificationService.reorderNetworkModifications(groupUuid, Boolean.FALSE);
         } else {
-            networkModificationService.restoreNetworkModifications(groupUuid, networkModificationUuids, studyRootContainerUuid, nodeContainerUuid, userId);
+            networkModificationService.restoreNetworkModifications(groupUuid, networkModificationUuids, userId);
             networkModificationService.reorderNetworkModifications(groupUuid, Boolean.TRUE);
         }
         return ResponseEntity.ok().build();

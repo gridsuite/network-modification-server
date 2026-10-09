@@ -54,8 +54,6 @@ public final class ApiUtils {
                 post("/v1/groups/{uuid}/duplicate", originGroupUuid)
                     .header(HEADER_USER_ID, TEST_USER_ID)
                     .param("groupUuid", targetGroupUuid.toString())
-                    .param("nodeContainerUuid", UUID.randomUUID().toString())
-                    .param("studyRootContainerUuid", UUID.randomUUID().toString())
             )
             .andExpectAll(status().isOk());
     }
@@ -151,8 +149,6 @@ public final class ApiUtils {
                 put("/v1/network-modifications")
                     .param("uuids", uuids.stream().map(Objects::toString).toList().toArray(new String[0]))
                     .param("groupUuid", UUID.randomUUID().toString())
-                    .param("nodeContainerUuid", UUID.randomUUID().toString())
-                    .param("studyRootContainerUuid", UUID.randomUUID().toString())
                     .param("stashed", "true")
                     .header(HEADER_USER_ID, TEST_USER_ID)
             )
