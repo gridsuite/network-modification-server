@@ -42,7 +42,9 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}element.update
         publishCompositeReference-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}reference.composite
-      output-bindings: publishBuild-out-0;publishResultBuild-out-0;publishCancelBuild-out-0;publishStoppedBuild-out-0;publishElementUpdate-out-0;publishCompositeReference-out-0
+        publishCompositeReferenceRecreation-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}reference.composite.recreation
+      output-bindings: publishBuild-out-0;publishResultBuild-out-0;publishCancelBuild-out-0;publishStoppedBuild-out-0;publishElementUpdate-out-0;publishCompositeReference-out-0;publishCompositeReferenceRecreation-out-0
       rabbit:
         bindings:
           consumeBuild1-in-0: &consumeBuildRabbitConfig

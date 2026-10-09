@@ -114,9 +114,21 @@ public class NetworkModificationController {
     @Operation(summary = "Create a modification group based on another group")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group and its modifications have been duplicated")})
     public ResponseEntity<Void> duplicateGroup(@RequestParam("groupUuid") UUID groupUuid,
-                                               @PathVariable("sourceGroupUuid") UUID sourceGroupUuid,
-                                               @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, userId);
+                                               @PathVariable("sourceGroupUuid") UUID sourceGroupUuid) {
+        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Fetches all the modification-references of the group, nested ones included, and asks the owner of the group (study-server)
+     * to recreate their references in directory-server. To be called once the group is resolvable by its owner (i.e. after a node duplication).
+     */
+    @PostMapping(value = "/groups/{groupUuid}/references")
+    @Operation(summary = "Notify the recreation of all the modification-references of a group, including in its composites")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The recreation of the references of the group has been notified")})
+    public ResponseEntity<Void> recreateElementReferences(@PathVariable("groupUuid") UUID groupUuid,
+                                                          @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.recreateElementReferences(groupUuid, userId);
         return ResponseEntity.ok().build();
     }
 

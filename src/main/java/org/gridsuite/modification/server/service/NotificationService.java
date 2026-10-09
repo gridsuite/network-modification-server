@@ -112,4 +112,20 @@ public class NotificationService {
                 .build();
         sendMessage(message, "publishCompositeReference-out-0");
     }
+
+    /**
+     * Asks the owner of the group (study-server) to recreate in directory-server the references of all the modification-references
+     * of the group, once the group is resolvable on its side (i.e. after a node duplication).
+     */
+    @PostCompletion
+    public void emitModificationReferencesRecreation(@NonNull UUID groupUuid, @NonNull List<ModificationReferenceData> references, @NonNull String userId) {
+        if (references.isEmpty()) {
+            return;
+        }
+        Message<List<ModificationReferenceData>> message = MessageBuilder.withPayload(references)
+                .setHeader(HEADER_GROUP_UUID, groupUuid)
+                .setHeader(HEADER_USER_ID, userId)
+                .build();
+        sendMessage(message, "publishCompositeReferenceRecreation-out-0");
+    }
 }

@@ -322,6 +322,11 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
+    public void recreateElementReferences(@NonNull UUID groupUuid, @NonNull String userId) {
+        notificationService.emitModificationReferencesRecreation(groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
+    }
+
+    @Transactional(readOnly = true)
     public void removeElementReferences(@NonNull UUID groupUuid, @NonNull String userId) {
         notificationService.emitModificationReferencesChanged(ReferenceAction.DELETE, groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
     }
@@ -545,10 +550,9 @@ public class NetworkModificationService {
                 : new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP);
     }
 
-    public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid, @NonNull String userId) {
+    /** The references of the new group are notified apart (see recreateElementReferences), once its owner is ready to resolve the group */
+    public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
         networkModificationRepository.duplicateUnstashedModifications(sourceGroupUuid, targetGroupUuid);
-        notificationService.emitModificationReferencesChanged(ReferenceAction.CREATE, targetGroupUuid,
-                getModificationReferencesNonTransactional(targetGroupUuid), userId);
     }
 
     private CompletableFuture<Optional<NetworkModificationResult>> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
