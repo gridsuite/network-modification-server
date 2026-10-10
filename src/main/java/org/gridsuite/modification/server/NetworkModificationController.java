@@ -117,8 +117,11 @@ public class NetworkModificationController {
                                                @RequestParam("nodeContainerUuid") UUID nodeContainerUuid,
                                                @RequestParam("studyRootContainerUuid") UUID studyRootContainerUuid,
                                                @PathVariable("sourceGroupUuid") UUID sourceGroupUuid,
+                                               @Parameter(description = "Root network tags of the study the group belongs to, which the copies are associated with")
+                                               @RequestParam(value = "rootNetworkTags", required = false) List<String> rootNetworkTags,
                                                @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, nodeContainerUuid, studyRootContainerUuid, userId);
+        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, nodeContainerUuid, studyRootContainerUuid,
+            rootNetworkTags == null ? List.of() : rootNetworkTags, userId);
         return ResponseEntity.ok().build();
     }
 

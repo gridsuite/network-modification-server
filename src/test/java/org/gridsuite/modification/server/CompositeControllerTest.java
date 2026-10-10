@@ -1140,6 +1140,29 @@ class CompositeControllerTest {
     }
 
     @Test
+    void testReplacedContentIsAssociatedWithTheRootNetworksOfTheComposite() throws Exception {
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
+        UUID compositeUuid = mapper.readValue(mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
+                        .content(mapper.writeValueAsString(List.of(modificationList.getFirst().getUuid())))
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), new TypeReference<>() { });
+        networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), "PH1", false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), "PH2", true);
+
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeUuid + "/replace")
+                        .param("name", "new name")
+                        .header(HEADER_USER_ID, TEST_USER_ID)
+                        .content(mapper.writeValueAsString(List.of(modificationList.getLast().getUuid()))).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        assertEquals(List.of(Map.of("PH1", true, "PH2", true)), networkModificationRepository.getModifications(compositeUuid, true).stream()
+                        .map(ModificationInfos::getApplicabilityByRootNetworkTag).toList(),
+                "The new content is associated with every root network the composite is, applicable on all of them");
+    }
+
+    @Test
     void testNoNotificationWhenNotSharedCompositeReplaced() throws Exception {
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
         UUID compositeUuid = mapper.readValue(mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")

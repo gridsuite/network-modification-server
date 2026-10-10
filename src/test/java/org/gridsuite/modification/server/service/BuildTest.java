@@ -914,6 +914,7 @@ class BuildTest {
         testNetworkModificationsCount(TEST_GROUP_ID, entities1.size());
 
         // the second modification is not applicable on the root network being built
+        modificationRepository.updateRootNetworkApplicability(List.of(modifications.get(0).getUuid()), TEST_ROOT_NETWORK_TAG, true);
         modificationRepository.updateRootNetworkApplicability(List.of(modifications.get(1).getUuid()), TEST_ROOT_NETWORK_TAG, false);
 
         // build node on a root network the second modification is not applicable on
@@ -1027,12 +1028,13 @@ class BuildTest {
                 .stream().map(ModificationInfos::getUuid).toList();
         modificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(1)), TEST_ROOT_NETWORK_TAG, false);
         modificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(2)), TEST_ROOT_NETWORK_TAG, true);
+        // the copy is associated with the root networks of its study, the applicabilities already set being kept
         return modificationRepository.insertCompositeModifications(TEST_GROUP_ID,
-                List.of(new CompositeInfos(sourceUuid, "composite", false, "description")));
+                List.of(new CompositeInfos(sourceUuid, "composite", false, "description")), List.of(TEST_ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG));
     }
 
     private static void assertOnlyTheContentTheTagAllowsIsApplied(Network appliedNetwork) {
-        assertTrue(appliedNetwork.getSwitch("v1d1").isOpen(), "The content the tag says nothing about is applied");
+        assertTrue(appliedNetwork.getSwitch("v1d1").isOpen(), "The content only associated with the root network is applied");
         assertFalse(appliedNetwork.getSwitch("v2d1").isOpen(), "The content the tag deactivates is left out");
         assertTrue(appliedNetwork.getSwitch("v2d2").isOpen(), "The content the tag activates is applied");
     }
@@ -1070,7 +1072,7 @@ class BuildTest {
 
         assertFalse(deactivatingNetwork.getSwitch("v2d1").isOpen(), "The modification the tag deactivates is left out");
         assertTrue(otherNetwork.getSwitch("v2d1").isOpen(),
-                "The other root network names no tag the modifications carry an entry for, so they all apply");
+                "The modifications are all applicable on the other root network, so they all apply");
         assertTrue(TestUtils.getRequestsDone(2, server).stream().allMatch(r -> r.matches("/v1/reports/.*")));
     }
 
