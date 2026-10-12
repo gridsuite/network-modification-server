@@ -27,8 +27,10 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
+import org.gridsuite.modification.server.entities.AbstractModificationContainerEntity;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationReferenceEntity;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -590,6 +592,35 @@ public class NetworkModificationService {
         List<UUID> ids = duplicateModifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, duplicateModifications, applicationContexts).thenApply(result ->
             new NetworkModificationsResult(ids, result));
+    }
+
+    public void unshareModification(@NonNull UUID referenceModificationUuid) {
+        // TODO : check that this is a reference modification
+        ModificationEntity referenceEntity = modificationRepository.findById(referenceModificationUuid)
+                .orElseThrow(() -> networkModificationRepository.getModificationNotFoundException(referenceModificationUuid.toString()));
+        ModificationInfos referencedCompositeInfos = networkModificationRepository.getModificationInfo(
+                ((ModificationReferenceEntity) referenceEntity).getReferencedId());
+
+        // copy the referenced composite into a new composite
+        ModificationEntity copiedComposite = ModificationEntity.fromDTO(referencedCompositeInfos);
+
+        // put the new copied composite into the container of the replaced reference modification
+        AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
+        copiedComposite.setContainer(containerEntity);
+        copiedComposite.setModificationsOrder(referenceEntity.getModificationsOrder());
+        modificationRepository.save(copiedComposite);
+
+        // remove the reference from directory server
+        List<ModificationReferenceData> referenceData = List.of(
+                new ModificationReferenceData(referenceModificationUuid,
+                        ((ModificationReferenceEntity) referenceEntity).getReferencedId(),
+                        containerEntity.getId()));
+        directoryService.removeElementReferences(referenceData, null);
+
+        // delete the referenceModificationUuid
+        modificationRepository.deleteById(referenceModificationUuid);
+//        Une erreur est survenue lors du départage de la modification
+//        Erreur serveur: 500  on PUT request for "http://localhost:5007/v1/network-modifications/6c135313-dc46-40e3-b2ea-89adde47a830/unshare": "{"timestamp":"2026-10-12T15:20:58.502+00:00","status":500,"error":"Internal Server Error","message":"could not execute batch [Batch entry 0 delete from modification where id=('6c135313-dc46-40e3-b2ea-89adde47a830'::uuid) was aborted: ERROR: update or delete on table \"modification\" violates foreign key constraint \"modification_uuid_fk_constraint\" on table \"modification_application\"\n  Détail : Key (id)=(6c135313-dc46-40e3
     }
 
     /**
