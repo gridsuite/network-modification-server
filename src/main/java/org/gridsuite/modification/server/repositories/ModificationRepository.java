@@ -273,23 +273,23 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      * a composite are its unstashed content, and a reference contains the shared modification it points to.
      */
     @NativeQuery("""
-        WITH RECURSIVE tree(container_id, id) AS (
-            SELECT m.container_id, m.id
+        WITH RECURSIVE tree(container_id, id, type, date, stashed, activated, message_type, message_values, description, modifications_order) AS (
+            SELECT m.container_id, m.id, m.type, m.date, m.stashed, m.activated, m.message_type, m.message_values,
+                   CAST(m.description AS VARCHAR), m.modifications_order
               FROM modification m
              WHERE m.container_id = :containerId
                AND (:stashed IS NULL OR m.stashed = :stashed)
             UNION
-            SELECT t.id, m.id
+            SELECT t.id, m.id, m.type, m.date, m.stashed, m.activated, m.message_type, m.message_values,
+                   CAST(m.description AS VARCHAR), m.modifications_order
               FROM tree t
               LEFT JOIN modification_reference r ON r.id = t.id
               JOIN modification m ON (m.container_id = t.id AND m.stashed = false) OR m.id = r.referenced_id
         )
-        SELECT CAST(t.container_id AS VARCHAR) AS containerId, CAST(t.id AS VARCHAR) AS id, m.type AS type, m.date AS date,
-               m.stashed AS stashed, m.activated AS activated, m.message_type AS messageType,
-               m.message_values AS messageValues, CAST(m.description AS VARCHAR) AS description
-          FROM tree t
-          JOIN modification m ON m.id = t.id
-         ORDER BY t.container_id, m.modifications_order
+        SELECT CAST(container_id AS VARCHAR) AS containerId, CAST(id AS VARCHAR) AS id, type, date, stashed, activated,
+               message_type AS messageType, message_values AS messageValues, description
+          FROM tree
+         ORDER BY container_id, modifications_order
         """)
     List<ChildModificationMetadata> findAllChildrenMetadata(@Param("containerId") UUID containerId, @Param("stashed") Boolean stashed);
 
