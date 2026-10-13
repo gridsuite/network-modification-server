@@ -177,16 +177,9 @@ public class NetworkModificationRepository {
 
     @Transactional
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
-        List<ModificationEntity> copyEntities = copiesOf(modificationUuids);
-
-        //TODO : separate creation and copy
-        if (copyEntities.size() == 1 && copyEntities.getFirst() instanceof CompositeModificationEntity single) {
-            return modificationRepository.save(single).getId();
-        }
-
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).name(name).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
-        compositeEntity.setModifications(copyEntities);
+        compositeEntity.setModifications(copyAsCompositeContent(modificationUuids));
         return modificationRepository.save(compositeEntity).getId();
     }
 
@@ -194,7 +187,7 @@ public class NetworkModificationRepository {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
 
-        List<ModificationEntity> copyEntities = copiesOf(modificationUuids);
+        List<ModificationEntity> copyEntities = copyAsCompositeContent(modificationUuids);
 
         //Delete previously held modifications
         deleteModifications(compositeEntity.getModifications());
@@ -663,10 +656,22 @@ public class NetworkModificationRepository {
     }
 
     /**
+     * @return copies of the modifications, to be used as the content of a composite; a lone composite is not
+     * wrapped in another one, its own content is copied instead
+     */
+    private List<ModificationEntity> copyAsCompositeContent(List<UUID> modificationUuids) {
+        List<ModificationEntity> copies = copyModificationsWithReferenceResolution(modificationUuids);
+        if (copies.size() == 1 && copies.getFirst() instanceof CompositeModificationEntity loneComposite) {
+            return loneComposite.getModifications();
+        }
+        return copies;
+    }
+
+    /**
      * Clone each selected modification so it can be stored inside a composite, keeping the caller-specified order
      * and duplicates: each occurrence gets its own fresh clone, its applicabilities included.
      */
-    private List<ModificationEntity> copiesOf(List<UUID> modificationUuids) {
+    private List<ModificationEntity> copyModificationsWithReferenceResolution(List<UUID> modificationUuids) {
         List<ModificationEntity> modificationsToCopy = modificationUuids.stream()
                 .map(getModificationEntities(modificationUuids.stream().distinct().toList(), true).stream()
                         .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()))::get)
@@ -677,14 +682,14 @@ public class NetworkModificationRepository {
                 .map(NetworkModificationRepository::resolveNestedModificationReferences)
                 .collect(Collectors.toMap(ModificationInfos::getUuid, Function.identity()));
 
-        return modificationsToCopy.stream().map(entity -> copyOf(entity, infosBySourceUuid)).toList();
+        return modificationsToCopy.stream().map(entity -> copyModificationWithReferenceResolution(entity, infosBySourceUuid)).toList();
     }
 
     /**
      * @return a fresh clone of the modification, built from its source infos; when the modification is a
      * reference, its own description is carried onto the clone, as it lives on the reference, not on the shared one
      */
-    private static ModificationEntity copyOf(ModificationEntity entity, Map<UUID, ModificationInfos> infosBySourceUuid) {
+    private static ModificationEntity copyModificationWithReferenceResolution(ModificationEntity entity, Map<UUID, ModificationInfos> infosBySourceUuid) {
         ModificationEntity clone = ModificationEntity.fromDTO(infosBySourceUuid.get(resolveReferenceUuid(entity)));
         if (entity instanceof ModificationReferenceEntity reference && reference.getDescription() != null && !reference.getDescription().isBlank()) {
             clone.setDescription(reference.getDescription());
