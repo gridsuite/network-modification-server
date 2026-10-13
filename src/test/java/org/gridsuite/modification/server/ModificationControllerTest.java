@@ -566,6 +566,7 @@ class ModificationControllerTest {
                 .queryParam("groupUuids", TEST_GROUP_ID.toString())
                 .queryParam("oldTag", ROOT_NETWORK_TAG)
                 .queryParam("newTag", RENAMED_ROOT_NETWORK_TAG)
+                .header(HEADER_USER_ID, TEST_USER_ID)
         ).andExpect(status().isOk());
         assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
 

@@ -1104,22 +1104,27 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * Moves the applicability entries of {@code oldTag} to {@code newTag} for the modifications of the given groups.
-     * On a modification a group owns, the entry of the old tag is renamed; on a referenced one, which other groups may
-     * still use the old tag for, it is copied under the new tag.
-     * Pre-existing applicabilities for the new tag are removed.
+     * Moves the applicability entries of {@code oldTag} to {@code newTag}, after dropping the entries of {@code newTag}:
+     * <ul>
+     *     <li>on an owned modification, the entry of the old tag is renamed;</li>
+     *     <li>on a writable shared modification and its content, which may still be used elsewhere with the old tag, it
+     *     is copied under the new tag.</li>
+     * </ul>
+     *
+     * @param ownedUuids the owned modifications, the content of their composites included
+     * @param writableSharedUuids the shared modifications, among the ones the owned modifications point to, the user can write on
      */
     @Transactional
-    public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag) {
-        List<UUID> ownedUuids = getContainedModificationUuids(groupUuids);
+    public void renameRootNetworkTag(@NonNull Collection<UUID> ownedUuids, @NonNull Collection<UUID> writableSharedUuids,
+                                     @NonNull String oldTag, @NonNull String newTag) {
         if (ownedUuids.isEmpty()) {
             return;
         }
-        Set<UUID> sharedModificationTreesUuids = getSharedModificationTrees(ownedUuids).allUuids();
+        Set<UUID> writableSharedAndChildrenUuids = SetUtils.union(Set.copyOf(writableSharedUuids), Set.copyOf(getContainedModificationUuids(writableSharedUuids)));
         // owned UUIDs that are references does not contain applicability, so it will be ignored
-        modificationRepository.deleteRootNetworkApplicabilities(SetUtils.union(Set.copyOf(ownedUuids), sharedModificationTreesUuids), List.of(newTag));
-        if (!sharedModificationTreesUuids.isEmpty()) {
-            modificationRepository.copyRootNetworkApplicability(sharedModificationTreesUuids, oldTag, newTag);
+        modificationRepository.deleteRootNetworkApplicabilities(SetUtils.union(Set.copyOf(ownedUuids), writableSharedAndChildrenUuids), List.of(newTag));
+        if (!writableSharedAndChildrenUuids.isEmpty()) {
+            modificationRepository.copyRootNetworkApplicability(writableSharedAndChildrenUuids, oldTag, newTag);
         }
         modificationRepository.renameRootNetworkApplicability(ownedUuids, oldTag, newTag);
     }
@@ -1129,7 +1134,25 @@ public class NetworkModificationRepository {
      */
     @Transactional(readOnly = true)
     public Set<UUID> getReferencedModificationUuids(@NonNull List<UUID> containerUuids) {
-        return getSharedModificationTrees(getContainedModificationUuids(containerUuids)).sharedUuids();
+        return getSharedModificationUuids(getContainedModificationUuids(containerUuids));
+    }
+
+    /**
+     * @return the shared modifications the references among the given modifications point to, directly or through
+     * other shared modifications
+     */
+    @Transactional(readOnly = true)
+    public Set<UUID> getSharedModificationUuids(@NonNull List<UUID> modificationUuids) {
+        return getSharedModificationTrees(modificationUuids).sharedUuids();
+    }
+
+    /**
+     * @return the root network tags all the given modifications are associated with, that is the ones each of them holds
+     * an applicability for, sorted
+     */
+    @Transactional(readOnly = true)
+    public List<String> getCommonRootNetworkTags(@NonNull Set<UUID> modificationUuids) {
+        return modificationRepository.findCommonRootNetworkTags(modificationUuids);
     }
 
     /**
@@ -1195,7 +1218,11 @@ public class NetworkModificationRepository {
         rootNetworkTags.forEach(tag -> modificationRepository.setDefaultApplicabilityIfMissing(sharedTreesUuids, tag));
     }
 
-    private List<UUID> getContainedModificationUuids(List<UUID> containerUuids) {
+    /**
+     * @return the modifications the given containers hold, the content of their composites included
+     */
+    @Transactional(readOnly = true)
+    public List<UUID> getContainedModificationUuids(@NonNull Collection<UUID> containerUuids) {
         return containerUuids.isEmpty() ? List.of() : modificationRepository.findAllDescendantModificationIdsByContainerIds(containerUuids);
     }
 
