@@ -637,23 +637,6 @@ public class NetworkModificationRepository {
         return modificationReferenceInfos;
     }
 
-    private ModificationReferenceInfos loadModificationReferenceMetadata(ModificationEntity modificationEntity) {
-        ModificationEntity referencedEntity = modificationRepository.findReferencedModificationMetadataByReferenceId(modificationEntity.getId());
-        if (referencedEntity == null) {
-            throw getModificationNotFoundException(modificationEntity.getId() + " (referenced modification)");
-        }
-        return ModificationReferenceInfos.builder()
-            .uuid(modificationEntity.getId())
-            .date(modificationEntity.getDate())
-            .stashed(modificationEntity.getStashed())
-            .activated(modificationEntity.getActivated())
-            .description(modificationEntity.getDescription())
-            .messageType(referencedEntity.getMessageType())
-            .messageValues(referencedEntity.getMessageValues())
-            .referencedId(referencedEntity.getId())
-            .build();
-    }
-
     private static ModificationInfos resolveNestedModificationReferences(ModificationInfos infos) {
         if (infos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
             composite.setModificationsInfos(composite.getModificationsInfos().stream()
@@ -799,17 +782,6 @@ public class NetworkModificationRepository {
         }
         if (modificationEntity instanceof ModificationReferenceEntity referenceEntity) {
             return loadModificationReference(referenceEntity);
-        }
-        // a plain modification, or a base projection that lost its subclass: only its metadata, depth unknown
-        return toModificationMetadataInfos(modificationEntity);
-    }
-
-    private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity) {
-        if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
-            return loadCompositeModificationMetadata(modificationEntity);
-        }
-        if (ModificationType.MODIFICATION_REFERENCE.name().equals(modificationEntity.getType())) {
-            return loadModificationReferenceMetadata(modificationEntity);
         }
         return modificationEntity.toModificationInfos();
     }
