@@ -177,16 +177,9 @@ public class NetworkModificationRepository {
 
     @Transactional
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
-        List<ModificationEntity> copyEntities = copiesOf(modificationUuids);
-
-        //TODO : separate creation and copy
-        if (copyEntities.size() == 1 && copyEntities.getFirst() instanceof CompositeModificationEntity single) {
-            return modificationRepository.save(single).getId();
-        }
-
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).name(name).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
-        compositeEntity.setModifications(copyEntities);
+        compositeEntity.setModifications(compositeContentCopiesOf(modificationUuids));
         return modificationRepository.save(compositeEntity).getId();
     }
 
@@ -194,7 +187,7 @@ public class NetworkModificationRepository {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
 
-        List<ModificationEntity> copyEntities = copiesOf(modificationUuids);
+        List<ModificationEntity> copyEntities = compositeContentCopiesOf(modificationUuids);
 
         //Delete previously held modifications
         deleteModifications(compositeEntity.getModifications());
@@ -659,6 +652,18 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toMap(ModificationInfos::getUuid, Function.identity()));
 
         return modificationsToCopy.stream().map(entity -> copyOf(entity, infosBySourceUuid)).toList();
+    }
+
+    /**
+     * @return copies of the modifications, to be used as the content of a composite; a lone composite is not
+     * wrapped in another one, its own content is copied instead
+     */
+    private List<ModificationEntity> compositeContentCopiesOf(List<UUID> modificationUuids) {
+        List<ModificationEntity> copies = copiesOf(modificationUuids);
+        if (copies.size() == 1 && copies.getFirst() instanceof CompositeModificationEntity loneComposite) {
+            return loneComposite.getModifications();
+        }
+        return copies;
     }
 
     /**
