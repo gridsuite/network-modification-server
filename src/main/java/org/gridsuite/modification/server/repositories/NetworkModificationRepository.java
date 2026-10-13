@@ -179,7 +179,7 @@ public class NetworkModificationRepository {
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).name(name).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
-        compositeEntity.setModifications(compositeContentCopiesOf(modificationUuids));
+        compositeEntity.setModifications(copyAsCompositeContent(modificationUuids));
         return modificationRepository.save(compositeEntity).getId();
     }
 
@@ -187,7 +187,7 @@ public class NetworkModificationRepository {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
 
-        List<ModificationEntity> copyEntities = compositeContentCopiesOf(modificationUuids);
+        List<ModificationEntity> copyEntities = copyAsCompositeContent(modificationUuids);
 
         //Delete previously held modifications
         deleteModifications(compositeEntity.getModifications());
@@ -658,7 +658,7 @@ public class NetworkModificationRepository {
      * @return copies of the modifications, to be used as the content of a composite; a lone composite is not
      * wrapped in another one, its own content is copied instead
      */
-    private List<ModificationEntity> compositeContentCopiesOf(List<UUID> modificationUuids) {
+    private List<ModificationEntity> copyAsCompositeContent(List<UUID> modificationUuids) {
         List<ModificationEntity> copies = copiesOf(modificationUuids);
         if (copies.size() == 1 && copies.getFirst() instanceof CompositeModificationEntity loneComposite) {
             return loneComposite.getModifications();
