@@ -1400,6 +1400,33 @@ class CompositeControllerTest {
         children.forEach(child -> assertFalse(child instanceof CompositeModificationInfos));
     }
 
+    @Test
+    void testReplaceCompositeWithSingleCompositeDoesNotWrap() throws Exception {
+        UUID compositeUuid = createComposite(createSomeSwitchModifications(TEST_GROUP_ID, 1));
+        UUID sourceCompositeUuid = createComposite(createSomeSwitchModifications(TEST_GROUP2_ID, 2));
+
+        // Replace the content of the first composite with the single second composite — must not wrap
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeUuid + "/replace")
+                        .param("name", "new name")
+                        .header(HEADER_USER_ID, TEST_USER_ID)
+                        .content(mapper.writeValueAsString(List.of(sourceCompositeUuid))).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        CompositeModificationInfos resultInfos = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(compositeUuid);
+        assertEquals("new name", resultInfos.getName());
+        List<ModificationInfos> children = resultInfos.getModificationsInfos();
+        assertEquals(2, children.size());
+        children.forEach(child -> assertFalse(child instanceof CompositeModificationInfos));
+    }
+
+    private UUID createComposite(List<ModificationInfos> modifications) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "composite")
+                        .content(mapper.writeValueAsString(modifications.stream().map(ModificationInfos::getUuid).toList()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        return mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+    }
+
     private static void assertContiguousOrder(List<ModificationEntity> modifications) {
         List<ModificationEntity> sorted = modifications.stream()
                 .sorted(Comparator.comparingInt(ModificationEntity::getModificationsOrder))
