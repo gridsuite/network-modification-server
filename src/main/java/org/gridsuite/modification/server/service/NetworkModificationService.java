@@ -340,9 +340,17 @@ public class NetworkModificationService {
         return networkModificationRepository.getModificationsReferences(allModificationUuids, false);
     }
 
+    /**
+     * @return the composite holding each of the given modifications, keyed by modification id; a modification
+     * sitting directly under a group is absent from the map
+     */
     @Transactional(readOnly = true)
     public Map<UUID, UUID> findModificationParentComposites(@NonNull List<UUID> modificationUuids) {
-        return modificationUuids.isEmpty() ? Map.of() : modificationRepository.findCompositeContainerIdByModificationIds(modificationUuids);
+        if (modificationUuids.isEmpty()) {
+            return Map.of();
+        }
+        return modificationRepository.findCompositeContainersByModificationIdIn(modificationUuids).stream()
+                .collect(Collectors.toMap(c -> UUID.fromString(c.getId()), c -> UUID.fromString(c.getContainerId())));
     }
 
     @Transactional(readOnly = true)
@@ -369,7 +377,7 @@ public class NetworkModificationService {
         // Collect referenced ancestor composites before stashing, since stashed modifications are moved out of their composite
         List<UUID> referencedAncestorUuids = networkModificationRepository.getAllReferencedModificationAncestorsUuids(modificationUuids);
 
-        moveOutOfComposites(groupUuid, modificationUuids);
+        moveCompositeChildrenToGroup(groupUuid, modificationUuids);
         networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
 
         // break all the references pointing to those stashed modification references
@@ -382,12 +390,12 @@ public class NetworkModificationService {
      * Stashed modifications live at the root of their group: those nested in a composite are moved out first,
      * one move per composite.
      */
-    private void moveOutOfComposites(UUID groupUuid, List<UUID> modificationUuids) {
+    private void moveCompositeChildrenToGroup(UUID groupUuid, List<UUID> modificationUuids) {
         if (modificationUuids.isEmpty()) {
             return;
         }
         // one query for the whole list
-        Map<UUID, UUID> compositeByModification = modificationRepository.findCompositeContainerIdByModificationIds(modificationUuids);
+        Map<UUID, UUID> compositeByModification = findModificationParentComposites(modificationUuids);
         // a move takes a source container, so they are gathered by the composites holding the modifications
         Map<UUID, List<UUID>> modificationsByComposite = modificationUuids.stream()
                 .filter(compositeByModification::containsKey)

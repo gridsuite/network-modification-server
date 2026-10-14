@@ -16,10 +16,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -171,7 +169,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
               LEFT JOIN r.container c
              WHERE r.id IN :uuids
             """)
-    List<ModificationReferenceData> findReferenceDataByIdIn(@Param("uuids") Collection<UUID> uuids);
+    List<ModificationReferenceData> findModificationReferenceDataByIdIn(@Param("uuids") Collection<UUID> uuids);
 
     interface CompositeContainer {
         String getId();
@@ -189,16 +187,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
               JOIN modification_container c ON c.type = 'COMPOSITE' AND c.id = m.container_id
              WHERE m.id IN :uuids
             """, nativeQuery = true)
-    List<CompositeContainer> findCompositeContainersByModificationIds(@Param("uuids") Collection<UUID> uuids);
-
-    /**
-     * @return the composite holding each of the given modifications, keyed by modification id; a modification
-     * sitting directly under a group is absent from the map
-     */
-    default Map<UUID, UUID> findCompositeContainerIdByModificationIds(Collection<UUID> uuids) {
-        return findCompositeContainersByModificationIds(uuids).stream()
-                .collect(Collectors.toMap(c -> UUID.fromString(c.getId()), c -> UUID.fromString(c.getContainerId())));
-    }
+    List<CompositeContainer> findCompositeContainersByModificationIdIn(@Param("uuids") Collection<UUID> uuids);
 
     @Query("""
           SELECT COUNT(m) FROM ModificationEntity m

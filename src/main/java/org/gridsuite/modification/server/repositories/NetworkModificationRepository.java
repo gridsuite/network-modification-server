@@ -994,7 +994,7 @@ public class NetworkModificationRepository {
         if (withChildren) {
             modificationUuids.addAll(modificationRepository.findAllDescendantModificationIdsByContainerIds(modificationUuids));
         }
-        return modificationRepository.findReferenceDataByIdIn(modificationUuids);
+        return modificationRepository.findModificationReferenceDataByIdIn(modificationUuids);
     }
 
     @Transactional
