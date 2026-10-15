@@ -179,16 +179,9 @@ public class NetworkModificationRepository {
 
     @Transactional
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
-        List<ModificationEntity> copyEntities = copiesOf(modificationUuids);
-
-        //TODO : separate creation and copy
-        if (copyEntities.size() == 1 && copyEntities.getFirst() instanceof CompositeModificationEntity single) {
-            return modificationRepository.save(single).getId();
-        }
-
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).name(name).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
-        compositeEntity.setModifications(copyEntities);
+        compositeEntity.setModifications(copyAsCompositeContent(modificationUuids));
         return modificationRepository.save(compositeEntity).getId();
     }
 
@@ -196,7 +189,7 @@ public class NetworkModificationRepository {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
 
-        List<ModificationEntity> copyEntities = copiesOf(modificationUuids);
+        List<ModificationEntity> copyEntities = copyAsCompositeContent(modificationUuids);
 
         //Delete previously held modifications
         deleteModifications(compositeEntity.getModifications());
@@ -334,6 +327,15 @@ public class NetworkModificationRepository {
         return onlyMetadata
                 ? getModificationsMetadata(containerUuid, stashedFilter)
                 : getModificationsInfos(containerUuid, stashedFilter);
+    }
+
+    /**
+     * @param containerUuid a group or a composite modification
+     * @return its modifications with their base columns only
+     */
+    @Transactional(readOnly = true)
+    public List<ModificationEntity> getBaseModifications(UUID containerUuid) {
+        return modificationRepository.findAllBaseByContainerId(containerUuid);
     }
 
     public List<ModificationInfos> getModificationsMetadata(UUID containerUuid, StashedFilter stashedFilter) {
@@ -656,10 +658,22 @@ public class NetworkModificationRepository {
     }
 
     /**
+     * @return copies of the modifications, to be used as the content of a composite; a lone composite is not
+     * wrapped in another one, its own content is copied instead
+     */
+    private List<ModificationEntity> copyAsCompositeContent(List<UUID> modificationUuids) {
+        List<ModificationEntity> copies = copyModificationsWithReferenceResolution(modificationUuids);
+        if (copies.size() == 1 && copies.getFirst() instanceof CompositeModificationEntity loneComposite) {
+            return loneComposite.getModifications();
+        }
+        return copies;
+    }
+
+    /**
      * Clone each selected modification so it can be stored inside a composite, keeping the caller-specified order
      * and duplicates: each occurrence gets its own fresh clone, its applicabilities included.
      */
-    private List<ModificationEntity> copiesOf(List<UUID> modificationUuids) {
+    private List<ModificationEntity> copyModificationsWithReferenceResolution(List<UUID> modificationUuids) {
         List<ModificationEntity> modificationsToCopy = modificationUuids.stream()
                 .map(getModificationEntities(modificationUuids.stream().distinct().toList(), true).stream()
                         .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()))::get)
@@ -670,14 +684,14 @@ public class NetworkModificationRepository {
                 .map(NetworkModificationRepository::resolveNestedModificationReferences)
                 .collect(Collectors.toMap(ModificationInfos::getUuid, Function.identity()));
 
-        return modificationsToCopy.stream().map(entity -> copyOf(entity, infosBySourceUuid)).toList();
+        return modificationsToCopy.stream().map(entity -> copyModificationWithReferenceResolution(entity, infosBySourceUuid)).toList();
     }
 
     /**
      * @return a fresh clone of the modification, built from its source infos; when the modification is a
      * reference, its own description is carried onto the clone, as it lives on the reference, not on the shared one
      */
-    private static ModificationEntity copyOf(ModificationEntity entity, Map<UUID, ModificationInfos> infosBySourceUuid) {
+    private static ModificationEntity copyModificationWithReferenceResolution(ModificationEntity entity, Map<UUID, ModificationInfos> infosBySourceUuid) {
         ModificationEntity clone = ModificationEntity.fromDTO(infosBySourceUuid.get(resolveReferenceUuid(entity)));
         if (entity instanceof ModificationReferenceEntity reference && reference.getDescription() != null && !reference.getDescription().isBlank()) {
             clone.setDescription(reference.getDescription());
@@ -989,38 +1003,43 @@ public class NetworkModificationRepository {
      * @return ReferenceData : modification and elementUuid of the referenced modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
-    // TODO use recursive CTE
     public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> initialModificationUuids, boolean withChildren) {
+        if (initialModificationUuids.isEmpty()) {
+            return List.of();
+        }
         List<UUID> modificationUuids = new ArrayList<>(initialModificationUuids);
         if (withChildren) {
             modificationUuids.addAll(modificationRepository.findAllDescendantModificationIdsByContainerIds(modificationUuids));
         }
-        List<ModificationEntity> modificationEntities = modificationRepository.findAllByIdIn(modificationUuids);
-
-        return modificationEntities.stream()
-            .filter(ModificationReferenceEntity.class::isInstance)
-            .map(m -> (ModificationReferenceEntity) m)
-            .map(ref -> {
-                UUID containerId = modificationRepository.findCompositeContainerIdByModificationId(ref.getId());
-                return new ModificationReferenceData(ref.getId(), ref.getReferencedId(), containerId);
-            })
-            .toList();
+        return modificationRepository.findModificationReferenceDataByIdIn(modificationUuids);
     }
 
     @Transactional
     public void stashNetworkModifications(@NonNull List<UUID> modificationUuids, int stashedModificationCount) {
         int stashModificationOrder = -stashedModificationCount - 1;
-        List<ModificationEntity> modificationEntities = new ArrayList<>();
-        for (UUID modificationUuid : modificationUuids) {
-            ModificationEntity modificationEntity = this.modificationRepository
-                    .findById(modificationUuid)
-                    .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
+        List<ModificationEntity> modificationEntities = getModificationEntitiesInOrder(modificationUuids);
+        for (ModificationEntity modificationEntity : modificationEntities) {
             modificationEntity.setStashed(true);
-            modificationEntity.setModificationsOrder(stashModificationOrder);
-            modificationEntities.add(modificationEntity);
-            stashModificationOrder--;
+            modificationEntity.setModificationsOrder(stashModificationOrder--);
         }
         this.modificationRepository.saveAll(modificationEntities);
+    }
+
+    /**
+     * @return the given modifications, read in one query, in the order they were asked for — the order the
+     * stash gives them
+     * @throws NetworkModificationServerException when one of them does not exist
+     */
+    private List<ModificationEntity> getModificationEntitiesInOrder(List<UUID> modificationUuids) {
+        if (modificationUuids.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, ModificationEntity> entitiesByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+        return modificationUuids.stream()
+                .map(modificationUuid -> Optional.ofNullable(entitiesByUuid.get(modificationUuid))
+                        .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString())))
+                .toList();
     }
 
     @Transactional
@@ -1056,10 +1075,7 @@ public class NetworkModificationRepository {
 
     @Transactional
     public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
-        for (UUID modificationUuid : modificationUuids) {
-            ModificationEntity modificationEntity = this.modificationRepository
-                    .findById(modificationUuid)
-                    .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
+        for (ModificationEntity modificationEntity : getModificationEntitiesInOrder(modificationUuids)) {
             if (metadata.getDescription() != null) {
                 modificationEntity.setDescription(metadata.getDescription());
             }
