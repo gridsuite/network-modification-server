@@ -14,6 +14,7 @@ import org.gridsuite.filter.wip.ExpertFilter;
 import org.gridsuite.filter.wip.Filter;
 import org.gridsuite.filter.wip.IdentifierListFilter;
 import org.gridsuite.filter.wip.rule.CombinatorExpertRule;
+import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
 import org.gridsuite.modification.server.RestClientConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,7 @@ class FilterServiceTest {
 
     private static final String FILTER_SERVER_BASE_URI = "http://filter-server-test";
     private static final String STANDALONE_FILTERS_PATH = "/v1/standalone-filters";
+    private static final String STANDALONE_FILTERS_WITH_DISTRIBUTION_KEYS_PATH = "/v1/standalone-filters/with-distribution-keys";
 
     private final RestClientConfig restClientConfig = new RestClientConfig();
     private final ObjectMapper objectMapper = restClientConfig.objectMapper();
@@ -117,8 +119,99 @@ class FilterServiceTest {
         filterServer.verify();
     }
 
+    @Test
+    void getStandaloneFiltersWithDistributionKeysShouldQueryTheFilterServerAndReturnFiltersWithTheirDistributionKeys() throws JsonProcessingException {
+        // Arrange
+        UUID identifierListFilterId = UUID.randomUUID();
+        UUID expertFilterId = UUID.randomUUID();
+        Map<UUID, FilterWithDistributionKeys> filtersById = new LinkedHashMap<>();
+        filtersById.put(identifierListFilterId, FilterWithDistributionKeys.builder()
+                .filter(IdentifierListFilter.builder()
+                        .equipmentType(EquipmentType.GENERATOR).equipmentIds(Set.of("GEN1", "GEN2")).build())
+                .distributionKeys(Map.of("GEN1", 0.7, "GEN2", 0.3))
+                .build());
+        filtersById.put(expertFilterId, FilterWithDistributionKeys.builder()
+                .filter(ExpertFilter.builder()
+                        .equipmentType(EquipmentType.LINE)
+                        .rule(CombinatorExpertRule.builder().combinator(CombinatorType.AND).rules(List.of()).build())
+                        .build())
+                .distributionKeys(Map.of())
+                .build());
+        expectStandaloneFiltersWithDistributionKeysRequest(filtersById, identifierListFilterId, expertFilterId);
+
+        // Act
+        Map<UUID, FilterWithDistributionKeys> loadedFilters = filterService.getStandaloneFiltersWithDistributionKeys(List.of(identifierListFilterId, expertFilterId));
+
+        // Assert : the polymorphic payload is deserialized back into self-contained filters, each with its distribution keys
+        assertThat(loadedFilters).hasSize(2)
+                .hasEntrySatisfying(identifierListFilterId, filterWithDistributionKeys -> {
+                    Filter filter = filterWithDistributionKeys.getFilter();
+                    assertThat(filter).isInstanceOf(IdentifierListFilter.class);
+                    assertThat(filter.getEquipmentType()).isEqualTo(EquipmentType.GENERATOR);
+                    assertThat(((IdentifierListFilter) filter).getEquipmentIds()).containsExactlyInAnyOrder("GEN1", "GEN2");
+                    assertThat(filterWithDistributionKeys.getDistributionKeys())
+                            .containsExactlyInAnyOrderEntriesOf(Map.of("GEN1", 0.7, "GEN2", 0.3));
+                })
+                .hasEntrySatisfying(expertFilterId, filterWithDistributionKeys -> {
+                    Filter filter = filterWithDistributionKeys.getFilter();
+                    assertThat(filter).isInstanceOf(ExpertFilter.class);
+                    assertThat(filter.getEquipmentType()).isEqualTo(EquipmentType.LINE);
+                    assertThat(filterWithDistributionKeys.getDistributionKeys()).isEmpty();
+                });
+        filterServer.verify();
+    }
+
+    @Test
+    void getStandaloneFiltersWithDistributionKeysShouldOmitFiltersThatDoNotExistAnymore() throws JsonProcessingException {
+        // Arrange : the filter server silently omits ids it cannot resolve
+        UUID existingFilterId = UUID.randomUUID();
+        UUID deletedFilterId = UUID.randomUUID();
+        Map<UUID, FilterWithDistributionKeys> filtersById = Map.of(existingFilterId, FilterWithDistributionKeys.builder()
+                .filter(IdentifierListFilter.builder()
+                        .equipmentType(EquipmentType.LOAD).equipmentIds(Set.of("LOAD1")).build())
+                .distributionKeys(Map.of("LOAD1", 1.0))
+                .build());
+        expectStandaloneFiltersWithDistributionKeysRequest(filtersById, existingFilterId, deletedFilterId);
+
+        // Act
+        Map<UUID, FilterWithDistributionKeys> loadedFilters = filterService.getStandaloneFiltersWithDistributionKeys(List.of(existingFilterId, deletedFilterId));
+
+        // Assert : callers detect deleted filters by diffing the requested ids with the returned keys
+        assertThat(loadedFilters).containsOnlyKeys(existingFilterId).doesNotContainValue(null);
+        filterServer.verify();
+    }
+
+    @Test
+    void getStandaloneFiltersWithDistributionKeysShouldReturnAnEmptyMapWhenNoFilterIsResolved() throws JsonProcessingException {
+        // Arrange
+        UUID deletedFilterId = UUID.randomUUID();
+        expectStandaloneFiltersWithDistributionKeysRequest(Map.of(), deletedFilterId);
+
+        // Act & Assert
+        assertThat(filterService.getStandaloneFiltersWithDistributionKeys(List.of(deletedFilterId))).isEmpty();
+        filterServer.verify();
+    }
+
+    @Test
+    void getStandaloneFiltersWithDistributionKeysShouldNotCallTheFilterServerWhenNoFilterIsRequested() {
+        // Act & Assert : no expectation is registered, so any outgoing request would fail the test
+        assertThat(filterService.getStandaloneFiltersWithDistributionKeys(List.of())).isEmpty();
+        assertThat(filterService.getStandaloneFiltersWithDistributionKeys(null)).isEmpty();
+        filterServer.verify();
+    }
+
     private void expectStandaloneFiltersRequest(Map<UUID, Filter> responseBody, UUID... requestedIds) throws JsonProcessingException {
         StringBuilder expectedUri = new StringBuilder(FILTER_SERVER_BASE_URI).append(STANDALONE_FILTERS_PATH);
+        for (int i = 0; i < requestedIds.length; i++) {
+            expectedUri.append(i == 0 ? '?' : '&').append("ids=").append(requestedIds[i]);
+        }
+        filterServer.expect(requestTo(expectedUri.toString()))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(responseBody), APPLICATION_JSON));
+    }
+
+    private void expectStandaloneFiltersWithDistributionKeysRequest(Map<UUID, FilterWithDistributionKeys> responseBody, UUID... requestedIds) throws JsonProcessingException {
+        StringBuilder expectedUri = new StringBuilder(FILTER_SERVER_BASE_URI).append(STANDALONE_FILTERS_WITH_DISTRIBUTION_KEYS_PATH);
         for (int i = 0; i < requestedIds.length; i++) {
             expectedUri.append(i == 0 ? '?' : '&').append("ids=").append(requestedIds[i]);
         }
