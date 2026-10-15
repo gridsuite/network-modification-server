@@ -74,6 +74,9 @@ class ModificationRepositoryTest {
     private NetworkModificationRepository networkModificationRepository;
 
     @Autowired
+    private NetworkModificationService networkModificationService;
+
+    @Autowired
     private ModificationContainerRepository modificationContainerRepository;
 
     @Autowired
@@ -2276,7 +2279,7 @@ class ModificationRepositoryTest {
                 .build());
         List<ModificationInfos> savedModificationInfos = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modification));
 
-        AbstractModification standaloneNetworkModification = networkModificationRepository.getStandaloneNetworkModification(savedModificationInfos.getFirst().getUuid());
+        AbstractModification standaloneNetworkModification = networkModificationService.getStandaloneNetworkModification(savedModificationInfos.getFirst().getUuid());
 
         assertThat(standaloneNetworkModification).isEqualTo(savedModificationInfos.getFirst().toModification());
     }
@@ -2285,7 +2288,7 @@ class ModificationRepositoryTest {
     void testGetNonExistentStandaloneNetworkModificationThrowsException() {
         UUID nonExistingUuid = UUID.randomUUID();
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getStandaloneNetworkModification(nonExistingUuid));
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationService.getStandaloneNetworkModification(nonExistingUuid));
     }
 
     @Test
@@ -2313,7 +2316,7 @@ class ModificationRepositoryTest {
         Map<UUID, AbstractModification> expectedModifications = savedModificationInfos.stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification));
 
-        Map<UUID, AbstractModification> standaloneNetworkModifications = networkModificationRepository.getStandaloneNetworkModifications(List.of(savedModificationInfos.getFirst().getUuid(),
+        Map<UUID, AbstractModification> standaloneNetworkModifications = networkModificationService.getStandaloneNetworkModifications(List.of(savedModificationInfos.getFirst().getUuid(),
                 savedModificationInfos.getLast().getUuid()), false);
 
         assertThat(standaloneNetworkModifications).isEqualTo(expectedModifications);
@@ -2332,7 +2335,7 @@ class ModificationRepositoryTest {
         Map<UUID, AbstractModification> expectedModifications = savedModificationInfos.stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification));
 
-        Map<UUID, AbstractModification> standaloneNetworkModifications = networkModificationRepository.getStandaloneNetworkModifications(List.of(savedModificationInfos.getFirst().getUuid(),
+        Map<UUID, AbstractModification> standaloneNetworkModifications = networkModificationService.getStandaloneNetworkModifications(List.of(savedModificationInfos.getFirst().getUuid(),
                 UUID.randomUUID()), false);
 
         assertThat(standaloneNetworkModifications).isEqualTo(expectedModifications);
@@ -2342,7 +2345,7 @@ class ModificationRepositoryTest {
     void testGetStandaloneNetworkModificationsWithErrorOnMissingModificationThrowsException() {
         List<UUID> nonExistingUuids = List.of(UUID.randomUUID(), UUID.randomUUID());
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getStandaloneNetworkModifications(nonExistingUuids, true));
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationService.getStandaloneNetworkModifications(nonExistingUuids, true));
     }
 
     private static EquipmentAttributeModificationInfos switchInfos(String equipmentId) {
