@@ -593,6 +593,7 @@ public class NetworkModificationService {
             new NetworkModificationsResult(ids, result));
     }
 
+    @Transactional
     public void unshareModification(@NonNull UUID referenceModificationUuid) {
         ModificationEntity referenceEntity = modificationRepository.findById(referenceModificationUuid)
                 .orElseThrow(() -> networkModificationRepository.getModificationNotFoundException(referenceModificationUuid.toString()));
@@ -623,7 +624,9 @@ public class NetworkModificationService {
                         containerEntity.getId()));
         directoryService.removeElementReferences(referenceData, null);
 
-        modificationRepository.deleteById(referenceModificationUuid);
+        AbstractModificationContainerEntity container = referenceEntity.getContainer();
+        UUID groupUuid = container != null && container.isGroup() ? container.getId() : null;
+        deleteNetworkModifications(groupUuid, List.of(referenceModificationUuid));
     }
 
     /**
