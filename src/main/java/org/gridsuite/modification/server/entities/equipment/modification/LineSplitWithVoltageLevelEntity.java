@@ -40,16 +40,16 @@ public class LineSplitWithVoltageLevelEntity extends ModificationEntity {
     @Column
     private String bbsOrBusId;
 
-    @Column
+    @Column(name = "new_line1id")
     private String newLine1Id;
 
-    @Column
+    @Column(name = "new_line1name")
     private String newLine1Name;
 
-    @Column
+    @Column(name = "new_line2id")
     private String newLine2Id;
 
-    @Column
+    @Column(name = "new_line2name")
     private String newLine2Name;
 
     public LineSplitWithVoltageLevelEntity(@NonNull LineSplitWithVoltageLevelInfos splitWithVoltageLevelInfos) {

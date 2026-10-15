@@ -53,15 +53,15 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "operatorActivePowerLimitSide1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "operatorActivePowerLimitSide1Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "operator_active_power_limit_side1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "operator_active_power_limit_side1op"))
     })
     private FloatModificationEmbedded operatorActivePowerLimitSide1;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "operatorActivePowerLimitSide2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "operatorActivePowerLimitSide2Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "operator_active_power_limit_side2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "operator_active_power_limit_side2op"))
     })
     private FloatModificationEmbedded operatorActivePowerLimitSide2;
 
@@ -89,7 +89,7 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "p0")),
-        @AttributeOverride(name = "opType", column = @Column(name = "p0Op"))
+        @AttributeOverride(name = "opType", column = @Column(name = "p0op"))
     })
     private FloatModificationEmbedded p0;
 

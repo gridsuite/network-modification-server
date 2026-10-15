@@ -58,16 +58,16 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private LineCreationEntity lineCreation;
 
-    @Column
+    @Column(name = "new_line1id")
     private String newLine1Id;
 
-    @Column
+    @Column(name = "new_line1name")
     private String newLine1Name;
 
-    @Column
+    @Column(name = "new_line2id")
     private String newLine2Id;
 
-    @Column
+    @Column(name = "new_line2name")
     private String newLine2Name;
 
     public LineAttachToVoltageLevelEntity(@NonNull LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {

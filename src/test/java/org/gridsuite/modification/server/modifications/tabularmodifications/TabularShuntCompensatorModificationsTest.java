@@ -22,7 +22,9 @@ import org.gridsuite.modification.server.modifications.AbstractNetworkModificati
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +36,8 @@ import static org.mockito.Mockito.when;
  * @author SARTORI David <david.sartori_externe at rte-france.com>
  */
 @Tag("IntegrationTest")
-    class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificationTest {
+@ExtendWith(MockitoExtension.class)
+class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificationTest {
 
     @Mock
     private Network network;
@@ -193,7 +196,6 @@ import static org.mockito.Mockito.when;
 
         when(network.getShuntCompensator("id")).thenReturn(shuntCompensator);
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.LINEAR);
-        when(shuntCompensator.getId()).thenReturn("id");
         ReportNode reportNode = ReportNode.newRootReportNode()
                 .withResourceBundles("i18n.reports")
                 .withMessageTemplate("test")

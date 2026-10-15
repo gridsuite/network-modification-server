@@ -6,12 +6,12 @@
  */
 package org.gridsuite.modification.server;
 
+import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.http.HttpHost;
-import org.elasticsearch.client.RestClient;
+import org.apache.hc.core5.http.HttpHost;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.SupervisionService;
 import org.springframework.http.MediaType;
@@ -33,10 +33,10 @@ public class SupervisionController {
 
     private final LineTypesCatalogService lineTypesCatalogService;
 
-    private final RestClient restClient;
+    private final Rest5Client restClient;
 
     public SupervisionController(SupervisionService supervisionService, LineTypesCatalogService lineTypesCatalogService,
-                                 RestClient restClient) {
+                                 Rest5Client restClient) {
         this.supervisionService = supervisionService;
         this.lineTypesCatalogService = lineTypesCatalogService;
         this.restClient = restClient;

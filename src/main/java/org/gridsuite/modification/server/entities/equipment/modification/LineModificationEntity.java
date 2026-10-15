@@ -33,28 +33,28 @@ public class LineModificationEntity extends BranchModificationEntity {
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "g1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "g1Op"))
+        @AttributeOverride(name = "opType", column = @Column(name = "g1op"))
     })
     private DoubleModificationEmbedded g1;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "b1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "b1Op"))
+        @AttributeOverride(name = "opType", column = @Column(name = "b1op"))
     })
     private DoubleModificationEmbedded b1;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "g2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "g2Op"))
+        @AttributeOverride(name = "opType", column = @Column(name = "g2op"))
     })
     private DoubleModificationEmbedded g2;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "b2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "b2Op"))
+        @AttributeOverride(name = "opType", column = @Column(name = "b2op"))
     })
     private DoubleModificationEmbedded b2;
 

@@ -49,19 +49,19 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private DoubleModificationEmbedded b;
 
-    @Column(name = "ratedU1")
+    @Column(name = "ratedu1")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratedU1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratedU1_op"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratedu1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratedu1_op"))
     })
     private DoubleModificationEmbedded ratedU1;
 
-    @Column(name = "ratedU2")
+    @Column(name = "ratedu2")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratedU2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratedU2_op"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratedu2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratedu2_op"))
     })
     private DoubleModificationEmbedded ratedU2;
 

@@ -8,8 +8,10 @@ import org.gridsuite.modification.server.repositories.ModificationApplicationRep
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -29,6 +31,7 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @DisableElasticsearch
+@ExtendWith(MockitoExtension.class)
 class SupervisionTest {
     @Autowired
     private SupervisionService supervisionService;

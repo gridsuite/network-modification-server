@@ -54,155 +54,155 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "selectedOperationalLimitsGroupId1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "selectedOperationalLimitsGroupId1Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "selected_operational_limits_group_id1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "selected_operational_limits_group_id1op"))
     })
     private StringModificationEmbedded selectedOperationalLimitsGroupId1;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "selectedOperationalLimitsGroupId2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "selectedOperationalLimitsGroupId2Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "selected_operational_limits_group_id2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "selected_operational_limits_group_id2op"))
     })
     private StringModificationEmbedded selectedOperationalLimitsGroupId2;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "voltageLevelId1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "voltageLevelId1Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "voltage_level_id1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "voltage_level_id1op"))
     })
     private StringModificationEmbedded voltageLevelId1;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "voltageLevelId2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "voltageLevelId2Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "voltage_level_id2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "voltage_level_id2op"))
     })
     private StringModificationEmbedded voltageLevelId2;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "busOrBusbarSectionId1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "busOrBusbarSectionId1Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "bus_or_busbar_section_id1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "bus_or_busbar_section_id1op"))
     })
     private StringModificationEmbedded busOrBusbarSectionId1;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "busOrBusbarSectionId2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "busOrBusbarSectionId2Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "bus_or_busbar_section_id2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "bus_or_busbar_section_id2op"))
     })
     private StringModificationEmbedded busOrBusbarSectionId2;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "connectionName1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "connectionName1Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "connection_name1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connection_name1op"))
     })
     private StringModificationEmbedded connectionName1;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "connectionName2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "connectionName2Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "connection_name2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connection_name2op"))
     })
     private StringModificationEmbedded connectionName2;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "connectionPosition1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "connectionPosition1Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "connection_position1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connection_position1op"))
     })
     private IntegerModificationEmbedded connectionPosition1;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "connectionPosition2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "connectionPosition2Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "connection_position2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connection_position2op"))
     })
     private IntegerModificationEmbedded connectionPosition2;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "connectionDirection1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "connectionDirection1Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "connection_direction1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connection_direction1op"))
     })
     private EnumModificationEmbedded<ConnectablePosition.Direction> connectionDirection1;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "connectionDirection2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "connectionDirection2Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "connection_direction2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connection_direction2op"))
     })
     private EnumModificationEmbedded<ConnectablePosition.Direction> connectionDirection2;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "connected1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "connected1Op"))
+        @AttributeOverride(name = "opType", column = @Column(name = "connected1op"))
     })
     private BooleanModificationEmbedded terminal1Connected;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "connected2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "connected2Op"))
+        @AttributeOverride(name = "opType", column = @Column(name = "connected2op"))
     })
     private BooleanModificationEmbedded terminal2Connected;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "p1MeasurementValue")),
-        @AttributeOverride(name = "opType", column = @Column(name = "p1MeasurementValueOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "p1measurement_value")),
+        @AttributeOverride(name = "opType", column = @Column(name = "p1measurement_value_op"))
     })
     private DoubleModificationEmbedded p1MeasurementValue;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "p1MeasurementValidity")),
-        @AttributeOverride(name = "opType", column = @Column(name = "p1MeasurementValidityOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "p1measurement_validity")),
+        @AttributeOverride(name = "opType", column = @Column(name = "p1measurement_validity_op"))
     })
     private BooleanModificationEmbedded p1MeasurementValidity;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "q1MeasurementValue")),
-        @AttributeOverride(name = "opType", column = @Column(name = "q1MeasurementValueOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "q1measurement_value")),
+        @AttributeOverride(name = "opType", column = @Column(name = "q1measurement_value_op"))
     })
     private DoubleModificationEmbedded q1MeasurementValue;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "q1MeasurementValidity")),
-        @AttributeOverride(name = "opType", column = @Column(name = "q1MeasurementValidityOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "q1measurement_validity")),
+        @AttributeOverride(name = "opType", column = @Column(name = "q1measurement_validity_op"))
     })
     private BooleanModificationEmbedded q1MeasurementValidity;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "p2MeasurementValue")),
-        @AttributeOverride(name = "opType", column = @Column(name = "p2MeasurementValueOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "p2measurement_value")),
+        @AttributeOverride(name = "opType", column = @Column(name = "p2measurement_value_op"))
     })
     private DoubleModificationEmbedded p2MeasurementValue;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "p2MeasurementValidity")),
-        @AttributeOverride(name = "opType", column = @Column(name = "p2MeasurementValidityOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "p2measurement_validity")),
+        @AttributeOverride(name = "opType", column = @Column(name = "p2measurement_validity_op"))
     })
     private BooleanModificationEmbedded p2MeasurementValidity;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "q2MeasurementValue")),
-        @AttributeOverride(name = "opType", column = @Column(name = "q2MeasurementValueOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "q2measurement_value")),
+        @AttributeOverride(name = "opType", column = @Column(name = "q2measurement_value_op"))
     })
     private DoubleModificationEmbedded q2MeasurementValue;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "q2MeasurementValidity")),
-        @AttributeOverride(name = "opType", column = @Column(name = "q2MeasurementValidityOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "q2measurement_validity")),
+        @AttributeOverride(name = "opType", column = @Column(name = "q2measurement_validity_op"))
     })
     private BooleanModificationEmbedded q2MeasurementValidity;
 

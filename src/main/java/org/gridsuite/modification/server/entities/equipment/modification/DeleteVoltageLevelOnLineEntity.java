@@ -25,16 +25,16 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 @Table(name = "DeleteVoltageLevelOnLine")
 public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
 
-    @Column
+    @Column(name = "line_to_attach_to1id")
     private String lineToAttachTo1Id;
 
-    @Column
+    @Column(name = "line_to_attach_to2id")
     private String lineToAttachTo2Id;
 
-    @Column
+    @Column(name = "replacing_line1id")
     private String replacingLine1Id;
 
-    @Column
+    @Column(name = "replacing_line1name")
     private String replacingLine1Name;
 
     public DeleteVoltageLevelOnLineEntity(@NonNull DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {

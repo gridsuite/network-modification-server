@@ -36,10 +36,10 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
     @Column(name = "b")
     private double b;
 
-    @Column(name = "ratedU1")
+    @Column(name = "ratedu1")
     private double ratedU1;
 
-    @Column(name = "ratedU2")
+    @Column(name = "ratedu2")
     private double ratedU2;
 
     @Column(name = "rateds")
