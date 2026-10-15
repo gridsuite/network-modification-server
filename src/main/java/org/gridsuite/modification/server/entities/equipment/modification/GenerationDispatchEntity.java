@@ -121,7 +121,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
     private List<FilterInfos> toGeneratorsFilters(List<GeneratorsFilterEmbeddable> generatorsFilters) {
         return generatorsFilters != null ? generatorsFilters
                 .stream()
-                .map(GeneratorsFilterEmbeddable::toGeneratorsFilterInfos)
+                .map(GeneratorsFilterEmbeddable::toFilterInfos)
                 .collect(Collectors.toList()) : null;
     }
 
@@ -131,7 +131,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
             generatorsFrequencyReserveInfos = generatorsFrequencyReserve.stream()
                 .filter(Objects::nonNull)
                 .map(generator -> {
-                    List<GeneratorsFilterInfos> generatorsFilterInfos = generator.getGeneratorsFilters().stream().map(GeneratorsFilterEmbeddable::toGeneratorsFilterInfos).collect(Collectors.toList());
+                    List<FilterInfos> generatorsFilterInfos = generator.getGeneratorsFilters().stream().map(GeneratorsFilterEmbeddable::toFilterInfos).collect(Collectors.toList());
                     return new GeneratorsFrequencyReserveInfos(generatorsFilterInfos, generator.getFrequencyReserve());
                 }).collect(Collectors.toList());
         }

@@ -11,7 +11,7 @@ import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.GeneratorsFilterInfos;
+import org.gridsuite.modification.dto.FilterInfos;
 import java.util.UUID;
 
 /**
@@ -28,7 +28,7 @@ public class GeneratorsFilterEmbeddable {
     /**
      * The filter name is not stored: the directory owns it and it is resolved on read.
      */
-    public GeneratorsFilterInfos toGeneratorsFilterInfos() {
-        return GeneratorsFilterInfos.builder().id(id).build();
+    public FilterInfos toFilterInfos() {
+        return FilterInfos.builder().id(id).build();
     }
 }

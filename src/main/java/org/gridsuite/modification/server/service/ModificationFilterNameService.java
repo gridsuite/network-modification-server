@@ -53,13 +53,13 @@ public class ModificationFilterNameService {
      * Sets, on the filters the given modifications reference, their current name in the directory, before applying them.
      * <p>
      * Filter names only feed the reports here: failing to resolve them must not prevent applying the modifications,
-     * the reports then show the filter ids instead.
+     * the reports then number the filters instead.
      */
     public void addFilterNamesForReports(List<ModificationInfos> modifications) {
         try {
             resolveFilterNames(modifications);
         } catch (RestClientException e) {
-            LOGGER.warn("Could not resolve filter names from the directory, reports will show filter ids instead", e);
+            LOGGER.warn("Could not resolve filter names from the directory, reports will number the filters instead", e);
         }
     }
 
