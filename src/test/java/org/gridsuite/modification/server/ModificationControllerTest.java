@@ -55,8 +55,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -735,7 +735,7 @@ class ModificationControllerTest {
                 .andExpect(status().isOk());
         assertNotNull(network.getGenerator("idGenerator"));
         assertEquals(20, network.getGenerator("idGenerator").getTargetP(), 0.1);
-        assertLogMessage("Technical error: java.lang.NullPointerException: Cannot set property 'targetP' on null object",
+        assertLogMessage("Technical error: java.lang.NullPointerException: Cannot invoke \"Object.getClass()\" because \"obj\" is null",
                 ERROR_MESSAGE_KEY, reportService);
 
         assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID, true).size());

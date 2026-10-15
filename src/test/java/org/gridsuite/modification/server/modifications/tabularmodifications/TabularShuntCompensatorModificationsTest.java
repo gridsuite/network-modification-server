@@ -22,7 +22,11 @@ import org.gridsuite.modification.server.modifications.AbstractNetworkModificati
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +38,9 @@ import static org.mockito.Mockito.when;
  * @author SARTORI David <david.sartori_externe at rte-france.com>
  */
 @Tag("IntegrationTest")
-    class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificationTest {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificationTest {
 
     @Mock
     private Network network;
