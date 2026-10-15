@@ -27,10 +27,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.entities.AbstractModificationContainerEntity;
-import org.gridsuite.modification.server.entities.ModificationContainerType;
-import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.ModificationReferenceEntity;
+import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -54,8 +51,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.gridsuite.modification.ModificationType.MODIFICATION_REFERENCE;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
+import static org.gridsuite.modification.server.repositories.NetworkModificationRepository.MODIFICATION_ID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -595,9 +594,16 @@ public class NetworkModificationService {
     }
 
     public void unshareModification(@NonNull UUID referenceModificationUuid) {
-        // TODO : check that this is a reference modification
         ModificationEntity referenceEntity = modificationRepository.findById(referenceModificationUuid)
                 .orElseThrow(() -> networkModificationRepository.getModificationNotFoundException(referenceModificationUuid.toString()));
+
+        if (!referenceEntity.getType().equals(MODIFICATION_REFERENCE.name())) {
+            // Only a reference modification may be unshared
+            String expectedType = ModificationType.MODIFICATION_REFERENCE.name();
+            throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
+                    String.format(MODIFICATION_BAD_TYPE.messageTemplate(), referenceModificationUuid, referenceEntity.getType(), expectedType),
+                    Map.of(MODIFICATION_ID, referenceModificationUuid.toString(), "modificationType", referenceEntity.getType(), "expectedModificationType", expectedType));
+        }
         ModificationInfos referencedCompositeInfos = networkModificationRepository.getModificationInfo(
                 ((ModificationReferenceEntity) referenceEntity).getReferencedId());
 
@@ -617,10 +623,7 @@ public class NetworkModificationService {
                         containerEntity.getId()));
         directoryService.removeElementReferences(referenceData, null);
 
-        // delete the referenceModificationUuid
         modificationRepository.deleteById(referenceModificationUuid);
-//        Une erreur est survenue lors du départage de la modification
-//        Erreur serveur: 500  on PUT request for "http://localhost:5007/v1/network-modifications/6c135313-dc46-40e3-b2ea-89adde47a830/unshare": "{"timestamp":"2026-10-12T15:20:58.502+00:00","status":500,"error":"Internal Server Error","message":"could not execute batch [Batch entry 0 delete from modification where id=('6c135313-dc46-40e3-b2ea-89adde47a830'::uuid) was aborted: ERROR: update or delete on table \"modification\" violates foreign key constraint \"modification_uuid_fk_constraint\" on table \"modification_application\"\n  Détail : Key (id)=(6c135313-dc46-40e3
     }
 
     /**
