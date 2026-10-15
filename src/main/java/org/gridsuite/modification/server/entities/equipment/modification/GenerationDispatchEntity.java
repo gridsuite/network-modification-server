@@ -20,8 +20,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
-import org.gridsuite.modification.dto.GeneratorsFilterInfos;
 import org.gridsuite.modification.dto.GeneratorsFrequencyReserveInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.SubstationsGeneratorsOrderingInfos;
@@ -100,7 +100,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
         }
     }
 
-    public static List<GeneratorsFilterEmbeddable> toEmbeddableGeneratorsFilters(List<GeneratorsFilterInfos> generators) {
+    public static List<GeneratorsFilterEmbeddable> toEmbeddableGeneratorsFilters(List<FilterInfos> generators) {
         return generators == null ? null : generators.stream()
             .map(generator -> new GeneratorsFilterEmbeddable(generator.getId()))
             .collect(Collectors.toList());
@@ -118,7 +118,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
         return generatorsFrequencyReserveEntities;
     }
 
-    private List<GeneratorsFilterInfos> toGeneratorsFilters(List<GeneratorsFilterEmbeddable> generatorsFilters) {
+    private List<FilterInfos> toGeneratorsFilters(List<GeneratorsFilterEmbeddable> generatorsFilters) {
         return generatorsFilters != null ? generatorsFilters
                 .stream()
                 .map(GeneratorsFilterEmbeddable::toGeneratorsFilterInfos)

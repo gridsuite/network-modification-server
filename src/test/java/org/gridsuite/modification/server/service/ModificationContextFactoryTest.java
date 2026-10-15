@@ -20,14 +20,16 @@ import static org.mockito.Mockito.mock;
 class ModificationContextFactoryTest {
 
     private FilterLoaderService filterLoaderService;
+    private FilterWithDistributionKeysLoaderService filterWithDistributionKeysLoaderService;
     private LoadFlowParametersLoaderService loadFlowParametersLoaderService;
     private ModificationContextFactory factory;
 
     @BeforeEach
     void setUp() {
         filterLoaderService = mock(FilterLoaderService.class);
+        filterWithDistributionKeysLoaderService = mock(FilterWithDistributionKeysLoaderService.class);
         loadFlowParametersLoaderService = mock(LoadFlowParametersLoaderService.class);
-        factory = new ModificationContextFactory(filterLoaderService, loadFlowParametersLoaderService);
+        factory = new ModificationContextFactory(filterLoaderService, filterWithDistributionKeysLoaderService, loadFlowParametersLoaderService);
     }
 
     @Test
@@ -35,6 +37,7 @@ class ModificationContextFactoryTest {
         ModificationContext context = factory.create();
 
         assertSame(filterLoaderService, context.filterLoader());
+        assertSame(filterWithDistributionKeysLoaderService, context.filterWithDistributionKeysLoader());
         assertSame(loadFlowParametersLoaderService, context.loadFlowParametersLoader());
     }
 
