@@ -150,7 +150,7 @@ class GroovyScriptTest extends AbstractNetworkModificationTest {
         // apply groovy script with unknown generator
         mockMvc.perform(post(getNetworkModificationUri()).content(getJsonBody(groovyScriptInfos, null)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Technical error: java.lang.NullPointerException: Cannot set property 'targetP' on null object",
+        assertLogMessage("Technical error: java.lang.NullPointerException: Cannot invoke \"Object.getClass()\" because \"obj\" is null",
                 ERROR_MESSAGE_KEY, reportService);
     }
 }

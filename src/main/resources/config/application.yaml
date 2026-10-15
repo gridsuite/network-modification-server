@@ -2,6 +2,10 @@ spring:
   application:
     name: network-modification-server
 
+  http:
+    converters:
+      preferred-json-mapper: jackson2
+
   mvc:
     async:
       # To have the same behavior of no timeouts as regular endpoints for servlet 3.0+ asynccontext endpoints
@@ -9,6 +13,12 @@ spring:
       request-timeout: -1
 
   jpa:
+    hibernate:
+      naming:
+        # We should remove this yaml config and the associated class when we do the
+        # databas renames to match the new better Hibernate's default naming strategy.
+        # see https://hibernate.atlassian.net/browse/HHH-17310
+        physical-strategy: org.gridsuite.modification.server.config.Hibernate6CompatCamelCaseToUnderscoresNamingStrategy
     properties:
       hibernate:
         order_inserts: true
