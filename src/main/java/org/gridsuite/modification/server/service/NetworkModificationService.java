@@ -598,6 +598,9 @@ public class NetworkModificationService {
         ModificationEntity referenceEntity = modificationRepository.findById(referenceModificationUuid)
                 .orElseThrow(() -> networkModificationRepository.getModificationNotFoundException(referenceModificationUuid.toString()));
 
+        AbstractModificationContainerEntity container = referenceEntity.getContainer();
+        UUID groupUuid = container != null && container.isGroup() ? container.getId() : null;
+
         if (!referenceEntity.getType().equals(MODIFICATION_REFERENCE.name())) {
             // Only a reference modification may be unshared
             String expectedType = ModificationType.MODIFICATION_REFERENCE.name();
@@ -609,6 +612,8 @@ public class NetworkModificationService {
                 ((ModificationReferenceEntity) referenceEntity).getReferencedId());
 
         // copy the referenced composite into a new composite
+        // ATTENTION : this simple copy only work in the context of reference modification not containing reference modifications
+        // -> if this changes, this copy should be upgraded (and maybe use an upgraded version of insertCompositeModifications)
         ModificationEntity copiedComposite = ModificationEntity.fromDTO(referencedCompositeInfos);
 
         // put the new copied composite into the container of the replaced reference modification
@@ -623,9 +628,6 @@ public class NetworkModificationService {
                         ((ModificationReferenceEntity) referenceEntity).getReferencedId(),
                         containerEntity.getId()));
         directoryService.removeElementReferences(referenceData, null);
-
-        AbstractModificationContainerEntity container = referenceEntity.getContainer();
-        UUID groupUuid = container != null && container.isGroup() ? container.getId() : null;
         deleteNetworkModifications(groupUuid, List.of(referenceModificationUuid));
     }
 
