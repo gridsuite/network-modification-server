@@ -148,11 +148,10 @@ public class NetworkModificationController {
                 .thenApply(ResponseEntity.ok()::body);
     }
 
-    @PutMapping(value = "/network-modifications/{referenceModificationUuid}/unshare", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/network-modifications/{referenceModificationUuid}/unshare")
     @Operation(summary = "Unshare a reference modification and copy the referenced composite in its place")
     @ApiResponse(responseCode = "200", description = "The reference modification has been replaced by a copy of its referenced composite")
-    public void unshareModification(
-            @PathVariable("referenceModificationUuid") UUID referenceModificationUuid) {
+    public void unshareModification(@PathVariable("referenceModificationUuid") UUID referenceModificationUuid) {
         networkModificationService.unshareModification(referenceModificationUuid);
     }
 
