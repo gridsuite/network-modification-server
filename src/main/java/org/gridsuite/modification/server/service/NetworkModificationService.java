@@ -290,6 +290,12 @@ public class NetworkModificationService {
     }
 
     @Transactional
+    public void addRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String newTag) {
+        assertRootNetworkTagFits(newTag);
+        networkModificationRepository.addRootNetworkTag(groupUuids, newTag);
+    }
+
+    @Transactional
     public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag) {
         assertRootNetworkTagFits(newTag);
         networkModificationRepository.renameRootNetworkTag(groupUuids, oldTag, newTag);

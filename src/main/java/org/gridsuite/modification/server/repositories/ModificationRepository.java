@@ -101,6 +101,23 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     boolean isModificationReferenced(@Param("referencedId") UUID referencedId);
 
     /**
+     * Gives an applicability for {@code tag} to those of the given modifications that have none for it yet: they are
+     * applicable on it unless they are not applicable on another tag. A reference is left out: its applicability is
+     * the one of the shared modification it points to.
+     */
+    @Modifying
+    @Query("""
+        INSERT INTO ModificationRootNetworkApplicabilityEntity (modification, rootNetworkTag, applicable)
+        SELECT m, :tag, CASE WHEN EXISTS (SELECT 1 FROM ModificationRootNetworkApplicabilityEntity a
+                                           WHERE a.modification = m AND a.applicable = false) THEN false ELSE true END
+          FROM ModificationEntity m
+         WHERE m.id IN (:ids) AND TYPE(m) <> ModificationReferenceEntity
+           AND NOT EXISTS (SELECT 1 FROM ModificationRootNetworkApplicabilityEntity a
+                            WHERE a.modification = m AND a.rootNetworkTag = :tag)
+        """)
+    void addRootNetworkApplicabilityIfMissing(@Param("ids") Collection<UUID> ids, @Param("tag") String tag);
+
+    /**
      * Copies the applicability of {@code fromTag} to {@code toTag}.
      */
     @Modifying

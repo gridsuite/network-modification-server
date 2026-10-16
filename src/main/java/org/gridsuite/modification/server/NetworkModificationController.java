@@ -358,6 +358,16 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping(value = "/network-modifications/root-network-tag")
+    @Operation(summary = "Adds a root network tag to the applicabilities of the modifications of the given groups, if not present")
+    @ApiResponse(responseCode = "200", description = "The root network tag has been successfully added")
+    public ResponseEntity<Void> addRootNetworkTag(
+            @Parameter(description = "Modification groups UUIDs") @RequestParam("groupUuids") List<UUID> groupUuids,
+            @Parameter(description = "Root network tag to add") @RequestParam("newTag") String newTag) {
+        networkModificationService.addRootNetworkTag(groupUuids, newTag);
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping(value = "/network-modifications/root-network-tag")
     @Operation(summary = "Renames a root network tag in the applicabilities of the modifications of the given groups")
     @ApiResponse(responseCode = "200", description = "The root network tag has been successfully renamed")
