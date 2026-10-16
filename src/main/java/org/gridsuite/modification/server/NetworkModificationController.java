@@ -355,6 +355,17 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping(value = "/network-modifications/{uuid}/name-and-description", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Update a modification name and description")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
+    public ResponseEntity<Void> updateModificationNameAndDescription(
+            @PathVariable("uuid") UUID modificationUuid,
+            @RequestHeader(HEADER_USER_ID) String userId,
+            @Parameter(description = "New composite metadata") @RequestBody ModificationMetadata modificationMetadata) {
+        networkModificationService.updateModificationNameAndDescription(modificationUuid, modificationMetadata, userId);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping(value = "/groups/stashed-modifications")
     @Operation(summary = "Delete all the stashed modifications from given groups")
     @ApiResponse(responseCode = "200", description = "All stashed modifications from the given groups are deleted")
