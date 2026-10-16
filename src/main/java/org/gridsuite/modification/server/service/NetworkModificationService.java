@@ -123,14 +123,6 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public Map<UUID, List<ModificationInfos>> getNetworkModifications(List<UUID> containerUuids, boolean onlyMetadata, StashedFilter stashedFilter) {
-        Map<UUID, List<ModificationInfos>> modifications = new LinkedHashMap<>();
-        containerUuids.forEach(containerUuid -> modifications.put(containerUuid,
-                networkModificationRepository.getModifications(containerUuid, onlyMetadata, stashedFilter)));
-        return modifications;
-    }
-
-    @Transactional(readOnly = true)
     public NetworkModificationExportInfos getNetworkModificationsInfosToExport(UUID containerUuid) {
         List<ModificationInfos> allModifications = networkModificationRepository.getModifications(containerUuid, false, StashedFilter.UNSTASHED);
         List<ModificationInfos> exportable = new ArrayList<>();
