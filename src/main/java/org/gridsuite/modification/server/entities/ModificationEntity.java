@@ -26,7 +26,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.MODIFICATION_DESCRIPTION_MISSING;
 
@@ -166,6 +168,22 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         findApplicability(rootNetworkTag).ifPresentOrElse(
             applicability -> applicability.setApplicable(applicable),
             () -> applicabilities.add(new ModificationRootNetworkApplicabilityEntity(this, rootNetworkTag, applicable)));
+    }
+
+    /**
+     * Makes the modification applicable on the root network tag, unless it already holds an applicability for it.
+     */
+    public void setDefaultApplicabilityIfMissing(String rootNetworkTag) {
+        if (findApplicability(rootNetworkTag).isEmpty()) {
+            applicabilities.add(new ModificationRootNetworkApplicabilityEntity(this, rootNetworkTag, true));
+        }
+    }
+
+    /**
+     * @return the root network tags the modification is associated with, that is the ones it holds an applicability for
+     */
+    public Set<String> getRootNetworkTags() {
+        return applicabilities.stream().map(ModificationRootNetworkApplicabilityEntity::getRootNetworkTag).collect(Collectors.toSet());
     }
 
     private Optional<ModificationRootNetworkApplicabilityEntity> findApplicability(String rootNetworkTag) {

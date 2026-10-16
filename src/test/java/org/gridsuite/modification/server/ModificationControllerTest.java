@@ -578,6 +578,30 @@ class ModificationControllerTest {
     }
 
     @Test
+    void testWrittenModificationsAreAssociatedWithTheRootNetworks() throws Exception {
+        EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH).equipmentAttributeName("open").equipmentAttributeValue(true).equipmentId("v1b1").build();
+        String bodyJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(switchStatusModificationInfos,
+                List.of(new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, UUID.randomUUID(), UUID.randomUUID(), ROOT_NETWORK_TAG))));
+        MvcResult mvcResult = runRequestAsync(mockMvc, post(URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID).content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+        UUID modificationUuid = modificationRepository.getModifications(TEST_GROUP_ID, true).getFirst().getUuid();
+        assertEquals(Map.of(ROOT_NETWORK_TAG, true), readApplicabilities(TEST_GROUP_ID).get(modificationUuid),
+                "A modification is associated with the root networks it is applied on as it is written");
+
+        // a copy of the group, maybe into another study, is associated with the root networks of the copy
+        UUID newGroupUuid = UUID.randomUUID();
+        mockMvc.perform(post("/v1/groups/" + TEST_GROUP_ID + "/duplicate")
+                .queryParam("groupUuid", newGroupUuid.toString())
+                .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
+                .queryParam("rootNetworkTags", RENAMED_ROOT_NETWORK_TAG)
+                .header(HEADER_USER_ID, TEST_USER_ID)
+        ).andExpect(status().isOk());
+        assertEquals(List.of(Map.of(ROOT_NETWORK_TAG, true, RENAMED_ROOT_NETWORK_TAG, true)), List.copyOf(readApplicabilities(newGroupUuid).values()));
+    }
+
+    @Test
     void testUpdateRootNetworkApplicabilityWithTooLongTag() throws Exception {
         List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
 
