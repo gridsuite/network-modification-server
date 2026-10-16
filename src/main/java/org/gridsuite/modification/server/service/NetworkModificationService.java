@@ -402,7 +402,8 @@ public class NetworkModificationService {
     }
 
     /**
-     * @return whether the given containers point to shared modifications and, if so, whether the user can write on all of them
+     * @return whether the given containers point to shared modifications and, if so, whether the user can write on all,
+     * some or none of them
      */
     @Transactional(readOnly = true)
     public SharedModificationsWriteAccess getReferencedModificationsWriteAccess(@NonNull List<UUID> containerUuids, @NonNull String userId) {
@@ -410,9 +411,14 @@ public class NetworkModificationService {
         if (sharedUuids.isEmpty()) {
             return SharedModificationsWriteAccess.NO_SHARED_MODIFICATION;
         }
-        return getNotWritableUuids(sharedUuids, userId).isEmpty()
-                ? SharedModificationsWriteAccess.ALL_WRITABLE
-                : SharedModificationsWriteAccess.SOME_NOT_WRITABLE;
+        int notWritableCount = getNotWritableUuids(sharedUuids, userId).size();
+        if (notWritableCount == 0) {
+            return SharedModificationsWriteAccess.ALL_WRITABLE;
+        }
+        if (notWritableCount == sharedUuids.size()) {
+            return SharedModificationsWriteAccess.NONE_WRITABLE;
+        }
+        return SharedModificationsWriteAccess.SOME_WRITABLE;
     }
 
     public void assertReferencedModificationsAreWritable(@NonNull List<UUID> containerUuids, @NonNull String userId) {

@@ -336,7 +336,7 @@ public class NetworkModificationController {
     }
 
     @GetMapping(value = "/containers/references/write-access", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Whether the containers (groups or composites) point to shared modifications and, if so, whether the user can write on all of them")
+    @Operation(summary = "Whether the containers (groups or composites) point to shared modifications and, if so, whether the user can write on all, some or none of them")
     @ApiResponse(responseCode = "200", description = "The write access on the shared modifications was returned")
     public ResponseEntity<SharedModificationsWriteAccess> getReferencedModificationsWriteAccess(
             @Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids,

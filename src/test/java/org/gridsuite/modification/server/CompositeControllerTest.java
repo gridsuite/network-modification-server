@@ -1494,11 +1494,18 @@ class CompositeControllerTest {
     @Test
     void testReferencedModificationsWriteAccess() throws Exception {
         UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
+        UUID otherSharedCompositeUuid = insertSharedCompositeInSecondGroup(networkModificationRepository.getModifications(TEST_GROUP_ID, false));
 
-        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ));
-        assertEquals(SharedModificationsWriteAccess.SOME_NOT_WRITABLE, getReferencedModificationsWriteAccess(TEST_GROUP2_ID));
+        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID)))
+                .thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ, otherSharedCompositeUuid, PermissionType.READ));
+        assertEquals(SharedModificationsWriteAccess.NONE_WRITABLE, getReferencedModificationsWriteAccess(TEST_GROUP2_ID));
 
-        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.WRITE));
+        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID)))
+                .thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ, otherSharedCompositeUuid, PermissionType.WRITE));
+        assertEquals(SharedModificationsWriteAccess.SOME_WRITABLE, getReferencedModificationsWriteAccess(TEST_GROUP2_ID));
+
+        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID)))
+                .thenReturn(Map.of(sharedCompositeUuid, PermissionType.WRITE, otherSharedCompositeUuid, PermissionType.WRITE));
         assertEquals(SharedModificationsWriteAccess.ALL_WRITABLE, getReferencedModificationsWriteAccess(TEST_GROUP2_ID));
 
         // a container pointing at no shared modification does not even need the permission to be checked
@@ -1548,9 +1555,12 @@ class CompositeControllerTest {
     }
 
     private UUID insertSharedCompositeInSecondGroup() throws Exception {
-        List<ModificationInfos> switchMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        return insertSharedCompositeInSecondGroup(createSomeSwitchModifications(TEST_GROUP_ID, 1));
+    }
+
+    private UUID insertSharedCompositeInSecondGroup(List<ModificationInfos> content) throws Exception {
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "shared")
-                        .content(mapper.writeValueAsString(switchMods.stream().map(ModificationInfos::getUuid).toList()))
+                        .content(mapper.writeValueAsString(content.stream().map(ModificationInfos::getUuid).toList()))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
