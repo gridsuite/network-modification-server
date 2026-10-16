@@ -1447,6 +1447,16 @@ class CompositeControllerTest {
     }
 
     @Test
+    void testGetContainersWithReferences() throws Exception {
+        insertSharedCompositeInSecondGroup();
+
+        List<UUID> containersWithReferenceModifications = mapper.readValue(mockMvc.perform(get("/v1/containers/reference-modifications")
+                        .queryParam("uuids", TEST_GROUP_ID.toString(), TEST_GROUP2_ID.toString()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(List.of(TEST_GROUP2_ID), containersWithReferenceModifications);
+    }
+
+    @Test
     void testReferencedModificationsAreWritable() throws Exception {
         UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
         doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null))
