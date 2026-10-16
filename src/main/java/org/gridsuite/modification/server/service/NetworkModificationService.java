@@ -19,7 +19,6 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.modifications.AbstractModification;
@@ -149,27 +148,8 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public void verifyModifications(UUID containerUuid, Set<UUID> modificationUuids) {
         networkModificationRepository.assertContainerExists(containerUuid);
-        List<ModificationInfos> rootModifications = networkModificationRepository.getModifications(containerUuid, true);
-
-        Set<UUID> childrenUuids = rootModifications.stream()
-            .map(ModificationInfos::getUuid)
-            .collect(Collectors.toSet());
-
-        // Fetches all the children of the composites in the container
-        List<UUID> compositeUuids = rootModifications.stream()
-                .filter(m -> ModificationType.COMPOSITE_MODIFICATION == m.getType() ||
-                        ModificationType.MODIFICATION_REFERENCE == m.getType())
-                .map(m -> {
-                    if (ModificationType.COMPOSITE_MODIFICATION == m.getType()) {
-                        return m.getUuid();
-                    } else {
-                        // adds the composites which are not directly in the container but referenced through a reference modification
-                        return ((ModificationReferenceInfos) m).getReferencedId();
-                    }
-                })
-                .distinct()
-                .toList();
-        childrenUuids.addAll(networkModificationRepository.findAllChildrenUuids(compositeUuids, true));
+        HashSet<UUID> childrenUuids = new HashSet<>(modificationRepository.findAllChildrenMetadata(containerUuid, false)
+                .stream().map(ModificationRepository.ChildModificationMetadata::getId).toList());
 
         if (!childrenUuids.containsAll(modificationUuids)) {
             throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
@@ -180,7 +160,7 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     public List<UUID> findAllChildrenUuids(List<UUID> compositeModificationUuids) {
-        return networkModificationRepository.findAllChildrenUuids(compositeModificationUuids, false);
+        return networkModificationRepository.findAllChildrenUuids(compositeModificationUuids);
     }
 
     private void checkGenerationDispatchFilters(GenerationDispatchInfos generationDispatchInfos) {
