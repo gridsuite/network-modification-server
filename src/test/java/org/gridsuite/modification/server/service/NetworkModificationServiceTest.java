@@ -334,8 +334,8 @@ class NetworkModificationServiceTest {
         assertEquals(sharedComposite.getModificationsInfos().size(), copiedCompositeContent.size());
         for (int i = 0; i < compositeChildren.size(); i++) {
             assertEquals(
-                    ((LoadModificationInfos)sharedComposite.getModificationsInfos().get(i)).getEquipmentId(),
-                    ((LoadModificationInfos)copiedCompositeContent.get(i)).getEquipmentId());
+                    ((LoadModificationInfos) sharedComposite.getModificationsInfos().get(i)).getEquipmentId(),
+                    ((LoadModificationInfos) copiedCompositeContent.get(i)).getEquipmentId());
         }
     }
 }
