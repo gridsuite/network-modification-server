@@ -29,7 +29,6 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.ModificationReferenceEntity;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -150,22 +149,22 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public void verifyModifications(UUID containerUuid, Set<UUID> modificationUuids) {
         networkModificationRepository.assertContainerExists(containerUuid);
-        List<ModificationEntity> rootModifications = networkModificationRepository.getBaseModifications(containerUuid);
+        List<ModificationInfos> rootModifications = networkModificationRepository.getModifications(containerUuid, true);
 
         Set<UUID> childrenUuids = rootModifications.stream()
-            .map(ModificationEntity::getId)
+            .map(ModificationInfos::getUuid)
             .collect(Collectors.toSet());
 
         // Fetches all the children of the composites in the container
         List<UUID> compositeUuids = rootModifications.stream()
-                .filter(m -> ModificationType.COMPOSITE_MODIFICATION.name().equals(m.getType()) ||
-                        ModificationType.MODIFICATION_REFERENCE.name().equals(m.getType()))
+                .filter(m -> ModificationType.COMPOSITE_MODIFICATION == m.getType() ||
+                        ModificationType.MODIFICATION_REFERENCE == m.getType())
                 .map(m -> {
-                    if (ModificationType.COMPOSITE_MODIFICATION.name().equals(m.getType())) {
-                        return m.getId();
+                    if (ModificationType.COMPOSITE_MODIFICATION == m.getType()) {
+                        return m.getUuid();
                     } else {
                         // adds the composites which are not directly in the container but referenced through a reference modification
-                        return ((ModificationReferenceEntity) m).getReferencedId();
+                        return ((ModificationReferenceInfos) m).getReferencedId();
                     }
                 })
                 .distinct()
