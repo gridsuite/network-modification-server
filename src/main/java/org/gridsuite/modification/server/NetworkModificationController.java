@@ -67,24 +67,6 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(modifications);
     }
 
-    @GetMapping(value = "/containers/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get the modifications of several containers (groups or composites)")
-    @ApiResponse(responseCode = "200", description = "Modifications of each container, an empty list for a container that does not exist")
-    public ResponseEntity<Map<UUID, List<ModificationInfos>>> getNetworkModifications(@Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids,
-                                                                                      @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false,
-                                                                                              defaultValue = "true") Boolean onlyMetadata,
-                                                                                      @Parameter(description = "Stashed modifications") @RequestParam(name = "onlyStashed", required = false,
-                                                                                              defaultValue = "false") Boolean onlyStashed,
-                                                                                      @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
-        Map<UUID, List<ModificationInfos>> modificationsByContainer = networkModificationService.getNetworkModifications(containerUuids, onlyMetadata,
-            onlyStashed ? StashedFilter.STASHED : StashedFilter.ALL);
-        if (userId != null) {
-            modificationPermissionService.addPermissions(
-                modificationsByContainer.values().stream().flatMap(List::stream).toList(), userId);
-        }
-        return ResponseEntity.ok().body(modificationsByContainer);
-    }
-
     @GetMapping(value = "/containers/{containerUuid}/network-modifications/export", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the modifications of a container (group or composite) to export")
     @ApiResponse(responseCode = "200", description = "List of modifications of the container to export")
@@ -130,9 +112,10 @@ public class NetworkModificationController {
             @Parameter(description = "origin group UUID (defaults to the target group)") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
             @Parameter(description = "apply modifications entering the target group (default true)")
             @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
-            @RequestBody Pair<List<ModificationMoveInfos>, List<ModificationApplicationContext>> moveContextInfos) {
+            @RequestBody Pair<List<ModificationMoveInfos>, List<ModificationApplicationContext>> moveContextInfos,
+            @RequestHeader(HEADER_USER_ID) String userId) {
         return networkModificationService.moveModifications(Objects.requireNonNullElse(originGroupUuid, targetGroupUuid), targetGroupUuid,
-                        moveContextInfos.getFirst(), moveContextInfos.getSecond(), canApply)
+                        moveContextInfos.getFirst(), moveContextInfos.getSecond(), canApply, userId)
                 .thenApply(ResponseEntity.ok()::body);
     }
 
@@ -349,8 +332,8 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The metadata of the network modifications has been successfully updated")
     public ResponseEntity<Void> updateNetworkModificationMetadata(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
-            @RequestBody ModificationInfos metadata) {
-        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata);
+            @RequestBody ModificationInfos metadata, @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata, userId);
         return ResponseEntity.ok().build();
     }
 

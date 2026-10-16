@@ -9,11 +9,15 @@ package org.gridsuite.modification.server.service;
 import org.gridsuite.modification.dto.LoadFlowParametersInfos;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -47,9 +51,21 @@ class LoadFlowParametersLoaderServiceTest {
     @Test
     void loadReturnsEmptyWhenTheParametersDoNotExistAnymore() {
         UUID parametersUuid = UUID.randomUUID();
-        when(loadFlowService.getLoadFlowParametersInfos(parametersUuid)).thenReturn(null);
+        // the load flow server answers 404 for parameters that do not exist
+        when(loadFlowService.getLoadFlowParametersInfos(parametersUuid))
+                .thenThrow(HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", null, null, null));
 
         assertTrue(loadFlowParametersLoaderService.load(parametersUuid).isEmpty(),
-                "Absent parameters must surface as an empty Optional, not as a null");
+                "Absent parameters must surface as an empty Optional, not as an error");
+    }
+
+    @Test
+    void loadFailsWhenTheLoadFlowServerFails() {
+        UUID parametersUuid = UUID.randomUUID();
+        when(loadFlowService.getLoadFlowParametersInfos(parametersUuid))
+                .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error"));
+
+        // a failure must not be mistaken for absent parameters, which would silently fall back on the default ones
+        assertThrows(HttpServerErrorException.class, () -> loadFlowParametersLoaderService.load(parametersUuid));
     }
 }

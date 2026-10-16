@@ -23,4 +23,15 @@ public enum StashedFilter {
             case UNSTASHED -> !Boolean.TRUE.equals(stashed);
         };
     }
+
+    /**
+     * @return the stashed state a query keeps, null when it keeps them all
+     */
+    public Boolean toSql() {
+        return switch (this) {
+            case ALL -> null;
+            case STASHED -> true;
+            case UNSTASHED -> false;
+        };
+    }
 }
