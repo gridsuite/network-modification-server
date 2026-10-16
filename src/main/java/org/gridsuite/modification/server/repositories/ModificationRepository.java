@@ -83,7 +83,21 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<ModificationApplicability> findApplicabilitiesByIdIn(@Param("uuids") Collection<UUID> uuids);
 
     /**
-     * @return every modification held by the given containers, the content of their composites included.
+     * @return the root network tags each of the given modifications holds an applicability for, sorted
+     */
+    @Query("""
+            SELECT a.rootNetworkTag
+            FROM ModificationRootNetworkApplicabilityEntity a
+            WHERE a.modification.id IN (:uuids)
+            GROUP BY a.rootNetworkTag
+            HAVING COUNT(a) = :#{#uuids.size()}
+            ORDER BY a.rootNetworkTag
+            """)
+    List<String> findCommonRootNetworkTags(@Param("uuids") Set<UUID> uuids);
+
+    /**
+     * @return every modification held by the given containers, the content of their composites included. The references
+     * are returned, but not the shared modifications they point to, nor their content.
      */
     @Query("""
         WITH descendants AS (

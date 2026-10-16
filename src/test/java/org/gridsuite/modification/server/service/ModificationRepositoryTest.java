@@ -1804,6 +1804,46 @@ class ModificationRepositoryTest {
                 .stream().map(ModificationInfos::getUuid).toList();
     }
 
+    /**
+     * Renames the tag through the repository directly, bypassing the permission check of the service
+     */
+    private void renameRootNetworkTagBypassingPermissions(UUID groupUuid, String oldTag, String newTag) {
+        networkModificationRepository.renameRootNetworkTag(networkModificationRepository.getContainedModificationUuids(List.of(groupUuid)),
+                networkModificationRepository.getReferencedModificationUuids(List.of(groupUuid)), oldTag, newTag);
+    }
+
+    @Test
+    void testRenameRootNetworkTagLeavesTheSharedModificationsTheUserCannotWriteOnUntouched() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+        networkModificationRepository.updateRootNetworkApplicability(modificationTreeUuids(sharedUuid), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(modificationTreeUuids(sharedUuid), RENAMED_ROOT_NETWORK_TAG, true);
+
+        networkModificationRepository.renameRootNetworkTag(networkModificationRepository.getContainedModificationUuids(List.of(TEST_GROUP_ID_2)),
+                List.of(), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+
+        Map<String, Boolean> untouched = Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, true);
+        assertEquals(untouched, getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid));
+        assertEquals(List.of(untouched), List.copyOf(getApplicabilitiesByModificationsInside(sharedUuid).values()),
+                "The content of a shared modification the user cannot write on is left untouched too");
+    }
+
+    @Test
+    void testCommonRootNetworkTags() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID_3,
+                List.of(switchModification("v1d1"), switchModification("v1d2"), switchModification("v1d3")));
+        UUID bothTagsUuid = modifications.get(0).getUuid();
+        UUID otherTagUuid = modifications.get(1).getUuid();
+        UUID noTagUuid = modifications.get(2).getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(bothTagsUuid), ROOT_NETWORK_TAG, true);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(bothTagsUuid, otherTagUuid), OTHER_ROOT_NETWORK_TAG, false);
+
+        // a modification is associated with a tag whatever its applicability
+        assertEquals(List.of(ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG), networkModificationRepository.getCommonRootNetworkTags(Set.of(bothTagsUuid)));
+        assertEquals(List.of(OTHER_ROOT_NETWORK_TAG), networkModificationRepository.getCommonRootNetworkTags(Set.of(bothTagsUuid, otherTagUuid)));
+        assertEquals(List.of(), networkModificationRepository.getCommonRootNetworkTags(Set.of(bothTagsUuid, noTagUuid)));
+    }
+
     @Test
     void testRenameRootNetworkTagMovesTheApplicabilityOfTheGroupModifications() {
         List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID_3,
@@ -1812,7 +1852,7 @@ class ModificationRepositoryTest {
         UUID untouchedUuid = modifications.get(1).getUuid();
         networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
 
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_3), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_3, ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
 
         Map<UUID, Map<String, Boolean>> applicabilities = getApplicabilities(TEST_GROUP_ID_3);
         assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), applicabilities.get(deactivatedUuid),
@@ -1828,7 +1868,7 @@ class ModificationRepositoryTest {
         // the shared composite and the modification it holds each carry an applicability of their own
         networkModificationRepository.updateRootNetworkApplicability(modificationTreeUuids(sharedUuid), ROOT_NETWORK_TAG, false);
 
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_2, ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
 
         Map<String, Boolean> bothTags = Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, false);
         assertEquals(bothTags, getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
@@ -1846,7 +1886,7 @@ class ModificationRepositoryTest {
         // a leftover entry, the new tag naming no root network of the study yet
         networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), OTHER_ROOT_NETWORK_TAG, true);
 
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_3), ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG);
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_3, ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG);
 
         assertEquals(Map.of(OTHER_ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_3).get(modificationUuid),
                 "On a modification the study owns the tag is really renamed: if an entry already exists under the new name, it is replaced");
@@ -2012,7 +2052,7 @@ class ModificationRepositoryTest {
 
         networkModificationRepository.updateRootNetworkApplicability(modificationTreeUuids(outerCompositeUuid), ROOT_NETWORK_TAG, false);
 
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_2, ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
 
         assertEquals(4, assertApplicabilityRenamedInDepth(outerCompositeUuid, getApplicabilities(TEST_GROUP_ID_2).get(outerCompositeUuid)),
                 "the outer composite, the inner one and the sibling it holds, and the modification inside the inner one");
@@ -2112,7 +2152,7 @@ class ModificationRepositoryTest {
         // another group already named a root network of its own with the tag this one is being renamed to
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), RENAMED_ROOT_NETWORK_TAG, true);
 
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_2, ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
 
         assertEquals(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, false),
                 getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
@@ -2125,7 +2165,7 @@ class ModificationRepositoryTest {
 
         networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), RENAMED_ROOT_NETWORK_TAG, false);
 
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_3), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_3, ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
 
         assertEquals(Map.of(), getApplicabilities(TEST_GROUP_ID_3).get(modificationUuid),
                 "The modification was applicable on the renamed root network, it must stay so");
@@ -2139,7 +2179,7 @@ class ModificationRepositoryTest {
 
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), RENAMED_ROOT_NETWORK_TAG, false);
 
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_2, ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
 
         assertEquals(Map.of(), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
                 "The shared modification was applicable on the renamed root network, it must stay so");

@@ -17,6 +17,7 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.NonNull;
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
@@ -297,10 +298,52 @@ public class NetworkModificationService {
         networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
     }
 
+    /**
+     * Renames the root network tag of the modifications of the given groups. The shared modifications the user cannot
+     * write on are left out of the renaming: their applicabilities, and the ones of their content, are left untouched.
+     */
     @Transactional
-    public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag) {
+    public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag, @NonNull String userId) {
         assertRootNetworkTagFits(newTag);
-        networkModificationRepository.renameRootNetworkTag(groupUuids, oldTag, newTag);
+        List<UUID> ownedUuids = networkModificationRepository.getContainedModificationUuids(groupUuids);
+        Set<UUID> sharedUuids = networkModificationRepository.getSharedModificationUuids(ownedUuids);
+        Set<UUID> writableSharedUuids = SetUtils.difference(sharedUuids, getNotWritableUuids(sharedUuids, userId));
+        networkModificationRepository.renameRootNetworkTag(ownedUuids, writableSharedUuids, oldTag, newTag);
+    }
+
+    private Set<UUID> getNotWritableUuids(Set<UUID> elementUuids, String userId) {
+        if (elementUuids.isEmpty()) {
+            return Set.of();
+        }
+        // directory server leaves out the elements without permission, and the ones it does not know: they are not writable
+        Map<UUID, PermissionType> permissions = directoryService.getElementsPermissions(elementUuids, userId);
+        return elementUuids.stream()
+            .filter(uuid -> permissions.get(uuid) == null || !permissions.get(uuid).grants(PermissionType.WRITE))
+            .collect(Collectors.toSet());
+    }
+
+    /**
+     * Asserts that the shared modifications the user cannot write on, among the ones the given containers point to, are
+     * all associated with the given root network tags, meaning each of them holds an applicability for all these tags: the
+     * user cannot add the missing ones.
+     */
+    @Transactional(readOnly = true)
+    public void assertRootNetworkTagsAllowed(@NonNull List<UUID> containerUuids, @NonNull List<String> rootNetworkTags, @NonNull String userId) {
+        if (rootNetworkTags.isEmpty()) {
+            return;
+        }
+        Set<UUID> notWritableUuids = getNotWritableUuids(networkModificationRepository.getReferencedModificationUuids(containerUuids), userId);
+        if (notWritableUuids.isEmpty()) {
+            return;
+        }
+        List<String> allowedTags = networkModificationRepository.getCommonRootNetworkTags(notWritableUuids);
+        List<String> forbiddenTags = rootNetworkTags.stream().filter(tag -> !allowedTags.contains(tag)).distinct().toList();
+        if (forbiddenTags.isEmpty()) {
+            return;
+        }
+        throw new NetworkModificationServerException(ROOT_NETWORK_TAGS_FORBIDDEN_BY_SHARED,
+                String.format(ROOT_NETWORK_TAGS_FORBIDDEN_BY_SHARED.messageTemplate(), forbiddenTags, notWritableUuids, allowedTags),
+                Map.of("allowedTags", String.join(", ", allowedTags), "allowedTagsCount", allowedTags.size()));
     }
 
     @Transactional
@@ -356,6 +399,26 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public boolean hasModificationReferences(@NonNull List<UUID> containerUuids) {
         return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
+    }
+
+    /**
+     * @return whether the given containers point to shared modifications and, if so, whether the user can write on all,
+     * some or none of them
+     */
+    @Transactional(readOnly = true)
+    public SharedModificationsWriteAccess getReferencedModificationsWriteAccess(@NonNull List<UUID> containerUuids, @NonNull String userId) {
+        Set<UUID> sharedUuids = networkModificationRepository.getReferencedModificationUuids(containerUuids);
+        if (sharedUuids.isEmpty()) {
+            return SharedModificationsWriteAccess.NO_SHARED_MODIFICATION;
+        }
+        int notWritableCount = getNotWritableUuids(sharedUuids, userId).size();
+        if (notWritableCount == 0) {
+            return SharedModificationsWriteAccess.ALL_WRITABLE;
+        }
+        if (notWritableCount == sharedUuids.size()) {
+            return SharedModificationsWriteAccess.NONE_WRITABLE;
+        }
+        return SharedModificationsWriteAccess.SOME_WRITABLE;
     }
 
     public void assertReferencedModificationsAreWritable(@NonNull List<UUID> containerUuids, @NonNull String userId) {
