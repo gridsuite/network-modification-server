@@ -578,6 +578,32 @@ class ModificationControllerTest {
     }
 
     @Test
+    void testInitRootNetworkTag() throws Exception {
+        List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID modificationUuid = modifications.getFirst().getUuid();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
+                .queryParam("uuids", modificationUuid.toString())
+                .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
+                .queryParam("applicable", "false")
+        ).andExpect(status().isOk());
+
+        // a modification deactivated on an existing root network is deactivated on the new one
+        mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "/root-network-tag")
+                .queryParam("groupUuids", TEST_GROUP_ID.toString())
+                .queryParam("existingTags", ROOT_NETWORK_TAG)
+                .queryParam("newTag", RENAMED_ROOT_NETWORK_TAG)
+        ).andExpect(status().isOk());
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+
+        // without existing root network, the modification is activated on the new one
+        mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "/root-network-tag")
+                .queryParam("groupUuids", TEST_GROUP_ID.toString())
+                .queryParam("newTag", RENAMED_ROOT_NETWORK_TAG)
+        ).andExpect(status().isOk());
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+    }
+
+    @Test
     void testUpdateRootNetworkApplicabilityWithTooLongTag() throws Exception {
         List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
 
