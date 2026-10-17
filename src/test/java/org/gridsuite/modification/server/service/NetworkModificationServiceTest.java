@@ -39,6 +39,9 @@ class NetworkModificationServiceTest {
     @Autowired
     private NetworkModificationService networkModificationService;
 
+    @MockitoBean
+    private DirectoryService directoryService;
+
     @Autowired
     private NetworkModificationRepository networkModificationRepository;
 
@@ -143,6 +146,13 @@ class NetworkModificationServiceTest {
                 .build();
     }
 
+    private static LoadModificationInfos dummyModification(UUID uuid, String equipmentId) {
+        return LoadModificationInfos.builder()
+                .equipmentId(equipmentId)
+                .uuid(uuid)
+                .build();
+    }
+
     private static CompositeModificationInfos compositeModification(UUID uuid, List<ModificationInfos> children) {
         return CompositeModificationInfos.builder()
                 .uuid(uuid)
@@ -169,5 +179,163 @@ class NetworkModificationServiceTest {
         assertEquals(1, result.modificationUuids().size());
         assertEquals(1, result.modificationResults().size());
         assertTrue(result.modificationResults().getFirst().isEmpty());
+    }
+
+    @Test
+    void shouldUnshareReferenceModificationAndReplaceByCopy() {
+        // 1. Create a shared composite modification
+        UUID sharedCompositeUuid = saveComposite(UUID.randomUUID(),
+                List.of(dummyModification(UUID.randomUUID())));
+
+        // 2. Create a group with a reference to the shared composite
+        UUID groupUuid = UUID.randomUUID();
+        ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
+                .referencedId(sharedCompositeUuid)
+                .referencedInfos(CompositeModificationInfos.builder().uuid(sharedCompositeUuid).build())
+                .stashed(false)
+                .activated(true)
+                .build();
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(groupUuid, List.of(referenceInfos));
+        UUID referenceUuid = saved.get(0).getUuid();
+
+        // 3. Verify the reference exists and is in the group
+        ModificationInfos fetched = networkModificationRepository.getModificationInfo(referenceUuid);
+        assertInstanceOf(ModificationReferenceInfos.class, fetched);
+        assertEquals(sharedCompositeUuid, ((ModificationReferenceInfos) fetched).getReferencedId());
+
+        // 4. Unshare the reference modification
+        networkModificationService.unshareModification(referenceUuid);
+
+        // 5. Verify the reference is deleted
+        assertTrue(modificationRepository.findById(referenceUuid).isEmpty());
+
+        // 6. Verify a new composite has been created in place of the reference
+        List<ModificationInfos> groupModifications = networkModificationRepository.getModifications(groupUuid, true);
+        assertEquals(1, groupModifications.size());
+        assertEquals(CompositeModificationInfos.class, groupModifications.get(0).getClass());
+        assertNotEquals(sharedCompositeUuid, groupModifications.get(0).getUuid());
+    }
+
+    @Test
+    void shouldUnshareReferenceModificationInsideComposite() {
+        // 1. Create a shared composite modification
+        UUID sharedCompositeUuid = saveComposite(UUID.randomUUID(),
+                List.of(dummyModification(UUID.randomUUID())));
+
+        // 2. Create a container composite that holds a reference to the shared composite
+        UUID groupUuid = UUID.randomUUID();
+        CompositeModificationInfos containerComposite = compositeModification(UUID.randomUUID(),
+                List.of(referenceTo(sharedCompositeUuid)));
+        List<ModificationInfos> containerSaved = networkModificationRepository.saveModifications(groupUuid,
+                List.of(ModificationEntity.fromDTO(containerComposite)));
+        UUID containerCompositeUuid = containerSaved.get(0).getUuid();
+
+        // 3. Get the reference UUID inside the container
+        List<ModificationInfos> containerContent = networkModificationRepository.getModifications(containerCompositeUuid, true);
+        UUID referenceUuid = containerContent.get(0).getUuid();
+
+        // 4. Unshare the reference modification
+        networkModificationService.unshareModification(referenceUuid);
+
+        // 5. Verify the reference is deleted
+        assertTrue(modificationRepository.findById(referenceUuid).isEmpty());
+
+        // 6. Verify a new composite has been created inside the container instead of the reference
+        List<ModificationInfos> updatedContainerContent = networkModificationRepository.getModifications(containerCompositeUuid, true);
+        assertEquals(1, updatedContainerContent.size());
+        assertEquals(CompositeModificationInfos.class, updatedContainerContent.get(0).getClass());
+        assertNotEquals(sharedCompositeUuid, updatedContainerContent.get(0).getUuid());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUnshareNonReferenceModification() {
+        // 1. Create a regular modification (not a reference)
+        UUID groupUuid = UUID.randomUUID();
+        LoadModificationInfos regularMod = dummyModification(UUID.randomUUID());
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(groupUuid, List.of(regularMod));
+        UUID regularModUuid = saved.get(0).getUuid();
+
+        // 2. Attempt to unshare a non-reference modification
+        assertThrows(Exception.class, () -> networkModificationService.unshareModification(regularModUuid),
+                "Should throw exception for non-reference modification");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUnshareNonexistentModification() {
+        UUID nonexistentUuid = UUID.randomUUID();
+
+        assertThrows(Exception.class, () -> networkModificationService.unshareModification(nonexistentUuid),
+                "Should throw exception for nonexistent modification");
+    }
+
+    @Test
+    void shouldPreserveCopiedCompositePropertiesWhenUnsharing() {
+        // 1. Create a composite modification to be shared
+        UUID sharedCompositeUuid = saveComposite(UUID.randomUUID(),
+                List.of(dummyModification(UUID.randomUUID())));
+        CompositeModificationInfos sharedComposite = (CompositeModificationInfos)
+                networkModificationRepository.getModificationInfo(sharedCompositeUuid);
+
+        // 2. Create a reference to the shared composite at root level
+        UUID groupUuid = UUID.randomUUID();
+        ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
+                .referencedId(sharedCompositeUuid)
+                .referencedInfos(sharedComposite)
+                .stashed(false)
+                .activated(true)
+                .build();
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(groupUuid, List.of(referenceInfos));
+        UUID referenceUuid = saved.getFirst().getUuid();
+
+        // 3. Unshare the reference
+        networkModificationService.unshareModification(referenceUuid);
+
+        // 4. Verify the copied composite has the same content as the original
+        List<ModificationInfos> groupModifications = networkModificationRepository.getModifications(groupUuid, false);
+        assertEquals(1, groupModifications.size());
+        CompositeModificationInfos copiedComposite = (CompositeModificationInfos) groupModifications.getFirst();
+
+        assertEquals(sharedComposite.getModificationsInfos().size(), copiedComposite.getModificationsInfos().size());
+    }
+
+    @Test
+    void shouldPreserveModificationsOrderWhenUnsharing() {
+        // 1. Create a shared composite with multiple modifications
+        List<ModificationInfos> compositeChildren = List.of(
+                dummyModification(UUID.randomUUID(), "equipment id 1"),
+                dummyModification(UUID.randomUUID(), "equipment id 2"),
+                dummyModification(UUID.randomUUID(), "equipment id 3")
+        );
+        UUID sharedCompositeUuid = saveComposite(UUID.randomUUID(), compositeChildren);
+        CompositeModificationInfos sharedComposite = (CompositeModificationInfos)
+                networkModificationRepository.getModificationInfo(sharedCompositeUuid);
+
+        // 2. Create a reference to the shared composite
+        UUID groupUuid = UUID.randomUUID();
+        ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
+                .referencedId(sharedCompositeUuid)
+                .referencedInfos(sharedComposite)
+                .stashed(false)
+                .activated(true)
+                .build();
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(groupUuid, List.of(referenceInfos));
+        UUID referenceUuid = saved.getFirst().getUuid();
+
+        // 3. Unshare the reference
+        networkModificationService.unshareModification(referenceUuid);
+
+        // 4. Verify the order of modifications is preserved. The uuids are different so they are compared according to they unique equipment id
+        List<ModificationInfos> copiedCompositeContent = networkModificationRepository.getModifications(
+                networkModificationRepository.getModifications(groupUuid, true).get(0).getUuid(), false);
+
+        assertEquals(sharedComposite.getModificationsInfos().size(), copiedCompositeContent.size());
+        for (int i = 0; i < compositeChildren.size(); i++) {
+            assertEquals(
+                    ((LoadModificationInfos) sharedComposite.getModificationsInfos().get(i)).getEquipmentId(),
+                    ((LoadModificationInfos) copiedCompositeContent.get(i)).getEquipmentId());
+        }
     }
 }

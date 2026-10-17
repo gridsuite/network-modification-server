@@ -27,8 +27,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.entities.ModificationContainerType;
-import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -52,8 +51,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.gridsuite.modification.ModificationType.MODIFICATION_REFERENCE;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
+import static org.gridsuite.modification.server.repositories.NetworkModificationRepository.MODIFICATION_ID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -599,6 +600,44 @@ public class NetworkModificationService {
         List<UUID> ids = duplicateModifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, duplicateModifications, applicationContexts).thenApply(result ->
             new NetworkModificationsResult(ids, result));
+    }
+
+    @Transactional
+    public void unshareModification(@NonNull UUID referenceModificationUuid) {
+        ModificationEntity referenceEntity = modificationRepository.findById(referenceModificationUuid)
+                .orElseThrow(() -> networkModificationRepository.getModificationNotFoundException(referenceModificationUuid.toString()));
+
+        AbstractModificationContainerEntity container = referenceEntity.getContainer();
+        UUID groupUuid = container != null && container.isGroup() ? container.getId() : null;
+
+        if (!referenceEntity.getType().equals(MODIFICATION_REFERENCE.name())) {
+            // Only a reference modification may be unshared
+            String expectedType = ModificationType.MODIFICATION_REFERENCE.name();
+            throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
+                    String.format(MODIFICATION_BAD_TYPE.messageTemplate(), referenceModificationUuid, referenceEntity.getType(), expectedType),
+                    Map.of(MODIFICATION_ID, referenceModificationUuid.toString(), "modificationType", referenceEntity.getType(), "expectedModificationType", expectedType));
+        }
+        ModificationInfos referencedCompositeInfos = networkModificationRepository.getModificationInfo(
+                ((ModificationReferenceEntity) referenceEntity).getReferencedId());
+
+        // copy the referenced composite into a new composite
+        // ATTENTION : this simple copy only work in the context of reference modification not containing reference modifications
+        // -> if this changes, this copy should be upgraded (and maybe use an upgraded version of insertCompositeModifications)
+        ModificationEntity copiedComposite = ModificationEntity.fromDTO(referencedCompositeInfos);
+
+        // put the new copied composite into the container of the replaced reference modification
+        AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
+        copiedComposite.setContainer(containerEntity);
+        copiedComposite.setModificationsOrder(referenceEntity.getModificationsOrder());
+        modificationRepository.save(copiedComposite);
+
+        // remove the reference from directory server
+        List<ModificationReferenceData> referenceData = List.of(
+                new ModificationReferenceData(referenceModificationUuid,
+                        ((ModificationReferenceEntity) referenceEntity).getReferencedId(),
+                        containerEntity.getId()));
+        directoryService.removeElementReferences(referenceData, null);
+        deleteNetworkModifications(groupUuid, List.of(referenceModificationUuid));
     }
 
     /**
