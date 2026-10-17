@@ -314,6 +314,14 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.hasModificationReferences(containerUuids));
     }
 
+    @GetMapping(value = "/containers/reference-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get those of the containers (groups or composites) holding an unstashed modification reference, including nested in their composites")
+    @ApiResponse(responseCode = "200", description = "The containers holding at least one modification reference")
+    public ResponseEntity<List<UUID>> getContainersWithModificationReferences(
+            @Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids) {
+        return ResponseEntity.ok().body(networkModificationService.getContainersWithModificationReferences(containerUuids));
+    }
+
     @GetMapping(value = "/containers/references/authorized")
     @Operation(summary = "Check the write permission on the shared modifications the containers (groups or composites) point to")
     @ApiResponses(value = {
