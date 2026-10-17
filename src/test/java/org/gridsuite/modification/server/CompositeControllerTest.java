@@ -1524,32 +1524,46 @@ class CompositeControllerTest {
     @Test
     void testRootNetworkTagsAllowedByTheSharedModificationsTheUserCannotWriteOn() throws Exception {
         UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
+        UUID referenceUuid = networkModificationRepository.getModifications(TEST_GROUP2_ID, true).getLast().getUuid();
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid), "B", true);
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid), "A", false);
         when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ));
 
         // a tag the shared modification is associated with is allowed, whatever its applicability
-        mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP2_ID, "A", "B")).andExpect(status().isOk());
+        mockMvc.perform(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP2_ID, "A", "B")).andExpect(status().isOk());
 
-        // another one is not
-        mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP2_ID, "A", "C")).andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.businessErrorCode").value("modification.rootNetworkTagsForbiddenByShared"))
-                .andExpect(jsonPath("$.businessErrorValues.allowedTags").value("A, B"))
-                .andExpect(jsonPath("$.businessErrorValues.allowedTagsCount").value(2));
+        // another one is not, from the container, from the reference or from the shared modification itself
+        for (var request : List.of(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP2_ID, "A", "C"),
+                areRootNetworkTagsAllowed("modificationUuids", referenceUuid, "C"),
+                areRootNetworkTagsAllowed("sharedUuids", sharedCompositeUuid, "C"))) {
+            mockMvc.perform(request).andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.businessErrorCode").value("modification.rootNetworkTagsForbiddenByShared"))
+                    .andExpect(jsonPath("$.businessErrorValues.allowedTags").value("A, B"))
+                    .andExpect(jsonPath("$.businessErrorValues.allowedTagsCount").value(2));
+        }
+
+        // an empty list, sent by its name only, is no list at all
+        mockMvc.perform(get("/v1/containers/root-network-tags/authorized")
+                        .param("containerUuids", "")
+                        .param("modificationUuids", referenceUuid.toString())
+                        .param("sharedUuids", "")
+                        .param("tags", "C")
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isForbidden());
 
         // a user who can write on the shared modification may associate it with any tag
         when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.WRITE));
-        mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP2_ID, "C")).andExpect(status().isOk());
+        mockMvc.perform(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP2_ID, "C")).andExpect(status().isOk());
 
         // a container pointing at no shared modification does not even need the permission to be checked
         clearInvocations(directoryService);
-        mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP_ID, "C")).andExpect(status().isOk());
+        mockMvc.perform(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP_ID, "C")).andExpect(status().isOk());
         verifyNoInteractions(directoryService);
     }
 
-    private static MockHttpServletRequestBuilder areRootNetworkTagsAllowed(UUID containerUuid, String... tags) {
+    private static MockHttpServletRequestBuilder areRootNetworkTagsAllowed(String uuidsParam, UUID uuid, String... tags) {
         return get("/v1/containers/root-network-tags/authorized")
-                .queryParam("uuids", containerUuid.toString())
+                .queryParam(uuidsParam, uuid.toString())
                 .queryParam("tags", tags)
                 .header(HEADER_USER_ID, TEST_USER_ID);
     }

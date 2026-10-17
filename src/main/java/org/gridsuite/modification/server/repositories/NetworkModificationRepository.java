@@ -1163,6 +1163,21 @@ public class NetworkModificationRepository {
     }
 
     /**
+     * @return the shared modifications among or referred to by the given parameters, however deep
+     */
+    @Transactional(readOnly = true)
+    public Set<UUID> getSharedModificationUuids(@NonNull List<UUID> containerUuids, @NonNull List<UUID> modificationUuids,
+                                                @NonNull List<UUID> sharedUuids) {
+        List<UUID> modificationTreesUuids = Stream.concat(modificationUuids.stream(),
+                getContainedModificationUuids(Stream.of(containerUuids, modificationUuids, sharedUuids).flatMap(List::stream).toList()).stream()).toList();
+        Set<UUID> allSharedUuids = new HashSet<>(sharedUuids);
+        if (!modificationTreesUuids.isEmpty()) {
+            allSharedUuids.addAll(getSharedModificationUuids(modificationTreesUuids));
+        }
+        return allSharedUuids;
+    }
+
+    /**
      * @return the root network tags all the given modifications are associated with, that is the ones each of them holds
      * an applicability for, sorted
      */
@@ -1235,7 +1250,8 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return the modifications the given containers hold, the content of their composites included
+     * @return the modifications the given containers hold, the content of their composites included. A given uuid which is
+     * not a container's, such as a modification other than a composite, is simply ignored.
      */
     @Transactional(readOnly = true)
     public List<UUID> getContainedModificationUuids(@NonNull Collection<UUID> containerUuids) {
