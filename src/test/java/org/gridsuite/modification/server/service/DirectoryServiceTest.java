@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.HttpMethod.*;
+import static org.springframework.test.web.client.ExpectedCount.once;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
@@ -50,7 +51,7 @@ class DirectoryServiceTest {
     }
 
     @Test
-    void testUpdateElementReference() {
+    void testUpdateElementReferences() {
         UUID elementUuid = UUID.randomUUID();
         UUID referenceUuid = UUID.randomUUID();
         UUID rootContainerId = UUID.randomUUID();
@@ -63,19 +64,19 @@ class DirectoryServiceTest {
                 ReferenceAttributes.ReferenceType.STUDY_NODE
         );
 
-        String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/" + elementUuid + "/references/" + referenceUuid;
+        String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/" + elementUuid + "/references";
         directoryServer.expect(requestTo(expectedUrl))
                 .andExpect(method(PUT))
                 .andExpect(header(HEADER_USER_ID, userId))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.referenceId").value(referenceUuid.toString()))
+                .andExpect(jsonPath("$[0].referenceId").value(referenceUuid.toString()))
                 .andRespond(withSuccess());
 
-        directoryService.updateElementReference(elementUuid, referenceAttributes, userId);
+        directoryService.updateElementReferences(elementUuid, List.of(referenceAttributes), userId);
     }
 
     @Test
-    void testCreateElementReference() {
+    void testCreateElementReferences() {
         UUID elementUuid = UUID.randomUUID();
         UUID referenceUuid = UUID.randomUUID();
         UUID rootContainerId = UUID.randomUUID();
@@ -93,25 +94,31 @@ class DirectoryServiceTest {
                 .andExpect(method(POST))
                 .andExpect(header(HEADER_USER_ID, userId))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.referenceId").value(referenceUuid.toString()))
+                .andExpect(jsonPath("$[0].referenceId").value(referenceUuid.toString()))
                 .andRespond(withSuccess());
 
-        directoryService.createElementReference(elementUuid, referenceAttributes, userId);
+        directoryService.createElementReferences(elementUuid, List.of(referenceAttributes), userId);
     }
 
     @Test
-    void testRemoveElementReference() {
+    void testRemoveElementReferences() {
         UUID sharedElementUuid = UUID.randomUUID();
-        UUID referenceUuid = UUID.randomUUID();
+        UUID referenceUuid1 = UUID.randomUUID();
+        UUID referenceUuid2 = UUID.randomUUID();
         String userId = "userId";
 
-        String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/" + sharedElementUuid + "/references/" + referenceUuid;
-        directoryServer.expect(requestTo(expectedUrl))
+        // both references of the same shared element are removed in a single call
+        String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/" + sharedElementUuid + "/references";
+        directoryServer.expect(once(), requestTo(expectedUrl))
                 .andExpect(method(DELETE))
                 .andExpect(header(HEADER_USER_ID, userId))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("[\"" + referenceUuid1 + "\",\"" + referenceUuid2 + "\"]"))
                 .andRespond(withSuccess());
 
-        directoryService.removeElementReferences(List.of(new ModificationReferenceData(referenceUuid, sharedElementUuid, null)), userId);
+        directoryService.removeElementReferences(List.of(
+                new ModificationReferenceData(referenceUuid1, sharedElementUuid, null),
+                new ModificationReferenceData(referenceUuid2, sharedElementUuid, UUID.randomUUID())), userId);
 
         directoryServer.verify();
     }
@@ -139,8 +146,8 @@ class DirectoryServiceTest {
                 .andExpect(method(POST))
                 .andExpect(header(HEADER_USER_ID, userId))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.referenceId").value(modification1Uuid.toString()))
-                .andExpect(jsonPath("$.referenceType").value(ReferenceAttributes.ReferenceType.STUDY_NODE_NETWORK_MODIFICATION.toString()))
+                .andExpect(jsonPath("$[0].referenceId").value(modification1Uuid.toString()))
+                .andExpect(jsonPath("$[0].referenceType").value(ReferenceAttributes.ReferenceType.STUDY_NODE_NETWORK_MODIFICATION.toString()))
                 .andRespond(withSuccess());
 
         // Second reference: at root level (containerId == null)
@@ -149,8 +156,8 @@ class DirectoryServiceTest {
                 .andExpect(method(POST))
                 .andExpect(header(HEADER_USER_ID, userId))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.referenceId").value(modification2Uuid.toString()))
-                .andExpect(jsonPath("$.referenceType").value(ReferenceAttributes.ReferenceType.STUDY_NODE.toString()))
+                .andExpect(jsonPath("$[0].referenceId").value(modification2Uuid.toString()))
+                .andExpect(jsonPath("$[0].referenceType").value(ReferenceAttributes.ReferenceType.STUDY_NODE.toString()))
                 .andRespond(withSuccess());
 
         directoryService.createElementReferences(nodeContainerUuid, studyRootContainerUuid, userId, referencesData);
