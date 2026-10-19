@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.ReactiveVariationMode;
 import org.gridsuite.modification.VariationMode;
-import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.ScalingVariationInfos;
 import java.util.List;
 import java.util.UUID;
@@ -76,7 +75,7 @@ public class ScalingVariationEntity {
                 .variationValue(getVariationValue())
                 .reactiveVariationMode(getReactiveVariationMode())
                 .filters(this.getFilters().stream()
-                        .map(filter -> new FilterInfos(filter.getFilterId(), filter.getName()))
+                        .map(VariationFilterEntity::toFilterInfos)
                         .collect(Collectors.toList()))
                 .build();
     }
