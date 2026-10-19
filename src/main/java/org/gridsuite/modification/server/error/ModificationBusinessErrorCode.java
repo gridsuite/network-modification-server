@@ -21,8 +21,6 @@ public enum ModificationBusinessErrorCode implements BusinessErrorCode {
     MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED("modification.sharedWriteForbidden", "The write permission is missing on at least one shared modification of %s"),
     MODIFICATIONS_NOT_FOUND("modifications.notFound"),
     MODIFICATION_INFOS_ERROR("modification.infos.error", "Modification infos error : %s"),
-    MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN("modification.with_group.deletion.forbidden", "Deletion forbidden : modification %s is owned by group %s"),
-    MODIFICATION_DELETION_ARGUMENT_ERROR("modification.deletion.argument.error", "Modification deletion : need to specify the group or give a list of UUIDs"),
     MODIFICATION_DUPLICATION_ARGUMENT_ERROR("modification.duplication.argument.error", "Modification duplication : need to specify the group or give a list of UUIDs"),
     MODIFICATION_DESCRIPTION_MISSING("modification.description.missing"),
     MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR("modification.composite.move.cycle.error"),

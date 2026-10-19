@@ -511,8 +511,8 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
-    public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
-        if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
+    public void deleteNetworkModifications(@NonNull List<UUID> modificationsUuids) {
+        if (networkModificationRepository.deleteModifications(modificationsUuids) == 0) {
             throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
                 String.format("Some of these modifications %s (to be deleted) were not found", modificationsUuids),
                 Map.of("ids", modificationsUuids));

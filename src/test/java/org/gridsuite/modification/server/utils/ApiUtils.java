@@ -121,23 +121,6 @@ public final class ApiUtils {
                 .andExpectAll(status().isOk());
     }
 
-    public static void deleteNetworkModificationsInGroup(MockMvc mockMvc, UUID groupUuid) throws Exception {
-        mockMvc.perform(
-                delete("/v1/network-modifications")
-                    .param("groupUuid", groupUuid.toString())
-            )
-            .andExpectAll(status().isOk());
-    }
-
-    public static void deleteNetworkModificationsInGroup(MockMvc mockMvc, UUID groupUuid, List<UUID> uuids) throws Exception {
-        mockMvc.perform(
-                delete("/v1/network-modifications")
-                    .param("uuids", uuids.stream().map(Objects::toString).toList().toArray(new String[0]))
-                    .param("groupUuid", groupUuid.toString())
-            )
-            .andExpectAll(status().isOk());
-    }
-
     public static void deleteNetworkModifications(MockMvc mockMvc, List<UUID> uuids) throws Exception {
         mockMvc.perform(
                 delete("/v1/network-modifications")

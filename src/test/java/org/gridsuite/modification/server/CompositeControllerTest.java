@@ -1315,6 +1315,34 @@ class CompositeControllerTest {
         children.forEach(child -> assertFalse(child instanceof CompositeModificationInfos));
     }
 
+    @Test
+    void testReplaceCompositeDeletesNestedPreviousContent() throws Exception {
+        // composite ── inner composite ── leaf
+        EquipmentAttributeModificationInfos leaf = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentId("v1b1")
+                .equipmentAttributeValue(true)
+                .build();
+        CompositeModificationInfos inner = CompositeModificationInfos.builder().modificationsInfos(List.of(leaf)).build();
+        CompositeModificationInfos composite = (CompositeModificationInfos) networkModificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(ModificationEntity.fromDTO(CompositeModificationInfos.builder().modificationsInfos(List.of(inner)).build()))).getFirst();
+        CompositeModificationInfos savedInner = (CompositeModificationInfos) composite.getModificationsInfos().getFirst();
+        UUID leafUuid = savedInner.getModificationsInfos().getFirst().getUuid();
+        List<ModificationInfos> newContent = createSomeSwitchModifications(TEST_GROUP2_ID, 1);
+
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + composite.getUuid() + "/replace")
+                        .param("name", "new name")
+                        .header(HEADER_USER_ID, TEST_USER_ID)
+                        .content(mapper.writeValueAsString(List.of(newContent.getFirst().getUuid()))).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // the previous content is deleted, the nested composite and its own content included
+        assertFalse(modificationRepository.existsById(savedInner.getUuid()));
+        assertFalse(modificationRepository.existsById(leafUuid));
+        assertEquals(1, getContainerModifications(composite.getUuid(), true).size());
+    }
+
     private UUID createComposite(List<ModificationInfos> modifications) throws Exception {
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "composite")
                         .content(mapper.writeValueAsString(modifications.stream().map(ModificationInfos::getUuid).toList()))

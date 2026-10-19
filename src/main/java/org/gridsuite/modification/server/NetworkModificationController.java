@@ -209,12 +209,11 @@ public class NetworkModificationController {
     }
 
     @DeleteMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Delete network modifications. If owned by a group, then groupUuid must be provided.")
+    @Operation(summary = "Delete network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were deleted")
     public ResponseEntity<Void> deleteNetworkModifications(
-            @Parameter(description = "Network modification UUIDs") @RequestParam(name = "uuids", required = false) List<UUID> networkModificationUuids,
-            @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid", required = false) UUID groupUuid) {
-        networkModificationService.deleteNetworkModifications(groupUuid, networkModificationUuids);
+            @Parameter(description = "Network modification UUIDs") @RequestParam(name = "uuids") List<UUID> networkModificationUuids) {
+        networkModificationService.deleteNetworkModifications(networkModificationUuids);
         return ResponseEntity.ok().build();
     }
 
