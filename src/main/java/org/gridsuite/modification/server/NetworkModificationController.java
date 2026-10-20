@@ -133,8 +133,9 @@ public class NetworkModificationController {
     @PutMapping(value = "/network-modifications/{referenceModificationUuid}/unshare")
     @Operation(summary = "Unshare a reference modification and copy the referenced composite in its place")
     @ApiResponse(responseCode = "200", description = "The reference modification has been replaced by a copy of its referenced composite")
-    public void unshareModification(@PathVariable("referenceModificationUuid") UUID referenceModificationUuid) {
-        networkModificationService.unshareModification(referenceModificationUuid);
+    public void unshareModification(@PathVariable("referenceModificationUuid") UUID referenceModificationUuid,
+                                    @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.unshareModification(referenceModificationUuid, userId);
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}")
