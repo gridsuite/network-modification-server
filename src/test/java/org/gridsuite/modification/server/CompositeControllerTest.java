@@ -518,7 +518,7 @@ class CompositeControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        verify(notificationService).emitElementUpdated(compositeInfos.getUuid(), TEST_USER_ID);
+        verify(notificationService).emitElementMetadataUpdated(compositeInfos.getUuid(), TEST_USER_ID);
 
         List<ModificationInfos> updatedModificationList = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         ModificationReferenceInfos updatedReference = assertInstanceOf(ModificationReferenceInfos.class, updatedModificationList.getLast());
