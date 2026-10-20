@@ -348,10 +348,10 @@ public class NetworkModificationController {
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Updates the metadata of network modifications")
     @ApiResponse(responseCode = "200", description = "The metadata of the network modifications has been successfully updated")
-    public ResponseEntity<Void> updateNetworkModificationMetadata(
+    public ResponseEntity<Void> updateNetworkModificationActivation(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @RequestBody ModificationInfos metadata, @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata, userId);
+        networkModificationService.updateNetworkModificationActivation(networkModificationUuids, metadata, userId);
         return ResponseEntity.ok().build();
     }
 

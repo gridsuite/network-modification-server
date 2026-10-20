@@ -276,8 +276,9 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
-        networkModificationRepository.updateNetworkModificationMetadata(modificationUuids, metadata);
+    public void updateNetworkModificationActivation(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
+        // TODO replace metadata by boolean in the endpoint
+        networkModificationRepository.updateModificationActivation(modificationUuids, metadata);
         emitReferencedAncestorsUpdated(modificationUuids, userId);
     }
 
@@ -662,14 +663,12 @@ public class NetworkModificationService {
     }
 
     public void updateModificationNameAndDescription(@NonNull UUID modificationUuid, ModificationMetadata modificationMetadata, String userId) {
-        UUID referencedModificationId = networkModificationRepository.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
-        // if modification is shared, emit notification about referenced modification
-        if (referencedModificationId != null) {
-            notificationService.emitElementUpdated(referencedModificationId, userId);
-            return;
+        ModificationEntity modificationEntity = networkModificationRepository.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
+
+        // emit notification about modification to update
+        if (modificationEntity.isReference()) {
+            notificationService.emitElementMetadataUpdated(modificationEntity.getId(), userId);
         }
-        // emit notification about modification to update GridExplore
-        notificationService.emitElementUpdated(modificationUuid, userId);
     }
 
     @Transactional

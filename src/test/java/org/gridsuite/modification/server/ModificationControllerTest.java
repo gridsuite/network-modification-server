@@ -40,6 +40,7 @@ import org.gridsuite.modification.server.impacts.TestImpactUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.DirectoryService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.gridsuite.modification.server.service.NotificationService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -71,8 +72,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.ModificationType.*;
-import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
-import static org.gridsuite.modification.ModificationType.LINE_MODIFICATION;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.BUSBAR_SECTION_NOT_FOUND;
@@ -87,7 +86,8 @@ import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -140,6 +140,9 @@ class ModificationControllerTest {
 
     @MockitoBean
     private DirectoryService directoryService;
+
+    @MockitoBean
+    private NotificationService notificationService;
 
     @Autowired
     private NetworkModificationService networkModificationService;
@@ -591,7 +594,7 @@ class ModificationControllerTest {
     }
 
     @Test
-    void updateModificationDescription() throws Exception {
+    void testUpdateModificationDescription() throws Exception {
         MvcResult mvcResult;
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .equipmentType(IdentifiableType.SWITCH)
@@ -610,16 +613,9 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         assertEquals("old description", modifications.getFirst().getDescription());
 
-        ModificationInfos metadata = new ModificationInfos();
-        metadata.setDescription("new description");
-        metadata.setType(LINE_MODIFICATION);
-        metadata.setActivated(null);
-        String uuidString = modifications.getFirst().getUuid().toString();
-        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("uuids", uuidString)
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/" + modifications.getFirst().getUuid().toString() + "/name-and-description")
                         .queryParam(HEADER_USER_ID, "userId")
-                        .content(mapper.writeValueAsString(metadata))
+                        .content(mapper.writeValueAsString(ModificationMetadata.builder().description("new description").build()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(HEADER_USER_ID, TEST_USER_ID)
                 ).andExpect(status().isOk());
@@ -628,23 +624,18 @@ class ModificationControllerTest {
     }
 
     @Test
-    void updateModificationMetadataDoesNotModifyFieldsNotProvided() {
+    void testUpdateModificationActivation() {
         // create a composite modification and set all its metadata fields
         UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of(), "");
-        modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder()
-                .name("composite name")
-                .description("composite description")
-                .activated(false)
-                .build());
+        assertEquals(true, modificationRepository.getModificationInfo(compositeUuid).getActivated());
 
-        // update the metadata again without providing any field
-        modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder().build());
+        // update activation
+        modificationRepository.updateModificationActivation(List.of(compositeUuid), CompositeModificationInfos.builder().activated(false).build());
+        assertEquals(false, modificationRepository.getModificationInfo(compositeUuid).getActivated());
 
-        // every field not provided must keep its previous value
-        CompositeModificationInfos result = (CompositeModificationInfos) modificationRepository.getModificationInfo(compositeUuid);
-        assertEquals("composite name", result.getName());
-        assertEquals("composite description", result.getDescription());
-        assertEquals(false, result.getActivated());
+        // update activation without providing value
+        modificationRepository.updateModificationActivation(List.of(compositeUuid), CompositeModificationInfos.builder().build());
+        assertEquals(false, modificationRepository.getModificationInfo(compositeUuid).getActivated());
     }
 
     @Test
@@ -1920,11 +1911,12 @@ class ModificationControllerTest {
     @Test
     void testGetCompositeMetadata() throws Exception {
         // create a single switch attribute modification in a group
-        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
-        UUID compositeUuid = createComposite(modificationList.stream().map(ModificationInfos::getUuid).toList());
-        // add a description
-        modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder()
-                .description("composite description")
+        UUID compositeUuid = createComposite(createSomeSwitchModifications(TEST_GROUP_ID, 2).stream().map(ModificationInfos::getUuid).toList());
+
+        // update name and description
+        modificationRepository.updateModificationNameAndDescription(compositeUuid, ModificationMetadata.builder()
+                .name("new name")
+                .description("new description")
                 .build());
 
         MvcResult mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/metadata?ids={id}", compositeUuid)
@@ -1934,8 +1926,8 @@ class ModificationControllerTest {
         assertEquals(1, metadata.size());
         assertEquals(compositeUuid, metadata.getFirst().getId());
         assertEquals(COMPOSITE_MODIFICATION, metadata.getFirst().getType());
-        assertEquals("composite name", metadata.getFirst().getName());
-        assertEquals("composite description", metadata.getFirst().getDescription());
+        assertEquals("new name", metadata.getFirst().getName());
+        assertEquals("new description", metadata.getFirst().getDescription());
     }
 
     @Test

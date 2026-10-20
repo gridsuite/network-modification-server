@@ -15,6 +15,7 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.hibernate.annotations.OnDelete;
@@ -141,12 +142,36 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         return modificationInfos;
     }
 
+    public ModificationMetadata toModificationMetadata() {
+        return ModificationMetadata.builder()
+            .id(this.id)
+            .name("")
+            .description(this.description)
+            .type(ModificationType.valueOf(this.type))
+            .build();
+    }
+
+    public boolean isComposite() {
+        return type.equals(ModificationType.COMPOSITE_MODIFICATION.name());
+    }
+
+    public boolean isReference() {
+        return type.equals(ModificationType.MODIFICATION_REFERENCE.name());
+    }
+
     public void update(ModificationInfos modificationInfos) {
         // Basic attributes are immutable in the database
         if (modificationInfos == null) {
             throw new NullPointerException("Impossible to update entity from null DTO");
         }
         assignAttributes(modificationInfos);
+    }
+
+    public void updateNameAndDescription(ModificationMetadata modificationMetadata) {
+        // TODO name when attribute is moved into ModificationEntity
+        if (modificationMetadata.getDescription() != null) {
+            this.setDescription(modificationMetadata.getDescription());
+        }
     }
 
     @SneakyThrows

@@ -6,10 +6,6 @@
  */
 package org.gridsuite.modification.server.repositories;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
-import org.gridsuite.modification.dto.CompositeModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -21,33 +17,5 @@ import java.util.UUID;
  */
 @Repository
 public interface CompositeModificationRepository extends JpaRepository<CompositeModificationEntity, UUID> {
-    ObjectMapper MAPPER = new ObjectMapper();
 
-    @SneakyThrows
-    //TODO: Move this method to a service class
-    default void updateCompositeModificationMetadata(CompositeModificationEntity compositeEntity, CompositeModificationInfos compositeMetadata) {
-        compositeEntity.setName(compositeMetadata.getName());
-        compositeEntity.setMessageValues(MAPPER.writeValueAsString(compositeMetadata.getMapMessageValues()));
-    }
-
-    @SneakyThrows
-    default void renameCompositeModification(CompositeModificationEntity compositeEntity, String name) {
-        compositeEntity.setName(name);
-        compositeEntity.setMessageValues(MAPPER.writeValueAsString(compositeEntity.toModificationInfos().getMapMessageValues()));
-    }
-
-    @SneakyThrows
-    default void changeDescriptionOfCompositeModification(CompositeModificationEntity compositeEntity, String description) {
-        compositeEntity.setDescription(description);
-    }
-
-    @SneakyThrows
-    default void generateModificationMessage(ModificationInfos modificationInfos) {
-        if (modificationInfos.getMessageType() == null) {
-            modificationInfos.setMessageType(modificationInfos.getType().name());
-        }
-        if (modificationInfos.getMessageValues() == null) {
-            modificationInfos.setMessageValues(MAPPER.writeValueAsString(modificationInfos.getMapMessageValues()));
-        }
-    }
 }
