@@ -1962,6 +1962,32 @@ class ModificationControllerTest {
     }
 
     @Test
+    void testVerifyModificationsInsideComposite() throws Exception {
+        UUID modificationInCompositeId = createSomeSwitchModifications(TEST_GROUP_ID, 1).getFirst().getUuid();
+        assembleModificationsIntoComposite(List.of(modificationInCompositeId));
+        mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications/verify", TEST_GROUP_ID)
+                        .param("uuids", modificationInCompositeId.toString()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testVerifyModificationsThroughReference() throws Exception {
+        // the reference is at the root level
+        UUID leafUuid = createSomeSwitchModifications(TEST_GROUP_ID, 1).getFirst().getUuid();
+        String compositeUuid = assembleModificationsIntoComposite(List.of(leafUuid));
+        ModificationReferenceData refData = shareCompositeIntoGroup(TEST_GROUP_ID, compositeUuid, "Test Reference");
+        mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications/verify", TEST_GROUP_ID)
+                        .param("uuids", leafUuid.toString()))
+                .andExpect(status().isOk());
+
+        // the reference is inside a composite which is at the root level
+        assembleModificationsIntoComposite(List.of(refData.modificationUuid()));
+        mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications/verify", TEST_GROUP_ID)
+                        .param("uuids", leafUuid.toString()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void testSearchModificationInfos() throws Exception {
         // Substation Modification ID : s1
         assertNotNull(network.getSubstation("s1"));
@@ -2139,6 +2165,24 @@ class ModificationControllerTest {
                 put("/v1/network-composite-modifications/groups/" + groupId + "?action=INSERT")
                         .content(body).contentType(MediaType.APPLICATION_JSON),
                 status().isOk());
+    }
+
+    private String assembleModificationsIntoComposite(List<UUID> modificationsUuids) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(post("/v1/network-composite-modifications/")
+                        .content(mapper.writeValueAsString(modificationsUuids))
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        return mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+    }
+
+    private ModificationReferenceData shareCompositeIntoGroup(UUID groupUuid, String compositeUuid, String name) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(post("/v1/network-composite-modifications/" + compositeUuid + "/share")
+                        .param("groupUuid", groupUuid.toString())
+                        .param("name", name))
+                .andExpect(status().isOk()).andReturn();
+        return mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
     }
 
     /** Ordered root-level modification UUIDs of a group. */
