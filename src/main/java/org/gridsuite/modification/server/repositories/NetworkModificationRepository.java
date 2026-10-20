@@ -878,7 +878,7 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * Deletes the given modifications wherever they sit: in a group, nested in a composite, or shared
+     * Deletes the given modifications.
      * @return the number of modifications found and deleted
      */
     @Transactional // To have the find and delete in the same transaction (atomic)
@@ -1195,6 +1195,8 @@ public class NetworkModificationRepository {
 
         // the content of the composites, at any depth, goes with them
         List<ModificationEntity> modificationEntities = withCompositesContent(deletedModificationEntities);
+        // a loaded container still holding a deleted modification would cancel its deletion through its PERSIST cascade,
+        // so we need to remove the deleted modifications from the loaded containers manually
         removeFromLoadedContainers(modificationEntities);
 
         // delete tabular modifications/creations
@@ -1220,25 +1222,23 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * The containers whose content is already loaded must no longer hold the deleted modifications: their content
-     * cascades PERSIST, which would cancel the deletion at flush time. The others will read the database, there is no
-     * need to load them.
+     * This method is necessary because of the PERSIST cascade of {@link AbstractModificationContainerEntity#modifications}:
+     * when that content is loaded, the deleted modifications must be removed from it manually.
      */
     private static void removeFromLoadedContainers(List<ModificationEntity> modificationEntities) {
         List<UUID> uuids = modificationEntities.stream().map(ModificationEntity::getId).toList();
         modificationEntities.stream()
                 .map(ModificationEntity::getContainer)
-                .filter(container -> container != null && AbstractModificationContainerEntity.isContentLoaded(container))
+                .filter(Objects::nonNull)
+                .filter(AbstractModificationContainerEntity::isContentLoaded)
                 .distinct()
                 .forEach(container -> container.removeModifications(uuids));
     }
 
     /**
      * @return the given modifications followed by the content of their composites at any depth, read in one query.
-     * The deletion order does not matter: the content points to the container row of its composite, deleted last.
      */
     private List<ModificationEntity> withCompositesContent(List<ModificationEntity> modificationEntities) {
-        // content id == composite id, so container ids ARE the composite ids
         List<UUID> compositeIds = modificationEntities.stream()
                 .filter(CompositeModificationEntity.class::isInstance)
                 .map(ModificationEntity::getId)
