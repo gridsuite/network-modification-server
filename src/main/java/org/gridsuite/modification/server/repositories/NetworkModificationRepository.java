@@ -29,7 +29,6 @@ import org.gridsuite.modification.server.entities.tabular.TabularModificationsEn
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.service.ModificationContextFactory;
-import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -873,16 +872,13 @@ public class NetworkModificationRepository {
     @Transactional
     public void deleteModificationGroups(List<UUID> groupUuids) {
         List<ModificationGroupEntity> groupEntities = getModificationGroups(groupUuids);
-        List<ModificationEntity> modifications = groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList();
-        if (!modifications.isEmpty()) {
-            deleteModifications(modifications);
-        }
+        deleteModifications(groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList());
         // deleting the group deletes its modification_container row (JOINED subtype delete)
         modificationGroupRepository.deleteAll(groupEntities);
     }
 
     /**
-     * Deletes the given modifications wherever they sit: in a group, nested in a composite, or shared
+     * Deletes the given modifications.
      * @return the number of modifications found and deleted
      */
     @Transactional // To have the find and delete in the same transaction (atomic)
@@ -1173,11 +1169,8 @@ public class NetworkModificationRepository {
 
     @Transactional
     public void deleteStashedModificationFromGroups(List<UUID> groupUuids) {
-        List<ModificationEntity> modifications = getModificationGroups(groupUuids).stream()
-                .flatMap(group -> group.getStashedModifications().stream()).collect(Collectors.toList());
-        if (!modifications.isEmpty()) {
-            deleteModifications(modifications);
-        }
+        deleteModifications(getModificationGroups(groupUuids).stream()
+                .flatMap(group -> group.getStashedModifications().stream()).toList());
     }
 
     @Transactional(readOnly = true)
@@ -1193,12 +1186,17 @@ public class NetworkModificationRepository {
     }
 
     private void deleteModifications(List<ModificationEntity> deletedModificationEntities) {
+        if (deletedModificationEntities.isEmpty()) {
+            return;
+        }
         // This optimizes the treatment for tabular modifications but reduces efficiency for a list of 'unitary'
         // modifications. Nevertheless, for the volumes we are considering (max few hundreds) it is still very
         // efficient so no need to dig deeper about that for now.
 
         // the content of the composites, at any depth, goes with them
         List<ModificationEntity> modificationEntities = withCompositesContent(deletedModificationEntities);
+        // a loaded container still holding a deleted modification would cancel its deletion through its PERSIST cascade,
+        // so we need to remove the deleted modifications from the loaded containers manually
         removeFromLoadedContainers(modificationEntities);
 
         // delete tabular modifications/creations
@@ -1206,11 +1204,6 @@ public class NetworkModificationRepository {
                 TabularModificationsEntity.class::cast).toList();
         tabularModificationsToDelete.forEach(m -> m.setContainer(null));
         tabularModificationsToDelete.forEach(this::deleteTabularModification);
-
-        List<CompositeModificationEntity> compositesToDelete = modificationEntities.stream()
-                .filter(CompositeModificationEntity.class::isInstance)
-                .map(CompositeModificationEntity.class::cast)
-                .toList();
 
         List<UUID> uuidsToDelete = modificationEntities.stream()
                 .filter(Predicate.not(TabularModificationsEntity.class::isInstance))
@@ -1220,31 +1213,32 @@ public class NetworkModificationRepository {
             modificationRepository.deleteAllByIdIn(uuidsToDelete);
             // bulk delete bypasses orphanRemoval; content shares the composite's id, so reap by the same ids.
             // (Or declare ON DELETE CASCADE composite_container.id -> modification_container.id and skip this.)
-            List<UUID> compositeIds = compositesToDelete.stream().map(ModificationEntity::getId).toList();
+            List<UUID> compositeIds = modificationEntities.stream()
+                    .filter(CompositeModificationEntity.class::isInstance)
+                    .map(ModificationEntity::getId)
+                    .toList();
             compositeContainerRepository.deleteAllById(compositeIds);
         }
     }
 
     /**
-     * The containers whose content is already loaded must no longer hold the deleted modifications: their content
-     * cascades PERSIST, which would cancel the deletion at flush time. The others will read the database, there is no
-     * need to load them.
+     * This method is necessary because of the PERSIST cascade of {@link AbstractModificationContainerEntity#modifications}:
+     * when that content is loaded, the deleted modifications must be removed from it manually.
      */
     private static void removeFromLoadedContainers(List<ModificationEntity> modificationEntities) {
         List<UUID> uuids = modificationEntities.stream().map(ModificationEntity::getId).toList();
         modificationEntities.stream()
                 .map(ModificationEntity::getContainer)
-                .filter(container -> container != null && Hibernate.isInitialized(container) && container.isContentLoaded())
+                .filter(Objects::nonNull)
+                .filter(AbstractModificationContainerEntity::isContentLoaded)
                 .distinct()
                 .forEach(container -> container.removeModifications(uuids));
     }
 
     /**
      * @return the given modifications followed by the content of their composites at any depth, read in one query.
-     * The deletion order does not matter: the content points to the container row of its composite, deleted last.
      */
     private List<ModificationEntity> withCompositesContent(List<ModificationEntity> modificationEntities) {
-        // content id == composite id, so container ids ARE the composite ids
         List<UUID> compositeIds = modificationEntities.stream()
                 .filter(CompositeModificationEntity.class::isInstance)
                 .map(ModificationEntity::getId)

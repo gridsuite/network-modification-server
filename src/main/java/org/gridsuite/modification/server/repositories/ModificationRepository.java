@@ -75,7 +75,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<ModificationApplicability> findApplicabilitiesByIdIn(@Param("uuids") Collection<UUID> uuids);
 
     /**
-     * @return every modification held by the given containers, the content of their composites included.
+     * @return the IDs of every modification held by the given containers, the content of their composites included.
      */
     @Query("""
         WITH descendants AS (
@@ -88,7 +88,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findAllDescendantModificationIdsByContainerIds(@Param("containerIds") Collection<UUID> containerIds);
 
     /**
-     * @return the entities of {@link #findAllDescendantModificationIdsByContainerIds}, read in the same query
+     * @return like {@link #findAllDescendantModificationIdsByContainerIds}, but return the entities
      */
     @Query("""
         WITH descendants AS (
