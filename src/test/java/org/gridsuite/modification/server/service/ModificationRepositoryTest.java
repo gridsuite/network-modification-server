@@ -16,6 +16,8 @@ import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicability;
 import org.gridsuite.modification.server.dto.ModificationContainerInfos;
+import org.gridsuite.modification.server.dto.ModificationReferenceData;
+import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
@@ -42,6 +44,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.dto.VoltageRegulationType.DISTANT;
@@ -237,7 +240,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.getModifications(TEST_GROUP_ID, true);
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         getEquipmentAttributeModification(modifEntity1.getId());
@@ -306,7 +309,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
@@ -386,7 +389,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
@@ -435,7 +438,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
@@ -1322,7 +1325,8 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
-        assertRequestsCount(1, 0, 0, 0);
+        // only the recursive query, not counted as a select, finding nothing to read
+        assertRequestsCount(0, 0, 0, 0);
     }
 
     @Test
@@ -1473,7 +1477,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
@@ -2159,6 +2163,79 @@ class ModificationRepositoryTest {
                 "Both shared modifications, the nested one included, but none of their children");
         assertEquals(Set.of(), networkModificationRepository.getReferencedModificationUuids(List.of(TEST_GROUP_ID_3)),
                 "A group containing no reference leads to no shared modification");
+    }
+
+    @Test
+    void testStashingReadsTheModificationsInOneQueryWhateverTheirNumber() {
+        List<UUID> modificationUuids = networkModificationRepository.saveModifications(TEST_GROUP_ID,
+                        List.of(switchModification("v1d1"), switchModification("v1d2"), switchModification("v1d3"), switchModification("v1d4")))
+                .stream().map(ModificationInfos::getUuid).toList();
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.stashNetworkModifications(modificationUuids.subList(0, 1), 0);
+        assertSelectCount(1);
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.stashNetworkModifications(modificationUuids.subList(1, 4), 1);
+        assertSelectCount(1);
+
+        assertEquals(modificationUuids,
+                networkModificationRepository.getModifications(TEST_GROUP_ID, true, StashedFilter.STASHED).stream()
+                        .map(ModificationInfos::getUuid).toList(),
+                "the modifications keep the order they were given");
+    }
+
+    @Test
+    void testReadingTheReferencesOfAContainerCostsTheSameWhateverTheirNumber() {
+        UUID firstReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+
+        List<UUID> descendantUuids = modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(TEST_GROUP_ID_2));
+        SQLStatementCountValidator.reset();
+        List<ModificationReferenceData> references = networkModificationRepository.getModificationsReferences(descendantUuids, false);
+        // a single query, which reports the composite holding each reference along the way
+        assertRequestsCount(1, 0, 0, 0);
+        assertEquals(List.of(firstReferenceUuid), references.stream().map(ModificationReferenceData::modificationUuid).toList());
+
+        UUID secondReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d2");
+        UUID thirdReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d3");
+
+        descendantUuids = modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(TEST_GROUP_ID_2));
+        SQLStatementCountValidator.reset();
+        references = networkModificationRepository.getModificationsReferences(descendantUuids, false);
+        assertRequestsCount(1, 0, 0, 0);
+        assertEquals(Set.of(firstReferenceUuid, secondReferenceUuid, thirdReferenceUuid),
+                references.stream().map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet()));
+    }
+
+    @Test
+    void testReadingTheGivenReferencesCostsTheSameWhateverTheirNumber() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID ownedUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_2, List.of(switchModification("v1d4"))).getFirst().getUuid();
+
+        SQLStatementCountValidator.reset();
+        List<ModificationReferenceData> references = networkModificationRepository.getModificationsReferences(List.of(referenceUuid, ownedUuid), false);
+        assertRequestsCount(1, 0, 0, 0);
+        assertEquals(List.of(referenceUuid), references.stream().map(ModificationReferenceData::modificationUuid).toList(),
+                "a modification that is not a reference is ignored");
+
+        UUID nestedReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d2");
+        UUID compositeUuid = sharedModificationOf(referenceUuid);
+        networkModificationRepository.moveModifications(
+                new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
+                new ModificationContainerInfos(compositeUuid, ModificationContainerType.COMPOSITE),
+                List.of(nestedReferenceUuid), null);
+
+        SQLStatementCountValidator.reset();
+        references = networkModificationRepository.getModificationsReferences(List.of(referenceUuid, nestedReferenceUuid, ownedUuid), false);
+        assertRequestsCount(1, 0, 0, 0);
+        assertEquals(Map.of(referenceUuid, Optional.<UUID>empty(), nestedReferenceUuid, Optional.of(compositeUuid)),
+                references.stream().collect(Collectors.toMap(ModificationReferenceData::modificationUuid,
+                        reference -> Optional.ofNullable(reference.containerId()))),
+                "only the nested reference reports a composite");
+
+        SQLStatementCountValidator.reset();
+        assertEquals(List.of(), networkModificationRepository.getModificationsReferences(List.of(ownedUuid), false));
+        assertRequestsCount(1, 0, 0, 0);
     }
 
     @Test
