@@ -365,12 +365,7 @@ public class NetworkModificationService {
         List<UUID> referencedAncestorUuids = networkModificationRepository.getAllReferencedModificationAncestorsUuids(modificationUuids);
 
         // modification references are not stashed but deleted, those nested in the stashed composites included
-        List<ModificationReferenceData> references = getModificationsReferencesNonTransactional(modificationUuids, true);
-        directoryService.removeElementReferences(references, userId);
-        Set<UUID> referenceUuids = references.stream().map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet());
-        if (!referenceUuids.isEmpty()) {
-            networkModificationRepository.deleteModifications(referenceUuids);
-        }
+        Set<UUID> referenceUuids = deleteModificationReferences(modificationUuids, userId);
 
         List<UUID> modificationUuidsToStash = modificationUuids.stream().filter(uuid -> !referenceUuids.contains(uuid)).toList();
         moveCompositeChildrenToGroup(groupUuid, modificationUuidsToStash);
@@ -697,6 +692,22 @@ public class NetworkModificationService {
         directoryService.removeElementReferences(references, userId);
         networkModificationRepository.deleteModifications(references.stream().map(ModificationReferenceData::modificationUuid).toList());
         networkModificationRepository.reorderNetworkModifications(groupUuid, Boolean.FALSE);
+    }
+
+    /**
+     * Unlinks the modification references among the given modifications, and those nested in the given composites,
+     * from their shared modifications, then deletes them
+     * @return the uuids of the deleted references
+     */
+    private Set<UUID> deleteModificationReferences(@NonNull List<UUID> modificationUuids, @NonNull String userId) {
+        List<ModificationReferenceData> references = getModificationsReferencesNonTransactional(modificationUuids, true);
+        if (references.isEmpty()) {
+            return Set.of();
+        }
+        directoryService.removeElementReferences(references, userId);
+        Set<UUID> referenceUuids = references.stream().map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet());
+        networkModificationRepository.deleteModifications(referenceUuids);
+        return referenceUuids;
     }
 
     public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {
