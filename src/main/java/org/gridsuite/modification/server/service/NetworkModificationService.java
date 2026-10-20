@@ -682,16 +682,15 @@ public class NetworkModificationService {
 
     /**
      * Unlinks the modification references of the group from their shared modifications, then deletes them
+     * @return the uuids of the deleted references
      */
     @Transactional
-    public void deleteModificationReferences(@NonNull UUID groupUuid, @NonNull String userId) {
-        List<ModificationReferenceData> references = getModificationReferencesNonTransactional(groupUuid);
-        if (references.isEmpty()) {
-            return;
+    public Set<UUID> deleteModificationReferences(@NonNull UUID groupUuid, @NonNull String userId) {
+        Set<UUID> referenceUuids = deleteReferences(getModificationReferencesNonTransactional(groupUuid), userId);
+        if (!referenceUuids.isEmpty()) {
+            networkModificationRepository.reorderNetworkModifications(groupUuid, Boolean.FALSE);
         }
-        directoryService.removeElementReferences(references, userId);
-        networkModificationRepository.deleteModifications(references.stream().map(ModificationReferenceData::modificationUuid).toList());
-        networkModificationRepository.reorderNetworkModifications(groupUuid, Boolean.FALSE);
+        return referenceUuids;
     }
 
     /**
@@ -700,7 +699,10 @@ public class NetworkModificationService {
      * @return the uuids of the deleted references
      */
     private Set<UUID> deleteModificationReferences(@NonNull List<UUID> modificationUuids, @NonNull String userId) {
-        List<ModificationReferenceData> references = getModificationsReferencesNonTransactional(modificationUuids, true);
+        return deleteReferences(getModificationsReferencesNonTransactional(modificationUuids, true), userId);
+    }
+
+    private Set<UUID> deleteReferences(List<ModificationReferenceData> references, String userId) {
         if (references.isEmpty()) {
             return Set.of();
         }
