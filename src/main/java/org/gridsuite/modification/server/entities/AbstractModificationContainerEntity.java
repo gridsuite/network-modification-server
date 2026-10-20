@@ -120,13 +120,6 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
             .toList();
     }
 
-    /**
-     * @return whether the content was read from the database, or is a new one
-     */
-    public boolean isContentLoaded() {
-        return Hibernate.isInitialized(modifications);
-    }
-
     public List<ModificationEntity> removeModifications(List<UUID> uuidsToRemove) {
         List<ModificationEntity> modificationsToBeRemoved = getOrderedModifications(uuidsToRemove);
         modifications.removeAll(modificationsToBeRemoved);
@@ -163,5 +156,9 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
             this.modifications.add(child);
         }
         resetPositionsOrder();
+    }
+
+    public static boolean isContentLoaded(AbstractModificationContainerEntity container) {
+        return Hibernate.isInitialized(container) && Hibernate.isInitialized(container.modifications);
     }
 }

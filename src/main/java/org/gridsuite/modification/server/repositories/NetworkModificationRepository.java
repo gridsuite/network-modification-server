@@ -29,7 +29,6 @@ import org.gridsuite.modification.server.entities.tabular.TabularModificationsEn
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.service.ModificationContextFactory;
-import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -873,10 +872,7 @@ public class NetworkModificationRepository {
     @Transactional
     public void deleteModificationGroups(List<UUID> groupUuids) {
         List<ModificationGroupEntity> groupEntities = getModificationGroups(groupUuids);
-        List<ModificationEntity> modifications = groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList();
-        if (!modifications.isEmpty()) {
-            deleteModifications(modifications);
-        }
+        deleteModifications(groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList());
         // deleting the group deletes its modification_container row (JOINED subtype delete)
         modificationGroupRepository.deleteAll(groupEntities);
     }
@@ -1173,11 +1169,8 @@ public class NetworkModificationRepository {
 
     @Transactional
     public void deleteStashedModificationFromGroups(List<UUID> groupUuids) {
-        List<ModificationEntity> modifications = getModificationGroups(groupUuids).stream()
-                .flatMap(group -> group.getStashedModifications().stream()).collect(Collectors.toList());
-        if (!modifications.isEmpty()) {
-            deleteModifications(modifications);
-        }
+        deleteModifications(getModificationGroups(groupUuids).stream()
+                .flatMap(group -> group.getStashedModifications().stream()).toList());
     }
 
     @Transactional(readOnly = true)
@@ -1193,6 +1186,9 @@ public class NetworkModificationRepository {
     }
 
     private void deleteModifications(List<ModificationEntity> deletedModificationEntities) {
+        if (deletedModificationEntities.isEmpty()) {
+            return;
+        }
         // This optimizes the treatment for tabular modifications but reduces efficiency for a list of 'unitary'
         // modifications. Nevertheless, for the volumes we are considering (max few hundreds) it is still very
         // efficient so no need to dig deeper about that for now.
@@ -1207,11 +1203,6 @@ public class NetworkModificationRepository {
         tabularModificationsToDelete.forEach(m -> m.setContainer(null));
         tabularModificationsToDelete.forEach(this::deleteTabularModification);
 
-        List<CompositeModificationEntity> compositesToDelete = modificationEntities.stream()
-                .filter(CompositeModificationEntity.class::isInstance)
-                .map(CompositeModificationEntity.class::cast)
-                .toList();
-
         List<UUID> uuidsToDelete = modificationEntities.stream()
                 .filter(Predicate.not(TabularModificationsEntity.class::isInstance))
                 .map(ModificationEntity::getId).toList();
@@ -1220,7 +1211,10 @@ public class NetworkModificationRepository {
             modificationRepository.deleteAllByIdIn(uuidsToDelete);
             // bulk delete bypasses orphanRemoval; content shares the composite's id, so reap by the same ids.
             // (Or declare ON DELETE CASCADE composite_container.id -> modification_container.id and skip this.)
-            List<UUID> compositeIds = compositesToDelete.stream().map(ModificationEntity::getId).toList();
+            List<UUID> compositeIds = modificationEntities.stream()
+                    .filter(CompositeModificationEntity.class::isInstance)
+                    .map(ModificationEntity::getId)
+                    .toList();
             compositeContainerRepository.deleteAllById(compositeIds);
         }
     }
@@ -1234,7 +1228,7 @@ public class NetworkModificationRepository {
         List<UUID> uuids = modificationEntities.stream().map(ModificationEntity::getId).toList();
         modificationEntities.stream()
                 .map(ModificationEntity::getContainer)
-                .filter(container -> container != null && Hibernate.isInitialized(container) && container.isContentLoaded())
+                .filter(container -> container != null && AbstractModificationContainerEntity.isContentLoaded(container))
                 .distinct()
                 .forEach(container -> container.removeModifications(uuids));
     }
