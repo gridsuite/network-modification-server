@@ -602,7 +602,7 @@ public class NetworkModificationService {
 
         if (!referenceEntity.getType().equals(MODIFICATION_REFERENCE.name())) {
             // Only a reference modification may be unshared
-            String expectedType = ModificationType.MODIFICATION_REFERENCE.name();
+            String expectedType = MODIFICATION_REFERENCE.name();
             throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
                     String.format(MODIFICATION_BAD_TYPE.messageTemplate(), referenceModificationUuid, referenceEntity.getType(), expectedType),
                     Map.of(MODIFICATION_ID, referenceModificationUuid.toString(), "modificationType", referenceEntity.getType(), "expectedModificationType", expectedType));
