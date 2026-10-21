@@ -28,7 +28,6 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.ModificationReferenceEntity;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -661,13 +660,8 @@ public class NetworkModificationService {
         return networkModificationRepository.duplicateCompositeModifications(sourceModificationUuids);
     }
 
-    public void updateModificationNameAndDescription(@NonNull UUID modificationUuid, ModificationMetadata modificationMetadata, String userId) {
-        ModificationEntity modificationEntity = networkModificationRepository.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
-
-        // emit notification about modification to update
-        if (modificationEntity.isReference()) {
-            notificationService.emitElementMetadataUpdated(((ModificationReferenceEntity) modificationEntity).getReferencedId(), userId);
-        }
+    public void updateModificationNameAndDescription(@NonNull UUID modificationUuid, ModificationMetadata modificationMetadata) {
+        networkModificationRepository.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
     }
 
     @Transactional

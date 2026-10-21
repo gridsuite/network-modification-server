@@ -38,7 +38,6 @@ public class NotificationService {
     public static final String HEADER_ELEMENT_UUID = "elementUuid";
     public static final String HEADER_MODIFIED_BY = "modifiedBy";
     public static final String HEADER_MODIFICATION_DATE = "modificationDate";
-    public static final String HEADER_ONLY_METADATA = "onlyMetadata";
 
     @Autowired
     private StreamBridge publisher;
@@ -84,18 +83,8 @@ public class NotificationService {
         Message<String> message = MessageBuilder.withPayload("")
                 .setHeader(HEADER_ELEMENT_UUID, elementUuid)
                 .setHeader(HEADER_MODIFIED_BY, userId)
-                .setHeader(HEADER_ONLY_METADATA, false)
                 .setHeader(HEADER_MODIFICATION_DATE, Instant.now())
                 .build();
-        sendMessage(message, "publishElementUpdate-out-0");
-    }
-
-    public void emitElementMetadataUpdated(@NonNull UUID elementUuid, @NonNull String userId) {
-        Message<String> message = MessageBuilder.withPayload("")
-            .setHeader(HEADER_ELEMENT_UUID, elementUuid)
-            .setHeader(HEADER_MODIFIED_BY, userId)
-            .setHeader(HEADER_ONLY_METADATA, true)
-            .build();
         sendMessage(message, "publishElementUpdate-out-0");
     }
 }

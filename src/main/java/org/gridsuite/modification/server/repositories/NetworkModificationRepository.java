@@ -202,14 +202,13 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public ModificationEntity updateModificationNameAndDescription(@NonNull UUID modificationUuid, @NonNull ModificationMetadata modificationMetadata) {
+    public void updateModificationNameAndDescription(@NonNull UUID modificationUuid, @NonNull ModificationMetadata modificationMetadata) {
         ModificationEntity modificationEntity = getModificationEntity(modificationUuid);
         if (modificationEntity.isReference()) {
             getReferencedModification((ModificationReferenceEntity) modificationEntity).updateNameAndDescription(modificationMetadata);
         } else {
             modificationEntity.updateNameAndDescription(modificationMetadata);
         }
-        return modificationEntity;
     }
 
     private ModificationEntity getReferencedModification(ModificationReferenceEntity modificationReferenceEntity) {
@@ -430,7 +429,7 @@ public class NetworkModificationRepository {
                     .date(modification.getDate())
                     .stashed(modification.getStashed())
                     .activated(modification.getActivated())
-                    .description(modification.getDescription())
+                    .description(shared.getDescription())
                     .messageType(shared.getMessageType())
                     .messageValues(shared.getMessageValues())
                     .referencedId(shared.getId())
