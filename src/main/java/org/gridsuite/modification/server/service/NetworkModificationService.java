@@ -512,11 +512,12 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids, String userId) {
+    public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids, @NonNull String userId) {
         // the references are read from the modifications, so before their deletion; only those of a group are registered by its owner
-        List<ModificationReferenceData> references = groupUuid != null && userId != null && modificationsUuids != null
-                ? getModificationsReferencesNonTransactional(modificationsUuids, true)
-                : List.of();
+        if (groupUuid == null || modificationsUuids == null) {
+            return;
+        }
+        List<ModificationReferenceData> references = getModificationsReferencesNonTransactional(modificationsUuids, true);
         deleteNetworkModificationsNonTransactional(groupUuid, modificationsUuids);
         if (!references.isEmpty()) {
             notificationService.emitModificationReferencesChanged(ReferenceAction.DELETE, groupUuid, references, userId);

@@ -496,8 +496,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         // removing only first tabular modification in the group
         ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), List.of(modifications.getFirst().getLeft()));
-        // It is actually (4, 0, 1, 7) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(4, 0, 1, 0);
+        // It is actually (5, 0, 1, 7) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(5, 0, 1, 0);
         assertEquals(4, modificationRepository.count()); // then second tabular still exists (and its sub-modifications)
     }
 
@@ -508,8 +508,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         // removing only 3 first tabular modifications in the group
         ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), modifications.subList(0, 3).stream().map(Pair::getLeft).toList());
-        // It is actually (8, 0, 1, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(8, 0, 1, 0);
+        // It is actually (9, 0, 1, 21) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(9, 0, 1, 0);
         assertEquals(31, modificationRepository.count()); // then last tabular still exists (and its sub-modifications)
     }
 

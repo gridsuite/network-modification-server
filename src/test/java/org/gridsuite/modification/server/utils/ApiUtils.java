@@ -122,6 +122,7 @@ public final class ApiUtils {
     public static void deleteNetworkModificationsInGroup(MockMvc mockMvc, UUID groupUuid) throws Exception {
         mockMvc.perform(
                 delete("/v1/network-modifications")
+                    .header(HEADER_USER_ID, TEST_USER_ID)
                     .param("groupUuid", groupUuid.toString())
             )
             .andExpectAll(status().isOk());
@@ -130,6 +131,7 @@ public final class ApiUtils {
     public static void deleteNetworkModificationsInGroup(MockMvc mockMvc, UUID groupUuid, List<UUID> uuids) throws Exception {
         mockMvc.perform(
                 delete("/v1/network-modifications")
+                    .header(HEADER_USER_ID, TEST_USER_ID)
                     .param("uuids", uuids.stream().map(Objects::toString).toList().toArray(new String[0]))
                     .param("groupUuid", groupUuid.toString())
             )
@@ -139,6 +141,7 @@ public final class ApiUtils {
     public static void deleteNetworkModifications(MockMvc mockMvc, List<UUID> uuids) throws Exception {
         mockMvc.perform(
                 delete("/v1/network-modifications")
+                    .header(HEADER_USER_ID, TEST_USER_ID)
                     .param("uuids", uuids.stream().map(Objects::toString).toList().toArray(new String[0]))
             )
             .andExpectAll(status().isOk());

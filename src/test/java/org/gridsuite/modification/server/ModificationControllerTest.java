@@ -657,11 +657,13 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, TEST_USER_ID)
                         .queryParam("groupUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString))
                 .andExpect(status().isNotFound());
 
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, TEST_USER_ID)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString))
                 .andExpect(status().isOk());
@@ -670,6 +672,7 @@ class ModificationControllerTest {
 
         /* non existing modification */
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, TEST_USER_ID)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString))
                 .andExpect(status().isNotFound());
@@ -685,6 +688,7 @@ class ModificationControllerTest {
 
         assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, TEST_USER_ID)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString()))
                 .andExpect(status().isOk());
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
@@ -692,7 +696,7 @@ class ModificationControllerTest {
 
     @Test
     void testDeleteModificationMissingParamError() throws Exception {
-        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE))
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE).header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isBadRequest())
                 .andExpect(result -> assertInstanceOf(NetworkModificationServerException.class, result.getResolvedException()))
                 .andExpect(result -> assertEquals(
@@ -1901,6 +1905,7 @@ class ModificationControllerTest {
 
         // Try to delete this modification without its group: not allowed
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, TEST_USER_ID)
                         .queryParam("uuids", switchModificationId.toString()))
                 .andExpect(status().isBadRequest())
                 .andExpect(result -> assertEquals(

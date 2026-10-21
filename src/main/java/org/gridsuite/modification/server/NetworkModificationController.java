@@ -234,7 +234,7 @@ public class NetworkModificationController {
     public ResponseEntity<Void> deleteNetworkModifications(
             @Parameter(description = "Network modification UUIDs") @RequestParam(name = "uuids", required = false) List<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid", required = false) UUID groupUuid,
-            @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
+            @RequestHeader(HEADER_USER_ID) String userId) {
         networkModificationService.deleteNetworkModifications(groupUuid, networkModificationUuids, userId);
         return ResponseEntity.ok().build();
     }
