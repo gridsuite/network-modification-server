@@ -716,10 +716,10 @@ public class NetworkModificationService {
     }
 
     private Set<UUID> deleteReferences(List<ModificationReferenceData> references, String userId) {
-        Set<UUID> referenceUuids = references.stream().map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet());
+        List<UUID> referenceUuids = references.stream().map(ModificationReferenceData::modificationUuid).toList();
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModifications(referenceUuids);
         removeDeletedElementReferences(deletedReferences, userId);
-        return referenceUuids;
+        return deletedReferences.stream().map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet());
     }
 
     public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {
