@@ -514,6 +514,7 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
+    @Transactional
     public void deleteNetworkModifications(@NonNull List<UUID> modificationsUuids, String userId) {
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModifications(modificationsUuids);
         removeDeletedElementReferences(deletedReferences, userId);
@@ -699,6 +700,7 @@ public class NetworkModificationService {
         }
     }
 
+    @Transactional
     public void deleteStashedModificationFromGroups(List<UUID> groupUuids, String userId) {
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteStashedModificationFromGroups(groupUuids);
         removeDeletedElementReferences(deletedReferences, userId);

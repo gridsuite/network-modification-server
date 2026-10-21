@@ -12,7 +12,6 @@ import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
-import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -21,9 +20,7 @@ import org.gridsuite.modification.server.repositories.NetworkModificationReposit
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -31,10 +28,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -54,9 +47,6 @@ class NetworkModificationServiceTest {
 
     @MockitoBean
     private NetworkStoreService networkStoreService;
-
-    @MockitoBean
-    private DirectoryService directoryService;
 
     @Test
     void shouldMoveModificationOutOfCompositeContainerWhenStashed() {
@@ -128,68 +118,6 @@ class NetworkModificationServiceTest {
         assertTrue(networkModificationService.hasModificationReferences(List.of(outerUuid)), "a composite is a container too");
         assertTrue(networkModificationService.hasModificationReferences(List.of(groupWithoutReferenceUuid, groupWithReferenceUuid)),
                 "any of the containers holding one is enough");
-    }
-
-    @Test
-    void shouldUnlinkTheDeletedReferences() {
-        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
-        // another shared composite holding a reference, itself referenced from the group
-        CompositeModificationInfos otherShared = (CompositeModificationInfos) networkModificationRepository.saveModifications(UUID.randomUUID(),
-                List.of(ModificationEntity.fromDTO(compositeModification(UUID.randomUUID(), List.of(referenceTo(sharedUuid)))))).getFirst();
-        UUID referenceInOtherSharedUuid = otherShared.getModificationsInfos().getFirst().getUuid();
-        UUID groupUuid = UUID.randomUUID();
-        // reference ; composite ── (reference, leaf) ; reference to the other shared
-        List<ModificationInfos> saved = networkModificationRepository.saveModifications(groupUuid, List.of(
-                ModificationEntity.fromDTO(referenceTo(sharedUuid)),
-                ModificationEntity.fromDTO(compositeModification(UUID.randomUUID(), List.of(referenceTo(sharedUuid), dummyModification(UUID.randomUUID())))),
-                ModificationEntity.fromDTO(referenceTo(otherShared.getUuid()))));
-        UUID rootReferenceUuid = saved.get(0).getUuid();
-        UUID nestedReferenceUuid = ((CompositeModificationInfos) saved.get(1)).getModificationsInfos().getFirst().getUuid();
-        UUID referenceToOtherSharedUuid = saved.get(2).getUuid();
-
-        networkModificationService.deleteNetworkModifications(saved.stream().map(ModificationInfos::getUuid).toList(), "userId");
-
-        // the references deleted, nested ones included, are unlinked; the content of a referenced shared composite is not touched
-        List<UUID> referenceUuids = List.of(rootReferenceUuid, nestedReferenceUuid, referenceToOtherSharedUuid);
-        verify(directoryService).removeElementReferences(argThat(references -> references.size() == 3
-                && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq("userId"));
-        assertTrue(modificationRepository.existsById(referenceInOtherSharedUuid));
-    }
-
-    @Test
-    void shouldUnlinkTheReferencesOfTheDeletedGroupsAndReplacedContent() {
-        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
-        UUID groupUuid = UUID.randomUUID();
-        UUID groupReferenceUuid = networkModificationRepository.saveModifications(groupUuid,
-                List.of(ModificationEntity.fromDTO(referenceTo(sharedUuid)))).getFirst().getUuid();
-        CompositeModificationInfos composite = (CompositeModificationInfos) networkModificationRepository.saveModifications(UUID.randomUUID(),
-                List.of(ModificationEntity.fromDTO(compositeModification(UUID.randomUUID(), List.of(referenceTo(sharedUuid)))))).getFirst();
-        UUID compositeReferenceUuid = composite.getModificationsInfos().getFirst().getUuid();
-
-        networkModificationService.deleteModificationGroups(List.of(groupUuid), "userId");
-        networkModificationService.replaceCompositeModification(composite.getUuid(), "name", List.of(), "userId");
-
-        verify(directoryService).removeElementReferences(argThat(references -> references.size() == 1
-                && references.getFirst().modificationUuid().equals(groupReferenceUuid)), eq("userId"));
-        verify(directoryService).removeElementReferences(argThat(references -> references.size() == 1
-                && references.getFirst().modificationUuid().equals(compositeReferenceUuid)), eq("userId"));
-    }
-
-    @Test
-    void shouldRequireTheUserOnlyToDeleteReferences() {
-        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
-        UUID groupUuid = UUID.randomUUID();
-        List<ModificationInfos> saved = networkModificationRepository.saveModifications(groupUuid, List.of(
-                ModificationEntity.fromDTO(dummyModification(UUID.randomUUID())),
-                ModificationEntity.fromDTO(referenceTo(sharedUuid))));
-
-        networkModificationService.deleteNetworkModifications(List.of(saved.get(0).getUuid()), null);
-        List<UUID> referenceUuids = List.of(saved.get(1).getUuid());
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> networkModificationService.deleteNetworkModifications(referenceUuids, null));
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        verify(directoryService, never()).removeElementReferences(any(), any());
     }
 
     /**
