@@ -614,18 +614,24 @@ public class NetworkModificationService {
         ModificationInfos referencedCompositeInfos = networkModificationRepository.getModificationInfo(((ModificationReferenceEntity) referenceEntity).getReferencedId());
         ModificationEntity copiedComposite = ModificationEntity.fromDTO(referencedCompositeInfos);
 
+        // the group owning the reference, read before its deletion; null if the reference is inside a shared composite
+        UUID groupUuid = modificationRepository.findGroupIdByModificationId(referenceModificationUuid);
+
         // put the new copied composite and delete the reference
         AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
         containerEntity.addModification(copiedComposite, referenceEntity.getModificationsOrder());
         modificationRepository.save(copiedComposite);
-        deleteNetworkModifications(containerEntity.isGroup() ? containerEntity.getId() : null, List.of(referenceModificationUuid));
+        // no user: the reference deletion is notified below, whatever its container
+        deleteNetworkModifications(containerEntity.isGroup() ? containerEntity.getId() : null, List.of(referenceModificationUuid), null);
 
-        // remove the reference from directory server
-        List<ModificationReferenceData> referenceData = List.of(
-                new ModificationReferenceData(referenceModificationUuid,
-                        ((ModificationReferenceEntity) referenceEntity).getReferencedId(),
-                        containerEntity.getId()));
-        directoryService.removeElementReferences(referenceData, userId);
+        // ask the owner of the group to remove the reference from directory server
+        if (groupUuid != null) {
+            List<ModificationReferenceData> referenceData = List.of(
+                    new ModificationReferenceData(referenceModificationUuid,
+                            ((ModificationReferenceEntity) referenceEntity).getReferencedId(),
+                            containerEntity.getId()));
+            notificationService.emitModificationReferencesChanged(ReferenceAction.DELETE, groupUuid, referenceData, userId);
+        }
     }
 
     /**
