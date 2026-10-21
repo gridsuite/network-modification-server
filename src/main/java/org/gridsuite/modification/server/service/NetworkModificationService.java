@@ -222,7 +222,7 @@ public class NetworkModificationService {
     public void deleteModificationGroups(List<UUID> groupUuids, @NonNull String userId) {
         deleteIndexedModificationGroups(groupUuids);
         // the references are read from the groups, so before their deletion
-        groupUuids.forEach(groupUuid -> removeElementReferences(groupUuid, userId));
+        groupUuids.forEach(groupUuid -> removeElementReferencesNonTransactional(groupUuid, userId));
         networkModificationRepository.deleteModificationGroups(groupUuids);
     }
 
@@ -312,6 +312,10 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     public void removeElementReferences(@NonNull UUID groupUuid, @NonNull String userId) {
+        removeElementReferencesNonTransactional(groupUuid, userId);
+    }
+
+    private void removeElementReferencesNonTransactional(@NonNull UUID groupUuid, @NonNull String userId) {
         notificationService.emitModificationReferencesChanged(ReferenceAction.DELETE, groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
     }
 
@@ -513,13 +517,17 @@ public class NetworkModificationService {
         List<ModificationReferenceData> references = groupUuid != null && userId != null && modificationsUuids != null
                 ? getModificationsReferencesNonTransactional(modificationsUuids, true)
                 : List.of();
+        deleteNetworkModificationsNonTransactional(groupUuid, modificationsUuids);
+        if (!references.isEmpty()) {
+            notificationService.emitModificationReferencesChanged(ReferenceAction.DELETE, groupUuid, references, userId);
+        }
+    }
+
+    private void deleteNetworkModificationsNonTransactional(UUID groupUuid, List<UUID> modificationsUuids) {
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
             throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
                 String.format("Some of these modifications %s (to be deleted) were not found", modificationsUuids),
                 Map.of("ids", modificationsUuids));
-        }
-        if (!references.isEmpty()) {
-            notificationService.emitModificationReferencesChanged(ReferenceAction.DELETE, groupUuid, references, userId);
         }
     }
 
@@ -621,8 +629,8 @@ public class NetworkModificationService {
         AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
         containerEntity.addModification(copiedComposite, referenceEntity.getModificationsOrder());
         modificationRepository.save(copiedComposite);
-        // no user: the reference deletion is notified below, whatever its container
-        deleteNetworkModifications(containerEntity.isGroup() ? containerEntity.getId() : null, List.of(referenceModificationUuid), null);
+        // the reference deletion is notified below, whatever its container
+        deleteNetworkModificationsNonTransactional(containerEntity.isGroup() ? containerEntity.getId() : null, List.of(referenceModificationUuid));
 
         // ask the owner of the group to remove the reference from directory server
         if (groupUuid != null) {
