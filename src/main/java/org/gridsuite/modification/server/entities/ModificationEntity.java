@@ -170,18 +170,12 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
             () -> applicabilities.add(new ModificationRootNetworkApplicabilityEntity(this, rootNetworkTag, applicable)));
     }
 
-    /**
-     * Makes the modification applicable on the root network tag, unless it already holds an applicability for it.
-     */
     public void setDefaultApplicabilityIfMissing(String rootNetworkTag) {
         if (findApplicability(rootNetworkTag).isEmpty()) {
             applicabilities.add(new ModificationRootNetworkApplicabilityEntity(this, rootNetworkTag, true));
         }
     }
 
-    /**
-     * @return the root network tags the modification is associated with, that is the ones it holds an applicability for
-     */
     public Set<String> getRootNetworkTags() {
         return applicabilities.stream().map(ModificationRootNetworkApplicabilityEntity::getRootNetworkTag).collect(Collectors.toSet());
     }
