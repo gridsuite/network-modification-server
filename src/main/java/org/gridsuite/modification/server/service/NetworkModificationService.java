@@ -515,6 +515,7 @@ public class NetworkModificationService {
     public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids, @NonNull String userId) {
         // the references are read from the modifications, so before their deletion; only those of a group are registered by its owner
         if (groupUuid == null || modificationsUuids == null) {
+            deleteNetworkModificationsNonTransactional(groupUuid, modificationsUuids);
             return;
         }
         List<ModificationReferenceData> references = getModificationsReferencesNonTransactional(modificationsUuids, true);
