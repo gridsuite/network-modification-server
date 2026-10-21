@@ -120,21 +120,6 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         """)
     void copyRootNetworkApplicability(@Param("ids") Collection<UUID> ids, @Param("fromTag") String fromTag, @Param("toTag") String toTag);
 
-    /**
-     * Makes {@code tag} applicable on those of the given modifications that have no applicability for it yet. A
-     * reference is left out: its applicability is the one of the shared modification it points to.
-     */
-    @Modifying
-    @Query("""
-        INSERT INTO ModificationRootNetworkApplicabilityEntity (modification, rootNetworkTag, applicable)
-        SELECT m, :tag, true
-          FROM ModificationEntity m
-         WHERE m.id IN (:ids) AND TYPE(m) <> ModificationReferenceEntity
-           AND NOT EXISTS (SELECT 1 FROM ModificationRootNetworkApplicabilityEntity a
-                            WHERE a.modification = m AND a.rootNetworkTag = :tag)
-        """)
-    void setDefaultApplicabilityIfMissing(@Param("ids") Collection<UUID> ids, @Param("tag") String tag);
-
     @Modifying
     @Query("""
         UPDATE ModificationRootNetworkApplicabilityEntity a SET a.rootNetworkTag = :toTag

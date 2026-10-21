@@ -441,9 +441,6 @@ public class NetworkModificationService {
         }
     }
 
-    /**
-     * @return the root network tags the modifications are applied on, which they must be associated with beforehand
-     */
     private static List<String> rootNetworkTagsOf(List<ModificationApplicationContext> applicationContexts) {
         return applicationContexts.stream().map(ModificationApplicationContext::rootNetworkTag).filter(Objects::nonNull).distinct().toList();
     }

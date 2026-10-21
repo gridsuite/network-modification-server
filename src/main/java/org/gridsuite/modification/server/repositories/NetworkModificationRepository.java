@@ -1163,22 +1163,25 @@ public class NetworkModificationRepository {
         }
     }
 
-    /**
-     * Sets the default applicability of the given modifications, of their content and of the shared modifications
-     * they point to on the root network tags they have none for.
-     */
     private void setDefaultApplicabilitiesIfMissing(List<ModificationEntity> modificationEntities, Collection<String> rootNetworkTags) {
+        if (rootNetworkTags.isEmpty()) {
+            return;
+        }
         // Set applicabilities on modifications (except shared ones)
         modificationEntities.forEach(entity -> setTreeDefaultApplicabilitiesIfMissing(entity, rootNetworkTags));
         // Set applicabilities on shared modifications and their children
-        setSharedTreesDefaultApplicabilitiesIfMissing(modificationEntities, rootNetworkTags);
+        List<UUID> sharedUuids = modificationEntities.stream()
+                .flatMap(NetworkModificationRepository::referencesIn)
+                .map(ModificationReferenceEntity::getReferencedId)
+                .toList();
+        if (sharedUuids.isEmpty()) {
+            return;
+        }
+        modificationRepository.findAllWithApplicabilitiesByIdIn(getSharedModificationTreesFrom(sharedUuids).allUuids()).stream()
+                .filter(Predicate.not(ModificationReferenceEntity.class::isInstance))
+                .forEach(modification -> rootNetworkTags.forEach(modification::setDefaultApplicabilityIfMissing));
     }
 
-    /**
-     * Sets the default applicability of the modification and of its content, however deep, on the root network tags
-     * they have none for. A reference is left out, as the shared modification it points to holds its applicability:
-     * see {@link #setSharedTreesDefaultApplicabilitiesIfMissing(List, Collection)} for those.
-     */
     private static void setTreeDefaultApplicabilitiesIfMissing(ModificationEntity modificationEntity, Collection<String> rootNetworkTags) {
         if (rootNetworkTags.isEmpty() || modificationEntity instanceof ModificationReferenceEntity) {
             return;
@@ -1187,28 +1190,6 @@ public class NetworkModificationRepository {
         if (modificationEntity instanceof CompositeModificationEntity composite) {
             composite.getModifications().forEach(content -> setTreeDefaultApplicabilitiesIfMissing(content, rootNetworkTags));
         }
-    }
-
-    /**
-     * Same as {@link #setTreeDefaultApplicabilitiesIfMissing(ModificationEntity, Collection)}, for the shared
-     * modifications the references among the given modifications and their content point to, and the content of those.
-     * <p>
-     * Optimized not to load the shared modifications: their trees are resolved by grouped queries, then a single query
-     * per tag writes all their missing applicabilities.
-     */
-    private void setSharedTreesDefaultApplicabilitiesIfMissing(List<ModificationEntity> modificationEntities, Collection<String> rootNetworkTags) {
-        if (rootNetworkTags.isEmpty()) {
-            return;
-        }
-        List<UUID> sharedUuids = modificationEntities.stream()
-                .flatMap(NetworkModificationRepository::referencesIn)
-                .map(ModificationReferenceEntity::getReferencedId)
-                .toList();
-        if (sharedUuids.isEmpty()) {
-            return;
-        }
-        Set<UUID> sharedTreesUuids = getSharedModificationTreesFrom(sharedUuids).allUuids();
-        rootNetworkTags.forEach(tag -> modificationRepository.setDefaultApplicabilityIfMissing(sharedTreesUuids, tag));
     }
 
     private List<UUID> getContainedModificationUuids(List<UUID> containerUuids) {
@@ -1223,9 +1204,6 @@ public class NetworkModificationRepository {
         return getSharedModificationTreesFrom(modificationRepository.findReferencedModificationIds(modificationUuids));
     }
 
-    /**
-     * @return the given shared modifications, the ones they point to through other shared modifications, and all their children
-     */
     private SharedModificationTrees getSharedModificationTreesFrom(Collection<UUID> sharedModificationUuids) {
         Set<UUID> sharedUuids = new LinkedHashSet<>();
         Set<UUID> childrenUuids = new LinkedHashSet<>();
