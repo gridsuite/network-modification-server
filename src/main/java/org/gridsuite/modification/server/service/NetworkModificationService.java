@@ -596,6 +596,7 @@ public class NetworkModificationService {
         ModificationEntity referenceEntity = modificationRepository.findById(referenceModificationUuid)
                 .orElseThrow(() -> networkModificationRepository.getModificationNotFoundException(referenceModificationUuid.toString()));
 
+        networkModificationRepository.assertHasContainer(referenceEntity);
         networkModificationRepository.assertContainerExists(referenceEntity.getContainerUuid());
         AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
         UUID groupUuid = containerEntity.isGroup() ? containerEntity.getId() : null;

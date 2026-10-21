@@ -135,7 +135,7 @@ public class NetworkModificationRepository {
     }
 
     private static NetworkModificationServerException getModificationContainerNotFoundException(UUID containerUuid, ModificationContainerType containerType) {
-        String containerId = containerUuid != null ? containerUuid.toString() : "UNKNOWN";
+        String containerId = containerUuid.toString();
         String containerTypeName = containerType != null ? containerType.name() : "UNKNOWN";
         return new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND,
             String.format(MODIFICATION_CONTAINER_NOT_FOUND.messageTemplate(), containerId, containerTypeName),
@@ -919,8 +919,16 @@ public class NetworkModificationRepository {
     }
 
     public void assertContainerExists(UUID containerUuid) {
-        if (containerUuid == null || !modificationContainerRepository.existsById(containerUuid)) {
+        if (!modificationContainerRepository.existsById(containerUuid)) {
             throw getModificationContainerNotFoundException(containerUuid, null);
+        }
+    }
+
+    public void assertHasContainer(ModificationEntity modification) {
+        if (modification.getContainerUuid() == null) {
+            throw new NetworkModificationServerException(MODIFICATION_HAS_NO_CONTAINER,
+                    String.format(MODIFICATION_HAS_NO_CONTAINER.messageTemplate(), modification.getId()),
+                    Map.of(MODIFICATION_ID, modification.getId()));
         }
     }
 
