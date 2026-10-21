@@ -481,6 +481,52 @@ class ModificationControllerTest {
                         .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
         assertEquals(true, modificationRepository.getModificationInfo(UUID.fromString(uuidString)).getStashed());
+
+        // modification references are not stashed but deleted, those nested in a stashed composite included
+        UUID sharedUuid = modificationRepository.saveModifications(TEST_GROUP2_ID,
+                List.of(ModificationEntity.fromDTO(compositeOf(List.of(switchStatusModificationInfos))))).getFirst().getUuid();
+        List<ModificationInfos> saved = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(
+                ModificationEntity.fromDTO(referenceTo(sharedUuid)),
+                ModificationEntity.fromDTO(compositeOf(List.of(referenceTo(sharedUuid), switchStatusModificationInfos)))));
+        UUID rootReferenceUuid = saved.get(0).getUuid();
+        UUID compositeUuid = saved.get(1).getUuid();
+        UUID nestedReferenceUuid = ((CompositeModificationInfos) saved.get(1)).getModificationsInfos().getFirst().getUuid();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", rootReferenceUuid.toString(), compositeUuid.toString())
+                        .queryParam("stashed", "true")
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        List<UUID> referenceUuids = List.of(rootReferenceUuid, nestedReferenceUuid);
+        verify(directoryService).removeElementReferences(argThat(references -> references.size() == 2
+                && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq(TEST_USER_ID));
+        // the composite goes to the trash without its reference
+        CompositeModificationInfos stashedComposite = (CompositeModificationInfos) modificationRepository.getModificationInfo(compositeUuid);
+        assertTrue(stashedComposite.getStashed());
+        assertEquals(1, stashedComposite.getModificationsInfos().size());
+    }
+
+    @Test
+    void testDeleteModificationReferencesOfAGroup() throws Exception {
+        UUID sharedUuid = modificationRepository.saveModifications(TEST_GROUP2_ID,
+                List.of(ModificationEntity.fromDTO(compositeOf(List.of(LoadModificationInfos.builder().equipmentId("v1load").build()))))).getFirst().getUuid();
+        // reference ; plain ; composite ── reference
+        List<ModificationInfos> saved = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(
+                ModificationEntity.fromDTO(referenceTo(sharedUuid)),
+                ModificationEntity.fromDTO(LoadModificationInfos.builder().equipmentId("v1load").build()),
+                ModificationEntity.fromDTO(compositeOf(List.of(referenceTo(sharedUuid))))));
+        List<UUID> referenceUuids = List.of(saved.get(0).getUuid(), ((CompositeModificationInfos) saved.get(2)).getModificationsInfos().getFirst().getUuid());
+
+        mockMvc.perform(delete("/v1/groups/{groupUuid}/references", TEST_GROUP_ID)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        // the references, those nested in a composite included, are deleted and unlinked from their shared composite
+        verify(directoryService).removeElementReferences(argThat(references -> references.size() == 2
+                && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq(TEST_USER_ID));
+        assertEquals(List.of(saved.get(1).getUuid(), saved.get(2).getUuid()),
+                modificationRepository.getModifications(TEST_GROUP_ID, true).stream().map(ModificationInfos::getUuid).toList());
     }
 
     @Test

@@ -12,7 +12,6 @@ import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
-import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -25,15 +24,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -62,10 +56,11 @@ class NetworkModificationServiceTest {
 
     @Test
     void shouldMoveModificationOutOfCompositeContainerWhenStashed() {
+        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
         UUID groupUuid = UUID.randomUUID();
         CompositeModificationInfos compositeModificationInfos = compositeModification(
                 UUID.randomUUID(),
-                List.of(dummyModification(UUID.randomUUID()))
+                List.of(dummyModification(UUID.randomUUID()), referenceTo(sharedUuid))
         );
 
         List<ModificationInfos> saved = networkModificationRepository.saveModifications(
@@ -73,99 +68,22 @@ class NetworkModificationServiceTest {
         CompositeModificationInfos savedComposite = (CompositeModificationInfos) saved.get(0);
         UUID compositeUuid = savedComposite.getUuid();
         UUID childUuid = savedComposite.getModificationsInfos().get(0).getUuid();
+        UUID referenceUuid = savedComposite.getModificationsInfos().get(1).getUuid();
 
         // sanity check: the modification is nested inside the composite before stashing
         assertEquals(compositeUuid, modificationRepository.findCompositeContainerIdByModificationId(childUuid));
 
-        networkModificationService.stashNetworkModifications(groupUuid, List.of(childUuid), "userId");
+        networkModificationService.stashNetworkModifications(groupUuid, List.of(childUuid, referenceUuid), "userId");
 
         // the modification was moved out of the composite, into the group, before being stashed
         assertNull(modificationRepository.findCompositeContainerIdByModificationId(childUuid));
+        // the reference is not stashed but deleted
+        assertFalse(modificationRepository.existsById(referenceUuid));
         assertEquals(1, networkModificationRepository.getModificationsCount(groupUuid, true));
         assertTrue(networkModificationRepository.getModifications(groupUuid, true, StashedFilter.STASHED).stream()
                 .anyMatch(modificationInfos -> modificationInfos.getUuid().equals(childUuid)));
         // the composite itself is left in place, now empty
         assertEquals(List.of(compositeUuid), modificationRepository.findAllChildrenUuids(compositeUuid));
-    }
-
-    @Test
-    void shouldDeleteReferencesInsteadOfStashingThem() {
-        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
-        UUID groupUuid = UUID.randomUUID();
-        // reference ; plain ; composite ── (reference, leaf) ; other composite ── reference
-        List<ModificationInfos> saved = networkModificationRepository.saveModifications(groupUuid, List.of(
-                ModificationEntity.fromDTO(referenceTo(sharedUuid)),
-                ModificationEntity.fromDTO(dummyModification(UUID.randomUUID())),
-                ModificationEntity.fromDTO(compositeModification(UUID.randomUUID(), List.of(referenceTo(sharedUuid), dummyModification(UUID.randomUUID())))),
-                ModificationEntity.fromDTO(compositeModification(UUID.randomUUID(), List.of(referenceTo(sharedUuid))))));
-        UUID rootReferenceUuid = saved.get(0).getUuid();
-        UUID plainUuid = saved.get(1).getUuid();
-        CompositeModificationInfos stashedComposite = (CompositeModificationInfos) saved.get(2);
-        UUID referenceInStashedCompositeUuid = stashedComposite.getModificationsInfos().get(0).getUuid();
-        UUID leafUuid = stashedComposite.getModificationsInfos().get(1).getUuid();
-        CompositeModificationInfos keptComposite = (CompositeModificationInfos) saved.get(3);
-        UUID selectedNestedReferenceUuid = keptComposite.getModificationsInfos().getFirst().getUuid();
-
-        networkModificationService.stashNetworkModifications(groupUuid,
-                List.of(rootReferenceUuid, plainUuid, stashedComposite.getUuid(), selectedNestedReferenceUuid), "userId");
-
-        // the references, selected or nested in a stashed composite, are deleted and unlinked from the shared modification
-        List<UUID> referenceUuids = List.of(rootReferenceUuid, referenceInStashedCompositeUuid, selectedNestedReferenceUuid);
-        referenceUuids.forEach(uuid -> assertFalse(modificationRepository.existsById(uuid)));
-        verify(directoryService).removeElementReferences(argThat(references -> references.size() == 3
-                && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq("userId"));
-        // the others are stashed, the composite without its reference
-        assertEquals(Set.of(plainUuid, stashedComposite.getUuid()),
-                networkModificationRepository.getModifications(groupUuid, true, StashedFilter.STASHED).stream()
-                        .map(ModificationInfos::getUuid).collect(Collectors.toSet()));
-        assertEquals(List.of(leafUuid), modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(stashedComposite.getUuid())));
-        // the composite holding the selected reference stays in place, now empty
-        assertTrue(modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(keptComposite.getUuid())).isEmpty());
-        assertEquals(List.of(keptComposite.getUuid()),
-                networkModificationRepository.getModifications(groupUuid, true, StashedFilter.UNSTASHED).stream().map(ModificationInfos::getUuid).toList());
-    }
-
-    @Test
-    void shouldDeleteReferenceStashedFromASharedComposite() {
-        UUID otherSharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
-        // shared ── reference to the other shared
-        CompositeModificationInfos shared = (CompositeModificationInfos) networkModificationRepository.saveModifications(UUID.randomUUID(),
-                List.of(ModificationEntity.fromDTO(compositeModification(UUID.randomUUID(), List.of(referenceTo(otherSharedUuid)))))).getFirst();
-        UUID referenceInSharedUuid = shared.getModificationsInfos().getFirst().getUuid();
-        UUID groupUuid = UUID.randomUUID();
-        networkModificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(referenceTo(shared.getUuid()))));
-
-        // the reference is reached from the group through the shared composite
-        networkModificationService.stashNetworkModifications(groupUuid, List.of(referenceInSharedUuid), "userId");
-
-        assertFalse(modificationRepository.existsById(referenceInSharedUuid));
-        assertTrue(modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(shared.getUuid())).isEmpty());
-    }
-
-    @Test
-    void shouldDeleteAllReferencesOfAGroup() {
-        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
-        UUID groupUuid = UUID.randomUUID();
-        // reference ; plain ; composite ── (reference, leaf)
-        List<ModificationInfos> saved = networkModificationRepository.saveModifications(groupUuid, List.of(
-                ModificationEntity.fromDTO(referenceTo(sharedUuid)),
-                ModificationEntity.fromDTO(dummyModification(UUID.randomUUID())),
-                ModificationEntity.fromDTO(compositeModification(UUID.randomUUID(), List.of(referenceTo(sharedUuid), dummyModification(UUID.randomUUID()))))));
-        UUID rootReferenceUuid = saved.get(0).getUuid();
-        UUID plainUuid = saved.get(1).getUuid();
-        CompositeModificationInfos composite = (CompositeModificationInfos) saved.get(2);
-        UUID nestedReferenceUuid = composite.getModificationsInfos().get(0).getUuid();
-        UUID leafUuid = composite.getModificationsInfos().get(1).getUuid();
-
-        networkModificationService.deleteModificationReferences(groupUuid, "userId");
-
-        List<UUID> referenceUuids = List.of(rootReferenceUuid, nestedReferenceUuid);
-        referenceUuids.forEach(uuid -> assertFalse(modificationRepository.existsById(uuid)));
-        verify(directoryService).removeElementReferences(argThat(references -> references.size() == 2
-                && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq("userId"));
-        assertEquals(List.of(plainUuid, composite.getUuid()),
-                networkModificationRepository.getModifications(groupUuid, true, StashedFilter.UNSTASHED).stream().map(ModificationInfos::getUuid).toList());
-        assertEquals(List.of(leafUuid), modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(composite.getUuid())));
     }
 
     @Test
