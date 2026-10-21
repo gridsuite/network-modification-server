@@ -89,7 +89,7 @@ public class NetworkModificationRepository {
     private final ModificationContextFactory modificationContextFactory;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationRepository.class);
-    private static final String MODIFICATION_ID = "modificationId";
+    public static final String MODIFICATION_ID = "modificationId";
     private static final String CONTAINER_ID = "containerId";
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
@@ -142,7 +142,7 @@ public class NetworkModificationRepository {
             Map.of(CONTAINER_ID, containerId, "containerType", containerTypeName));
     }
 
-    private NetworkModificationServerException getModificationNotFoundException(String modificationId) {
+    public NetworkModificationServerException getModificationNotFoundException(String modificationId) {
         return new NetworkModificationServerException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND.messageTemplate(), modificationId), Map.of(MODIFICATION_ID, modificationId));
     }
 
