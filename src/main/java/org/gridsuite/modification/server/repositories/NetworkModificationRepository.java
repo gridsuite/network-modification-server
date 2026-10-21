@@ -164,14 +164,16 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationInfos> saveModificationInfos(@NonNull UUID groupUuid, List<ModificationInfos> modifications) {
-        List<ModificationEntity> entities = saveModificationInfosNonTransactional(groupUuid, modifications);
+    public List<ModificationInfos> saveModificationInfos(@NonNull UUID groupUuid, List<ModificationInfos> modifications, @NonNull Collection<String> rootNetworkTags) {
+        List<ModificationEntity> entities = saveModificationInfosNonTransactional(groupUuid, modifications, rootNetworkTags);
         // We can't return input modifications directly because it wouldn't have the IDs coming from the saved entities
         return toModificationsInfosAlreadySaved(entities);
     }
 
-    private List<ModificationEntity> saveModificationInfosNonTransactional(@NonNull UUID groupUuid, List<ModificationInfos> modifications) {
+    private List<ModificationEntity> saveModificationInfosNonTransactional(@NonNull UUID groupUuid, List<ModificationInfos> modifications,
+                                                                           Collection<String> rootNetworkTags) {
         List<ModificationEntity> entities = modifications.stream().map(ModificationEntity::fromDTO).toList();
+        setDefaultApplicabilitiesIfMissing(entities, rootNetworkTags);
         return saveModificationsNonTransactional(groupUuid, entities);
     }
 
@@ -193,6 +195,10 @@ public class NetworkModificationRepository {
         deleteModifications(compositeEntity.getModifications());
 
         deleteCompositeChildrenSubtree(List.of(compositeEntity));
+        // the new content is associated with the root networks the composite is
+        Set<String> rootNetworkTags = compositeEntity.getRootNetworkTags();
+        // the copies hold no reference, copiesOf resolving them all: there is no shared modification to associate
+        copyEntities.forEach(copy -> setTreeDefaultApplicabilitiesIfMissing(copy, rootNetworkTags));
         compositeEntity.setModifications(copyEntities);
         compositeModificationRepository.renameCompositeModification(compositeEntity, name);
     }
@@ -248,6 +254,12 @@ public class NetworkModificationRepository {
         var sourceContainer = getContainer(source);
         var targetContainer = getContainer(target);
         var moved = moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid);
+        // the moved modifications already are associated with the root networks of their study, but a composite may be
+        // shared with other studies, whose root networks they must be associated with too
+        if (targetContainer instanceof CompositeContainerEntity) {
+            compositeModificationRepository.findById(targetContainer.getId())
+                    .ifPresent(composite -> setDefaultApplicabilitiesIfMissing(moved, composite.getRootNetworkTags()));
+        }
         deleteStaleApplicationInfos(sourceContainer, targetContainer, moved);
         return addApplicabilities(moved.stream().map(this::toModificationInfos).toList());
     }
@@ -1163,6 +1175,35 @@ public class NetworkModificationRepository {
         }
     }
 
+    private void setDefaultApplicabilitiesIfMissing(List<ModificationEntity> modificationEntities, Collection<String> rootNetworkTags) {
+        if (rootNetworkTags.isEmpty()) {
+            return;
+        }
+        // Set applicabilities on modifications (except shared ones)
+        modificationEntities.forEach(entity -> setTreeDefaultApplicabilitiesIfMissing(entity, rootNetworkTags));
+        // Set applicabilities on shared modifications and their children
+        List<UUID> sharedUuids = modificationEntities.stream()
+                .flatMap(NetworkModificationRepository::referencesIn)
+                .map(ModificationReferenceEntity::getReferencedId)
+                .toList();
+        if (sharedUuids.isEmpty()) {
+            return;
+        }
+        modificationRepository.findAllWithApplicabilitiesByIdIn(getSharedModificationTreesFrom(sharedUuids).allUuids()).stream()
+                .filter(Predicate.not(ModificationReferenceEntity.class::isInstance))
+                .forEach(modification -> rootNetworkTags.forEach(modification::setDefaultApplicabilityIfMissing));
+    }
+
+    private static void setTreeDefaultApplicabilitiesIfMissing(ModificationEntity modificationEntity, Collection<String> rootNetworkTags) {
+        if (rootNetworkTags.isEmpty() || modificationEntity instanceof ModificationReferenceEntity) {
+            return;
+        }
+        rootNetworkTags.forEach(modificationEntity::setDefaultApplicabilityIfMissing);
+        if (modificationEntity instanceof CompositeModificationEntity composite) {
+            composite.getModifications().forEach(content -> setTreeDefaultApplicabilitiesIfMissing(content, rootNetworkTags));
+        }
+    }
+
     private List<UUID> getContainedModificationUuids(List<UUID> containerUuids) {
         return containerUuids.isEmpty() ? List.of() : modificationRepository.findAllDescendantModificationIdsByContainerIds(containerUuids);
     }
@@ -1172,17 +1213,21 @@ public class NetworkModificationRepository {
      * other shared modifications, and all their children
      */
     private SharedModificationTrees getSharedModificationTrees(List<UUID> modificationUuids) {
+        return getSharedModificationTreesFrom(modificationRepository.findReferencedModificationIds(modificationUuids));
+    }
+
+    private SharedModificationTrees getSharedModificationTreesFrom(Collection<UUID> sharedModificationUuids) {
         Set<UUID> sharedUuids = new LinkedHashSet<>();
         Set<UUID> childrenUuids = new LinkedHashSet<>();
-        List<UUID> uuidsToResolve = modificationUuids;
-        while (!uuidsToResolve.isEmpty()) {
-            List<UUID> referencedUuids = modificationRepository.findReferencedModificationIds(uuidsToResolve).stream()
-                    .filter(referencedUuid -> !sharedUuids.contains(referencedUuid))
+        List<UUID> sharedUuidsToResolve = sharedModificationUuids.stream().distinct().toList();
+        while (!sharedUuidsToResolve.isEmpty()) {
+            sharedUuids.addAll(sharedUuidsToResolve);
+            List<UUID> nestedUuids = getContainedModificationUuids(sharedUuidsToResolve);
+            childrenUuids.addAll(nestedUuids);
+            // next: check the nested shared modifications
+            sharedUuidsToResolve = nestedUuids.isEmpty() ? List.of() : modificationRepository.findReferencedModificationIds(nestedUuids).stream()
+                    .filter(sharedUuid -> !sharedUuids.contains(sharedUuid))
                     .toList();
-            sharedUuids.addAll(referencedUuids);
-            // next: check the nested modifications
-            uuidsToResolve = getContainedModificationUuids(referencedUuids);
-            childrenUuids.addAll(uuidsToResolve);
         }
         return new SharedModificationTrees(sharedUuids, childrenUuids);
     }
@@ -1337,11 +1382,12 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationInfos> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
+    public List<ModificationInfos> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids,
+                                                              @NonNull Collection<String> rootNetworkTags) {
         List<ModificationInfos> modificationInfos = originGroupUuid != null
                 ? getModificationsInfos(getModificationContainer(originGroupUuid), StashedFilter.UNSTASHED)
                 : getModificationsInfosInGivenOrder(modificationsUuids);
-        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos, rootNetworkTags);
         // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
         return toModificationsInfosAlreadySaved(newEntities);
     }
@@ -1351,15 +1397,16 @@ public class NetworkModificationRepository {
      * Nothing is done, not even creating the target group, when the source group does not exist.
      */
     @Transactional
-    public void duplicateUnstashedModifications(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid) {
+    public void duplicateUnstashedModifications(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid, @NonNull Collection<String> rootNetworkTags) {
         modificationContainerRepository.findById(sourceGroupUuid).ifPresent(sourceGroup ->
-            saveModificationInfosNonTransactional(targetGroupUuid, getModificationsInfos(sourceGroup, StashedFilter.UNSTASHED)));
+            saveModificationInfosNonTransactional(targetGroupUuid, getModificationsInfos(sourceGroup, StashedFilter.UNSTASHED), rootNetworkTags));
     }
 
     @Transactional
-    public List<ModificationInfos> extractModificationsFromCompositesAndSave(@NonNull UUID targetGroupUuid, @NonNull List<UUID> compositesUuids) {
+    public List<ModificationInfos> extractModificationsFromCompositesAndSave(@NonNull UUID targetGroupUuid, @NonNull List<UUID> compositesUuids,
+                                                                             @NonNull Collection<String> rootNetworkTags) {
         List<ModificationInfos> modificationInfos = getCompositeModificationsInfos(compositesUuids);
-        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos, rootNetworkTags);
         // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
         return toModificationsInfosAlreadySaved(newEntities);
     }
@@ -1367,7 +1414,8 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationInfos> insertCompositeModifications(
             @NonNull UUID targetGroupUuid,
-            @NonNull List<CompositeInfos> compositeInfos) {
+            @NonNull List<CompositeInfos> compositeInfos,
+            @NonNull Collection<String> rootNetworkTags) {
         // preload the composite modifications to optimize queries
         List<ModificationInfos> sourceInfos = toModificationsInfosWithApplicabilities(compositeInfos.stream()
                 .map(compositeToBeInserted -> getModificationEntity(compositeToBeInserted.id()))
@@ -1396,7 +1444,7 @@ public class NetworkModificationRepository {
                 LOGGER.error("Could not find composite modification with uuid {} to apply its name {}", compositeToBeInserted.id(), compositeToBeInserted.name());
             }
         }
-        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
+        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications, rootNetworkTags);
         return toModificationsInfosAlreadySaved(newEntities);
     }
 
@@ -1556,6 +1604,11 @@ public class NetworkModificationRepository {
                 .name("Composite modification")
                 .build();
         CompositeModificationEntity newLeaf = (CompositeModificationEntity) ModificationEntity.fromDTO(newCompositeInfos);
+        // the new composite is associated with the root networks its content is
+        getApplicabilityHolders(assembledModifications).stream()
+                .flatMap(holder -> holder.getRootNetworkTags().stream())
+                .distinct()
+                .forEach(newLeaf::setDefaultApplicabilityIfMissing);
         newLeaf.setModifications(assembledModifications);
 
         if (targetGroup != null) {

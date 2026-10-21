@@ -32,6 +32,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     /**
      * @return the modifications of the container that are applied on the given root network tag, that is the activated
      * ones the tag does not deactivate. A reference is resolved to the shared modification carrying the applicability.
+     * A modification without applicability for the tag is kept, for the applicator to reject it and throw an exception.
      */
     @Query("""
             SELECT m FROM ModificationEntity m
