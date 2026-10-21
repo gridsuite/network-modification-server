@@ -367,7 +367,6 @@ public class NetworkModificationService {
         // Collect referenced ancestor composites before stashing, since stashed modifications are moved out of their composite
         List<UUID> referencedAncestorUuids = networkModificationRepository.getAllReferencedModificationAncestorsUuids(modificationUuids);
 
-        // modification references are not stashed but deleted, those nested in the stashed composites included
         Set<UUID> referenceUuids = deleteModificationReferences(modificationUuids, userId);
 
         List<UUID> modificationUuidsToStash = modificationUuids.stream().filter(uuid -> !referenceUuids.contains(uuid)).toList();
@@ -698,7 +697,6 @@ public class NetworkModificationService {
     }
 
     /**
-     * Deletes the modification references of the group, and unlinks them from their shared modifications
      * @return the uuids of the deleted references
      */
     @Transactional
@@ -711,8 +709,6 @@ public class NetworkModificationService {
     }
 
     /**
-     * Deletes the modification references among the given modifications, and those nested in the given composites,
-     * and unlinks them from their shared modifications
      * @return the uuids of the deleted references
      */
     private Set<UUID> deleteModificationReferences(@NonNull List<UUID> modificationUuids, @NonNull String userId) {
