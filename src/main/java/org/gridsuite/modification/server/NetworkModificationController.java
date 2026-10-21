@@ -133,16 +133,18 @@ public class NetworkModificationController {
     @DeleteMapping(value = "/groups/{groupUuid}")
     @Operation(summary = "Delete the modifications group")
     @ApiResponse(responseCode = "200", description = "Modifications group deleted")
-    public ResponseEntity<Void> deleteModificationGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        networkModificationService.deleteModificationGroups(List.of(groupUuid));
+    public ResponseEntity<Void> deleteModificationGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                        @RequestHeader(value = HEADER_USER_ID, required = false) String userId) {
+        networkModificationService.deleteModificationGroups(List.of(groupUuid), userId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping(value = "/groups")
     @Operation(summary = "Delete the given modification groups")
     @ApiResponse(responseCode = "200", description = "Modifications groups are deleted")
-    public ResponseEntity<Void> deleteModificationGroups(@Parameter(description = "Group UUIDs") @RequestBody List<UUID> groupUuids) {
-        networkModificationService.deleteModificationGroups(groupUuids);
+    public ResponseEntity<Void> deleteModificationGroups(@Parameter(description = "Group UUIDs") @RequestBody List<UUID> groupUuids,
+                                                         @RequestHeader(value = HEADER_USER_ID, required = false) String userId) {
+        networkModificationService.deleteModificationGroups(groupUuids, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -212,8 +214,9 @@ public class NetworkModificationController {
     @Operation(summary = "Delete network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were deleted")
     public ResponseEntity<Void> deleteNetworkModifications(
-            @Parameter(description = "Network modification UUIDs") @RequestParam(name = "uuids") List<UUID> networkModificationUuids) {
-        networkModificationService.deleteNetworkModifications(networkModificationUuids);
+            @Parameter(description = "Network modification UUIDs") @RequestParam(name = "uuids") List<UUID> networkModificationUuids,
+            @RequestHeader(value = HEADER_USER_ID, required = false) String userId) {
+        networkModificationService.deleteNetworkModifications(networkModificationUuids, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -341,7 +344,7 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "All stashed modifications from the given groups are deleted")
     public ResponseEntity<Void> deleteStashedModificationFromGroups(@Parameter(description = "Group UUIDs") @RequestBody List<UUID> groupUuids,
                                                                    @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.deleteStashedModificationFromGroups(groupUuids);
+        networkModificationService.deleteStashedModificationFromGroups(groupUuids, userId);
         groupUuids.forEach(groupUuid -> networkModificationService.removeElementReferences(groupUuid, userId));
         return ResponseEntity.ok().build();
     }

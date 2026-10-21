@@ -183,16 +183,20 @@ public class NetworkModificationRepository {
         return modificationRepository.save(compositeEntity).getId();
     }
 
-    public void replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<UUID> modificationUuids) {
+    /**
+     * @return the modification references among the previous content, deleted
+     */
+    public List<ModificationReferenceData> replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<UUID> modificationUuids) {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
 
         List<ModificationEntity> copyEntities = copyAsCompositeContent(modificationUuids);
 
         //Delete previously held modifications
-        deleteModifications(compositeEntity.getModifications());
+        List<ModificationReferenceData> references = deleteModifications(compositeEntity.getModifications());
         compositeEntity.setModifications(copyEntities);
         compositeModificationRepository.renameCompositeModification(compositeEntity, name);
+        return references;
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
@@ -869,23 +873,32 @@ public class NetworkModificationRepository {
                 .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
     }
 
+    /**
+     * @return the modification references among the deleted modifications
+     */
     @Transactional
-    public void deleteModificationGroups(List<UUID> groupUuids) {
+    public List<ModificationReferenceData> deleteModificationGroups(List<UUID> groupUuids) {
         List<ModificationGroupEntity> groupEntities = getModificationGroups(groupUuids);
-        deleteModifications(groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList());
+        List<ModificationReferenceData> references = deleteModifications(groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList());
         // deleting the group deletes its modification_container row (JOINED subtype delete)
         modificationGroupRepository.deleteAll(groupEntities);
+        return references;
     }
 
     /**
      * Deletes the given modifications.
-     * @return the number of modifications found and deleted
+     * @return the modification references among the deleted modifications
+     * @throws NetworkModificationServerException when none of them is found
      */
     @Transactional // To have the find and delete in the same transaction (atomic)
-    public int deleteModifications(@NonNull Collection<UUID> uuids) {
+    public List<ModificationReferenceData> deleteModifications(@NonNull Collection<UUID> uuids) {
         List<ModificationEntity> modifications = modificationRepository.findAllById(uuids);
-        deleteModifications(modifications);
-        return modifications.size();
+        if (modifications.isEmpty()) {
+            throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
+                String.format("None of these modifications %s (to be deleted) was found", uuids),
+                Map.of("ids", uuids));
+        }
+        return deleteModifications(modifications);
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
@@ -1167,9 +1180,12 @@ public class NetworkModificationRepository {
         }
     }
 
+    /**
+     * @return the modification references among the deleted modifications
+     */
     @Transactional
-    public void deleteStashedModificationFromGroups(List<UUID> groupUuids) {
-        deleteModifications(getModificationGroups(groupUuids).stream()
+    public List<ModificationReferenceData> deleteStashedModificationFromGroups(List<UUID> groupUuids) {
+        return deleteModifications(getModificationGroups(groupUuids).stream()
                 .flatMap(group -> group.getStashedModifications().stream()).toList());
     }
 
@@ -1185,9 +1201,12 @@ public class NetworkModificationRepository {
                 .toList();
     }
 
-    private void deleteModifications(List<ModificationEntity> deletedModificationEntities) {
+    /**
+     * @return the modification references among the deleted modifications, the content of the composites included
+     */
+    private List<ModificationReferenceData> deleteModifications(List<ModificationEntity> deletedModificationEntities) {
         if (deletedModificationEntities.isEmpty()) {
-            return;
+            return List.of();
         }
         // This optimizes the treatment for tabular modifications but reduces efficiency for a list of 'unitary'
         // modifications. Nevertheless, for the volumes we are considering (max few hundreds) it is still very
@@ -1195,6 +1214,12 @@ public class NetworkModificationRepository {
 
         // the content of the composites, at any depth, goes with them
         List<ModificationEntity> modificationEntities = withCompositesContent(deletedModificationEntities);
+        List<ModificationReferenceData> references = modificationEntities.stream()
+                .filter(ModificationReferenceEntity.class::isInstance)
+                .map(ModificationReferenceEntity.class::cast)
+                // the container is not needed to unlink the references, so it is not filled
+                .map(reference -> new ModificationReferenceData(reference.getId(), reference.getReferencedId(), null))
+                .toList();
         // a loaded container still holding a deleted modification would cancel its deletion through its PERSIST cascade,
         // so we need to remove the deleted modifications from the loaded containers manually
         removeFromLoadedContainers(modificationEntities);
@@ -1219,6 +1244,7 @@ public class NetworkModificationRepository {
                     .toList();
             compositeContainerRepository.deleteAllById(compositeIds);
         }
+        return references;
     }
 
     /**

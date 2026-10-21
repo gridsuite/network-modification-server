@@ -350,7 +350,7 @@ class ModificationIndexationTest {
         /*
         Delete this modification
          */
-        networkModificationService.deleteNetworkModifications(modifications.stream().map(ModificationInfos::getUuid).toList());
+        networkModificationService.deleteNetworkModifications(modifications.stream().map(ModificationInfos::getUuid).toList(), null);
 
         /*
         check results in database and in elasticsearch
@@ -375,7 +375,7 @@ class ModificationIndexationTest {
         /*
         Delete modification group
          */
-        networkModificationService.deleteModificationGroups(List.of(groupUuid1));
+        networkModificationService.deleteModificationGroups(List.of(groupUuid1), null);
 
         /*
         check results in database and in elasticsearch
