@@ -13,7 +13,6 @@ import com.powsybl.ws.commons.error.BusinessErrorCode;
  */
 public enum ModificationBusinessErrorCode implements BusinessErrorCode {
     MODIFICATION_CONTAINER_NOT_FOUND("modification.container.notFound", "Modification container '%s' of type '%s' not found"),
-    MODIFICATION_HAS_NO_CONTAINER("modification.container.none", "Modification '%s' has no container"),
     MODIFICATION_CONTAINER_TYPE_NOT_FOUND("modification.container.type.notFound", "Modification container type of %s is not found"),
     MODIFICATION_CONTAINER_BAD_TYPE("modification.container.badType", "Modification container type of %s is invalid : actual type %s -> expected type %s"),
     MODIFICATION_NOT_FOUND("modification.notFound", "Modification (%s) not found"),

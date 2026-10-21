@@ -595,30 +595,22 @@ public class NetworkModificationService {
     public void unshareModification(@NonNull UUID referenceModificationUuid, String userId) {
         ModificationEntity referenceEntity = modificationRepository.findById(referenceModificationUuid)
                 .orElseThrow(() -> networkModificationRepository.getModificationNotFoundException(referenceModificationUuid.toString()));
-
-        networkModificationRepository.assertHasContainer(referenceEntity);
-        networkModificationRepository.assertContainerExists(referenceEntity.getContainerUuid());
-        AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
-        UUID groupUuid = containerEntity.isGroup() ? containerEntity.getId() : null;
-
         if (!referenceEntity.getType().equals(MODIFICATION_REFERENCE.name())) {
             // Only a reference modification may be unshared
-            String expectedType = MODIFICATION_REFERENCE.name();
             throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
-                    String.format(MODIFICATION_BAD_TYPE.messageTemplate(), referenceModificationUuid, referenceEntity.getType(), expectedType),
-                    Map.of(MODIFICATION_ID, referenceModificationUuid.toString(), "modificationType", referenceEntity.getType(), "expectedModificationType", expectedType));
+                String.format(MODIFICATION_BAD_TYPE.messageTemplate(), referenceModificationUuid, referenceEntity.getType(), MODIFICATION_REFERENCE),
+                Map.of(MODIFICATION_ID, referenceModificationUuid.toString(), "modificationType", referenceEntity.getType(), "expectedModificationType", MODIFICATION_REFERENCE));
         }
-        ModificationInfos referencedCompositeInfos = networkModificationRepository.getModificationInfo(
-                ((ModificationReferenceEntity) referenceEntity).getReferencedId());
 
-        // copy the referenced composite into a new composite
-        // ATTENTION : this simple copy only work in the context of reference modification not containing reference modifications
-        // -> if this changes, this copy should be upgraded (and maybe use an upgraded version of insertCompositeModifications)
+        // copy referenced modification
+        ModificationInfos referencedCompositeInfos = networkModificationRepository.getModificationInfo(((ModificationReferenceEntity) referenceEntity).getReferencedId());
         ModificationEntity copiedComposite = ModificationEntity.fromDTO(referencedCompositeInfos);
 
-        // put the new copied composite into the container of the replaced reference modification
+        // put the new copied composite and delete the reference
+        AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
         containerEntity.addModification(copiedComposite, referenceEntity.getModificationsOrder());
         modificationRepository.save(copiedComposite);
+        deleteNetworkModifications(containerEntity.isGroup() ? containerEntity.getId() : null, List.of(referenceModificationUuid));
 
         // remove the reference from directory server
         List<ModificationReferenceData> referenceData = List.of(
@@ -626,7 +618,6 @@ public class NetworkModificationService {
                         ((ModificationReferenceEntity) referenceEntity).getReferencedId(),
                         containerEntity.getId()));
         directoryService.removeElementReferences(referenceData, userId);
-        deleteNetworkModifications(groupUuid, List.of(referenceModificationUuid));
     }
 
     /**

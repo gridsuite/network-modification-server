@@ -924,14 +924,6 @@ public class NetworkModificationRepository {
         }
     }
 
-    public void assertHasContainer(ModificationEntity modification) {
-        if (modification.getContainerUuid() == null) {
-            throw new NetworkModificationServerException(MODIFICATION_HAS_NO_CONTAINER,
-                    String.format(MODIFICATION_HAS_NO_CONTAINER.messageTemplate(), modification.getId()),
-                    Map.of(MODIFICATION_ID, modification.getId()));
-        }
-    }
-
     private AbstractModificationContainerEntity getModificationContainer(UUID containerUuid) {
         return modificationContainerRepository.findById(containerUuid)
             .orElseThrow(() -> getModificationContainerNotFoundException(containerUuid, null));
