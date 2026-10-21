@@ -928,7 +928,7 @@ class CompositeControllerTest {
                         .header(HEADER_USER_ID, "user1"))
                 .andExpect(status().isOk());
         UUID duplicatedReferenceUuid = networkModificationRepository.getModifications(duplicatedGroupUuid, true).getFirst().getUuid();
-        assertReferenceNotification(ReferenceAction.RECREATE, duplicatedGroupUuid, "user1",
+        assertReferenceNotification(ReferenceAction.CREATE, duplicatedGroupUuid, "user1",
                 List.of(new ModificationReferenceData(duplicatedReferenceUuid, sharedModificationUuid, null)));
 
         // stashing the reference deletes it
