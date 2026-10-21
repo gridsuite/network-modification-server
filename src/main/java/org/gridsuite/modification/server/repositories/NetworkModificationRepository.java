@@ -1159,12 +1159,18 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return the root network tags all the given modifications are associated with, that is the ones each of them holds
-     * an applicability for, sorted
+     * @return the root network tags all the given modifications and their content are associated with, that is the ones
+     * each of them holds an applicability for, sorted
      */
     @Transactional(readOnly = true)
     public List<String> getCommonRootNetworkTags(@NonNull Set<UUID> modificationUuids) {
-        return modificationRepository.findCommonRootNetworkTags(modificationUuids);
+        Set<UUID> modificationTreesUuids = SetUtils.union(modificationUuids, Set.copyOf(getContainedModificationUuids(modificationUuids)));
+        return modificationRepository.findAllWithApplicabilitiesByIdIn(modificationTreesUuids).stream()
+                .filter(Predicate.not(ModificationReferenceEntity.class::isInstance))
+                .map(ModificationEntity::getRootNetworkTags)
+                .reduce(SetUtils::intersection)
+                .map(tags -> tags.stream().sorted().toList())
+                .orElse(List.of());
     }
 
     /**

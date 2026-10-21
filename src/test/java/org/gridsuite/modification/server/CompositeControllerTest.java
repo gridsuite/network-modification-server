@@ -1420,14 +1420,17 @@ class CompositeControllerTest {
     @Test
     void testRootNetworkTagsAllowedByTheSharedModificationsTheUserCannotWriteOn() throws Exception {
         UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
-        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid), "B", true);
-        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid), "A", false);
+        UUID childUuid = ((CompositeModificationInfos) networkModificationRepository.getModificationInfo(sharedCompositeUuid))
+                .getModificationsInfos().getFirst().getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid, childUuid), "B", true);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid, childUuid), "A", false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid), "C", true);
         when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ));
 
-        // a tag the shared modification is associated with is allowed, whatever its applicability
+        // a tag the shared modification and its content are associated with is allowed, whatever its applicability
         mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP2_ID, "A", "B")).andExpect(status().isOk());
 
-        // another one is not
+        // C is not: the shared modification is associated with it, but not its content
         mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP2_ID, "A", "C")).andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.businessErrorCode").value("modification.rootNetworkTagsForbiddenByShared"))
                 .andExpect(jsonPath("$.businessErrorValues.allowedTags").value("A, B"))
