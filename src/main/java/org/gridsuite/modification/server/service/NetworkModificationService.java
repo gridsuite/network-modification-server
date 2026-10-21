@@ -278,9 +278,9 @@ public class NetworkModificationService {
         assertRootNetworkTagFits(rootNetworkTag);
         networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
 
-        modificationUuids.stream()
-                .filter(networkModificationRepository::isModificationReferenced)
-                .forEach(modifUuid -> notificationService.emitElementUpdated(modifUuid, userId));
+        modificationRepository.findReferencedModificationIds(modificationUuids)
+                .forEach(referencedUuid -> notificationService.emitElementUpdated(referencedUuid, userId));
+        emitReferencedAncestorsUpdated(modificationUuids, userId);
     }
 
     @Transactional
