@@ -667,10 +667,10 @@ class ModificationControllerTest {
 
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
 
-        /* non existing modification */
+        // deleting a modification that no longer exists does nothing
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
                         .queryParam("uuids", uuidString))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
         // deleting a group that no longer exists does nothing
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());

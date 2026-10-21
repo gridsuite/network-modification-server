@@ -888,17 +888,10 @@ public class NetworkModificationRepository {
     /**
      * Deletes the given modifications.
      * @return the modification references among the deleted modifications
-     * @throws NetworkModificationServerException when none of them is found
      */
     @Transactional // To have the find and delete in the same transaction (atomic)
     public List<ModificationReferenceData> deleteModifications(@NonNull Collection<UUID> uuids) {
-        List<ModificationEntity> modifications = modificationRepository.findAllById(uuids);
-        if (modifications.isEmpty()) {
-            throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
-                String.format("None of these modifications %s (to be deleted) was found", uuids),
-                Map.of("ids", uuids));
-        }
-        return deleteModifications(modifications);
+        return deleteModifications(modificationRepository.findAllById(uuids));
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
@@ -1214,12 +1207,6 @@ public class NetworkModificationRepository {
 
         // the content of the composites, at any depth, goes with them
         List<ModificationEntity> modificationEntities = withCompositesContent(deletedModificationEntities);
-        List<ModificationReferenceData> references = modificationEntities.stream()
-                .filter(ModificationReferenceEntity.class::isInstance)
-                .map(ModificationReferenceEntity.class::cast)
-                // the container is not needed to unlink the references, so it is not filled
-                .map(reference -> new ModificationReferenceData(reference.getId(), reference.getReferencedId(), null))
-                .toList();
         // a loaded container still holding a deleted modification would cancel its deletion through its PERSIST cascade,
         // so we need to remove the deleted modifications from the loaded containers manually
         removeFromLoadedContainers(modificationEntities);
@@ -1244,7 +1231,19 @@ public class NetworkModificationRepository {
                     .toList();
             compositeContainerRepository.deleteAllById(compositeIds);
         }
-        return references;
+        return toReferencesDataWithoutContainer(modificationEntities);
+    }
+
+    /**
+     * Keeps only the modification references among the given modifications
+     * @return their data with a null container
+     */
+    private static List<ModificationReferenceData> toReferencesDataWithoutContainer(List<ModificationEntity> modificationEntities) {
+        return modificationEntities.stream()
+                .filter(ModificationReferenceEntity.class::isInstance)
+                .map(ModificationReferenceEntity.class::cast)
+                .map(reference -> new ModificationReferenceData(reference.getId(), reference.getReferencedId(), null))
+                .toList();
     }
 
     /**
