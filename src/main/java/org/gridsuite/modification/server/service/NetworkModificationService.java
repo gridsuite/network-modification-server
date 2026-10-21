@@ -41,9 +41,11 @@ import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.util.Pair;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -229,9 +231,10 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void deleteModificationGroups(List<UUID> groupUuids) {
+    public void deleteModificationGroups(List<UUID> groupUuids, String userId) {
         deleteIndexedModificationGroups(groupUuids);
-        networkModificationRepository.deleteModificationGroups(groupUuids);
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModificationGroups(groupUuids);
+        removeDeletedElementReferences(deletedReferences, userId);
     }
 
     private void deleteIndexedModificationGroups(List<UUID> groupUuids) {
@@ -502,12 +505,23 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
-    public void deleteNetworkModifications(@NonNull List<UUID> modificationsUuids) {
-        if (networkModificationRepository.deleteModifications(modificationsUuids) == 0) {
-            throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
-                String.format("Some of these modifications %s (to be deleted) were not found", modificationsUuids),
-                Map.of("ids", modificationsUuids));
+    @Transactional
+    public void deleteNetworkModifications(@NonNull List<UUID> modificationsUuids, String userId) {
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModifications(modificationsUuids);
+        removeDeletedElementReferences(deletedReferences, userId);
+    }
+
+    /**
+     * Unlinks the deleted modification references from their shared modifications
+     */
+    private void removeDeletedElementReferences(List<ModificationReferenceData> deletedReferences, String userId) {
+        if (deletedReferences.isEmpty()) {
+            return;
         }
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The user is required to delete modification references");
+        }
+        directoryService.removeElementReferences(deletedReferences, userId);
     }
 
     public CompletableFuture<NetworkModificationsResult> moveModifications(
@@ -668,7 +682,8 @@ public class NetworkModificationService {
 
     @Transactional
     public void replaceCompositeModification(@NonNull UUID compositeUuid, String name, List<UUID> modificationUuids, @NonNull String userId) {
-        networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
+        removeDeletedElementReferences(deletedReferences, userId);
 
         // Notify directory-server if the replaced composite is itself referenced, then once per referenced ancestor composite (closest first)
         if (networkModificationRepository.isModificationReferenced(compositeUuid)) {
@@ -676,8 +691,10 @@ public class NetworkModificationService {
         }
     }
 
-    public void deleteStashedModificationFromGroups(List<UUID> groupUuids) {
-        networkModificationRepository.deleteStashedModificationFromGroups(groupUuids);
+    @Transactional
+    public void deleteStashedModificationFromGroups(List<UUID> groupUuids, String userId) {
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteStashedModificationFromGroups(groupUuids);
+        removeDeletedElementReferences(deletedReferences, userId);
     }
 
     /**

@@ -661,13 +661,63 @@ class ModificationControllerTest {
 
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
 
-        /* non existing modification */
+        // deleting a modification that no longer exists does nothing
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
                         .queryParam("uuids", uuidString))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
         // deleting a group that no longer exists does nothing
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
+
+        // a shared composite, and another one holding a reference to it
+        UUID sharedUuid = modificationRepository.saveModifications(TEST_GROUP2_ID,
+                List.of(ModificationEntity.fromDTO(compositeOf(List.of(switchStatusModificationInfos))))).getFirst().getUuid();
+        CompositeModificationInfos otherShared = (CompositeModificationInfos) modificationRepository.saveModifications(TEST_GROUP2_ID,
+                List.of(ModificationEntity.fromDTO(compositeOf(List.of(referenceTo(sharedUuid)))))).getFirst();
+        UUID referenceInOtherSharedUuid = otherShared.getModificationsInfos().getFirst().getUuid();
+        // reference ; composite ── (reference, leaf) ; reference to the other shared composite
+        List<ModificationInfos> saved = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(
+                ModificationEntity.fromDTO(referenceTo(sharedUuid)),
+                ModificationEntity.fromDTO(compositeOf(List.of(referenceTo(sharedUuid), switchStatusModificationInfos))),
+                ModificationEntity.fromDTO(referenceTo(otherShared.getUuid()))));
+        UUID rootReferenceUuid = saved.get(0).getUuid();
+        List<ModificationInfos> compositeContent = ((CompositeModificationInfos) saved.get(1)).getModificationsInfos();
+        UUID referenceToOtherSharedUuid = saved.get(2).getUuid();
+        String savedUuids = String.join(",", saved.stream().map(modification -> modification.getUuid().toString()).toList());
+
+        // deleting modification references requires the user, to unlink them from their shared composite
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .queryParam("uuids", savedUuids))
+                .andExpect(status().isBadRequest());
+        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
+
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .queryParam("uuids", savedUuids)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        // the content of the deleted composite goes with it, and its reference is unlinked too
+        compositeContent.forEach(modification -> assertThrows(NetworkModificationServerException.class,
+                () -> modificationRepository.getModificationInfo(modification.getUuid())));
+        List<UUID> referenceUuids = List.of(rootReferenceUuid, compositeContent.getFirst().getUuid(), referenceToOtherSharedUuid);
+        verify(directoryService).removeElementReferences(argThat(references -> references.size() == 3
+                && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq(TEST_USER_ID));
+        // the content of a referenced shared composite is not touched
+        assertDoesNotThrow(() -> modificationRepository.getModificationInfo(referenceInOtherSharedUuid));
+    }
+
+    private static ModificationReferenceInfos referenceTo(UUID sharedCompositeUuid) {
+        return ModificationReferenceInfos.builder()
+                .referencedId(sharedCompositeUuid)
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
+                .build();
+    }
+
+    private static CompositeModificationInfos compositeOf(List<ModificationInfos> content) {
+        return CompositeModificationInfos.builder()
+                .uuid(UUID.randomUUID())
+                .modificationsInfos(content)
+                .build();
     }
 
     @Test
