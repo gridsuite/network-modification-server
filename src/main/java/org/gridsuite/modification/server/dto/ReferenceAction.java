@@ -15,4 +15,6 @@ public enum ReferenceAction {
     CREATE,
     UPDATE,
     DELETE,
+    // all the modification-references of a group, notified once asked for (i.e. after a node duplication)
+    RECREATE,
 }

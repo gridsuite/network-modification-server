@@ -304,7 +304,7 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     public void recreateElementReferences(@NonNull UUID groupUuid, @NonNull String userId) {
-        notificationService.emitModificationReferencesRecreation(groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
+        notificationService.emitModificationReferencesChanged(ReferenceAction.RECREATE, groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
     }
 
     @Transactional(readOnly = true)

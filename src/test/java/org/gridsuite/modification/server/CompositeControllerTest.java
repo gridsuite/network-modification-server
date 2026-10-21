@@ -129,9 +129,6 @@ class CompositeControllerTest {
     @Value("${spring.cloud.stream.bindings.publishCompositeReference-out-0.destination}")
     private String compositeReferenceDestination;
 
-    @Value("${spring.cloud.stream.bindings.publishCompositeReferenceRecreation-out-0.destination}")
-    private String compositeReferenceRecreationDestination;
-
     private Network network;
 
     @BeforeEach
@@ -931,12 +928,8 @@ class CompositeControllerTest {
                         .header(HEADER_USER_ID, "user1"))
                 .andExpect(status().isOk());
         UUID duplicatedReferenceUuid = networkModificationRepository.getModifications(duplicatedGroupUuid, true).getFirst().getUuid();
-        Message<byte[]> recreationMessage = output.receive(1000, compositeReferenceRecreationDestination);
-        assertNotNull(recreationMessage);
-        assertEquals(duplicatedGroupUuid.toString(), String.valueOf(recreationMessage.getHeaders().get(NotificationService.HEADER_GROUP_UUID)));
-        assertEquals("user1", recreationMessage.getHeaders().get(NotificationService.HEADER_USER_ID));
-        assertEquals(List.of(new ModificationReferenceData(duplicatedReferenceUuid, sharedModificationUuid, null)),
-                mapper.readValue(recreationMessage.getPayload(), new TypeReference<List<ModificationReferenceData>>() { }));
+        assertReferenceNotification(ReferenceAction.RECREATE, duplicatedGroupUuid, "user1",
+                List.of(new ModificationReferenceData(duplicatedReferenceUuid, sharedModificationUuid, null)));
 
         // stashing the reference deletes it
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
@@ -981,7 +974,7 @@ class CompositeControllerTest {
         mockMvc.perform(post("/v1/groups/{uuid}/references", TEST_GROUP2_ID)
                         .header(HEADER_USER_ID, "user1"))
                 .andExpect(status().isOk());
-        assertNull(output.receive(1000, compositeReferenceRecreationDestination));
+        assertNull(output.receive(1000, compositeReferenceDestination));
     }
 
     private void assertReferenceNotification(ReferenceAction action, UUID groupUuid, String userId, List<ModificationReferenceData> expectedReferences) throws Exception {
