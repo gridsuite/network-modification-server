@@ -1128,7 +1128,9 @@ public class NetworkModificationRepository {
         }
         Set<UUID> sharedModificationTreesUuids = getSharedModificationTrees(ownedUuids).allUuids();
         // owned UUIDs that are references hold no applicability, so they are ignored
-        modificationRepository.addRootNetworkApplicabilityIfMissing(SetUtils.union(Set.copyOf(ownedUuids), sharedModificationTreesUuids), newTag);
+        modificationRepository.findAllWithApplicabilitiesByIdIn(SetUtils.union(Set.copyOf(ownedUuids), sharedModificationTreesUuids)).stream()
+                .filter(Predicate.not(ModificationReferenceEntity.class::isInstance))
+                .forEach(modification -> modification.addApplicabilityIfMissing(newTag));
     }
 
     /**

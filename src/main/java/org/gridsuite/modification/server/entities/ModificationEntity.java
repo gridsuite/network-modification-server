@@ -176,6 +176,13 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         }
     }
 
+    public void addApplicabilityIfMissing(String rootNetworkTag) {
+        if (findApplicability(rootNetworkTag).isEmpty()) {
+            boolean applicable = applicabilities.stream().noneMatch(applicability -> Boolean.FALSE.equals(applicability.getApplicable()));
+            applicabilities.add(new ModificationRootNetworkApplicabilityEntity(this, rootNetworkTag, applicable));
+        }
+    }
+
     public Set<String> getRootNetworkTags() {
         return applicabilities.stream().map(ModificationRootNetworkApplicabilityEntity::getRootNetworkTag).collect(Collectors.toSet());
     }
