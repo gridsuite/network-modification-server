@@ -522,14 +522,14 @@ public class NetworkModificationService {
     /**
      * Unlinks the deleted modification references from their shared modifications
      */
-    private void removeDeletedElementReferences(List<ModificationReferenceData> references, String userId) {
-        if (references.isEmpty()) {
+    private void removeDeletedElementReferences(List<ModificationReferenceData> deletedReferences, String userId) {
+        if (deletedReferences.isEmpty()) {
             return;
         }
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The user is required to delete modification references");
         }
-        directoryService.removeElementReferences(references, userId);
+        directoryService.removeElementReferences(deletedReferences, userId);
     }
 
     public CompletableFuture<NetworkModificationsResult> moveModifications(
