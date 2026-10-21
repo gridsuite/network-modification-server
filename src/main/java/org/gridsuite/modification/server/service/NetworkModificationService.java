@@ -218,8 +218,10 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void deleteModificationGroups(List<UUID> groupUuids) {
+    public void deleteModificationGroups(List<UUID> groupUuids, @NonNull String userId) {
         deleteIndexedModificationGroups(groupUuids);
+        // the references are read from the groups, so before their deletion
+        groupUuids.forEach(groupUuid -> removeElementReferences(groupUuid, userId));
         networkModificationRepository.deleteModificationGroups(groupUuids);
     }
 
@@ -504,11 +506,19 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
-    public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
+    @Transactional
+    public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids, String userId) {
+        // the references are read from the modifications, so before their deletion; only those of a group are registered by its owner
+        List<ModificationReferenceData> references = groupUuid != null && userId != null && modificationsUuids != null
+                ? getModificationsReferencesNonTransactional(modificationsUuids, true)
+                : List.of();
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
             throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
                 String.format("Some of these modifications %s (to be deleted) were not found", modificationsUuids),
                 Map.of("ids", modificationsUuids));
+        }
+        if (!references.isEmpty()) {
+            notificationService.emitModificationReferencesChanged(ReferenceAction.DELETE, groupUuid, references, userId);
         }
     }
 

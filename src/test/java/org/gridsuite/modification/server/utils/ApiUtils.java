@@ -107,7 +107,7 @@ public final class ApiUtils {
     }
 
     public static void deleteGroup(MockMvc mockMvc, UUID groupUuid) throws Exception {
-        mockMvc.perform(delete("/v1/groups/{groupUuid}", groupUuid)).andExpectAll(status().isOk());
+        mockMvc.perform(delete("/v1/groups/{groupUuid}", groupUuid).header(HEADER_USER_ID, TEST_USER_ID)).andExpectAll(status().isOk());
     }
 
     public static void deleteStashedInGroup(MockMvc mockMvc, UUID groupUuid) throws Exception {

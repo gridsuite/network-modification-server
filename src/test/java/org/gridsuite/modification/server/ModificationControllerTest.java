@@ -356,7 +356,7 @@ class ModificationControllerTest {
         assertEquals(exportInfos.unexportedModifications().getFirst().type(), byFormulaModificationInfos.getType());
 
         // delete group
-        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
+        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         // Export after deletion should return empty lists
@@ -407,7 +407,7 @@ class ModificationControllerTest {
         assertEquals(1, bsicListResultInfos.size());
 
         // delete the default modification group of a network
-        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
+        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         mvcResult = mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(
@@ -672,9 +672,9 @@ class ModificationControllerTest {
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
+        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID)).andExpect(status().isOk());
         // deleting a group that no longer exists does nothing
-        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
+        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID)).andExpect(status().isOk());
     }
 
     //test delete all modifications
@@ -1847,7 +1847,7 @@ class ModificationControllerTest {
 
         // remove the first two groups
         String body = mapper.writeValueAsString(List.of(TEST_GROUP_ID, TEST_GROUP2_ID));
-        mockMvc.perform(delete("/v1/groups")
+        mockMvc.perform(delete("/v1/groups").header(HEADER_USER_ID, TEST_USER_ID)
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

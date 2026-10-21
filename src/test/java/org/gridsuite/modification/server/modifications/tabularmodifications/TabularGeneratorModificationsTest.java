@@ -375,7 +375,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.deleteGroup(mockMvc, getGroupId());
         // It is actually (9, 0, 0, 15) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(7, 0, 1, 1);
+        TestUtils.assertRequestsCount(8, 0, 1, 1);
         assertEquals(0, modificationRepository.count());
         assertEquals(0, tabularPropertyRepository.count());
     }
@@ -387,7 +387,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.deleteGroup(mockMvc, getGroupId());
         // It is actually (12, 0, 0, 29) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(11, 0, 1, 1);
+        TestUtils.assertRequestsCount(12, 0, 1, 1);
         assertEquals(0, modificationRepository.count());
     }
 
