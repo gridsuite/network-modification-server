@@ -698,7 +698,7 @@ public class NetworkModificationService {
     }
 
     /**
-     * Unlinks the modification references of the group from their shared modifications, then deletes them
+     * Deletes the modification references of the group, and unlinks them from their shared modifications
      * @return the uuids of the deleted references
      */
     @Transactional
@@ -711,8 +711,8 @@ public class NetworkModificationService {
     }
 
     /**
-     * Unlinks the modification references among the given modifications, and those nested in the given composites,
-     * from their shared modifications, then deletes them
+     * Deletes the modification references among the given modifications, and those nested in the given composites,
+     * and unlinks them from their shared modifications
      * @return the uuids of the deleted references
      */
     private Set<UUID> deleteModificationReferences(@NonNull List<UUID> modificationUuids, @NonNull String userId) {
@@ -720,12 +720,9 @@ public class NetworkModificationService {
     }
 
     private Set<UUID> deleteReferences(List<ModificationReferenceData> references, String userId) {
-        if (references.isEmpty()) {
-            return Set.of();
-        }
-        directoryService.removeElementReferences(references, userId);
         Set<UUID> referenceUuids = references.stream().map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet());
-        networkModificationRepository.deleteModifications(referenceUuids);
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModifications(referenceUuids);
+        removeDeletedElementReferences(deletedReferences, userId);
         return referenceUuids;
     }
 
