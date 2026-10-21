@@ -456,7 +456,7 @@ class CompositeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON),
                 status().isOk());
         ModificationInfos compositeInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true).getLast();
-        assert compositeInfos instanceof CompositeModificationInfos;
+        assertInstanceOf(CompositeModificationInfos.class, compositeInfos);
         assertEquals("composite description in the study", compositeInfos.getDescription());
         UUID compositeInGroupUuid = compositeInfos.getUuid();
 
