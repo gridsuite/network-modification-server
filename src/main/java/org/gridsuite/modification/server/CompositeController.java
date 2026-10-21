@@ -115,8 +115,9 @@ public class CompositeController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
     public ResponseEntity<Void> updateNetworkCompositeModification(
             @PathVariable("uuid") UUID compositeModificationUuid,
-            @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name) {
-        networkModificationService.updateCompositeModification(compositeModificationUuid, name);
+            @Parameter(description = "New composite name") @RequestParam(value = "name", required = false) String name,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.updateCompositeModification(compositeModificationUuid, name, userId);
         return ResponseEntity.ok().build();
     }
 

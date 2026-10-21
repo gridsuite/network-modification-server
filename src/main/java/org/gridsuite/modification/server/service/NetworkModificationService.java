@@ -250,14 +250,33 @@ public class NetworkModificationService {
         return new NetworkInfos(network, networkUuid, isVariantPresent);
     }
 
+    public void checkModificationsPermission(@NonNull List<UUID> modificationUuids, @NonNull String userId) {
+        Set<UUID> uuids = new LinkedHashSet<>(
+                networkModificationRepository.getAllReferencedModificationAncestorsUuids(modificationUuids)
+        );
+        modificationUuids.stream()
+                .filter(networkModificationRepository::isModificationReferenced)
+                .forEach(uuids::add);
+
+        if (!uuids.isEmpty()) {
+            try {
+                directoryService.checkPermission(new ArrayList<>(uuids), userId, PermissionType.WRITE);
+            } catch (Exception e) {
+                throw new NetworkModificationServerException(MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED);
+            }
+        }
+    }
+
     @Transactional
     public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos, @NonNull String userId) {
+        checkModificationsPermission(List.of(modificationUuid), userId);
         networkModificationRepository.updateModification(modificationUuid, modificationInfos);
         emitReferencedAncestorsUpdated(List.of(modificationUuid), userId);
     }
 
     @Transactional
     public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
+        checkModificationsPermission(modificationUuids, userId);
         networkModificationRepository.updateNetworkModificationMetadata(modificationUuids, metadata);
         emitReferencedAncestorsUpdated(modificationUuids, userId);
     }
@@ -660,12 +679,14 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
+    public void updateCompositeModification(@NonNull UUID compositeUuid, String name, @NonNull String userId) {
+        checkModificationsPermission(List.of(compositeUuid), userId);
         networkModificationRepository.updateCompositeModification(compositeUuid, name);
     }
 
     @Transactional
     public void replaceCompositeModification(@NonNull UUID compositeUuid, String name, List<UUID> modificationUuids, @NonNull String userId) {
+        checkModificationsPermission(List.of(compositeUuid), userId);
         networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
 
         // Notify directory-server if the replaced composite is itself referenced, then once per referenced ancestor composite (closest first)
