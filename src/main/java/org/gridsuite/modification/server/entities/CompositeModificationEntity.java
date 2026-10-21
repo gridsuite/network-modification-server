@@ -84,6 +84,7 @@ public class CompositeModificationEntity extends ModificationEntity {
     }
 
     @SneakyThrows
+    @Override
     public void updateNameAndDescription(ModificationMetadata modificationMetadata) {
         super.updateNameAndDescription(modificationMetadata);
         if (modificationMetadata.getName() != null) {
