@@ -241,7 +241,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.getModifications(TEST_GROUP_ID, true);
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         getEquipmentAttributeModification(modifEntity1.getId());
@@ -310,7 +310,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
@@ -390,7 +390,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
@@ -439,7 +439,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
@@ -1326,7 +1326,8 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
-        assertRequestsCount(1, 0, 0, 0);
+        // only the recursive query, not counted as a select, finding nothing to read
+        assertRequestsCount(0, 0, 0, 0);
     }
 
     @Test
@@ -1477,7 +1478,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
@@ -2180,7 +2181,7 @@ class ModificationRepositoryTest {
         assertSelectCount(1);
 
         assertEquals(modificationUuids,
-                networkModificationRepository.getModificationsMetadata(TEST_GROUP_ID, StashedFilter.STASHED).stream()
+                networkModificationRepository.getModifications(TEST_GROUP_ID, true, StashedFilter.STASHED).stream()
                         .map(ModificationInfos::getUuid).toList(),
                 "the modifications keep the order they were given");
     }
