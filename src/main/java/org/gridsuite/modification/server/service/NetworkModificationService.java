@@ -713,7 +713,8 @@ public class NetworkModificationService {
         return networkModificationRepository.duplicateCompositeModifications(sourceModificationUuids);
     }
 
-    public void updateModificationNameAndDescription(@NonNull UUID modificationUuid, ModificationMetadata modificationMetadata) {
+    public void updateModificationNameAndDescription(@NonNull UUID modificationUuid, ModificationMetadata modificationMetadata, String userId) {
+        checkModificationsPermission(List.of(modificationUuid), userId);
         networkModificationRepository.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
     }
 
