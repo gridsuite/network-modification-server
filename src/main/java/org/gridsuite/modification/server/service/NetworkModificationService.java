@@ -306,8 +306,7 @@ public class NetworkModificationService {
 
     /**
      * Asserts that the shared modifications the user cannot write on, among the ones the given containers point to, are
-     * all associated with the given root network tags, meaning each of them holds an applicability for all these tags: the
-     * user cannot add the missing ones.
+     * all associated with the given root network tags: the user cannot add the missing ones.
      */
     @Transactional(readOnly = true)
     public void assertRootNetworkTagsAllowed(@NonNull List<UUID> containerUuids, @NonNull List<String> rootNetworkTags, @NonNull String userId) {
@@ -383,10 +382,6 @@ public class NetworkModificationService {
         return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
     }
 
-    /**
-     * @return whether the given containers point to shared modifications and, if so, whether the user can write on all,
-     * some or none of them
-     */
     @Transactional(readOnly = true)
     public SharedModificationsWriteAccess getReferencedModificationsWriteAccess(@NonNull List<UUID> containerUuids, @NonNull String userId) {
         Set<UUID> sharedUuids = networkModificationRepository.getReferencedModificationUuids(containerUuids);

@@ -1149,8 +1149,7 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return the shared modifications the references among the given modifications point to, directly or through
-     * other shared modifications
+     * @return the shared modifications the given modifications refer to, however deep
      */
     @Transactional(readOnly = true)
     public Set<UUID> getSharedModificationUuids(@NonNull List<UUID> modificationUuids) {
@@ -1158,8 +1157,7 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return the root network tags all the given modifications and their content are associated with, that is the ones
-     * each of them holds an applicability for, sorted
+     * @return the root network tags each given modification and its content holds an applicability for, sorted
      */
     @Transactional(readOnly = true)
     public List<String> getCommonRootNetworkTags(@NonNull Set<UUID> modificationUuids) {

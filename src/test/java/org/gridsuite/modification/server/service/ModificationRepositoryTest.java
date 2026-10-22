@@ -1805,9 +1805,6 @@ class ModificationRepositoryTest {
                 .stream().map(ModificationInfos::getUuid).toList();
     }
 
-    /**
-     * Renames the tag through the repository directly, bypassing the permission check of the service
-     */
     private void renameRootNetworkTagBypassingPermissions(UUID groupUuid, String oldTag, String newTag) {
         networkModificationRepository.renameRootNetworkTag(networkModificationRepository.getContainedModificationUuids(List.of(groupUuid)),
                 networkModificationRepository.getReferencedModificationUuids(List.of(groupUuid)), oldTag, newTag);

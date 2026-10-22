@@ -14,7 +14,6 @@ import java.util.UUID;
  * Modifications to check against root network tags.
  *
  * @param containerUuids groups or composites: only the shared modifications their content refers to are checked
- * @param tags root network tags
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
 public record RootNetworkTagsCheckInfos(List<UUID> containerUuids, List<String> tags) {
