@@ -25,6 +25,7 @@ import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.dto.PermissionType;
+import org.gridsuite.modification.server.dto.RootNetworkTagsCheckInfos;
 import org.gridsuite.modification.server.dto.SharedModificationsWriteAccess;
 import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
@@ -1446,10 +1447,10 @@ class CompositeControllerTest {
         verifyNoInteractions(directoryService);
     }
 
-    private static MockHttpServletRequestBuilder areRootNetworkTagsAllowed(UUID containerUuid, String... tags) {
-        return get("/v1/containers/root-network-tags/authorized")
-                .queryParam("uuids", containerUuid.toString())
-                .queryParam("tags", tags)
+    private MockHttpServletRequestBuilder areRootNetworkTagsAllowed(UUID containerUuid, String... tags) throws Exception {
+        return post("/v1/containers/root-network-tags/authorized")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(new RootNetworkTagsCheckInfos(List.of(containerUuid), List.of(tags))))
                 .header(HEADER_USER_ID, TEST_USER_ID);
     }
 

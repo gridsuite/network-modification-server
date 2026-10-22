@@ -334,7 +334,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getReferencedModificationsWriteAccess(containerUuids, userId));
     }
 
-    @GetMapping(value = "/containers/root-network-tags/authorized")
+    @PostMapping(value = "/containers/root-network-tags/authorized", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Check that the shared modifications the user cannot write on, among the ones the containers point to," +
         " are associated with the root network tags")
     @ApiResponses(value = {
@@ -342,10 +342,9 @@ public class NetworkModificationController {
         @ApiResponse(responseCode = "403", description = "At least one of them is not associated with one of the tags")
     })
     public ResponseEntity<Void> areRootNetworkTagsAllowed(
-            @Parameter(description = "Container UUIDs (groups or composites)") @RequestParam("uuids") List<UUID> containerUuids,
-            @Parameter(description = "Root network tags") @RequestParam("tags") List<String> rootNetworkTags,
+            @Parameter(description = "Containers to check and root network tags") @RequestBody RootNetworkTagsCheckInfos checkInfos,
             @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.assertRootNetworkTagsAllowed(containerUuids, rootNetworkTags, userId);
+        networkModificationService.assertRootNetworkTagsAllowed(checkInfos.containerUuids(), checkInfos.tags(), userId);
         return ResponseEntity.ok().build();
     }
 
