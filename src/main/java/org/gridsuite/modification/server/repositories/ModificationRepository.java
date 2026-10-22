@@ -347,11 +347,14 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
                   FROM modification m
                  WHERE m.container_id IN (:containerIds)
                    AND m.stashed = false
+                   AND m.type IN ('COMPOSITE_MODIFICATION', 'MODIFICATION_REFERENCE')
                 UNION ALL
                 SELECT d.root_id, m.id, m.type
                   FROM modification m
                   JOIN descendants d ON m.container_id = d.id
-                 WHERE m.stashed = false
+                 WHERE d.type = 'COMPOSITE_MODIFICATION'
+                   AND m.stashed = false
+                   AND m.type IN ('COMPOSITE_MODIFICATION', 'MODIFICATION_REFERENCE')
             )
             SELECT DISTINCT CAST(root_id AS VARCHAR) FROM descendants WHERE type = 'MODIFICATION_REFERENCE'
             """)
