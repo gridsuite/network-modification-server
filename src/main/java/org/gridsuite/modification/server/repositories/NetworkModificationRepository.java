@@ -886,7 +886,6 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * Deletes the given modifications.
      * @return the modification references among the deleted modifications
      */
     @Transactional // To have the find and delete in the same transaction (atomic)
@@ -1205,7 +1204,6 @@ public class NetworkModificationRepository {
         // modifications. Nevertheless, for the volumes we are considering (max few hundreds) it is still very
         // efficient so no need to dig deeper about that for now.
 
-        // the content of the composites, at any depth, goes with them
         List<ModificationEntity> modificationEntitiesToDelete = withCompositesContent(modificationEntities);
         // a loaded container still holding a deleted modification would cancel its deletion through its PERSIST cascade,
         // so we need to remove the deleted modifications from the loaded containers manually
@@ -1247,8 +1245,8 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * This method is necessary because of the PERSIST cascade of {@link AbstractModificationContainerEntity#modifications}:
-     * when that content is loaded, the deleted modifications must be removed from it manually.
+     * A loaded container still holding a deleted modification would cancel its deletion through the PERSIST cascade of
+     * {@link AbstractModificationContainerEntity#modifications}.
      */
     private static void removeFromLoadedContainers(List<ModificationEntity> modificationEntities) {
         List<UUID> uuids = modificationEntities.stream().map(ModificationEntity::getId).toList();
