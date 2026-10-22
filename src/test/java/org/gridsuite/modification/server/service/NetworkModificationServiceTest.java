@@ -56,9 +56,6 @@ class NetworkModificationServiceTest {
     @MockitoBean
     private NetworkStoreService networkStoreService;
 
-    @MockitoBean
-    private DirectoryService directoryService;
-
     @Test
     void shouldMoveModificationOutOfCompositeContainerWhenStashed() {
         UUID groupUuid = UUID.randomUUID();
@@ -297,6 +294,9 @@ class NetworkModificationServiceTest {
                 () -> networkModificationService.replaceCompositeModification(sharedCompositeUuid, "newName", List.of(), "userId")
         );
         assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, ex.getBusinessErrorCode());
+    }
+
+    @Test
     void shouldUnshareReferenceModificationAndReplaceByCopy() {
         // 1. Create a shared composite modification
         UUID sharedCompositeUuid = saveComposite(UUID.randomUUID(),
