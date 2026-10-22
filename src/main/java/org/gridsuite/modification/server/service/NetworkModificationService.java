@@ -514,14 +514,12 @@ public class NetworkModificationService {
     @Transactional
     public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids, @NonNull String userId) {
         // the references are read from the modifications, so before their deletion; only those of a group are registered by its owner
-        if (groupUuid == null || modificationsUuids == null) {
-            deleteNetworkModificationsNonTransactional(groupUuid, modificationsUuids);
-            return;
-        }
-        List<ModificationReferenceData> references = getModificationsReferencesNonTransactional(modificationsUuids, true);
         deleteNetworkModificationsNonTransactional(groupUuid, modificationsUuids);
-        if (!references.isEmpty()) {
-            notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid, references, userId);
+        if (groupUuid != null && modificationsUuids != null) {
+            List<ModificationReferenceData> references = getModificationsReferencesNonTransactional(modificationsUuids, true);
+            if (!references.isEmpty()) {
+                notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid, references, userId);
+            }
         }
     }
 
@@ -627,21 +625,24 @@ public class NetworkModificationService {
         // the group owning the reference, read before its deletion; null if the reference is inside a shared composite
         UUID groupUuid = modificationRepository.findGroupIdByModificationId(referenceModificationUuid);
 
-        // put the new copied composite and delete the reference
+        // put the new copied composite
         AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
         containerEntity.addModification(copiedComposite, referenceEntity.getModificationsOrder());
         modificationRepository.save(copiedComposite);
-        // the reference deletion is notified below, whatever its container
         deleteNetworkModificationsNonTransactional(containerEntity.isGroup() ? containerEntity.getId() : null, List.of(referenceModificationUuid));
 
         // ask the owner of the group to remove the reference from directory server
         if (groupUuid != null) {
-            List<ModificationReferenceData> referenceData = List.of(
-                    new ModificationReferenceData(referenceModificationUuid,
-                            ((ModificationReferenceEntity) referenceEntity).getReferencedId(),
-                            containerEntity.getId()));
-            notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid, referenceData, userId);
+            emitModificationReferencesChanged(groupUuid, (ModificationReferenceEntity) referenceEntity, userId);
         }
+    }
+
+    private void emitModificationReferencesChanged(UUID groupUuid, ModificationReferenceEntity referenceEntity, String userId) {
+        List<ModificationReferenceData> referenceData = List.of(new ModificationReferenceData(
+            referenceEntity.getId(),
+            referenceEntity.getReferencedId(),
+            referenceEntity.getContainer().getId()));
+        notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid, referenceData, userId);
     }
 
     /**
