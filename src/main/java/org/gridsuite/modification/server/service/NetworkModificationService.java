@@ -323,12 +323,11 @@ public class NetworkModificationService {
         }
         List<String> allowedTags = networkModificationRepository.getCommonRootNetworkTags(notWritableUuids);
         List<String> forbiddenTags = rootNetworkTags.stream().filter(tag -> !allowedTags.contains(tag)).distinct().toList();
-        if (forbiddenTags.isEmpty()) {
-            return;
+        if (!forbiddenTags.isEmpty()) {
+            throw new NetworkModificationServerException(ROOT_NETWORK_TAGS_FORBIDDEN_BY_SHARED,
+                    String.format(ROOT_NETWORK_TAGS_FORBIDDEN_BY_SHARED.messageTemplate(), forbiddenTags, notWritableUuids, allowedTags),
+                    Map.of("allowedTags", String.join(", ", allowedTags), "allowedTagsCount", allowedTags.size()));
         }
-        throw new NetworkModificationServerException(ROOT_NETWORK_TAGS_FORBIDDEN_BY_SHARED,
-                String.format(ROOT_NETWORK_TAGS_FORBIDDEN_BY_SHARED.messageTemplate(), forbiddenTags, notWritableUuids, allowedTags),
-                Map.of("allowedTags", String.join(", ", allowedTags), "allowedTagsCount", allowedTags.size()));
     }
 
     @Transactional
