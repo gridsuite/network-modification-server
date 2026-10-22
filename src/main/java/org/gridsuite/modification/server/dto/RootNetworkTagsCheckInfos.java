@@ -16,7 +16,6 @@ import java.util.UUID;
  * @param containerUuids groups or composites: only the shared modifications their content refers to are checked
  * @param modificationUuids modifications: only the shared modifications they and their content refer to are checked
  * @param sharedUuids shared modifications: checked themselves, along with the shared modifications their content refers to
- * @param tags root network tags
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
 public record RootNetworkTagsCheckInfos(List<UUID> containerUuids, List<UUID> modificationUuids, List<UUID> sharedUuids,
