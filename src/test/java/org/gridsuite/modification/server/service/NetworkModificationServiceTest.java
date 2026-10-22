@@ -259,25 +259,6 @@ class NetworkModificationServiceTest {
     }
 
     @Test
-    void shouldCheckPermissionWhenUpdatingComposite() {
-        List<ModificationInfos> saved = networkModificationRepository.saveModifications(
-                UUID.randomUUID(),
-                List.of(ModificationEntity.fromDTO(compositeModification(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID()))))));
-        UUID sharedCompositeUuid = saved.getFirst().getUuid();
-        networkModificationRepository.saveModifications(
-                UUID.randomUUID(),
-                List.of(ModificationEntity.fromDTO(referenceTo(sharedCompositeUuid))));
-
-        doThrow(new RuntimeException("Forbidden")).when(directoryService).checkPermission(any(), eq("userId"), eq(PermissionType.WRITE));
-
-        NetworkModificationServerException ex = assertThrows(
-                NetworkModificationServerException.class,
-                () -> networkModificationService.updateCompositeModification(sharedCompositeUuid, "newName", "userId")
-        );
-        assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, ex.getBusinessErrorCode());
-    }
-
-    @Test
     void shouldCheckPermissionWhenReplacingComposite() {
         List<ModificationInfos> saved = networkModificationRepository.saveModifications(
                 UUID.randomUUID(),

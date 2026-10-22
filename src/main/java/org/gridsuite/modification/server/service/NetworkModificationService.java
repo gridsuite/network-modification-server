@@ -278,6 +278,7 @@ public class NetworkModificationService {
     @Transactional
     public void updateNetworkModificationActivation(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
         // TODO replace metadata by boolean in the endpoint
+        checkModificationsPermission(modificationUuids, userId);
         networkModificationRepository.updateModificationActivation(modificationUuids, metadata);
         emitReferencedAncestorsUpdated(modificationUuids, userId);
     }
