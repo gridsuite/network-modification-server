@@ -562,7 +562,6 @@ class ModificationControllerTest {
                 .queryParam("applicable", "false")
         ).andExpect(status().isOk());
 
-        // adding a root network tag gives the modifications an applicability for it
         mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "/root-network-tag")
                 .queryParam("groupUuids", TEST_GROUP_ID.toString())
                 .queryParam("newTag", NEW_ROOT_NETWORK_TAG)
