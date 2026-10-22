@@ -258,8 +258,9 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
-        networkModificationRepository.updateNetworkModificationMetadata(modificationUuids, metadata);
+    public void updateNetworkModificationActivation(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
+        // TODO replace metadata by boolean in the endpoint
+        networkModificationRepository.updateModificationActivation(modificationUuids, metadata);
         emitReferencedAncestorsUpdated(modificationUuids, userId);
     }
 
@@ -690,17 +691,16 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
-        return networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name);
+    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name, String description) {
+        return networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name, description);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {
         return networkModificationRepository.duplicateCompositeModifications(sourceModificationUuids);
     }
 
-    @Transactional
-    public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
-        networkModificationRepository.updateCompositeModification(compositeUuid, name);
+    public void updateModificationNameAndDescription(@NonNull UUID modificationUuid, ModificationMetadata modificationMetadata) {
+        networkModificationRepository.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
     }
 
     @Transactional
