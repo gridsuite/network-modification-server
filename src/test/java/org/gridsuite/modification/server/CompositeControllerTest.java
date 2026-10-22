@@ -1442,15 +1442,6 @@ class CompositeControllerTest {
                     .andExpect(jsonPath("$.businessErrorValues.allowedTagsCount").value(2));
         }
 
-        // an empty list, sent by its name only, is no list at all
-        mockMvc.perform(get("/v1/containers/root-network-tags/authorized")
-                        .param("containerUuids", "")
-                        .param("modificationUuids", referenceUuid.toString())
-                        .param("sharedUuids", "")
-                        .param("tags", "C")
-                        .header(HEADER_USER_ID, TEST_USER_ID))
-                .andExpect(status().isForbidden());
-
         // a user who can write on the shared modification may associate it with any tag
         when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.WRITE));
         mockMvc.perform(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP2_ID, "C")).andExpect(status().isOk());
@@ -1461,10 +1452,10 @@ class CompositeControllerTest {
         verifyNoInteractions(directoryService);
     }
 
-    private static MockHttpServletRequestBuilder areRootNetworkTagsAllowed(String uuidsParam, UUID uuid, String... tags) {
-        return get("/v1/containers/root-network-tags/authorized")
-                .queryParam(uuidsParam, uuid.toString())
-                .queryParam("tags", tags)
+    private MockHttpServletRequestBuilder areRootNetworkTagsAllowed(String uuidsField, UUID uuid, String... tags) throws Exception {
+        return post("/v1/containers/root-network-tags/authorized")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(Map.of(uuidsField, List.of(uuid), "tags", List.of(tags))))
                 .header(HEADER_USER_ID, TEST_USER_ID);
     }
 

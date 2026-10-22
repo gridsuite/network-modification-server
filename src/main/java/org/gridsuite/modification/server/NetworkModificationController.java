@@ -334,7 +334,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getReferencedModificationsWriteAccess(containerUuids, userId));
     }
 
-    @GetMapping(value = "/containers/root-network-tags/authorized")
+    @PostMapping(value = "/containers/root-network-tags/authorized", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Check that the shared modifications the user cannot write on, among the given ones and the ones" +
         " the containers or the modifications refer to, are associated with the root network tags")
     @ApiResponses(value = {
@@ -342,15 +342,10 @@ public class NetworkModificationController {
         @ApiResponse(responseCode = "403", description = "At least one of them is not associated with one of the tags")
     })
     public ResponseEntity<Void> areRootNetworkTagsAllowed(
-            @Parameter(description = "Container UUIDs (groups or composites), whose content is checked")
-            @RequestParam(value = "containerUuids", required = false, defaultValue = "") List<UUID> containerUuids,
-            @Parameter(description = "Modification UUIDs, checked with their content")
-            @RequestParam(value = "modificationUuids", required = false, defaultValue = "") List<UUID> modificationUuids,
-            @Parameter(description = "Shared modification UUIDs, checked themselves and with their content")
-            @RequestParam(value = "sharedUuids", required = false, defaultValue = "") List<UUID> sharedUuids,
-            @Parameter(description = "Root network tags") @RequestParam("tags") List<String> rootNetworkTags,
+            @Parameter(description = "Modifications to check and root network tags") @RequestBody RootNetworkTagsCheckInfos checkInfos,
             @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.assertRootNetworkTagsAllowed(containerUuids, modificationUuids, sharedUuids, rootNetworkTags, userId);
+        networkModificationService.assertRootNetworkTagsAllowed(checkInfos.containerUuids(), checkInfos.modificationUuids(),
+                checkInfos.sharedUuids(), checkInfos.tags(), userId);
         return ResponseEntity.ok().build();
     }
 
