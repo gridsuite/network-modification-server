@@ -130,6 +130,14 @@ public class NetworkModificationController {
                 .thenApply(ResponseEntity.ok()::body);
     }
 
+    @PutMapping(value = "/network-modifications/{referenceModificationUuid}/unshare")
+    @Operation(summary = "Unshare a reference modification and copy the referenced composite in its place")
+    @ApiResponse(responseCode = "200", description = "The reference modification has been replaced by a copy of its referenced composite")
+    public void unshareModification(@PathVariable("referenceModificationUuid") UUID referenceModificationUuid,
+                                    @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.unshareModification(referenceModificationUuid, userId);
+    }
+
     @DeleteMapping(value = "/groups/{groupUuid}")
     @Operation(summary = "Delete the modifications group")
     @ApiResponse(responseCode = "200", description = "Modifications group deleted")
@@ -353,8 +361,9 @@ public class NetworkModificationController {
     public ResponseEntity<Void> updateRootNetworkApplicability(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Root network tag") @RequestParam("rootNetworkTag") String rootNetworkTag,
-            @Parameter(description = "Applicability on this root network tag") @RequestParam("applicable") boolean applicable) {
-        networkModificationService.updateRootNetworkApplicability(networkModificationUuids, rootNetworkTag, applicable);
+            @Parameter(description = "Applicability on this root network tag") @RequestParam("applicable") boolean applicable,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.updateRootNetworkApplicability(networkModificationUuids, rootNetworkTag, applicable, userId);
         return ResponseEntity.ok().build();
     }
 
