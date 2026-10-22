@@ -535,6 +535,7 @@ class ModificationControllerTest {
         UUID untouchedUuid = modifications.get(1).getUuid();
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
+                .header(HEADER_USER_ID, TEST_USER_ID)
                 .queryParam("uuids", deactivatedUuid.toString())
                 .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
                 .queryParam("applicable", "false")
@@ -561,6 +562,7 @@ class ModificationControllerTest {
         List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         UUID modificationUuid = modifications.getFirst().getUuid();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
+                .header(HEADER_USER_ID, TEST_USER_ID)
                 .queryParam("uuids", modificationUuid.toString())
                 .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
                 .queryParam("applicable", "false")
@@ -587,6 +589,7 @@ class ModificationControllerTest {
         List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
+                .header(HEADER_USER_ID, TEST_USER_ID)
                 .queryParam("uuids", modifications.getFirst().getUuid().toString())
                 .queryParam("rootNetworkTag", "TOO_LONG")
                 .queryParam("applicable", "false")
