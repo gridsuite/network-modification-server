@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.service;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.ReferenceAction;
+import org.gridsuite.modification.server.dto.ElementReferenceAction;
 import org.gridsuite.modification.server.dto.WorkflowType;
 import org.gridsuite.modification.server.utils.PostCompletion;
 import org.slf4j.Logger;
@@ -100,7 +100,7 @@ public class NotificationService {
      * or deleted, so it can keep the references registered on the shared elements in directory-server up to date.
      */
     @PostCompletion
-    public void emitModificationReferencesChanged(@NonNull ReferenceAction action, @NonNull UUID groupUuid,
+    public void emitModificationReferencesChanged(@NonNull ElementReferenceAction action, @NonNull UUID groupUuid,
                                                   @NonNull List<ModificationReferenceData> references, @NonNull String userId) {
         if (references.isEmpty()) {
             return;

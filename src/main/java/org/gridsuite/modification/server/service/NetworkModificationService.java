@@ -307,7 +307,7 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     public void recreateElementReferences(@NonNull UUID groupUuid, @NonNull String userId) {
-        notificationService.emitModificationReferencesChanged(ReferenceAction.CREATE, groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
+        notificationService.emitModificationReferencesChanged(ElementReferenceAction.CREATE, groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
     }
 
     @Transactional(readOnly = true)
@@ -316,7 +316,7 @@ public class NetworkModificationService {
     }
 
     private void removeElementReferencesNonTransactional(@NonNull UUID groupUuid, @NonNull String userId) {
-        notificationService.emitModificationReferencesChanged(ReferenceAction.DELETE, groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
+        notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
     }
 
     @Transactional
@@ -374,7 +374,7 @@ public class NetworkModificationService {
         networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
 
         // break all the references pointing to those stashed modification references
-        notificationService.emitModificationReferencesChanged(ReferenceAction.DELETE, groupUuid,
+        notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid,
                 getModificationsReferencesNonTransactional(modificationUuids, true), userId);
 
         emitReferencedModificationsUpdated(referencedAncestorUuids, userId);
@@ -410,7 +410,7 @@ public class NetworkModificationService {
         networkModificationRepository.restoreNetworkModifications(modificationUuids,
             networkModificationRepository.getModificationsCount(groupUuid, false));
         // recreate the references broken when those modifications were stashed
-        notificationService.emitModificationReferencesChanged(ReferenceAction.CREATE, groupUuid,
+        notificationService.emitModificationReferencesChanged(ElementReferenceAction.CREATE, groupUuid,
                 getModificationsReferencesNonTransactional(modificationUuids, true), userId);
     }
 
@@ -521,7 +521,7 @@ public class NetworkModificationService {
         List<ModificationReferenceData> references = getModificationsReferencesNonTransactional(modificationsUuids, true);
         deleteNetworkModificationsNonTransactional(groupUuid, modificationsUuids);
         if (!references.isEmpty()) {
-            notificationService.emitModificationReferencesChanged(ReferenceAction.DELETE, groupUuid, references, userId);
+            notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid, references, userId);
         }
     }
 
@@ -640,7 +640,7 @@ public class NetworkModificationService {
                     new ModificationReferenceData(referenceModificationUuid,
                             ((ModificationReferenceEntity) referenceEntity).getReferencedId(),
                             containerEntity.getId()));
-            notificationService.emitModificationReferencesChanged(ReferenceAction.DELETE, groupUuid, referenceData, userId);
+            notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid, referenceData, userId);
         }
     }
 
@@ -675,7 +675,7 @@ public class NetworkModificationService {
         // the references among the assembled modifications are now located in the new composite
         UUID groupUuid = modificationRepository.findGroupIdByModificationId(newComposite.getUuid());
         if (groupUuid != null) {
-            notificationService.emitModificationReferencesChanged(ReferenceAction.UPDATE, groupUuid,
+            notificationService.emitModificationReferencesChanged(ElementReferenceAction.UPDATE, groupUuid,
                     getModificationsReferencesNonTransactional(assembledModificationsUuids, false), userId);
         }
 

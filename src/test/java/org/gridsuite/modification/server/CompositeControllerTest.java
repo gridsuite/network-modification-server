@@ -25,7 +25,7 @@ import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.dto.PermissionType;
-import org.gridsuite.modification.server.dto.ReferenceAction;
+import org.gridsuite.modification.server.dto.ElementReferenceAction;
 import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
@@ -929,7 +929,7 @@ class CompositeControllerTest {
                         .header(HEADER_USER_ID, "user1"))
                 .andExpect(status().isOk());
         UUID duplicatedReferenceUuid = networkModificationRepository.getModifications(duplicatedGroupUuid, true).getFirst().getUuid();
-        assertReferenceNotification(ReferenceAction.CREATE, duplicatedGroupUuid, "user1",
+        assertReferenceNotification(ElementReferenceAction.CREATE, duplicatedGroupUuid, "user1",
                 List.of(new ModificationReferenceData(duplicatedReferenceUuid, sharedModificationUuid, null)));
 
         // stashing the reference deletes it
@@ -939,7 +939,7 @@ class CompositeControllerTest {
                         .queryParam("uuids", referenceUuid.toString())
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
-        assertReferenceNotification(ReferenceAction.DELETE, TEST_GROUP_ID, "user2",
+        assertReferenceNotification(ElementReferenceAction.DELETE, TEST_GROUP_ID, "user2",
                 List.of(new ModificationReferenceData(referenceUuid, sharedModificationUuid, null)));
 
         // restoring the reference creates it again
@@ -949,7 +949,7 @@ class CompositeControllerTest {
                         .queryParam("uuids", referenceUuid.toString())
                         .queryParam("stashed", "false"))
                 .andExpect(status().isOk());
-        assertReferenceNotification(ReferenceAction.CREATE, TEST_GROUP_ID, "user2",
+        assertReferenceNotification(ElementReferenceAction.CREATE, TEST_GROUP_ID, "user2",
                 List.of(new ModificationReferenceData(referenceUuid, sharedModificationUuid, null)));
 
         // assembling the reference into a composite moves it into that composite
@@ -959,7 +959,7 @@ class CompositeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), UUID.class);
-        assertReferenceNotification(ReferenceAction.UPDATE, TEST_GROUP_ID, "user3",
+        assertReferenceNotification(ElementReferenceAction.UPDATE, TEST_GROUP_ID, "user3",
                 List.of(new ModificationReferenceData(referenceUuid, sharedModificationUuid, compositeUuid)));
 
         // cleaning the group of a deleted node deletes all its references, nested ones included
@@ -968,7 +968,7 @@ class CompositeControllerTest {
                         .content(mapper.writeValueAsString(List.of(TEST_GROUP_ID)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertReferenceNotification(ReferenceAction.DELETE, TEST_GROUP_ID, "user4",
+        assertReferenceNotification(ElementReferenceAction.DELETE, TEST_GROUP_ID, "user4",
                 List.of(new ModificationReferenceData(referenceUuid, sharedModificationUuid, compositeUuid)));
 
         // nothing is sent when no reference is involved
@@ -978,7 +978,7 @@ class CompositeControllerTest {
         assertNull(output.receive(1000, compositeReferenceDestination));
     }
 
-    private void assertReferenceNotification(ReferenceAction action, UUID groupUuid, String userId, List<ModificationReferenceData> expectedReferences) throws Exception {
+    private void assertReferenceNotification(ElementReferenceAction action, UUID groupUuid, String userId, List<ModificationReferenceData> expectedReferences) throws Exception {
         Message<byte[]> message = output.receive(1000, compositeReferenceDestination);
         assertNotNull(message);
         assertEquals(action.name(), String.valueOf(message.getHeaders().get(NotificationService.HEADER_ACTION)));
