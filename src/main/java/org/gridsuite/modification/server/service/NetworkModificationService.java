@@ -222,7 +222,7 @@ public class NetworkModificationService {
     public void deleteModificationGroups(List<UUID> groupUuids, @NonNull String userId) {
         deleteIndexedModificationGroups(groupUuids);
         // the references are read from the groups, so before their deletion
-        groupUuids.forEach(groupUuid -> removeElementReferencesNonTransactional(groupUuid, userId));
+        groupUuids.forEach(groupUuid -> handleRemoveElementReferences(groupUuid, userId));
         networkModificationRepository.deleteModificationGroups(groupUuids);
     }
 
@@ -312,10 +312,10 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     public void removeElementReferences(@NonNull UUID groupUuid, @NonNull String userId) {
-        removeElementReferencesNonTransactional(groupUuid, userId);
+        handleRemoveElementReferences(groupUuid, userId);
     }
 
-    private void removeElementReferencesNonTransactional(@NonNull UUID groupUuid, @NonNull String userId) {
+    private void handleRemoveElementReferences(@NonNull UUID groupUuid, @NonNull String userId) {
         notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
     }
 
@@ -513,17 +513,23 @@ public class NetworkModificationService {
 
     @Transactional
     public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids, @NonNull String userId) {
-        // the references are read from the modifications, so before their deletion; only those of a group are registered by its owner
-        deleteNetworkModificationsNonTransactional(groupUuid, modificationsUuids);
-        if (groupUuid != null && modificationsUuids != null) {
-            List<ModificationReferenceData> references = getModificationsReferencesNonTransactional(modificationsUuids, true);
-            if (!references.isEmpty()) {
-                notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid, references, userId);
-            }
+        List<ModificationReferenceData> references = getModificationsReferencesToDelete(groupUuid, modificationsUuids);
+        handleDeleteNetworkModifications(groupUuid, modificationsUuids);
+        if (!references.isEmpty()) {
+            notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid, references, userId);
         }
     }
 
-    private void deleteNetworkModificationsNonTransactional(UUID groupUuid, List<UUID> modificationsUuids) {
+    private List<ModificationReferenceData> getModificationsReferencesToDelete(UUID groupUuid, List<UUID> modificationsUuids) {
+        if (groupUuid == null) {
+            return List.of();
+        }
+        return modificationsUuids != null
+            ? getModificationsReferencesNonTransactional(modificationsUuids, true)
+            : getModificationReferencesNonTransactional(groupUuid);
+    }
+
+    private void handleDeleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
             throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
                 String.format("Some of these modifications %s (to be deleted) were not found", modificationsUuids),
@@ -629,7 +635,7 @@ public class NetworkModificationService {
         AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
         containerEntity.addModification(copiedComposite, referenceEntity.getModificationsOrder());
         modificationRepository.save(copiedComposite);
-        deleteNetworkModificationsNonTransactional(containerEntity.isGroup() ? containerEntity.getId() : null, List.of(referenceModificationUuid));
+        handleDeleteNetworkModifications(containerEntity.isGroup() ? containerEntity.getId() : null, List.of(referenceModificationUuid));
 
         // ask the owner of the group to remove the reference from directory server
         if (groupUuid != null) {
