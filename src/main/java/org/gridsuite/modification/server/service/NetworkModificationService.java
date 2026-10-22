@@ -274,9 +274,13 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable) {
+    public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable, String userId) {
         assertRootNetworkTagFits(rootNetworkTag);
         networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
+
+        modificationRepository.findReferencedModificationIds(modificationUuids)
+                .forEach(referencedUuid -> notificationService.emitElementUpdated(referencedUuid, userId));
+        emitReferencedAncestorsUpdated(modificationUuids, userId);
     }
 
     @Transactional

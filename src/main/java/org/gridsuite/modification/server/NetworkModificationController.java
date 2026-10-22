@@ -369,8 +369,9 @@ public class NetworkModificationController {
     public ResponseEntity<Void> updateRootNetworkApplicability(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Root network tag") @RequestParam("rootNetworkTag") String rootNetworkTag,
-            @Parameter(description = "Applicability on this root network tag") @RequestParam("applicable") boolean applicable) {
-        networkModificationService.updateRootNetworkApplicability(networkModificationUuids, rootNetworkTag, applicable);
+            @Parameter(description = "Applicability on this root network tag") @RequestParam("applicable") boolean applicable,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.updateRootNetworkApplicability(networkModificationUuids, rootNetworkTag, applicable, userId);
         return ResponseEntity.ok().build();
     }
 
