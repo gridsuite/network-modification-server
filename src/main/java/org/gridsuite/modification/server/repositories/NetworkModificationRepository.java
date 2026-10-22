@@ -195,9 +195,8 @@ public class NetworkModificationRepository {
         deleteModifications(compositeEntity.getModifications());
 
         deleteCompositeChildrenSubtree(List.of(compositeEntity));
-        // the new content is associated with the root networks the composite is
         Set<String> rootNetworkTags = compositeEntity.getRootNetworkTags();
-        // the copies hold no reference, copiesOf resolving them all: there is no shared modification to associate
+        // copiesOf resolves every reference: no shared modification here
         copyEntities.forEach(copy -> setTreeDefaultApplicabilitiesIfMissing(copy, rootNetworkTags));
         compositeEntity.setModifications(copyEntities);
         compositeModificationRepository.renameCompositeModification(compositeEntity, name);
@@ -1192,9 +1191,7 @@ public class NetworkModificationRepository {
         if (rootNetworkTags.isEmpty()) {
             return;
         }
-        // Set applicabilities on modifications (except shared ones)
         modificationEntities.forEach(entity -> setTreeDefaultApplicabilitiesIfMissing(entity, rootNetworkTags));
-        // Set applicabilities on shared modifications and their children
         List<UUID> sharedUuids = modificationEntities.stream()
                 .flatMap(NetworkModificationRepository::referencesIn)
                 .map(ModificationReferenceEntity::getReferencedId)
@@ -1241,7 +1238,6 @@ public class NetworkModificationRepository {
             sharedUuids.addAll(sharedUuidsToResolve);
             List<UUID> nestedUuids = getContainedModificationUuids(sharedUuidsToResolve);
             childrenUuids.addAll(nestedUuids);
-            // next: check the nested shared modifications
             sharedUuidsToResolve = nestedUuids.isEmpty() ? List.of() : modificationRepository.findReferencedModificationIds(nestedUuids).stream()
                     .filter(sharedUuid -> !sharedUuids.contains(sharedUuid))
                     .toList();
@@ -1621,7 +1617,6 @@ public class NetworkModificationRepository {
                 .name("Composite modification")
                 .build();
         CompositeModificationEntity newLeaf = (CompositeModificationEntity) ModificationEntity.fromDTO(newCompositeInfos);
-        // the new composite is associated with the root networks its content is
         getApplicabilityHolders(assembledModifications).stream()
                 .flatMap(holder -> holder.getRootNetworkTags().stream())
                 .distinct()
