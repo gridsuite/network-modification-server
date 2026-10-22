@@ -259,14 +259,9 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * Refuses putting into a composite modifications that can reach it, be it by containment or by following the
-     * shared modifications they reference: the composite would end up containing itself, and any full conversion of
-     * its content would then recurse forever. The cycle has to be refused here, at write time: a cyclic DTO would
-     * make the reading, the JSON serialization and the application on the network loop just as much.
-     * <p>
-     * {@link CompositeContainerEntity#insertModifications} only looks at containment, and only at the modifications
-     * handed to it; a reference designating the target ({@link #resolveContainerId}) or pointing back at one of its
-     * ancestors is precisely what slips through it.
+     * Refuses putting into a composite modifications that can reach it, by containment or through shared references:
+     * the reading, the JSON serialization and the application would loop forever.
+     * {@link CompositeContainerEntity#insertModifications} only checks the direct containment, not the references.
      */
     private void assertContainerIsOutOfReach(@NonNull UUID targetCompositeUuid, @NonNull List<UUID> modificationUuids) {
         if (modificationUuids.isEmpty()) {
@@ -1536,7 +1531,6 @@ public class NetworkModificationRepository {
             targetComposite = compositeContainerRepository.findById(firstModificationEntity.getContainerUuid()).orElse(null);
         }
         if (targetComposite != null) {
-            // the new composite lands in that one, so whatever it assembles must not lead back to it
             assertContainerIsOutOfReach(targetComposite.getId(), assembledModificationsUuids);
         }
 

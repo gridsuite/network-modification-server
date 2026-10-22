@@ -1233,8 +1233,7 @@ class CompositeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON),
                 status().isOk());
 
-        // moving the reference to A into B closes the loop, A → B → A: only following the references, at two levels,
-        // shows it
+        // moving the reference to A into B closes the loop A → B → A
         mockMvc.perform(put(URI_NETWORK_MODIF_MOVE, TEST_GROUP_ID)
                         .content(getJsonBodyMove(List.of(referenceToA), null, referenceToB, null))
                         .contentType(MediaType.APPLICATION_JSON))
