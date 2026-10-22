@@ -67,24 +67,6 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(modifications);
     }
 
-    @GetMapping(value = "/containers/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get the modifications of several containers (groups or composites)")
-    @ApiResponse(responseCode = "200", description = "Modifications of each container, an empty list for a container that does not exist")
-    public ResponseEntity<Map<UUID, List<ModificationInfos>>> getNetworkModifications(@Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids,
-                                                                                      @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false,
-                                                                                              defaultValue = "true") Boolean onlyMetadata,
-                                                                                      @Parameter(description = "Stashed modifications") @RequestParam(name = "onlyStashed", required = false,
-                                                                                              defaultValue = "false") Boolean onlyStashed,
-                                                                                      @RequestHeader(name = HEADER_USER_ID, required = false) String userId) {
-        Map<UUID, List<ModificationInfos>> modificationsByContainer = networkModificationService.getNetworkModifications(containerUuids, onlyMetadata,
-            onlyStashed ? StashedFilter.STASHED : StashedFilter.ALL);
-        if (userId != null) {
-            modificationPermissionService.addPermissions(
-                modificationsByContainer.values().stream().flatMap(List::stream).toList(), userId);
-        }
-        return ResponseEntity.ok().body(modificationsByContainer);
-    }
-
     @GetMapping(value = "/containers/{containerUuid}/network-modifications/export", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the modifications of a container (group or composite) to export")
     @ApiResponse(responseCode = "200", description = "List of modifications of the container to export")
@@ -93,7 +75,7 @@ public class NetworkModificationController {
     }
 
     @GetMapping(value = "/containers/{containerUuid}/network-modifications/verify", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Check if all the modifications from a list belong to a container (group or composite)")
+    @Operation(summary = "Check if all the modifications from a list belong to a container (group or composite), including through modification references")
     @ApiResponse(responseCode = "200", description = "List of modifications")
     public ResponseEntity<List<ModificationInfos>> verifyNetworkModifications(@Parameter(description = "Container UUID") @PathVariable("containerUuid") UUID containerUuid,
                                                                               @Parameter(description = "Modifications UUID") @RequestParam(name = "uuids") Set<UUID> modificationUuids) {
@@ -149,6 +131,14 @@ public class NetworkModificationController {
             @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
         return networkModificationService.duplicateModifications(targetGroupUuid, sourceContainerUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond())
                 .thenApply(ResponseEntity.ok()::body);
+    }
+
+    @PutMapping(value = "/network-modifications/{referenceModificationUuid}/unshare")
+    @Operation(summary = "Unshare a reference modification and copy the referenced composite in its place")
+    @ApiResponse(responseCode = "200", description = "The reference modification has been replaced by a copy of its referenced composite")
+    public void unshareModification(@PathVariable("referenceModificationUuid") UUID referenceModificationUuid,
+                                    @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.unshareModification(referenceModificationUuid, userId);
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}")
@@ -336,7 +326,7 @@ public class NetworkModificationController {
     }
 
     @GetMapping(value = "/containers/references/write-access", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Whether the containers (groups or composites) point to shared modifications and, if so, whether the user can write on all of them")
+    @Operation(summary = "Whether the containers (groups or composites) point to shared modifications and, if so, whether the user can write on all, some or none of them")
     @ApiResponse(responseCode = "200", description = "The write access on the shared modifications was returned")
     public ResponseEntity<SharedModificationsWriteAccess> getReferencedModificationsWriteAccess(
             @Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids,

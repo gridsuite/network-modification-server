@@ -14,6 +14,7 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
+import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -87,7 +88,7 @@ class CompositeControllerTest {
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_GROUP2_ID = UUID.randomUUID();
     private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/network-composite-modifications";
-    private static final String URI_GET_CONTAINERS_NETWORK_MODIFICATIONS = "/v1/containers/network-modifications";
+    private static final String URI_GET_CONTAINER_NETWORK_MODIFICATIONS = "/v1/containers/{containerUuid}/network-modifications";
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String URI_NETWORK_MODIF_MOVE = "/v1/groups/{groupUuid}/network-modifications/move";
 
@@ -172,10 +173,7 @@ class CompositeControllerTest {
         assertEquals(modificationsNumber, modificationInfosList.size());
 
         // get the composite modification (metadata only)
-        mvcResult = mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeModificationUuid))
-                .andExpect(status().isOk()).andReturn();
-        Map<UUID, List<ModificationInfos>> compositeModificationsMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        List<ModificationInfos> compositeModificationContent = compositeModificationsMap.get(compositeModificationUuid);
+        List<ModificationInfos> compositeModificationContent = getContainerModifications(compositeModificationUuid, true);
         assertEquals(modificationsNumber, compositeModificationContent.size());
         for (int i = 0; i < modificationUuids.size(); i++) {
             assertEquals(modificationInfosList.get(i).getMessageValues(), compositeModificationContent.get(i).getMessageValues());
@@ -185,34 +183,8 @@ class CompositeControllerTest {
         assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.getFirst()).getEquipmentAttributeName());
         assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.getFirst()).getEquipmentAttributeValue());
 
-        // create another composite modification
-        List<ModificationInfos> otherModificationList = createSomeSwitchModifications(TEST_GROUP2_ID, modificationsNumber);
-        List<UUID> otherModificationUuids = otherModificationList.stream().map(ModificationInfos::getUuid).toList();
-        String compositeName = "composite name 2";
-        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", compositeName)
-                        .content(mapper.writeValueAsString(otherModificationUuids)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        ModificationInfos otherCompositeModificationInfos = CompositeModificationInfos.builder()
-                .modificationsInfos(otherModificationList)
-                .name(compositeName)
-                .build();
-        UUID otherCompositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertThat(networkModificationRepository.getModificationInfo(otherCompositeModificationUuid)).recursivelyEquals(otherCompositeModificationInfos);
-
-        // get both composite modifications
-        mvcResult = mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids=" + compositeModificationUuid + "&uuids=" + otherCompositeModificationUuid))
-                .andExpect(status().isOk()).andReturn();
-        Map<UUID, List<ModificationInfos>> bothCompositesMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(2, bothCompositesMap.size());
-        assertEquals(modificationsNumber, bothCompositesMap.get(compositeModificationUuid).size());
-        assertEquals(modificationsNumber, bothCompositesMap.get(otherCompositeModificationUuid).size());
-
         // get the composite modification (complete data)
-        mvcResult = mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=false", compositeModificationUuid))
-                .andExpect(status().isOk()).andReturn();
-        Map<UUID, List<ModificationInfos>> completeMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        compositeModificationContent = completeMap.get(compositeModificationUuid);
-        checkCompositeModificationContent(compositeModificationContent);
+        checkCompositeModificationContent(getContainerModifications(compositeModificationUuid, false));
 
         // Insert the composite modification in the group
         final String bodyJson = getJsonBodyModificationCompositeToBeInserted(
@@ -661,11 +633,7 @@ class CompositeControllerTest {
                 .andExpect(status().isOk());
 
         // verify that the composite has not been emptied (modifications_uuids is missing so modifications have been ignored)
-        mvcResult = mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=false", compositeModificationUuid))
-                .andExpect(status().isOk()).andReturn();
-        Map<UUID, List<ModificationInfos>> updatedMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        List<ModificationInfos> updatedCompositeContent = updatedMap.get(compositeModificationUuid);
-        assertEquals(updatedCompositeContent.size(), modificationList.size());
+        assertEquals(getContainerModifications(compositeModificationUuid, false).size(), modificationList.size());
 
         // but the name has been updated
         mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + compositeModificationUuid))
@@ -696,10 +664,7 @@ class CompositeControllerTest {
         List<ModificationInfos> newModificationList = createSomeSwitchModifications(TEST_GROUP2_ID, newModificationsNumber);
         List<UUID> newModificationUuids = newModificationList.stream().map(ModificationInfos::getUuid).toList();
 
-        mvcResult = mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=false", compositeModificationUuid))
-                .andExpect(status().isOk()).andReturn();
-        Map<UUID, List<ModificationInfos>> compositeContentMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        List<UUID> baseCompositeContent = compositeContentMap.get(compositeModificationUuid).stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> baseCompositeContent = getContainerModifications(compositeModificationUuid, false).stream().map(ModificationInfos::getUuid).toList();
 
         // Update the composite modification with the new modifications
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeModificationUuid + "/replace")
@@ -712,10 +677,7 @@ class CompositeControllerTest {
         assertEquals(0, modificationRepository.findAllByIdIn(baseCompositeContent).size());
 
         // Get the composite modification content and verify it has been updated
-        mvcResult = mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=false", compositeModificationUuid))
-                .andExpect(status().isOk()).andReturn();
-        Map<UUID, List<ModificationInfos>> updatedMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        List<ModificationInfos> updatedCompositeContent = updatedMap.get(compositeModificationUuid);
+        List<ModificationInfos> updatedCompositeContent = getContainerModifications(compositeModificationUuid, false);
 
         assertEquals(newModificationsNumber, updatedCompositeContent.size());
     }
@@ -752,10 +714,7 @@ class CompositeControllerTest {
                 .andExpect(status().isOk());
 
         // Verify that the composite now contains no modifications
-        mvcResult = mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}&onlyMetadata=false", compositeModificationUuid))
-                .andExpect(status().isOk()).andReturn();
-        Map<UUID, List<ModificationInfos>> emptyMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        List<ModificationInfos> updatedCompositeContent = emptyMap.get(compositeModificationUuid);
+        List<ModificationInfos> updatedCompositeContent = getContainerModifications(compositeModificationUuid, false);
 
         assertTrue(updatedCompositeContent.isEmpty());
     }
@@ -771,11 +730,7 @@ class CompositeControllerTest {
         UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
         // Fetch the actual sub-modification UUIDs as stored inside the composite
-        Map<UUID, List<ModificationInfos>> initialMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        List<UUID> subUuids = initialMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> subUuids = getContainerModifications(compositeUuid, true).stream().map(ModificationInfos::getUuid).toList();
         assertEquals(3, subUuids.size());
 
         // Move the first sub-modification to the end (no insertBeforeUuid = append)
@@ -786,11 +741,7 @@ class CompositeControllerTest {
                         .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
-        Map<UUID, List<ModificationInfos>> afterFirstMove = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        List<UUID> orderAfterFirst = afterFirstMove.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> orderAfterFirst = getContainerModifications(compositeUuid, true).stream().map(ModificationInfos::getUuid).toList();
         assertEquals(3, orderAfterFirst.size());
         assertEquals(subUuids.get(1), orderAfterFirst.get(0));
         assertEquals(subUuids.get(2), orderAfterFirst.get(1));
@@ -804,11 +755,7 @@ class CompositeControllerTest {
                         .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
-        Map<UUID, List<ModificationInfos>> afterSecondMove = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        List<UUID> orderAfterSecond = afterSecondMove.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> orderAfterSecond = getContainerModifications(compositeUuid, true).stream().map(ModificationInfos::getUuid).toList();
         assertEquals(3, orderAfterSecond.size());
         assertEquals(subUuids.get(0), orderAfterSecond.get(0));
         assertEquals(subUuids.get(1), orderAfterSecond.get(1));
@@ -833,11 +780,7 @@ class CompositeControllerTest {
                 status().isOk());
 
         // Fetch the actual sub-modification UUIDs as stored inside the composite
-        Map<UUID, List<ModificationInfos>> initialMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        List<UUID> actualSubUuids = initialMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> actualSubUuids = getContainerModifications(compositeUuid, true).stream().map(ModificationInfos::getUuid).toList();
         assertEquals(2, actualSubUuids.size());
 
         int rootSizeBefore = networkModificationRepository.getModifications(TEST_GROUP_ID, true).size();
@@ -852,12 +795,9 @@ class CompositeControllerTest {
                 .andExpect(status().isOk());
 
         // Composite should now contain only 1 sub-modification
-        Map<UUID, List<ModificationInfos>> resultMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        assertEquals(1, resultMap.get(compositeUuid).size());
-        assertEquals(actualSubUuids.get(1), resultMap.get(compositeUuid).getFirst().getUuid());
+        List<ModificationInfos> compositeContent = getContainerModifications(compositeUuid, true);
+        assertEquals(1, compositeContent.size());
+        assertEquals(actualSubUuids.get(1), compositeContent.getFirst().getUuid());
 
         // Root group should have one more modification
         assertEquals(rootSizeBefore + 1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
@@ -900,11 +840,7 @@ class CompositeControllerTest {
         assertEquals(originalRootModUuids.get(2), rootModificationsAfterAssemble.get(1).getUuid());
 
         // The new composite should contain the assembled modifications in the same order
-        Map<UUID, List<ModificationInfos>> compositeContentMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", firstCompositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        List<ModificationInfos> compositeContent = compositeContentMap.get(firstCompositeUuid);
+        List<ModificationInfos> compositeContent = getContainerModifications(firstCompositeUuid, true);
 
         assertEquals(2, compositeContent.size());
         assertEquals(originalRootModUuids.get(0), compositeContent.get(0).getUuid());
@@ -949,11 +885,7 @@ class CompositeControllerTest {
         assertEquals(1, rootModificationsAfterAssemble.size());
 
         // The first composite should contain the new composite, then the other untouched modification
-        compositeContentMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", firstCompositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        compositeContent = compositeContentMap.get(firstCompositeUuid);
+        compositeContent = getContainerModifications(firstCompositeUuid, true);
 
         assertEquals(2, compositeContent.size());
         assertEquals(twodepthCompositeUuid, compositeContent.get(0).getUuid());
@@ -962,11 +894,7 @@ class CompositeControllerTest {
         // The new 2 depth composite must now belong to the first composite, not to a group
         CompositeModificationEntity twoDepthComposite = compositeRepository.findById(twodepthCompositeUuid).orElseThrow();
         assertEquals(ModificationContainerType.COMPOSITE, networkModificationRepository.getContainerType(twoDepthComposite));
-        compositeContentMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", firstCompositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        assertTrue(compositeContentMap.get(firstCompositeUuid).stream()
+        assertTrue(getContainerModifications(firstCompositeUuid, true).stream()
                 .map(ModificationInfos::getUuid)
                 .anyMatch(twodepthCompositeUuid::equals));
 
@@ -1219,11 +1147,7 @@ class CompositeControllerTest {
         UUID innerCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
         // Fetch actual sub-UUIDs of the inner composite
-        Map<UUID, List<ModificationInfos>> innerMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", innerCompositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        List<UUID> actualInnerSubUuids = innerMap.get(innerCompositeUuid).stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> actualInnerSubUuids = getContainerModifications(innerCompositeUuid, true).stream().map(ModificationInfos::getUuid).toList();
         assertEquals(2, actualInnerSubUuids.size());
 
         List<ModificationInfos> outerLeafs = createSomeSwitchModifications(TEST_GROUP2_ID, 1);
@@ -1235,11 +1159,7 @@ class CompositeControllerTest {
         UUID outerCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
         // Fetch actual sub-UUIDs of the outer composite (includes innerComposite and leaf3 copies)
-        Map<UUID, List<ModificationInfos>> outerMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", outerCompositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        List<ModificationInfos> outerSubMods = outerMap.get(outerCompositeUuid);
+        List<ModificationInfos> outerSubMods = getContainerModifications(outerCompositeUuid, true);
         assertEquals(2, outerSubMods.size());
 
         // Identify the inner composite copy and the leaf copy by their type
@@ -1253,11 +1173,7 @@ class CompositeControllerTest {
                 .findFirst().orElseThrow();
 
         // Fetch actual sub-UUIDs of the inner composite as nested under the outer composite
-        Map<UUID, List<ModificationInfos>> nestedInnerMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", actualInnerCompositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        List<UUID> actualNestedInnerSubUuids = nestedInnerMap.get(actualInnerCompositeUuid).stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> actualNestedInnerSubUuids = getContainerModifications(actualInnerCompositeUuid, true).stream().map(ModificationInfos::getUuid).toList();
         assertEquals(2, actualNestedInnerSubUuids.size());
 
         // Expanding the outer composite should recursively include all nested UUIDs
@@ -1293,11 +1209,7 @@ class CompositeControllerTest {
                 status().isOk());
 
         // Fetch actual sub-modification UUID inside the composite (copy created by INSERT)
-        Map<UUID, List<ModificationInfos>> initialMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        List<UUID> actualSubUuids = initialMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> actualSubUuids = getContainerModifications(compositeUuid, true).stream().map(ModificationInfos::getUuid).toList();
         assertEquals(1, actualSubUuids.size());
 
         int rootSizeBefore = networkModificationRepository.getModifications(TEST_GROUP_ID, true).size();
@@ -1310,11 +1222,7 @@ class CompositeControllerTest {
                 .andExpect(status().isOk());
 
         // Composite should now contain 2 sub-modifications; moved mod is appended at the end
-        Map<UUID, List<ModificationInfos>> afterMap = mapper.readValue(
-                mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", compositeUuid))
-                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                new TypeReference<>() { });
-        List<UUID> newSubUuids = afterMap.get(compositeUuid).stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> newSubUuids = getContainerModifications(compositeUuid, true).stream().map(ModificationInfos::getUuid).toList();
         assertEquals(2, newSubUuids.size());
         assertEquals(actualSubUuids.getFirst(), newSubUuids.get(0));
         assertEquals(rootModUuid, newSubUuids.get(1));
@@ -1359,25 +1267,13 @@ class CompositeControllerTest {
                 .andExpect(status().isOk()).andReturn();
         UUID composite0Uuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
-        UUID actualComposite1Uuid = mapper.readValue(
-                        mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", composite0Uuid))
-                                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                        new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
-                .get(composite0Uuid).stream()
+        UUID actualComposite1Uuid = getContainerModifications(composite0Uuid, true).stream()
                 .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
 
-        UUID actualComposite2Uuid = mapper.readValue(
-                        mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", actualComposite1Uuid))
-                                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                        new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
-                .get(actualComposite1Uuid).stream()
+        UUID actualComposite2Uuid = getContainerModifications(actualComposite1Uuid, true).stream()
                 .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
 
-        UUID actualComposite3Uuid = mapper.readValue(
-                        mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", actualComposite2Uuid))
-                                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),
-                        new TypeReference<Map<UUID, List<ModificationInfos>>>() { })
-                .get(actualComposite2Uuid).stream()
+        UUID actualComposite3Uuid = getContainerModifications(actualComposite2Uuid, true).stream()
                 .filter(m -> COMPOSITE_MODIFICATION == m.getType()).map(ModificationInfos::getUuid).findFirst().orElseThrow();
 
         // Case 1: direct child — move composite1 into composite2 (direct child of composite1)
@@ -1494,11 +1390,18 @@ class CompositeControllerTest {
     @Test
     void testReferencedModificationsWriteAccess() throws Exception {
         UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
+        UUID otherSharedCompositeUuid = insertSharedCompositeInSecondGroup(networkModificationRepository.getModifications(TEST_GROUP_ID, false));
 
-        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ));
-        assertEquals(SharedModificationsWriteAccess.SOME_NOT_WRITABLE, getReferencedModificationsWriteAccess(TEST_GROUP2_ID));
+        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID)))
+                .thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ, otherSharedCompositeUuid, PermissionType.READ));
+        assertEquals(SharedModificationsWriteAccess.NONE_WRITABLE, getReferencedModificationsWriteAccess(TEST_GROUP2_ID));
 
-        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.WRITE));
+        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID)))
+                .thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ, otherSharedCompositeUuid, PermissionType.WRITE));
+        assertEquals(SharedModificationsWriteAccess.SOME_WRITABLE, getReferencedModificationsWriteAccess(TEST_GROUP2_ID));
+
+        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID)))
+                .thenReturn(Map.of(sharedCompositeUuid, PermissionType.WRITE, otherSharedCompositeUuid, PermissionType.WRITE));
         assertEquals(SharedModificationsWriteAccess.ALL_WRITABLE, getReferencedModificationsWriteAccess(TEST_GROUP2_ID));
 
         // a container pointing at no shared modification does not even need the permission to be checked
@@ -1518,14 +1421,18 @@ class CompositeControllerTest {
     void testRootNetworkTagsAllowedByTheSharedModificationsTheUserCannotWriteOn() throws Exception {
         UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
         UUID referenceUuid = networkModificationRepository.getModifications(TEST_GROUP2_ID, true).getLast().getUuid();
-        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid), "B", true);
-        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid), "A", false);
+        UUID childUuid = ((CompositeModificationInfos) networkModificationRepository.getModificationInfo(sharedCompositeUuid))
+                .getModificationsInfos().getFirst().getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid, childUuid), "B", true);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid, childUuid), "A", false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid), "C", true);
         when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ));
 
-        // a tag the shared modification is associated with is allowed, whatever its applicability
+        // a tag the shared modification and its content are associated with is allowed, whatever its applicability
         mockMvc.perform(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP2_ID, "A", "B")).andExpect(status().isOk());
 
-        // another one is not, from the container, from the reference or from the shared modification itself
+        // C is not, the shared modification being associated with it but not its content: from the container, from the
+        // reference or from the shared modification itself
         for (var request : List.of(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP2_ID, "A", "C"),
                 areRootNetworkTagsAllowed("modificationUuids", referenceUuid, "C"),
                 areRootNetworkTagsAllowed("sharedUuids", sharedCompositeUuid, "C"))) {
@@ -1562,9 +1469,12 @@ class CompositeControllerTest {
     }
 
     private UUID insertSharedCompositeInSecondGroup() throws Exception {
-        List<ModificationInfos> switchMods = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        return insertSharedCompositeInSecondGroup(createSomeSwitchModifications(TEST_GROUP_ID, 1));
+    }
+
+    private UUID insertSharedCompositeInSecondGroup(List<ModificationInfos> content) throws Exception {
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "shared")
-                        .content(mapper.writeValueAsString(switchMods.stream().map(ModificationInfos::getUuid).toList()))
+                        .content(mapper.writeValueAsString(content.stream().map(ModificationInfos::getUuid).toList()))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
@@ -1594,12 +1504,6 @@ class CompositeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].editable").value(false));
 
-        // and so does the same container read among several others
-        mockMvc.perform(get(URI_GET_CONTAINERS_NETWORK_MODIFICATIONS + "?uuids={id}", TEST_GROUP2_ID)
-                        .header(HEADER_USER_ID, TEST_USER_ID))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$['" + TEST_GROUP2_ID + "'][0].editable").value(false));
-
         // and so does the reference read on its own, unfolded
         mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/" + referenceUuid).header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk())
@@ -1618,6 +1522,39 @@ class CompositeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].editable").doesNotExist());
         verifyNoInteractions(directoryService);
+    }
+
+    @Test
+    void testTheMetadataOfAContainerHoldsTheContentOfItsCompositesAndReferences() throws Exception {
+        UUID sharedCompositeUuid = modificationRepository.save(ModificationEntity.fromDTO(CompositeModificationInfos.builder().name("shared")
+                .modificationsInfos(List.of(EquipmentAttributeModificationInfos.builder().equipmentId("shared switch").equipmentAttributeName("open")
+                        .equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).stashed(false).build()))
+                .stashed(false).build())).getId();
+        UUID groupUuid = UUID.randomUUID();
+        networkModificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(CompositeModificationInfos.builder().name("composite")
+                .modificationsInfos(List.of(ModificationReferenceInfos.builder().referenceType(ModificationReferenceInfos.Type.COMPOSITE)
+                        .referencedId(sharedCompositeUuid).stashed(false).build()))
+                .stashed(false).build())));
+        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.WRITE));
+
+        // the reference nested in the composite comes with the shared composite and its content, and tells it is editable
+        mockMvc.perform(get("/v1/containers/" + groupUuid + "/network-modifications?onlyMetadata=true")
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk())
+                // the reference stands for the shared composite, one level more
+                .andExpect(jsonPath("$[0].sublevelCount").value(2))
+                .andExpect(jsonPath("$[0].modificationsInfos[0].sublevelCount").value(1))
+                .andExpect(jsonPath("$[0].modificationsInfos[0].referencedId").value(sharedCompositeUuid.toString()))
+                .andExpect(jsonPath("$[0].modificationsInfos[0].editable").value(true))
+                .andExpect(jsonPath("$[0].modificationsInfos[0].referencedInfos.modificationsInfos[0].equipmentId").doesNotExist())
+                .andExpect(jsonPath("$[0].modificationsInfos[0].referencedInfos.modificationsInfos[0].type").value(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION.name()));
+        verify(directoryService, times(1)).getElementsPermissions(Set.of(sharedCompositeUuid), TEST_USER_ID);
+    }
+
+    private List<ModificationInfos> getContainerModifications(UUID containerUuid, boolean onlyMetadata) throws Exception {
+        return mapper.readValue(mockMvc.perform(get(URI_GET_CONTAINER_NETWORK_MODIFICATIONS, containerUuid)
+                        .queryParam("onlyMetadata", String.valueOf(onlyMetadata)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), new TypeReference<>() { });
     }
 
     private boolean hasReferences(UUID... containerUuids) throws Exception {

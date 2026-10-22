@@ -20,7 +20,6 @@ import lombok.NonNull;
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.modifications.AbstractModification;
@@ -28,8 +27,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.entities.ModificationContainerType;
-import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -53,8 +51,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.gridsuite.modification.ModificationType.MODIFICATION_REFERENCE;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
+import static org.gridsuite.modification.server.repositories.NetworkModificationRepository.MODIFICATION_ID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -124,14 +124,6 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public Map<UUID, List<ModificationInfos>> getNetworkModifications(List<UUID> containerUuids, boolean onlyMetadata, StashedFilter stashedFilter) {
-        Map<UUID, List<ModificationInfos>> modifications = new LinkedHashMap<>();
-        containerUuids.forEach(containerUuid -> modifications.put(containerUuid,
-                networkModificationRepository.getModifications(containerUuid, onlyMetadata, stashedFilter)));
-        return modifications;
-    }
-
-    @Transactional(readOnly = true)
     public NetworkModificationExportInfos getNetworkModificationsInfosToExport(UUID containerUuid) {
         List<ModificationInfos> allModifications = networkModificationRepository.getModifications(containerUuid, false, StashedFilter.UNSTASHED);
         List<ModificationInfos> exportable = new ArrayList<>();
@@ -158,18 +150,8 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public void verifyModifications(UUID containerUuid, Set<UUID> modificationUuids) {
         networkModificationRepository.assertContainerExists(containerUuid);
-        List<ModificationEntity> rootModifications = networkModificationRepository.getBaseModifications(containerUuid);
-
-        Set<UUID> childrenUuids = rootModifications.stream()
-            .map(ModificationEntity::getId)
-            .collect(Collectors.toSet());
-
-        childrenUuids.addAll(networkModificationRepository.findAllChildrenUuids(
-            rootModifications.stream()
-                .filter(m -> ModificationType.COMPOSITE_MODIFICATION.name().equals(m.getType()))
-                .map(ModificationEntity::getId)
-                .toList())
-        );
+        HashSet<UUID> childrenUuids = new HashSet<>(modificationRepository.findAllChildrenMetadata(containerUuid, false)
+                .stream().map(ModificationRepository.ChildModificationMetadata::getId).toList());
 
         if (!childrenUuids.containsAll(modificationUuids)) {
             throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
@@ -405,7 +387,8 @@ public class NetworkModificationService {
     }
 
     /**
-     * @return whether the given containers point to shared modifications and, if so, whether the user can write on all of them
+     * @return whether the given containers point to shared modifications and, if so, whether the user can write on all,
+     * some or none of them
      */
     @Transactional(readOnly = true)
     public SharedModificationsWriteAccess getReferencedModificationsWriteAccess(@NonNull List<UUID> containerUuids, @NonNull String userId) {
@@ -413,9 +396,14 @@ public class NetworkModificationService {
         if (sharedUuids.isEmpty()) {
             return SharedModificationsWriteAccess.NO_SHARED_MODIFICATION;
         }
-        return getNotWritableUuids(sharedUuids, userId).isEmpty()
-                ? SharedModificationsWriteAccess.ALL_WRITABLE
-                : SharedModificationsWriteAccess.SOME_NOT_WRITABLE;
+        int notWritableCount = getNotWritableUuids(sharedUuids, userId).size();
+        if (notWritableCount == 0) {
+            return SharedModificationsWriteAccess.ALL_WRITABLE;
+        }
+        if (notWritableCount == sharedUuids.size()) {
+            return SharedModificationsWriteAccess.NONE_WRITABLE;
+        }
+        return SharedModificationsWriteAccess.SOME_WRITABLE;
     }
 
     public void assertReferencedModificationsAreWritable(@NonNull List<UUID> containerUuids, @NonNull String userId) {
@@ -501,9 +489,6 @@ public class NetworkModificationService {
         }
     }
 
-    /**
-     * @return the root network tags the modifications are applied on, which they must be associated with beforehand
-     */
     private static List<String> rootNetworkTagsOf(List<ModificationApplicationContext> applicationContexts) {
         return applicationContexts.stream().map(ModificationApplicationContext::rootNetworkTag).filter(Objects::nonNull).distinct().toList();
     }
@@ -678,6 +663,35 @@ public class NetworkModificationService {
         List<UUID> ids = duplicateModifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, duplicateModifications, applicationContexts).thenApply(result ->
             new NetworkModificationsResult(ids, result));
+    }
+
+    @Transactional
+    public void unshareModification(@NonNull UUID referenceModificationUuid, String userId) {
+        ModificationEntity referenceEntity = modificationRepository.findById(referenceModificationUuid)
+                .orElseThrow(() -> networkModificationRepository.getModificationNotFoundException(referenceModificationUuid.toString()));
+        if (!referenceEntity.getType().equals(MODIFICATION_REFERENCE.name())) {
+            // Only a reference modification may be unshared
+            throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
+                String.format(MODIFICATION_BAD_TYPE.messageTemplate(), referenceModificationUuid, referenceEntity.getType(), MODIFICATION_REFERENCE),
+                Map.of(MODIFICATION_ID, referenceModificationUuid.toString(), "modificationType", referenceEntity.getType(), "expectedModificationType", MODIFICATION_REFERENCE));
+        }
+
+        // copy referenced modification
+        ModificationInfos referencedCompositeInfos = networkModificationRepository.getModificationInfo(((ModificationReferenceEntity) referenceEntity).getReferencedId());
+        ModificationEntity copiedComposite = ModificationEntity.fromDTO(referencedCompositeInfos);
+
+        // put the new copied composite and delete the reference
+        AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
+        containerEntity.addModification(copiedComposite, referenceEntity.getModificationsOrder());
+        modificationRepository.save(copiedComposite);
+        deleteNetworkModifications(containerEntity.isGroup() ? containerEntity.getId() : null, List.of(referenceModificationUuid));
+
+        // remove the reference from directory server
+        List<ModificationReferenceData> referenceData = List.of(
+                new ModificationReferenceData(referenceModificationUuid,
+                        ((ModificationReferenceEntity) referenceEntity).getReferencedId(),
+                        containerEntity.getId()));
+        directoryService.removeElementReferences(referenceData, userId);
     }
 
     /**
