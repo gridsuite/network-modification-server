@@ -7,9 +7,9 @@
 package org.gridsuite.modification.server.service;
 
 import lombok.NonNull;
+import org.gridsuite.modification.server.dto.ElementReferenceAction;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.ElementReferenceAction;
 import org.gridsuite.modification.server.dto.WorkflowType;
 import org.gridsuite.modification.server.utils.PostCompletion;
 import org.slf4j.Logger;
