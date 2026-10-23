@@ -52,12 +52,16 @@ class NetworkModificationServiceTest {
     @MockitoBean
     private NetworkStoreService networkStoreService;
 
+    @MockitoBean
+    private NotificationService notificationService;
+
     @Test
     void shouldMoveModificationOutOfCompositeContainerWhenStashed() {
+        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
         UUID groupUuid = UUID.randomUUID();
         CompositeModificationInfos compositeModificationInfos = compositeModification(
                 UUID.randomUUID(),
-                List.of(dummyModification(UUID.randomUUID()))
+                List.of(dummyModification(UUID.randomUUID()), referenceTo(sharedUuid))
         );
 
         List<ModificationInfos> saved = networkModificationRepository.saveModifications(
@@ -65,14 +69,17 @@ class NetworkModificationServiceTest {
         CompositeModificationInfos savedComposite = (CompositeModificationInfos) saved.getFirst();
         UUID compositeUuid = savedComposite.getUuid();
         UUID childUuid = savedComposite.getModificationsInfos().getFirst().getUuid();
+        UUID referenceUuid = savedComposite.getModificationsInfos().get(1).getUuid();
 
         // sanity check: the modification is nested inside the composite before stashing
         assertEquals(compositeUuid, modificationRepository.findCompositeContainerIdByModificationId(childUuid));
 
-        networkModificationService.stashNetworkModifications(groupUuid, List.of(childUuid), TEST_USER_ID);
+        networkModificationService.stashNetworkModifications(groupUuid, List.of(childUuid, referenceUuid), TEST_USER_ID);
 
         // the modification was moved out of the composite, into the group, before being stashed
         assertNull(modificationRepository.findCompositeContainerIdByModificationId(childUuid));
+        // the reference is not stashed but deleted
+        assertFalse(modificationRepository.existsById(referenceUuid));
         assertEquals(1, networkModificationRepository.getModificationsCount(groupUuid, true));
         assertTrue(networkModificationRepository.getModifications(groupUuid, true, StashedFilter.STASHED).stream()
                 .anyMatch(modificationInfos -> modificationInfos.getUuid().equals(childUuid)));
