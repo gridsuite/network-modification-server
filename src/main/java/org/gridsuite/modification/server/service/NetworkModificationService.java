@@ -34,6 +34,7 @@ import org.gridsuite.modification.server.modifications.ModificationTypeWithPrelo
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
@@ -44,6 +45,8 @@ import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -83,6 +86,8 @@ public class NetworkModificationService {
 
     private final DirectoryService directoryService;
 
+    private final ApplicationEventPublisher eventPublisher;
+
     static final String NETWORK_UUID = "networkUuid.keyword";
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
@@ -100,7 +105,8 @@ public class NetworkModificationService {
                                       ElasticsearchOperations elasticsearchOperations,
                                       ModificationRepository modificationRepository,
                                       FilterService filterService,
-                                      DirectoryService directoryService) {
+                                      DirectoryService directoryService,
+                                      ApplicationEventPublisher eventPublisher) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -112,6 +118,7 @@ public class NetworkModificationService {
         this.modificationRepository = modificationRepository;
         this.filterService = filterService;
         this.directoryService = directoryService;
+        this.eventPublisher = eventPublisher;
     }
 
     public List<UUID> getModificationGroups() {
@@ -521,7 +528,7 @@ public class NetworkModificationService {
     }
 
     /**
-     * Unlinks the deleted modification references from their shared modifications
+     * Unlinks the deleted modification references from their shared modifications once their deletion is committed
      */
     private void removeDeletedElementReferences(List<ModificationReferenceData> deletedReferences, String userId) {
         if (deletedReferences.isEmpty()) {
@@ -530,7 +537,15 @@ public class NetworkModificationService {
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The user is required to delete modification references");
         }
-        directoryService.removeElementReferences(deletedReferences, userId);
+        eventPublisher.publishEvent(new ModificationReferencesDeletedEvent(deletedReferences, userId));
+    }
+
+    /**
+     * After the commit, not to hold the deletion transaction during the calls to directory-server
+     */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onModificationReferencesDeleted(ModificationReferencesDeletedEvent event) {
+        directoryService.removeElementReferences(event.references(), event.userId());
     }
 
     public CompletableFuture<NetworkModificationsResult> moveModifications(
@@ -848,4 +863,6 @@ public class NetworkModificationService {
         }
         return bbsIds;
     }
+
+    record ModificationReferencesDeletedEvent(List<ModificationReferenceData> references, String userId) { }
 }
