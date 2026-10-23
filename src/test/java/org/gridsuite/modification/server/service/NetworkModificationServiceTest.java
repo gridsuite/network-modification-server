@@ -23,7 +23,10 @@ import org.gridsuite.modification.server.repositories.NetworkModificationReposit
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 import java.util.Map;
@@ -275,7 +278,8 @@ class NetworkModificationServiceTest {
                 .build();
         networkModificationRepository.saveModifications(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(ref)));
 
-        doThrow(new RuntimeException("Forbidden")).when(directoryService).checkPermission(any(), eq("userId"), eq(PermissionType.WRITE));
+        doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", HttpHeaders.EMPTY, new byte[0], null))
+                .when(directoryService).checkPermission(any(), eq("userId"), eq(PermissionType.WRITE));
 
         NetworkModificationServerException ex = assertThrows(
                 NetworkModificationServerException.class,
@@ -294,7 +298,8 @@ class NetworkModificationServiceTest {
                 UUID.randomUUID(),
                 List.of(ModificationEntity.fromDTO(referenceTo(sharedCompositeUuid))));
 
-        doThrow(new RuntimeException("Forbidden")).when(directoryService).checkPermission(any(), eq("userId"), eq(PermissionType.WRITE));
+        doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", HttpHeaders.EMPTY, new byte[0], null))
+                .when(directoryService).checkPermission(any(), eq("userId"), eq(PermissionType.WRITE));
 
         NetworkModificationServerException ex = assertThrows(
                 NetworkModificationServerException.class,

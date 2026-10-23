@@ -259,10 +259,13 @@ public class NetworkModificationService {
                 .filter(networkModificationRepository::isModificationReferenced)
                 .forEach(uuids::add);
 
+        // add also referenced modifications
+        uuids.addAll(modificationRepository.findReferencedModificationIds(modificationUuids));
+
         if (!uuids.isEmpty()) {
             try {
                 directoryService.checkPermission(new ArrayList<>(uuids), userId, PermissionType.WRITE);
-            } catch (Exception e) {
+            } catch (HttpClientErrorException.Forbidden _) {
                 throw new NetworkModificationServerException(MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED);
             }
         }

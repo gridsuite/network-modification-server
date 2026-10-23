@@ -719,7 +719,8 @@ class CompositeControllerTest {
                 .build();
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(modificationReferenceInfo)));
 
-        doThrow(new RuntimeException("Forbidden")).when(directoryService).checkPermission(any(), eq(TEST_USER_ID), eq(PermissionType.WRITE));
+        doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null))
+                .when(directoryService).checkPermission(any(), eq(TEST_USER_ID), eq(PermissionType.WRITE));
 
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeModificationUuid + "/replace")
                         .param("name", "new name")
