@@ -126,6 +126,32 @@ class NetworkModificationServiceTest {
                 "any of the containers holding one is enough");
     }
 
+    @Test
+    void shouldGetContainersWithReferencesNestedInComposites() {
+        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
+        UUID groupWithoutReferenceUuid = UUID.randomUUID();
+        saveComposite(groupWithoutReferenceUuid, List.of(dummyModification(UUID.randomUUID())));
+        // outer ── inner ── reference to the shared composite
+        UUID groupWithReferenceUuid = UUID.randomUUID();
+        UUID outerUuid = saveComposite(groupWithReferenceUuid,
+                List.of(compositeModification(UUID.randomUUID(), List.of(referenceTo(sharedUuid)))));
+        // the only reference of this group is in the bin
+        UUID groupWithStashedReferenceUuid = UUID.randomUUID();
+        networkModificationRepository.saveModifications(groupWithStashedReferenceUuid, List.of(ModificationEntity.fromDTO(
+                CompositeModificationInfos.builder()
+                        .uuid(UUID.randomUUID())
+                        .modificationsInfos(List.of(referenceTo(sharedUuid)))
+                        .stashed(true)
+                        .build())));
+
+        assertTrue(networkModificationService.getContainersWithModificationReferences(List.of()).isEmpty(), "no container, nothing to look into");
+        assertEquals(List.of(groupWithReferenceUuid), networkModificationService.getContainersWithModificationReferences(
+                List.of(groupWithoutReferenceUuid, groupWithReferenceUuid, groupWithStashedReferenceUuid)),
+                "a reference nested two composites deep, a stashed one does not count");
+        assertEquals(List.of(outerUuid), networkModificationService.getContainersWithModificationReferences(List.of(outerUuid)),
+                "a composite is a container too");
+    }
+
     /**
      * @return the uuid of a composite holding the given content, saved in the given group
      */

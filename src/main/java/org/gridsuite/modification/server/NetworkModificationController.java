@@ -333,6 +333,15 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.hasModificationReferences(containerUuids));
     }
 
+    // POST as the uuids of a whole study tree would exceed the url length limit
+    @PostMapping(value = "/containers/reference-modifications", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get those of the containers (groups or composites) holding an unstashed modification reference, including nested in their composites")
+    @ApiResponse(responseCode = "200", description = "The containers holding at least one modification reference")
+    public ResponseEntity<List<UUID>> getContainersWithModificationReferences(
+            @Parameter(description = "Container UUIDs") @RequestBody List<UUID> containerUuids) {
+        return ResponseEntity.ok().body(networkModificationService.getContainersWithModificationReferences(containerUuids));
+    }
+
     @GetMapping(value = "/containers/references/authorized")
     @Operation(summary = "Check the write permission on the shared modifications the containers (groups or composites) point to")
     @ApiResponses(value = {
@@ -349,10 +358,20 @@ public class NetworkModificationController {
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Updates the metadata of network modifications")
     @ApiResponse(responseCode = "200", description = "The metadata of the network modifications has been successfully updated")
-    public ResponseEntity<Void> updateNetworkModificationMetadata(
+    public ResponseEntity<Void> updateNetworkModificationActivation(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @RequestBody ModificationInfos metadata, @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata, userId);
+        networkModificationService.updateNetworkModificationActivation(networkModificationUuids, metadata, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping(value = "/network-modifications/{uuid}/name-and-description", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Update a modification name and description")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
+    public ResponseEntity<Void> updateModificationNameAndDescription(
+            @PathVariable("uuid") UUID modificationUuid,
+            @Parameter(description = "New composite metadata") @RequestBody ModificationMetadata modificationMetadata) {
+        networkModificationService.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
         return ResponseEntity.ok().build();
     }
 
@@ -372,8 +391,9 @@ public class NetworkModificationController {
     public ResponseEntity<Void> updateRootNetworkApplicability(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Root network tag") @RequestParam("rootNetworkTag") String rootNetworkTag,
-            @Parameter(description = "Applicability on this root network tag") @RequestParam("applicable") boolean applicable) {
-        networkModificationService.updateRootNetworkApplicability(networkModificationUuids, rootNetworkTag, applicable);
+            @Parameter(description = "Applicability on this root network tag") @RequestParam("applicable") boolean applicable,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.updateRootNetworkApplicability(networkModificationUuids, rootNetworkTag, applicable, userId);
         return ResponseEntity.ok().build();
     }
 
