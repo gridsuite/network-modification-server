@@ -1491,6 +1491,7 @@ class CompositeControllerTest {
     @Test
     void testRootNetworkTagsAllowedByTheSharedModificationsTheUserCannotWriteOn() throws Exception {
         UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
+        UUID referenceUuid = networkModificationRepository.getModifications(TEST_GROUP2_ID, true).getLast().getUuid();
         UUID childUuid = ((CompositeModificationInfos) networkModificationRepository.getModificationInfo(sharedCompositeUuid))
                 .getModificationsInfos().getFirst().getUuid();
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid, childUuid), "B", true);
@@ -1499,28 +1500,33 @@ class CompositeControllerTest {
         when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ));
 
         // a tag the shared modification and its content are associated with is allowed, whatever its applicability
-        mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP2_ID, "A", "B")).andExpect(status().isOk());
+        mockMvc.perform(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP2_ID, "A", "B")).andExpect(status().isOk());
 
-        // C is not: the shared modification is associated with it, but not its content
-        mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP2_ID, "A", "C")).andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.businessErrorCode").value("modification.rootNetworkTagsForbiddenByShared"))
-                .andExpect(jsonPath("$.businessErrorValues.allowedTags").value("A, B"))
-                .andExpect(jsonPath("$.businessErrorValues.allowedTagsCount").value(2));
+        // C is not, the shared modification being associated with it but not its content: from the container, from the
+        // reference or from the shared modification itself
+        for (var request : List.of(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP2_ID, "A", "C"),
+                areRootNetworkTagsAllowed("modificationUuids", referenceUuid, "C"),
+                areRootNetworkTagsAllowed("sharedUuids", sharedCompositeUuid, "C"))) {
+            mockMvc.perform(request).andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.businessErrorCode").value("modification.rootNetworkTagsForbiddenByShared"))
+                    .andExpect(jsonPath("$.businessErrorValues.allowedTags").value("A, B"))
+                    .andExpect(jsonPath("$.businessErrorValues.allowedTagsCount").value(2));
+        }
 
         // a user who can write on the shared modification may associate it with any tag
         when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.WRITE));
-        mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP2_ID, "C")).andExpect(status().isOk());
+        mockMvc.perform(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP2_ID, "C")).andExpect(status().isOk());
 
         // a container pointing at no shared modification does not even need the permission to be checked
         clearInvocations(directoryService);
-        mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP_ID, "C")).andExpect(status().isOk());
+        mockMvc.perform(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP_ID, "C")).andExpect(status().isOk());
         verifyNoInteractions(directoryService);
     }
 
-    private MockHttpServletRequestBuilder areRootNetworkTagsAllowed(UUID containerUuid, String... tags) throws Exception {
+    private MockHttpServletRequestBuilder areRootNetworkTagsAllowed(String uuidsField, UUID uuid, String... tags) throws Exception {
         return post("/v1/containers/root-network-tags/authorized")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(new RootNetworkTagsCheckInfos(List.of(containerUuid), List.of(tags))))
+                .content(mapper.writeValueAsString(Map.of(uuidsField, List.of(uuid), "tags", List.of(tags))))
                 .header(HEADER_USER_ID, TEST_USER_ID);
     }
 
