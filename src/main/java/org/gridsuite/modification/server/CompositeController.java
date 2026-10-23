@@ -74,7 +74,7 @@ public class CompositeController {
             @RequestHeader(HEADER_USER_ID) String userId,
             @RequestBody List<UUID> assembledModificationsUuids) {
         return ResponseEntity.ok().body(
-                networkModificationService.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids, nodeContainerUuid, userId)
+                networkModificationService.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids.stream().distinct().toList(), nodeContainerUuid, userId)
         );
     }
 
