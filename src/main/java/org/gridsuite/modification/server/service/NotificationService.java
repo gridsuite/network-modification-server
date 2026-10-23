@@ -100,9 +100,9 @@ public class NotificationService {
      * or deleted, so it can keep the references registered on the shared elements in directory-server up to date.
      */
     @PostCompletion
-    public void emitModificationReferencesChanged(@NonNull ElementReferenceAction action, @NonNull UUID groupUuid,
+    public void emitModificationReferencesChanged(@NonNull ElementReferenceAction action, UUID groupUuid,
                                                   @NonNull List<ModificationReferenceData> references, @NonNull String userId) {
-        if (references.isEmpty()) {
+        if (groupUuid == null || references.isEmpty()) {
             return;
         }
         Message<List<ModificationReferenceData>> message = MessageBuilder.withPayload(references)

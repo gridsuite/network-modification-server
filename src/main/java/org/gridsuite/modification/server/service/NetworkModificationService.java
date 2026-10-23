@@ -525,9 +525,7 @@ public class NetworkModificationService {
     public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids, @NonNull String userId) {
         List<ModificationReferenceData> references = getModificationsReferencesToDelete(groupUuid, modificationsUuids);
         handleDeleteNetworkModifications(groupUuid, modificationsUuids);
-        if (!references.isEmpty()) {
-            notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid, references, userId);
-        }
+        notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid, references, userId);
     }
 
     private List<ModificationReferenceData> getModificationsReferencesToDelete(UUID groupUuid, List<UUID> modificationsUuids) {
@@ -648,9 +646,7 @@ public class NetworkModificationService {
         handleDeleteNetworkModifications(containerEntity.isGroup() ? containerEntity.getId() : null, List.of(referenceModificationUuid));
 
         // ask the owner of the group to remove the reference from directory server
-        if (groupUuid != null) {
-            emitModificationReferencesChanged(groupUuid, (ModificationReferenceEntity) referenceEntity, userId);
-        }
+        emitModificationReferencesChanged(groupUuid, (ModificationReferenceEntity) referenceEntity, userId);
     }
 
     private void emitModificationReferencesChanged(UUID groupUuid, ModificationReferenceEntity referenceEntity, String userId) {
@@ -691,10 +687,8 @@ public class NetworkModificationService {
 
         // the references among the assembled modifications are now located in the new composite
         UUID groupUuid = modificationRepository.findGroupIdByModificationId(newComposite.getUuid());
-        if (groupUuid != null) {
-            notificationService.emitModificationReferencesChanged(ElementReferenceAction.UPDATE, groupUuid,
-                    getModificationsReferencesNonTransactional(assembledModificationsUuids, false), userId);
-        }
+        notificationService.emitModificationReferencesChanged(ElementReferenceAction.UPDATE, groupUuid,
+                getModificationsReferencesNonTransactional(assembledModificationsUuids, false), userId);
 
         // Collect referenced ancestor composites before assembling, since assembled modifications are moved out of their composite
         emitReferencedAncestorsUpdated(assembledModificationsUuids, userId);
