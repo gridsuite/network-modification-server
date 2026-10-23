@@ -416,7 +416,8 @@ public class NetworkModificationService {
 
     public CompletableFuture<NetworkModificationsResult> createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo,
             @NonNull List<ModificationApplicationContext> applicationContexts) {
-        List<ModificationInfos> modifications = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
+        List<ModificationInfos> modifications = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo),
+            rootNetworkTagsOf(applicationContexts));
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(groupUuid, modifications, applicationContexts).thenApply(results ->
             new NetworkModificationsResult(ids, results));
@@ -430,6 +431,10 @@ public class NetworkModificationService {
                 String.format(MODIFICATION_INFOS_ERROR.messageTemplate(), e.getMessage()),
                 Map.of("errorMessage", e.getMessage()));
         }
+    }
+
+    private static List<String> rootNetworkTagsOf(List<ModificationApplicationContext> applicationContexts) {
+        return applicationContexts.stream().map(ModificationApplicationContext::rootNetworkTag).filter(Objects::nonNull).distinct().toList();
     }
 
     /**
@@ -555,8 +560,10 @@ public class NetworkModificationService {
                 : new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP);
     }
 
-    public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid, UUID nodeContainerUuid, UUID studyContainerUuid, String userId) {
-        networkModificationRepository.duplicateUnstashedModifications(sourceGroupUuid, targetGroupUuid);
+    public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid, UUID nodeContainerUuid, UUID studyContainerUuid,
+                               @NonNull List<String> rootNetworkTags, String userId) {
+        // the copies may come from another study, using other root network tags
+        networkModificationRepository.duplicateUnstashedModifications(sourceGroupUuid, targetGroupUuid, rootNetworkTags);
         createElementReferences(targetGroupUuid, nodeContainerUuid, studyContainerUuid, userId);
     }
 
@@ -595,7 +602,8 @@ public class NetworkModificationService {
         if (originGroupUuid != null && !modificationsUuids.isEmpty()) { // Duplicate modifications from a group or from a list only
             throw new NetworkModificationServerException(MODIFICATION_DUPLICATION_ARGUMENT_ERROR, MODIFICATION_DUPLICATION_ARGUMENT_ERROR.messageTemplate());
         }
-        List<ModificationInfos> duplicateModifications = networkModificationRepository.saveDuplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids);
+        List<ModificationInfos> duplicateModifications = networkModificationRepository.saveDuplicateModifications(targetGroupUuid, originGroupUuid,
+            modificationsUuids, rootNetworkTagsOf(applicationContexts));
         List<UUID> ids = duplicateModifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, duplicateModifications, applicationContexts).thenApply(result ->
             new NetworkModificationsResult(ids, result));
@@ -637,7 +645,8 @@ public class NetworkModificationService {
             @NonNull UUID targetGroupUuid,
             @NonNull Pair<List<CompositeInfos>, List<ModificationApplicationContext>> modificationContextInfos) {
         List<UUID> compositesUuids = modificationContextInfos.getFirst().stream().map(CompositeInfos::id).toList();
-        List<ModificationInfos> modifications = networkModificationRepository.extractModificationsFromCompositesAndSave(targetGroupUuid, compositesUuids);
+        List<ModificationInfos> modifications = networkModificationRepository.extractModificationsFromCompositesAndSave(targetGroupUuid, compositesUuids,
+            rootNetworkTagsOf(modificationContextInfos.getSecond()));
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, modifications, modificationContextInfos.getSecond()).thenApply(result ->
             new NetworkModificationsResult(ids, result));
@@ -646,8 +655,8 @@ public class NetworkModificationService {
     public CompletableFuture<NetworkModificationsResult> insertCompositeModifications(
             @NonNull UUID targetGroupUuid,
             @NonNull Pair<List<CompositeInfos>, List<ModificationApplicationContext>> modificationContextInfos) {
-        List<ModificationInfos> modifications = networkModificationRepository.insertCompositeModifications(
-                targetGroupUuid, modificationContextInfos.getFirst());
+        List<ModificationInfos> modifications = networkModificationRepository.insertCompositeModifications(targetGroupUuid,
+            modificationContextInfos.getFirst(), rootNetworkTagsOf(modificationContextInfos.getSecond()));
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, modifications, modificationContextInfos.getSecond()).thenApply(result ->
             new NetworkModificationsResult(ids, result));
