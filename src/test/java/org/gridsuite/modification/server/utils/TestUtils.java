@@ -49,6 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public final class TestUtils {
 
     private static final long TIMEOUT = 100;
+    public static final String EQUIPMENT_TYPE = "equipmentType";
 
     private TestUtils() {
         throw new IllegalCallerException("Utility class");
