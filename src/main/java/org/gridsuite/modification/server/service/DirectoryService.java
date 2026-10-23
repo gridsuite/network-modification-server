@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -102,11 +103,15 @@ public class DirectoryService {
                 .buildAndExpand(sharedElementUuid, referenceUuid)
                 .toUriString();
 
-        restClient.delete()
-                .uri(getDirectoryServerBaseUri() + path)
-                .header(HEADER_USER_ID, userId)
-                .retrieve()
-                .toBodilessEntity();
+        try {
+            restClient.delete()
+                    .uri(getDirectoryServerBaseUri() + path)
+                    .header(HEADER_USER_ID, userId)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (HttpClientErrorException.NotFound _) {
+            // the shared element is gone, and its references with it
+        }
     }
 
     /**
