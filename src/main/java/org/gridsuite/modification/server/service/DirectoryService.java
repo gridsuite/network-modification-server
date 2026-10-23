@@ -14,12 +14,15 @@ import org.gridsuite.modification.server.dto.PermissionType;
 import org.gridsuite.modification.server.dto.ReferenceAttributes;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,27 +50,28 @@ public class DirectoryService {
     }
 
     /**
-     * updates a reference from a shared modification in directory server so it points to a new container.
-     * the row to update is identified by elementUuid (the referenced shared element) and referenceUuid (the modification-reference itself)
+     * updates references from a shared modification in directory server in a single call so they point to a new container.
+     * the rows to update are identified by elementUuid (the referenced shared element) and, for each entry, the referenceUuid
+     * carried by its ReferenceAttributes (the modification-reference itself)
      * @param elementUuid uuid of the referenced shared element in the directory-server
-     * @param referenceAttributes new attributes of the modification-reference including its own referenceUuid which doesn't change
-     * @param userId id of the user who moves the reference
+     * @param referencesAttributes new attributes of the modification-references including their own referenceUuid which doesn't change
+     * @param userId id of the user who moves the references
      */
-    public void updateElementReference(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, @NonNull String userId) {
+    public void updateElementReferences(@NonNull UUID elementUuid, @NonNull List<ReferenceAttributes> referencesAttributes, @NonNull String userId) {
         var path = UriComponentsBuilder.fromPath(
-                        DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references/{referenceUuid}")
-                .buildAndExpand(elementUuid, referenceAttributes.getReferenceId())
+                        DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references")
+                .buildAndExpand(elementUuid)
                 .toUriString();
 
         restClient.put()
                 .uri(getDirectoryServerBaseUri() + path).header(HEADER_USER_ID, userId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(referenceAttributes)
+                .body(referencesAttributes)
                 .retrieve()
                 .toBodilessEntity();
     }
 
-    public void createElementReference(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, @NonNull String userId) {
+    public void createElementReferences(@NonNull UUID elementUuid, @NonNull List<ReferenceAttributes> referencesAttributes, @NonNull String userId) {
         var path = UriComponentsBuilder.fromPath(
                         DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references")
                 .buildAndExpand(elementUuid)
@@ -77,34 +81,42 @@ public class DirectoryService {
                 .uri(getDirectoryServerBaseUri() + path)
                 .header(HEADER_USER_ID, userId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(referenceAttributes)
+                .body(referencesAttributes)
                 .retrieve()
                 .toBodilessEntity();
     }
 
     public void removeElementReferences(@NonNull List<ModificationReferenceData> referencesData, String userId) {
-        //TODO modify endpoint in directory-server to allow batch deletion of references
-        referencesData.forEach(referenceData -> removeElementReference(referenceData.referencedId(), referenceData.modificationUuid(), userId));
+        // one call per referenced shared element, carrying all its references to remove
+        Map<UUID, List<UUID>> referenceUuidsByReferencedId = new LinkedHashMap<>();
+        for (ModificationReferenceData referenceData : referencesData) {
+            referenceUuidsByReferencedId.computeIfAbsent(referenceData.referencedId(), k -> new ArrayList<>()).add(referenceData.modificationUuid());
+        }
+        for (Map.Entry<UUID, List<UUID>> entry : referenceUuidsByReferencedId.entrySet()) {
+            removeElementReferences(entry.getKey(), entry.getValue(), userId);
+        }
     }
 
     /**
-     * remove reference from the shared modification in directory server
-     * @param referenceUuid uuid of the composite or group where the 'Modification reference' is located
+     * remove references from the shared modification in directory server in a single call
+     * @param referenceUuids uuids of the 'Modification references' to remove
      * @param userId id of the user who caused the unreferencing
      * @param sharedElementUuid uuid of the referenced shared element in the directory-server
      */
-    private void removeElementReference(UUID sharedElementUuid, UUID referenceUuid, String userId) {
-        Objects.requireNonNull(referenceUuid);
+    private void removeElementReferences(UUID sharedElementUuid, List<UUID> referenceUuids, String userId) {
+        Objects.requireNonNull(referenceUuids);
         Objects.requireNonNull(sharedElementUuid);
 
         var path = UriComponentsBuilder.fromPath(
-                        DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references/{referenceUuid}")
-                .buildAndExpand(sharedElementUuid, referenceUuid)
+                        DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references")
+                .buildAndExpand(sharedElementUuid)
                 .toUriString();
 
-        restClient.delete()
+        restClient.method(HttpMethod.DELETE)
                 .uri(getDirectoryServerBaseUri() + path)
                 .header(HEADER_USER_ID, userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(referenceUuids)
                 .retrieve()
                 .toBodilessEntity();
     }
@@ -154,7 +166,9 @@ public class DirectoryService {
     }
 
     public void createElementReferences(@NonNull UUID nodeContainerUuid, @NonNull UUID studyRootContainerUuid, String userId, List<ModificationReferenceData> referencesData) {
-        referencesData.forEach(ref -> {
+        // one call per referenced shared element, carrying all its references to create
+        Map<UUID, List<ReferenceAttributes>> referencesAttributesByReferencedId = new LinkedHashMap<>();
+        for (ModificationReferenceData ref : referencesData) {
             // local ModificationReferenceData data don't hold the node UUID so when containerId is null it means that this reference modification is at the root level
             // otherwise, the reference modification is inside a composite
             boolean insideComposite = ref.containerId() != null;
@@ -164,7 +178,10 @@ public class DirectoryService {
                     insideComposite ? ref.containerId() : nodeContainerUuid,
                     insideComposite ? ReferenceAttributes.ReferenceType.STUDY_NODE_NETWORK_MODIFICATION
                             : ReferenceAttributes.ReferenceType.STUDY_NODE);
-            createElementReference(ref.referencedId(), referenceAttributes, userId);
-        });
+            referencesAttributesByReferencedId.computeIfAbsent(ref.referencedId(), k -> new ArrayList<>()).add(referenceAttributes);
+        }
+        for (Map.Entry<UUID, List<ReferenceAttributes>> entry : referencesAttributesByReferencedId.entrySet()) {
+            createElementReferences(entry.getKey(), entry.getValue(), userId);
+        }
     }
 }
