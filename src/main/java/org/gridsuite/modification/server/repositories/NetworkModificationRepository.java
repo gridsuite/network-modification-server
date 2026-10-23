@@ -1270,7 +1270,7 @@ public class NetworkModificationRepository {
             return modificationEntities;
         }
         return Stream.concat(modificationEntities.stream(),
-                modificationRepository.findAllDescendantModificationsByContainerIds(compositeIds).stream()).toList();
+                modificationRepository.findAllDescendantModificationsByContainerIds(compositeIds).stream()).distinct().toList();
     }
 
     private void deleteSomeLineTabularSubModifications(List<UUID> subModificationsIds) {

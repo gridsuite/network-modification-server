@@ -80,7 +80,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query("""
         WITH descendants AS (
             SELECT m.id AS id FROM ModificationEntity m WHERE m.container.id IN (:containerIds)
-            UNION ALL
+            UNION
             SELECT m.id AS id FROM ModificationEntity m JOIN descendants d ON m.container.id = d.id
         )
         SELECT d.id FROM descendants d
@@ -93,7 +93,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query("""
         WITH descendants AS (
             SELECT m.id AS id FROM ModificationEntity m WHERE m.container.id IN (:containerIds)
-            UNION ALL
+            UNION
             SELECT m.id AS id FROM ModificationEntity m JOIN descendants d ON m.container.id = d.id
         )
         SELECT m FROM ModificationEntity m JOIN descendants d ON m.id = d.id
