@@ -1213,7 +1213,7 @@ public class NetworkModificationRepository {
     /**
      * @return the modification references among the deleted modifications, the content of the composites included
      */
-    private List<ModificationReferenceData> deleteModifications(List<ModificationEntity> modificationEntities) {
+    private List<ModificationReferenceData> deleteModifications(@NonNull List<ModificationEntity> modificationEntities) {
         if (modificationEntities.isEmpty()) {
             return List.of();
         }
