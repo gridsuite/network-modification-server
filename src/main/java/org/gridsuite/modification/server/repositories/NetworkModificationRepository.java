@@ -6,8 +6,10 @@
  */
 package org.gridsuite.modification.server.repositories;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.SetUtils;
 import org.gridsuite.modification.ModificationType;
@@ -89,8 +91,10 @@ public class NetworkModificationRepository {
     private final ModificationContextFactory modificationContextFactory;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationRepository.class);
-    private static final String MODIFICATION_ID = "modificationId";
+    public static final String MODIFICATION_ID = "modificationId";
     private static final String CONTAINER_ID = "containerId";
+
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
@@ -142,7 +146,7 @@ public class NetworkModificationRepository {
             Map.of(CONTAINER_ID, containerId, "containerType", containerTypeName));
     }
 
-    private NetworkModificationServerException getModificationNotFoundException(String modificationId) {
+    public NetworkModificationServerException getModificationNotFoundException(String modificationId) {
         return new NetworkModificationServerException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND.messageTemplate(), modificationId), Map.of(MODIFICATION_ID, modificationId));
     }
 
@@ -195,16 +199,23 @@ public class NetworkModificationRepository {
         //Delete previously held modifications
         List<ModificationReferenceData> deletedReferences = deleteModifications(compositeEntity.getModifications());
         compositeEntity.setModifications(copyEntities);
-        compositeModificationRepository.renameCompositeModification(compositeEntity, name);
+        compositeEntity.updateNameAndDescription(ModificationMetadata.builder().name(name).build());
         return deletedReferences;
     }
 
-    public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
-        CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
-                .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
-        if (name != null) {
-            compositeModificationRepository.renameCompositeModification(compositeEntity, name);
+    @Transactional
+    public void updateModificationNameAndDescription(@NonNull UUID modificationUuid, @NonNull ModificationMetadata modificationMetadata) {
+        ModificationEntity modificationEntity = getModificationEntity(modificationUuid);
+        if (modificationEntity.isReference()) {
+            getReferencedModification((ModificationReferenceEntity) modificationEntity).updateNameAndDescription(modificationMetadata);
+        } else {
+            modificationEntity.updateNameAndDescription(modificationMetadata);
         }
+    }
+
+    private ModificationEntity getReferencedModification(ModificationReferenceEntity modificationReferenceEntity) {
+        return modificationRepository.findById(modificationReferenceEntity.getReferencedId())
+            .orElseThrow(() -> getModificationNotFoundException(modificationReferenceEntity.getReferencedId() + " (referenced modification)"));
     }
 
     private List<ModificationEntity> saveModificationsNonTransactional(@NonNull UUID groupUuid, List<ModificationEntity> modifications) {
@@ -420,7 +431,7 @@ public class NetworkModificationRepository {
                     .date(modification.getDate())
                     .stashed(modification.getStashed())
                     .activated(modification.getActivated())
-                    .description(modification.getDescription())
+                    .description(shared.getDescription())
                     .messageType(shared.getMessageType())
                     .messageValues(shared.getMessageValues())
                     .referencedId(shared.getId())
@@ -628,17 +639,26 @@ public class NetworkModificationRepository {
 
     private ModificationReferenceInfos loadModificationReference(ModificationReferenceEntity referenceEntity) {
         // prefetched beforehand, the shared modification is read from the persistence context
-        ModificationEntity referencedEntity = modificationRepository.findById(referenceEntity.getReferencedId())
-                .orElseThrow(() -> getModificationNotFoundException(referenceEntity.getReferencedId() + " (referenced modification)"));
+        ModificationEntity referencedEntity = getReferencedModification(referenceEntity);
         ModificationInfos refInfos = toModificationInfos(referencedEntity);
         if (refInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
-            composite.getModificationsInfos().forEach(compositeModificationRepository::generateModificationMessage);
+            composite.getModificationsInfos().forEach(this::initModificationMessage);
         }
         ModificationReferenceInfos modificationReferenceInfos = referenceEntity.toModificationInfos();
         modificationReferenceInfos.setReferencedInfos(refInfos);
         // a reference stands for the composite it points to
         modificationReferenceInfos.setSublevelCount(sublevelCountOf(refInfos));
         return modificationReferenceInfos;
+    }
+
+    @SneakyThrows
+    private void initModificationMessage(ModificationInfos modificationInfos) {
+        if (modificationInfos.getMessageType() == null) {
+            modificationInfos.setMessageType(modificationInfos.getType().name());
+        }
+        if (modificationInfos.getMessageValues() == null) {
+            modificationInfos.setMessageValues(mapper.writeValueAsString(modificationInfos.getMapMessageValues()));
+        }
     }
 
     private static ModificationInfos resolveNestedModificationReferences(ModificationInfos infos) {
@@ -1042,20 +1062,11 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
-        for (ModificationEntity modificationEntity : getModificationEntitiesInOrder(modificationUuids)) {
-            if (metadata.getDescription() != null) {
-                modificationEntity.setDescription(metadata.getDescription());
-            }
-            if (metadata.getActivated() != null) {
-                modificationEntity.setActivated(metadata.getActivated());
-            }
-            if (metadata instanceof CompositeModificationInfos compositeMetadata
-                    && modificationEntity instanceof CompositeModificationEntity composite
-                    && compositeMetadata.getName() != null) {
-                compositeModificationRepository.updateCompositeModificationMetadata(composite, compositeMetadata);
-            }
+    public void updateModificationActivation(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
+        if (metadata.getActivated() == null) {
+            return;
         }
+        modificationRepository.findAllByIdIn(modificationUuids).forEach(m -> m.setActivated(metadata.getActivated()));
     }
 
     /**
@@ -1183,14 +1194,20 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationMetadata> getModificationsMetadata(List<UUID> uuids) {
-        // custom query to read only the required fields (id/type)
-        return modificationRepository.findMetadataIn(uuids)
+        // TODO remove when name attribute moved into ModificationEntity
+        List<ModificationMetadata> modificationsMetadata =
+            compositeModificationRepository.findAllById(uuids)
                 .stream()
-                .map(entity -> ModificationMetadata.builder()
-                        .id(entity.getId())
-                        .type(ModificationType.valueOf(entity.getType()))
-                        .build())
-                .toList();
+                .map(CompositeModificationEntity::toModificationMetadata)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        // custom query to read only the required fields (metadata)
+        modificationsMetadata.addAll(modificationRepository.findMetadataIn(uuids).stream()
+            .filter(m -> !m.isComposite()) // To be removed see TODO below
+            .map(m -> m.toModificationMetadata())
+            .toList());
+
+        return modificationsMetadata;
     }
 
     /**
@@ -1270,7 +1287,7 @@ public class NetworkModificationRepository {
             return modificationEntities;
         }
         return Stream.concat(modificationEntities.stream(),
-                modificationRepository.findAllDescendantModificationsByContainerIds(compositeIds).stream()).toList();
+                modificationRepository.findAllDescendantModificationsByContainerIds(compositeIds).stream()).distinct().toList();
     }
 
     private void deleteSomeLineTabularSubModifications(List<UUID> subModificationsIds) {
@@ -1418,7 +1435,7 @@ public class NetworkModificationRepository {
      * @return the reference left in place of the composite modification
      */
     @Transactional
-    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
+    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name, String description) {
         getModificationGroup(groupUuid); // check if group exists
         ModificationEntity modificationEntity = getModificationEntity(modificationUuid);
         if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
@@ -1443,9 +1460,7 @@ public class NetworkModificationRepository {
         containerEntity.removeModifications(List.of(modificationUuid));
         compositeEntity.setContainer(null);
         compositeEntity.setModificationsOrder(0);
-        if (name != null) {
-            compositeModificationRepository.renameCompositeModification(compositeEntity, name);
-        }
+        compositeEntity.updateNameAndDescription(ModificationMetadata.builder().name(name).description(description).build());
         return new ModificationReferenceData(referenceEntity.getId(), modificationUuid,
             containerEntity.isComposite() ? containerEntity.getId() : null);
     }

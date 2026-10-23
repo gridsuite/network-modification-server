@@ -49,7 +49,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
             + "FROM ModificationEntity m WHERE m.container.id = ?1 order by m.modificationsOrder")
     List<ModificationEntity> findAllBaseByContainerId(UUID containerId);
 
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
+    @Query(value = "SELECT new ModificationEntity(m.id, m.description, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
     List<ModificationEntity> findMetadataIn(List<UUID> uuids);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder")
@@ -80,7 +80,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query("""
         WITH descendants AS (
             SELECT m.id AS id FROM ModificationEntity m WHERE m.container.id IN (:containerIds)
-            UNION ALL
+            UNION
             SELECT m.id AS id FROM ModificationEntity m JOIN descendants d ON m.container.id = d.id
         )
         SELECT d.id FROM descendants d
@@ -93,7 +93,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query("""
         WITH descendants AS (
             SELECT m.id AS id FROM ModificationEntity m WHERE m.container.id IN (:containerIds)
-            UNION ALL
+            UNION
             SELECT m.id AS id FROM ModificationEntity m JOIN descendants d ON m.container.id = d.id
         )
         SELECT m FROM ModificationEntity m JOIN descendants d ON m.id = d.id

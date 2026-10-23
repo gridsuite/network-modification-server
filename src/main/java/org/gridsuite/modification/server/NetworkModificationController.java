@@ -75,7 +75,7 @@ public class NetworkModificationController {
     }
 
     @GetMapping(value = "/containers/{containerUuid}/network-modifications/verify", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Check if all the modifications from a list belong to a container (group or composite)")
+    @Operation(summary = "Check if all the modifications from a list belong to a container (group or composite), including through modification references")
     @ApiResponse(responseCode = "200", description = "List of modifications")
     public ResponseEntity<List<ModificationInfos>> verifyNetworkModifications(@Parameter(description = "Container UUID") @PathVariable("containerUuid") UUID containerUuid,
                                                                               @Parameter(description = "Modifications UUID") @RequestParam(name = "uuids") Set<UUID> modificationUuids) {
@@ -128,6 +128,14 @@ public class NetworkModificationController {
             @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
         return networkModificationService.duplicateModifications(targetGroupUuid, sourceContainerUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond())
                 .thenApply(ResponseEntity.ok()::body);
+    }
+
+    @PutMapping(value = "/network-modifications/{referenceModificationUuid}/unshare")
+    @Operation(summary = "Unshare a reference modification and copy the referenced composite in its place")
+    @ApiResponse(responseCode = "200", description = "The reference modification has been replaced by a copy of its referenced composite")
+    public void unshareModification(@PathVariable("referenceModificationUuid") UUID referenceModificationUuid,
+                                    @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.unshareModification(referenceModificationUuid, userId);
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}")
@@ -330,10 +338,20 @@ public class NetworkModificationController {
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Updates the metadata of network modifications")
     @ApiResponse(responseCode = "200", description = "The metadata of the network modifications has been successfully updated")
-    public ResponseEntity<Void> updateNetworkModificationMetadata(
+    public ResponseEntity<Void> updateNetworkModificationActivation(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @RequestBody ModificationInfos metadata, @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata, userId);
+        networkModificationService.updateNetworkModificationActivation(networkModificationUuids, metadata, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping(value = "/network-modifications/{uuid}/name-and-description", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Update a modification name and description")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
+    public ResponseEntity<Void> updateModificationNameAndDescription(
+            @PathVariable("uuid") UUID modificationUuid,
+            @Parameter(description = "New composite metadata") @RequestBody ModificationMetadata modificationMetadata) {
+        networkModificationService.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
         return ResponseEntity.ok().build();
     }
 
@@ -361,8 +379,9 @@ public class NetworkModificationController {
     public ResponseEntity<Void> updateRootNetworkApplicability(
             @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Root network tag") @RequestParam("rootNetworkTag") String rootNetworkTag,
-            @Parameter(description = "Applicability on this root network tag") @RequestParam("applicable") boolean applicable) {
-        networkModificationService.updateRootNetworkApplicability(networkModificationUuids, rootNetworkTag, applicable);
+            @Parameter(description = "Applicability on this root network tag") @RequestParam("applicable") boolean applicable,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.updateRootNetworkApplicability(networkModificationUuids, rootNetworkTag, applicable, userId);
         return ResponseEntity.ok().build();
     }
 
