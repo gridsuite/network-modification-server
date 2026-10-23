@@ -391,6 +391,11 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
+    public List<UUID> getContainersWithModificationReferences(@NonNull List<UUID> containerUuids) {
+        return containerUuids.isEmpty() ? List.of() : modificationRepository.findContainersWithReferenceInSubtrees(containerUuids);
+    }
+
+    @Transactional(readOnly = true)
     public SharedModificationsWriteAccess getReferencedModificationsWriteAccess(@NonNull List<UUID> containerUuids, @NonNull String userId) {
         Set<UUID> sharedUuids = networkModificationRepository.getReferencedModificationUuids(containerUuids);
         if (sharedUuids.isEmpty()) {
