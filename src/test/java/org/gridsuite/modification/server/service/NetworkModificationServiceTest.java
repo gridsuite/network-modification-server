@@ -131,6 +131,32 @@ class NetworkModificationServiceTest {
                 "any of the containers holding one is enough");
     }
 
+    @Test
+    void shouldGetContainersWithReferencesNestedInComposites() {
+        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
+        UUID groupWithoutReferenceUuid = UUID.randomUUID();
+        saveComposite(groupWithoutReferenceUuid, List.of(dummyModification(UUID.randomUUID())));
+        // outer ── inner ── reference to the shared composite
+        UUID groupWithReferenceUuid = UUID.randomUUID();
+        UUID outerUuid = saveComposite(groupWithReferenceUuid,
+                List.of(compositeModification(UUID.randomUUID(), List.of(referenceTo(sharedUuid)))));
+        // the only reference of this group is in the bin
+        UUID groupWithStashedReferenceUuid = UUID.randomUUID();
+        networkModificationRepository.saveModifications(groupWithStashedReferenceUuid, List.of(ModificationEntity.fromDTO(
+                CompositeModificationInfos.builder()
+                        .uuid(UUID.randomUUID())
+                        .modificationsInfos(List.of(referenceTo(sharedUuid)))
+                        .stashed(true)
+                        .build())));
+
+        assertTrue(networkModificationService.getContainersWithModificationReferences(List.of()).isEmpty(), "no container, nothing to look into");
+        assertEquals(List.of(groupWithReferenceUuid), networkModificationService.getContainersWithModificationReferences(
+                List.of(groupWithoutReferenceUuid, groupWithReferenceUuid, groupWithStashedReferenceUuid)),
+                "a reference nested two composites deep, a stashed one does not count");
+        assertEquals(List.of(outerUuid), networkModificationService.getContainersWithModificationReferences(List.of(outerUuid)),
+                "a composite is a container too");
+    }
+
     /**
      * @return the uuid of a composite holding the given content, saved in the given group
      */
@@ -204,7 +230,7 @@ class NetworkModificationServiceTest {
                 .stashed(false)
                 .activated(true)
                 .build();
-        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(groupUuid, List.of(referenceInfos));
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(groupUuid, List.of(referenceInfos), List.of());
         UUID referenceUuid = saved.getFirst().getUuid();
 
         // 3. Verify the reference exists and is in the group
@@ -261,7 +287,7 @@ class NetworkModificationServiceTest {
         // 1. Create a regular modification (not a reference)
         UUID groupUuid = UUID.randomUUID();
         LoadModificationInfos regularMod = dummyModification(UUID.randomUUID());
-        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(groupUuid, List.of(regularMod));
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(groupUuid, List.of(regularMod), List.of());
         UUID regularModUuid = saved.getFirst().getUuid();
 
         // 2. Attempt to unshare a non-reference modification
@@ -294,7 +320,7 @@ class NetworkModificationServiceTest {
                 .stashed(false)
                 .activated(true)
                 .build();
-        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(groupUuid, List.of(referenceInfos));
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(groupUuid, List.of(referenceInfos), List.of());
         UUID referenceUuid = saved.getFirst().getUuid();
 
         // 3. Unshare the reference
@@ -329,7 +355,7 @@ class NetworkModificationServiceTest {
                 .stashed(false)
                 .activated(true)
                 .build();
-        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(groupUuid, List.of(referenceInfos));
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(groupUuid, List.of(referenceInfos), List.of());
         UUID referenceUuid = saved.getFirst().getUuid();
 
         // 3. Unshare the reference

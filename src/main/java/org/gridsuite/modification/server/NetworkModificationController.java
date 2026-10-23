@@ -99,8 +99,11 @@ public class NetworkModificationController {
                                                @RequestParam("nodeContainerUuid") UUID nodeContainerUuid,
                                                @RequestParam("studyRootContainerUuid") UUID studyRootContainerUuid,
                                                @PathVariable("sourceGroupUuid") UUID sourceGroupUuid,
+                                               @Parameter(description = "Root network tags of the study the group belongs to, which the copies are associated with")
+                                               @RequestParam(value = "rootNetworkTags", required = false) List<String> rootNetworkTags,
                                                @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, nodeContainerUuid, studyRootContainerUuid, userId);
+        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, nodeContainerUuid, studyRootContainerUuid,
+            rootNetworkTags == null ? List.of() : rootNetworkTags, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -320,6 +323,15 @@ public class NetworkModificationController {
     public ResponseEntity<Boolean> hasModificationReferences(
             @Parameter(description = "Container UUIDs") @RequestParam("uuids") List<UUID> containerUuids) {
         return ResponseEntity.ok().body(networkModificationService.hasModificationReferences(containerUuids));
+    }
+
+    // POST as the uuids of a whole study tree would exceed the url length limit
+    @PostMapping(value = "/containers/reference-modifications", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get those of the containers (groups or composites) holding an unstashed modification reference, including nested in their composites")
+    @ApiResponse(responseCode = "200", description = "The containers holding at least one modification reference")
+    public ResponseEntity<List<UUID>> getContainersWithModificationReferences(
+            @Parameter(description = "Container UUIDs") @RequestBody List<UUID> containerUuids) {
+        return ResponseEntity.ok().body(networkModificationService.getContainersWithModificationReferences(containerUuids));
     }
 
     @GetMapping(value = "/containers/references/authorized")
