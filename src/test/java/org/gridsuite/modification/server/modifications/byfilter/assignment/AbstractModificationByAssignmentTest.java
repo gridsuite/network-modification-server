@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.ModificationByAssignmentInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.PropertyAssignmentInfos;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
+import static org.gridsuite.modification.server.utils.TestUtils.EQUIPMENT_TYPE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
@@ -201,4 +203,17 @@ abstract class AbstractModificationByAssignmentTest extends AbstractByFilterTest
     }
 
     protected abstract List<AssignmentInfos<?>> getUpdatedAssignmentInfos();
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals(getIdentifiableType().toString(), updatedValues.get(EQUIPMENT_TYPE));
+    }
+
+    @Override
+    @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals(getIdentifiableType().toString(), updatedValues.get(EQUIPMENT_TYPE));
+    }
 }
