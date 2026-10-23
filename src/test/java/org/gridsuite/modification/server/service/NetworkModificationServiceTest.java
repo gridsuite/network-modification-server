@@ -11,6 +11,7 @@ import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.dto.StashedFilter;
@@ -34,6 +35,7 @@ import static org.mockito.Mockito.when;
  * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
  */
 @SpringBootTest
+@ContextConfigurationWithTestChannel
 class NetworkModificationServiceTest {
     private static final String TEST_USER_ID = "userId";
 

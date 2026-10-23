@@ -352,7 +352,8 @@ class ModificationIndexationTest {
          */
         networkModificationService.deleteNetworkModifications(
             groupUuid1,
-            modifications.stream().map(ModificationInfos::getUuid).toList()
+            modifications.stream().map(ModificationInfos::getUuid).toList(),
+            "userId"
         );
 
         /*
@@ -378,7 +379,7 @@ class ModificationIndexationTest {
         /*
         Delete modification group
          */
-        networkModificationService.deleteModificationGroups(List.of(groupUuid1));
+        networkModificationService.deleteModificationGroups(List.of(groupUuid1), "userId");
 
         /*
         check results in database and in elasticsearch

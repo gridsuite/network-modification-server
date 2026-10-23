@@ -98,6 +98,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @AutoConfigureMockMvc
 @SpringBootTest
+@ContextConfigurationWithTestChannel
 @Import(BaseExceptionHandler.class)
 @Tag("IntegrationTest")
 class ModificationControllerTest {
@@ -360,7 +361,7 @@ class ModificationControllerTest {
         assertEquals(exportInfos.unexportedModifications().getFirst().type(), byFormulaModificationInfos.getType());
 
         // delete group
-        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
+        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         // Export after deletion should return empty lists
@@ -411,7 +412,7 @@ class ModificationControllerTest {
         assertEquals(1, bsicListResultInfos.size());
 
         // delete the default modification group of a network
-        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
+        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         mvcResult = mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(
@@ -444,8 +445,6 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true")
                         .header(HEADER_USER_ID, TEST_USER_ID))
@@ -455,8 +454,6 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "false")
                         .header(HEADER_USER_ID, TEST_USER_ID))
@@ -484,8 +481,6 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true")
                         .header(HEADER_USER_ID, TEST_USER_ID))
@@ -659,11 +654,13 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, TEST_USER_ID)
                         .queryParam("groupUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString))
                 .andExpect(status().isNotFound());
 
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, TEST_USER_ID)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString))
                 .andExpect(status().isOk());
@@ -672,12 +669,13 @@ class ModificationControllerTest {
 
         /* non existing modification */
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, TEST_USER_ID)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
+        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID)).andExpect(status().isOk());
         // deleting a group that no longer exists does nothing
-        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
+        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID)).andExpect(status().isOk());
     }
 
     //test delete all modifications
@@ -687,6 +685,7 @@ class ModificationControllerTest {
 
         assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, TEST_USER_ID)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString()))
                 .andExpect(status().isOk());
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
@@ -694,7 +693,7 @@ class ModificationControllerTest {
 
     @Test
     void testDeleteModificationMissingParamError() throws Exception {
-        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE))
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE).header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isBadRequest())
                 .andExpect(result -> assertInstanceOf(NetworkModificationServerException.class, result.getResolvedException()))
                 .andExpect(result -> assertEquals(
@@ -1187,8 +1186,6 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true")
                         .header(HEADER_USER_ID, TEST_USER_ID))
@@ -1205,8 +1202,6 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
-                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
                 ).andExpect(status().isOk());
         List<ModificationInfos> stashedCopiedModifications = modificationRepository.getModifications(newGroupUuid, true, StashedFilter.STASHED);
         List<ModificationInfos> copiedModifications = modificationRepository.getModifications(newGroupUuid, true, StashedFilter.ALL);
@@ -1230,8 +1225,6 @@ class ModificationControllerTest {
         String copyGroupUriString = "/v1/groups/" + TEST_GROUP_ID + "/duplicate?groupUuid=" + newGroupUuid + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(
                 post(copyGroupUriString)
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
-                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
                         .header(HEADER_USER_ID, "user1")
                 ).andExpect(status().isOk());
 
@@ -1263,8 +1256,6 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
-                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
                 ).andExpect(status().isOk());
         testNetworkModificationsCount(duplicatedGroupUuid, 1);
 
@@ -1274,8 +1265,6 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
-                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
         ).andExpect(status().isOk());
         assertFalse(networkModificationService.getModificationGroups().contains(targetOfUnexistingGroupUuid));
 
@@ -1753,8 +1742,6 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true")
                         .header(HEADER_USER_ID, TEST_USER_ID))
@@ -1813,16 +1800,12 @@ class ModificationControllerTest {
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString)
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
         String uuidString2 = modificationsGroup2.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                         .header(HEADER_USER_ID, "user1")
                         .queryParam("groupUuid", TEST_GROUP2_ID.toString())
-                        .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
-                        .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString2)
                         .queryParam("stashed", "true")
                         .header(HEADER_USER_ID, TEST_USER_ID))
@@ -1866,7 +1849,7 @@ class ModificationControllerTest {
 
         // remove the first two groups
         String body = mapper.writeValueAsString(List.of(TEST_GROUP_ID, TEST_GROUP2_ID));
-        mockMvc.perform(delete("/v1/groups")
+        mockMvc.perform(delete("/v1/groups").header(HEADER_USER_ID, TEST_USER_ID)
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -1941,6 +1924,7 @@ class ModificationControllerTest {
 
         // Try to delete this modification without its group: not allowed
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, TEST_USER_ID)
                         .queryParam("uuids", switchModificationId.toString()))
                 .andExpect(status().isBadRequest())
                 .andExpect(result -> assertEquals(
