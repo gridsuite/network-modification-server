@@ -337,4 +337,27 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
             SELECT EXISTS (SELECT 1 FROM descendants WHERE type = 'MODIFICATION_REFERENCE')
             """)
     boolean existsReferenceInContainersSubtrees(@Param("containerIds") Collection<UUID> containerIds);
+
+    /**
+     * @return those of {@code containerIds} (groups or composites) holding an unstashed modification reference,
+     * directly or nested in any of their unstashed composite descendants
+     */
+    @NativeQuery("""
+            WITH RECURSIVE descendants(root_id, id, type) AS (
+                SELECT m.container_id, m.id, m.type
+                  FROM modification m
+                 WHERE m.container_id IN (:containerIds)
+                   AND m.stashed = false
+                   AND m.type IN ('COMPOSITE_MODIFICATION', 'MODIFICATION_REFERENCE')
+                UNION ALL
+                SELECT d.root_id, m.id, m.type
+                  FROM modification m
+                  JOIN descendants d ON m.container_id = d.id
+                 WHERE d.type = 'COMPOSITE_MODIFICATION'
+                   AND m.stashed = false
+                   AND m.type IN ('COMPOSITE_MODIFICATION', 'MODIFICATION_REFERENCE')
+            )
+            SELECT DISTINCT CAST(root_id AS VARCHAR) FROM descendants WHERE type = 'MODIFICATION_REFERENCE'
+            """)
+    List<UUID> findContainersWithReferenceInSubtrees(@Param("containerIds") Collection<UUID> containerIds);
 }
