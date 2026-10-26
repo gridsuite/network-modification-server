@@ -707,6 +707,33 @@ class CompositeControllerTest {
     }
 
     @Test
+    void testUpdateNetworkCompositeModificationForbiddenOnSharedComposite() throws Exception {
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
+        List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "composite name 1")
+                        .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Make composite shared by adding a reference pointing to it
+        ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
+                .referencedId(compositeModificationUuid)
+                .stashed(false)
+                .build();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(modificationReferenceInfo)));
+
+        doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null))
+                .when(directoryService).checkPermission(any(), eq(TEST_USER_ID), eq(PermissionType.WRITE));
+
+        mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + compositeModificationUuid + "/replace")
+                        .param("name", "new name")
+                        .header(HEADER_USER_ID, TEST_USER_ID)
+                        .content(mapper.writeValueAsString(List.of())).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void testUpdateNetworkCompositeModification() throws Exception {
         // Insert some switch modifications in the group
         int modificationsNumber = 3;
@@ -1448,8 +1475,9 @@ class CompositeControllerTest {
                 .when(directoryService).checkPermission(Set.of(sharedCompositeUuid), TEST_USER_ID, PermissionType.WRITE);
 
         // a container pointing at a shared modification the user cannot write on is refused
+        List<UUID> containerUuids = List.of(TEST_GROUP2_ID);
         NetworkModificationServerException exception = assertThrows(NetworkModificationServerException.class,
-                () -> networkModificationService.assertReferencedModificationsAreWritable(List.of(TEST_GROUP2_ID), TEST_USER_ID));
+                () -> networkModificationService.assertReferencedModificationsAreWritable(containerUuids, TEST_USER_ID));
         assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, exception.getBusinessErrorCode());
         verify(directoryService, times(1)).checkPermission(any(), any(), any());
 
