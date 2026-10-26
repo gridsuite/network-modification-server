@@ -1475,8 +1475,9 @@ class CompositeControllerTest {
                 .when(directoryService).checkPermission(Set.of(sharedCompositeUuid), TEST_USER_ID, PermissionType.WRITE);
 
         // a container pointing at a shared modification the user cannot write on is refused
+        List<UUID> containerUuids = List.of(TEST_GROUP2_ID);
         NetworkModificationServerException exception = assertThrows(NetworkModificationServerException.class,
-                () -> networkModificationService.assertReferencedModificationsAreWritable(List.of(TEST_GROUP2_ID), TEST_USER_ID));
+                () -> networkModificationService.assertReferencedModificationsAreWritable(containerUuids, TEST_USER_ID));
         assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, exception.getBusinessErrorCode());
         verify(directoryService, times(1)).checkPermission(any(), any(), any());
 
