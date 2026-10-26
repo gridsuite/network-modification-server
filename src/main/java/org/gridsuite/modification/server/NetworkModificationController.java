@@ -373,8 +373,9 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
     public ResponseEntity<Void> updateModificationNameAndDescription(
             @PathVariable("uuid") UUID modificationUuid,
-            @Parameter(description = "New composite metadata") @RequestBody ModificationMetadata modificationMetadata) {
-        networkModificationService.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
+            @Parameter(description = "New composite metadata") @RequestBody ModificationMetadata modificationMetadata,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.updateModificationNameAndDescription(modificationUuid, modificationMetadata, userId);
         return ResponseEntity.ok().build();
     }
 
