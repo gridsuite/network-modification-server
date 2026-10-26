@@ -109,7 +109,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .activated(true)
                 .build();
-        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos));
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos), List.of());
         UUID referenceUuid = saved.get(0).getUuid();
 
         ModificationInfos fetched = networkModificationRepository.getModificationInfo(referenceUuid);
@@ -145,7 +145,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .activated(true)
                 .build();
-        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos));
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos), List.of());
 
         ModificationInfos fetched = networkModificationRepository.getModificationInfo(saved.get(0).getUuid());
 
