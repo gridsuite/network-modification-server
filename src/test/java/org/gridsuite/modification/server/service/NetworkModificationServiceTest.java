@@ -312,9 +312,9 @@ class NetworkModificationServiceTest {
     @Test
     void shouldCheckPermissionOnTargetCompositeWhenMovingModifications() {
         UUID groupUuid = UUID.randomUUID();
-        UUID modUuid = UUID.randomUUID();
-        networkModificationRepository.saveModifications(
-                groupUuid, List.of(ModificationEntity.fromDTO(dummyModification(modUuid))));
+        List<ModificationInfos> savedMod = networkModificationRepository.saveModifications(
+                groupUuid, List.of(ModificationEntity.fromDTO(dummyModification(UUID.randomUUID()))));
+        UUID modUuid = savedMod.getFirst().getUuid();
 
         List<ModificationInfos> saved = networkModificationRepository.saveModifications(
                 groupUuid,
@@ -336,9 +336,9 @@ class NetworkModificationServiceTest {
     @Test
     void shouldThrowWhenPermissionDeniedOnTargetCompositeWhenMovingModifications() {
         UUID groupUuid = UUID.randomUUID();
-        UUID modUuid = UUID.randomUUID();
-        networkModificationRepository.saveModifications(
-                groupUuid, List.of(ModificationEntity.fromDTO(dummyModification(modUuid))));
+        List<ModificationInfos> savedMod = networkModificationRepository.saveModifications(
+                groupUuid, List.of(ModificationEntity.fromDTO(dummyModification(UUID.randomUUID()))));
+        UUID modUuid = savedMod.getFirst().getUuid();
 
         List<ModificationInfos> saved = networkModificationRepository.saveModifications(
                 groupUuid,

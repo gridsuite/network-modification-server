@@ -555,8 +555,11 @@ public class NetworkModificationService {
             @NonNull String userId) {
 
         // check if we have permission to move the modifications on source and target groups
+        List<UUID> parentComposites = findModificationParentComposites(moveInfos.stream().map(ModificationMoveInfos::modificationUuid).toList())
+                .values().stream().toList();
+
         List<UUID> uuids = Stream.concat(
-                moveInfos.stream().map(ModificationMoveInfos::modificationUuid),
+                parentComposites.stream(),
                 moveInfos.stream().map(ModificationMoveInfos::targetCompositeUuid).filter(Objects::nonNull)
         ).distinct().toList();
         checkModificationsPermission(uuids, userId);
