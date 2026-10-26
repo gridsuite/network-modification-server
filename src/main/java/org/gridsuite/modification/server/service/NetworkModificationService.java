@@ -553,6 +553,14 @@ public class NetworkModificationService {
             @NonNull List<ModificationApplicationContext> applicationContexts,
             boolean canApply,
             @NonNull String userId) {
+
+        // check if we have permission to move the modifications on source and target groups
+        List<UUID> uuids = Stream.concat(
+                moveInfos.stream().map(ModificationMoveInfos::modificationUuid),
+                moveInfos.stream().map(ModificationMoveInfos::targetCompositeUuid).filter(Objects::nonNull)
+        ).distinct().toList();
+        checkModificationsPermission(uuids, userId);
+
         // Collect referenced ancestor composites before moving, since moved modifications may leave their referenced composite
         Set<UUID> referencedAncestorUuids = new HashSet<>(networkModificationRepository.getAllReferencedModificationAncestorsUuids(
                 moveInfos.stream().map(ModificationMoveInfos::modificationUuid).toList()));

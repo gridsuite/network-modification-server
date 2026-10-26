@@ -12,6 +12,7 @@ import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
+import org.gridsuite.modification.server.dto.ModificationMoveInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.dto.PermissionType;
 import org.gridsuite.modification.server.dto.StashedFilter;
@@ -304,6 +305,58 @@ class NetworkModificationServiceTest {
         NetworkModificationServerException ex = assertThrows(
                 NetworkModificationServerException.class,
                 () -> networkModificationService.replaceCompositeModification(sharedCompositeUuid, "newName", List.of(), "userId")
+        );
+        assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, ex.getBusinessErrorCode());
+    }
+
+    @Test
+    void shouldCheckPermissionOnTargetCompositeWhenMovingModifications() {
+        UUID groupUuid = UUID.randomUUID();
+        UUID modUuid = UUID.randomUUID();
+        networkModificationRepository.saveModifications(
+                groupUuid, List.of(ModificationEntity.fromDTO(dummyModification(modUuid))));
+
+        List<ModificationInfos> saved = networkModificationRepository.saveModifications(
+                groupUuid,
+                List.of(ModificationEntity.fromDTO(compositeModification(UUID.randomUUID(), List.of()))));
+        UUID targetCompositeUuid = saved.getFirst().getUuid();
+
+        // Create reference pointing to targetCompositeUuid
+        networkModificationRepository.saveModifications(
+                UUID.randomUUID(),
+                List.of(ModificationEntity.fromDTO(referenceTo(targetCompositeUuid))));
+
+        ModificationMoveInfos moveInfo = new ModificationMoveInfos(modUuid, null, targetCompositeUuid, null);
+
+        networkModificationService.moveModifications(groupUuid, groupUuid, List.of(moveInfo), List.of(), false, "userId");
+
+        verify(directoryService).checkPermission(List.of(targetCompositeUuid), "userId", PermissionType.WRITE);
+    }
+
+    @Test
+    void shouldThrowWhenPermissionDeniedOnTargetCompositeWhenMovingModifications() {
+        UUID groupUuid = UUID.randomUUID();
+        UUID modUuid = UUID.randomUUID();
+        networkModificationRepository.saveModifications(
+                groupUuid, List.of(ModificationEntity.fromDTO(dummyModification(modUuid))));
+
+        List<ModificationInfos> saved = networkModificationRepository.saveModifications(
+                groupUuid,
+                List.of(ModificationEntity.fromDTO(compositeModification(UUID.randomUUID(), List.of()))));
+        UUID targetCompositeUuid = saved.getFirst().getUuid();
+
+        networkModificationRepository.saveModifications(
+                UUID.randomUUID(),
+                List.of(ModificationEntity.fromDTO(referenceTo(targetCompositeUuid))));
+
+        doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", HttpHeaders.EMPTY, new byte[0], null))
+                .when(directoryService).checkPermission(any(), eq("userId"), eq(PermissionType.WRITE));
+
+        ModificationMoveInfos moveInfo = new ModificationMoveInfos(modUuid, null, targetCompositeUuid, null);
+
+        NetworkModificationServerException ex = assertThrows(
+                NetworkModificationServerException.class,
+                () -> networkModificationService.moveModifications(groupUuid, groupUuid, List.of(moveInfo), List.of(), false, "userId")
         );
         assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, ex.getBusinessErrorCode());
     }
