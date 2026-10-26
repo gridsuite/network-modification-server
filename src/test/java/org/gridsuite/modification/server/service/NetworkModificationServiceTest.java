@@ -282,9 +282,10 @@ class NetworkModificationServiceTest {
         doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", HttpHeaders.EMPTY, new byte[0], null))
                 .when(directoryService).checkPermission(any(), eq("userId"), eq(PermissionType.WRITE));
 
+        List<UUID> modUuids = List.of(modUuid);
         NetworkModificationServerException ex = assertThrows(
                 NetworkModificationServerException.class,
-                () -> networkModificationService.checkModificationsPermission(List.of(modUuid), "userId")
+                () -> networkModificationService.checkModificationsPermission(modUuids, "userId")
         );
         assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, ex.getBusinessErrorCode());
     }
@@ -354,9 +355,11 @@ class NetworkModificationServiceTest {
 
         ModificationMoveInfos moveInfo = new ModificationMoveInfos(modUuid, null, targetCompositeUuid, null);
 
+        List<ModificationMoveInfos> moveInfos = List.of(moveInfo);
+        List<ModificationApplicationContext> applicationContexts = List.of();
         NetworkModificationServerException ex = assertThrows(
                 NetworkModificationServerException.class,
-                () -> networkModificationService.moveModifications(groupUuid, groupUuid, List.of(moveInfo), List.of(), false, "userId")
+                () -> networkModificationService.moveModifications(groupUuid, groupUuid, moveInfos, applicationContexts, false, "userId")
         );
         assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, ex.getBusinessErrorCode());
     }
