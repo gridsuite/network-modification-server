@@ -1142,7 +1142,7 @@ public class NetworkModificationRepository {
         if (ownedUuids.isEmpty()) {
             return;
         }
-        Set<UUID> writableSharedAndChildrenUuids = SetUtils.union(Set.copyOf(writableSharedUuids), Set.copyOf(getContainedModificationUuids(writableSharedUuids)));
+        Set<UUID> writableSharedAndChildrenUuids = SetUtils.union(Set.copyOf(writableSharedUuids), Set.copyOf(getContainedModificationUuidsNonTransactional(writableSharedUuids)));
         // owned UUIDs that are references does not contain applicability, so it will be ignored
         modificationRepository.deleteRootNetworkApplicabilities(SetUtils.union(Set.copyOf(ownedUuids), writableSharedAndChildrenUuids), List.of(newTag));
         if (!writableSharedAndChildrenUuids.isEmpty()) {
@@ -1156,7 +1156,7 @@ public class NetworkModificationRepository {
      */
     @Transactional(readOnly = true)
     public Set<UUID> getReferencedModificationUuids(@NonNull List<UUID> containerUuids) {
-        return getSharedModificationUuids(getContainedModificationUuids(containerUuids));
+        return getSharedModificationTrees(getContainedModificationUuidsNonTransactional(containerUuids)).sharedUuids();
     }
 
     /**
@@ -1174,10 +1174,10 @@ public class NetworkModificationRepository {
     public Set<UUID> getSharedModificationUuids(@NonNull List<UUID> containerUuids, @NonNull List<UUID> modificationUuids,
                                                 @NonNull List<UUID> sharedUuids) {
         List<UUID> modificationTreesUuids = Stream.concat(modificationUuids.stream(),
-                getContainedModificationUuids(Stream.of(containerUuids, modificationUuids, sharedUuids).flatMap(List::stream).toList()).stream()).toList();
+                getContainedModificationUuidsNonTransactional(Stream.of(containerUuids, modificationUuids, sharedUuids).flatMap(List::stream).toList()).stream()).toList();
         Set<UUID> allSharedUuids = new HashSet<>(sharedUuids);
         if (!modificationTreesUuids.isEmpty()) {
-            allSharedUuids.addAll(getSharedModificationUuids(modificationTreesUuids));
+            allSharedUuids.addAll(getSharedModificationTrees(modificationTreesUuids).sharedUuids());
         }
         return allSharedUuids;
     }
@@ -1187,7 +1187,7 @@ public class NetworkModificationRepository {
      */
     @Transactional(readOnly = true)
     public List<String> getCommonRootNetworkTags(@NonNull Set<UUID> modificationUuids) {
-        Set<UUID> modificationTreesUuids = SetUtils.union(modificationUuids, Set.copyOf(getContainedModificationUuids(modificationUuids)));
+        Set<UUID> modificationTreesUuids = SetUtils.union(modificationUuids, Set.copyOf(getContainedModificationUuidsNonTransactional(modificationUuids)));
         return modificationRepository.findAllWithApplicabilitiesByIdIn(modificationTreesUuids).stream()
                 .filter(Predicate.not(ModificationReferenceEntity.class::isInstance))
                 .map(ModificationEntity::getRootNetworkTags)
@@ -1205,7 +1205,7 @@ public class NetworkModificationRepository {
         if (tags.isEmpty()) {
             return;
         }
-        List<UUID> ownedUuids = getContainedModificationUuids(groupUuids);
+        List<UUID> ownedUuids = getContainedModificationUuidsNonTransactional(groupUuids);
         if (!ownedUuids.isEmpty()) {
             modificationRepository.deleteRootNetworkApplicabilities(ownedUuids, tags);
         }
@@ -1244,6 +1244,10 @@ public class NetworkModificationRepository {
      */
     @Transactional(readOnly = true)
     public List<UUID> getContainedModificationUuids(@NonNull Collection<UUID> containerUuids) {
+        return getContainedModificationUuidsNonTransactional(containerUuids);
+    }
+
+    private List<UUID> getContainedModificationUuidsNonTransactional(Collection<UUID> containerUuids) {
         return containerUuids.isEmpty() ? List.of() : modificationRepository.findAllDescendantModificationIdsByContainerIds(containerUuids);
     }
 
@@ -1261,7 +1265,7 @@ public class NetworkModificationRepository {
         List<UUID> sharedUuidsToResolve = sharedModificationUuids.stream().distinct().toList();
         while (!sharedUuidsToResolve.isEmpty()) {
             sharedUuids.addAll(sharedUuidsToResolve);
-            List<UUID> nestedUuids = getContainedModificationUuids(sharedUuidsToResolve);
+            List<UUID> nestedUuids = getContainedModificationUuidsNonTransactional(sharedUuidsToResolve);
             childrenUuids.addAll(nestedUuids);
             sharedUuidsToResolve = nestedUuids.isEmpty() ? List.of() : modificationRepository.findReferencedModificationIds(nestedUuids).stream()
                     .filter(sharedUuid -> !sharedUuids.contains(sharedUuid))
