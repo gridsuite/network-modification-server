@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.SetUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.context.ModificationContext;
@@ -1173,13 +1174,10 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public Set<UUID> getSharedModificationUuids(@NonNull List<UUID> containerUuids, @NonNull List<UUID> modificationUuids,
                                                 @NonNull List<UUID> sharedUuids) {
-        List<UUID> modificationTreesUuids = Stream.concat(modificationUuids.stream(),
-                getContainedModificationUuidsNonTransactional(Stream.of(containerUuids, modificationUuids, sharedUuids).flatMap(List::stream).toList()).stream()).toList();
-        Set<UUID> allSharedUuids = new HashSet<>(sharedUuids);
-        if (!modificationTreesUuids.isEmpty()) {
-            allSharedUuids.addAll(getSharedModificationTrees(modificationTreesUuids).sharedUuids());
-        }
-        return allSharedUuids;
+        List<UUID> modificationTreesUuids = ListUtils.union(modificationUuids,
+                getContainedModificationUuidsNonTransactional(ListUtils.union(containerUuids, modificationUuids)));
+        List<UUID> referencedUuids = modificationTreesUuids.isEmpty() ? List.of() : modificationRepository.findReferencedModificationIds(modificationTreesUuids);
+        return getSharedModificationTreesFrom(ListUtils.union(sharedUuids, referencedUuids)).sharedUuids();
     }
 
     /**
