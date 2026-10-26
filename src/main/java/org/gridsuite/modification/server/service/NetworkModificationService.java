@@ -355,6 +355,10 @@ public class NetworkModificationService {
      */
     @Transactional(readOnly = true)
     public Map<UUID, UUID> findModificationParentComposites(@NonNull List<UUID> modificationUuids) {
+        return findModificationParentCompositesNonTransactional(modificationUuids);
+    }
+
+    public Map<UUID, UUID> findModificationParentCompositesNonTransactional(@NonNull List<UUID> modificationUuids) {
         if (modificationUuids.isEmpty()) {
             return Map.of();
         }
@@ -409,7 +413,7 @@ public class NetworkModificationService {
             return;
         }
         // one query for the whole list
-        Map<UUID, UUID> compositeByModification = findModificationParentComposites(modificationUuids);
+        Map<UUID, UUID> compositeByModification = findModificationParentCompositesNonTransactional(modificationUuids);
         // a move takes a source container, so they are gathered by the composites holding the modifications
         Map<UUID, List<UUID>> modificationsByComposite = modificationUuids.stream()
                 .filter(compositeByModification::containsKey)
@@ -555,7 +559,7 @@ public class NetworkModificationService {
             @NonNull String userId) {
 
         // check if we have permission to move the modifications on source and target groups
-        List<UUID> parentComposites = findModificationParentComposites(moveInfos.stream().map(ModificationMoveInfos::modificationUuid).toList())
+        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(moveInfos.stream().map(ModificationMoveInfos::modificationUuid).toList())
                 .values().stream().toList();
 
         List<UUID> uuids = Stream.concat(
