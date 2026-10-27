@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.SetUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.context.ModificationContext;
@@ -1168,6 +1169,18 @@ public class NetworkModificationRepository {
     }
 
     /**
+     * @return the shared modifications among or referred to by the given parameters, however deep
+     */
+    @Transactional(readOnly = true)
+    public Set<UUID> getSharedModificationUuids(@NonNull List<UUID> containerUuids, @NonNull List<UUID> modificationUuids,
+                                                @NonNull List<UUID> sharedUuids) {
+        List<UUID> modificationTreesUuids = ListUtils.union(modificationUuids,
+                getContainedModificationUuidsNonTransactional(ListUtils.union(containerUuids, modificationUuids)));
+        List<UUID> referencedUuids = modificationTreesUuids.isEmpty() ? List.of() : modificationRepository.findReferencedModificationIds(modificationTreesUuids);
+        return getSharedModificationTreesFrom(ListUtils.union(sharedUuids, referencedUuids)).sharedUuids();
+    }
+
+    /**
      * @return the root network tags each given modification and its content holds an applicability for, sorted
      */
     @Transactional(readOnly = true)
@@ -1224,7 +1237,8 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return the modifications the given containers hold, the content of their composites included
+     * @return the modifications the given containers hold, the content of their composites included. A given uuid which is
+     * not a container's, such as a modification other than a composite, is simply ignored.
      */
     @Transactional(readOnly = true)
     public List<UUID> getContainedModificationUuids(@NonNull Collection<UUID> containerUuids) {
