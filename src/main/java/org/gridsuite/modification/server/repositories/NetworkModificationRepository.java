@@ -1127,6 +1127,23 @@ public class NetworkModificationRepository {
     }
 
     /**
+     * Gives an applicability for {@code newTag} to the modifications of the given groups and to the shared ones they
+     * point to, unless they already have one for it: they are applicable on it unless they are not applicable on
+     * another tag, of the study or not.
+     */
+    @Transactional
+    public void addRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String newTag) {
+        List<UUID> ownedUuids = getContainedModificationUuidsNonTransactional(groupUuids);
+        if (ownedUuids.isEmpty()) {
+            return;
+        }
+        Set<UUID> sharedModificationTreesUuids = getSharedModificationTrees(ownedUuids).allUuids();
+        modificationRepository.findAllWithApplicabilitiesByIdIn(SetUtils.union(Set.copyOf(ownedUuids), sharedModificationTreesUuids)).stream()
+                .filter(Predicate.not(ModificationReferenceEntity.class::isInstance))
+                .forEach(modification -> modification.addApplicabilityIfMissing(newTag));
+    }
+
+    /**
      * Moves the applicability entries of {@code oldTag} to {@code newTag}, after dropping the entries of {@code newTag}:
      * <ul>
      *     <li>on an owned modification, the entry of the old tag is renamed;</li>

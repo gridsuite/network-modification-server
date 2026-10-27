@@ -307,6 +307,12 @@ public class NetworkModificationService {
         emitReferencedAncestorsUpdated(modificationUuids, userId);
     }
 
+    @Transactional
+    public void addRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String newTag) {
+        assertRootNetworkTagFits(newTag);
+        networkModificationRepository.addRootNetworkTag(groupUuids, newTag);
+    }
+
     /**
      * Renames the root network tag of the modifications of the given groups. The shared modifications the user cannot
      * write on are left out of the renaming: their applicabilities, and the ones of their content, are left untouched.
