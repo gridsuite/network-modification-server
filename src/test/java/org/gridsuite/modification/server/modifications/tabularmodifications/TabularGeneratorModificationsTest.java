@@ -399,6 +399,10 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
     - 1 select on group to check if it exists
     - 1 select to find modifications of this group
     - 2 selects to retrieve tabular sub-modifications IDs (1 per tabular modification)
+    - 3 selects to collect the references to remove from the directory server, before the deletion:
+        - select the stashed modifications IDs of the groups
+        - select their descendant modifications IDs
+        - select the references among them
     - 14 deletes (7 per tabular modification):
         - delete reactive_capability_curve_points
         - delete free_property
@@ -415,8 +419,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
-        // It is actually (5, 0, 0, 14) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(6, 0, 1, 0);
+        // It is actually (7, 0, 0, 14) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(8, 0, 1, 0);
         assertEquals(0, modificationRepository.count());
     }
 
@@ -427,8 +431,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
-        // It is actually (9, 0, 0, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(10, 0, 1, 0);
+        // It is actually (11, 0, 0, 21) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(12, 0, 1, 0);
         assertEquals(0, modificationRepository.count());
     }
 
