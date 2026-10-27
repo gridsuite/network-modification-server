@@ -211,9 +211,8 @@ class NetworkModificationServiceTest {
     /**
      * @return the uuids of all the references the directory server was asked to remove
      */
-    @SuppressWarnings("unchecked")
     private Set<UUID> removedReferenceUuids() {
-        ArgumentCaptor<List<ModificationReferenceData>> captor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<ModificationReferenceData>> captor = ArgumentCaptor.captor();
         verify(directoryService, atLeast(0)).removeElementReferences(captor.capture(), eq(TEST_USER_ID));
         return captor.getAllValues().stream().flatMap(List::stream).map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet());
     }
