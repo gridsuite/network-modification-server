@@ -383,9 +383,13 @@ public class NetworkModificationController {
     @Operation(summary = "Delete all the stashed modifications from given groups")
     @ApiResponse(responseCode = "200", description = "All stashed modifications from the given groups are deleted")
     public ResponseEntity<Void> deleteStashedModificationFromGroups(@Parameter(description = "Group UUIDs") @RequestBody List<UUID> groupUuids,
+                                                                   @Parameter(description = "Remove the references of the groups modifications from the directory server")
+                                                                   @RequestParam(value = "removeElementReferences", required = false, defaultValue = "true") boolean removeElementReferences,
                                                                    @RequestHeader(HEADER_USER_ID) String userId) {
         networkModificationService.deleteStashedModificationFromGroups(groupUuids);
-        groupUuids.forEach(groupUuid -> networkModificationService.removeElementReferences(groupUuid, userId));
+        if (removeElementReferences) {
+            groupUuids.forEach(groupUuid -> networkModificationService.removeElementReferences(groupUuid, userId));
+        }
         return ResponseEntity.ok().build();
     }
 

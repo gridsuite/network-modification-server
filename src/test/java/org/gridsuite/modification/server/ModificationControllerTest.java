@@ -54,6 +54,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -1797,6 +1798,25 @@ class ModificationControllerTest {
                 .content(objectMapper.writeValueAsString(List.of(UUID.randomUUID().toString()).toArray(new String[0])))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void testDeleteStashedNetworkModificationsKeepingElementReferences() throws Exception {
+        String body = objectMapper.writeValueAsString(List.of(TEST_GROUP_ID.toString()));
+        mockMvc.perform(delete("/v1/groups/stashed-modifications")
+                .queryParam("removeElementReferences", "false")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .content(body)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        Mockito.verify(directoryService, Mockito.never()).removeElementReferences(any(), any());
+
+        mockMvc.perform(delete("/v1/groups/stashed-modifications")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .content(body)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        Mockito.verify(directoryService).removeElementReferences(any(), eq(TEST_USER_ID));
     }
 
     @Test
