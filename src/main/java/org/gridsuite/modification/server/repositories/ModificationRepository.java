@@ -76,7 +76,8 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<ModificationApplicability> findApplicabilitiesByIdIn(@Param("uuids") Collection<UUID> uuids);
 
     /**
-     * @return the IDs of every modification held by the given containers, the content of their composites included.
+     * @return the IDs of every modification held by the given containers, the content of their composites included. The
+     * references are returned, but not the shared modifications they point to, nor their content.
      */
     @Query("""
         WITH descendants AS (
