@@ -381,11 +381,6 @@ public class NetworkModificationService {
         return getModificationReferencesNonTransactional(containerUuid);
     }
 
-    @Transactional(readOnly = true)
-    public void removeElementReferences(@NonNull UUID groupUuid, String userId) {
-        directoryService.removeElementReferences(getModificationReferencesNonTransactional(groupUuid), userId);
-    }
-
     @Transactional
     public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids, boolean fetchSubModifications) {
         return this.getModificationsReferencesNonTransactional(modificationUuids, fetchSubModifications);
@@ -828,8 +823,15 @@ public class NetworkModificationService {
         }
     }
 
-    public void deleteStashedModificationFromGroups(List<UUID> groupUuids) {
+    @Transactional
+    public void deleteStashedModificationFromGroups(List<UUID> groupUuids, String userId) {
+        // Collect the references of the stashed modifications only, before they are deleted
+        List<UUID> stashedModificationUuids = modificationRepository.findStashedModificationIdsByContainerIds(groupUuids);
+        List<ModificationReferenceData> referencesData = getModificationsReferencesNonTransactional(stashedModificationUuids, true);
+
         networkModificationRepository.deleteStashedModificationFromGroups(groupUuids);
+
+        directoryService.removeElementReferences(referencesData, userId);
     }
 
     public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {
