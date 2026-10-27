@@ -19,6 +19,7 @@ public enum ModificationBusinessErrorCode implements BusinessErrorCode {
     MODIFICATION_BAD_TYPE("modification.badType", "Modification type of %s is invalid : actual type %s -> expected type %s"),
     MODIFICATION_CONTAINS_SHARED("modification.containsShared", "Modification %s contains a shared modification"),
     MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED("modification.sharedWriteForbidden", "The write permission is missing on at least one shared modification of %s"),
+    ROOT_NETWORK_TAGS_FORBIDDEN_BY_SHARED("modification.rootNetworkTagsForbiddenByShared", "Root network tags %s are missing on shared modifications %s, which only allow %s"),
     MODIFICATIONS_NOT_FOUND("modifications.notFound"),
     MODIFICATION_INFOS_ERROR("modification.infos.error", "Modification infos error : %s"),
     MODIFICATION_DUPLICATION_ARGUMENT_ERROR("modification.duplication.argument.error", "Modification duplication : need to specify the group or give a list of UUIDs"),

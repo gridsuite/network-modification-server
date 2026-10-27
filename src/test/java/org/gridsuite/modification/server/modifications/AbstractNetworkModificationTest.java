@@ -22,6 +22,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.service.DirectoryService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.WireMockUtils;
@@ -91,6 +92,9 @@ public abstract class AbstractNetworkModificationTest {
 
     @MockitoBean
     protected ReportService reportService;
+
+    @MockitoBean
+    protected DirectoryService directoryService;
 
     @Autowired
     protected NetworkModificationRepository networkModificationRepository;
