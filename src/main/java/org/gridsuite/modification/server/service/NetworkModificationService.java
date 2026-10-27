@@ -41,13 +41,11 @@ import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.util.Pair;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -229,7 +227,7 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void deleteModificationGroups(List<UUID> groupUuids, String userId) {
+    public void deleteModificationGroups(List<UUID> groupUuids, @NonNull String userId) {
         deleteIndexedModificationGroups(groupUuids);
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModificationGroups(groupUuids);
         removeDeletedElementReferences(deletedReferences, userId);
@@ -620,7 +618,7 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void deleteNetworkModifications(@NonNull List<UUID> modificationsUuids, String userId) {
+    public void deleteNetworkModifications(@NonNull List<UUID> modificationsUuids, @NonNull String userId) {
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModifications(modificationsUuids);
         removeDeletedElementReferences(deletedReferences, userId);
     }
@@ -631,9 +629,6 @@ public class NetworkModificationService {
     private void removeDeletedElementReferences(List<ModificationReferenceData> deletedReferences, String userId) {
         if (deletedReferences.isEmpty()) {
             return;
-        }
-        if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The user is required to delete modification references");
         }
         eventPublisher.publishEvent(new ModificationReferencesDeletedEvent(deletedReferences, userId));
     }
@@ -852,7 +847,7 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void deleteStashedModificationFromGroups(List<UUID> groupUuids, String userId) {
+    public void deleteStashedModificationFromGroups(List<UUID> groupUuids, @NonNull String userId) {
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteStashedModificationFromGroups(groupUuids);
         removeDeletedElementReferences(deletedReferences, userId);
     }

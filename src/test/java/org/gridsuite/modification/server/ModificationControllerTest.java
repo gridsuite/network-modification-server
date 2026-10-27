@@ -362,7 +362,7 @@ class ModificationControllerTest {
         assertEquals(exportInfos.unexportedModifications().getFirst().type(), byFormulaModificationInfos.getType());
 
         // delete group
-        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
+        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         // Export after deletion should return empty lists
@@ -413,7 +413,7 @@ class ModificationControllerTest {
         assertEquals(1, bsicListResultInfos.size());
 
         // delete the default modification group of a network
-        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
+        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         mvcResult = mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(
@@ -692,18 +692,20 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .queryParam("uuids", uuidString))
+                        .queryParam("uuids", uuidString)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
 
         // deleting a modification that no longer exists does nothing
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .queryParam("uuids", uuidString))
+                        .queryParam("uuids", uuidString)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
-        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
+        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID)).andExpect(status().isOk());
         // deleting a group that no longer exists does nothing
-        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
+        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID)).andExpect(status().isOk());
 
         // a shared composite, and another one holding a reference to it
         UUID sharedUuid = modificationRepository.saveModifications(TEST_GROUP2_ID,
@@ -720,12 +722,6 @@ class ModificationControllerTest {
         List<ModificationInfos> compositeContent = ((CompositeModificationInfos) saved.get(1)).getModificationsInfos();
         UUID referenceToOtherSharedUuid = saved.get(2).getUuid();
         String savedUuids = String.join(",", saved.stream().map(modification -> modification.getUuid().toString()).toList());
-
-        // deleting modification references requires the user, to unlink them from their shared composite
-        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .queryParam("uuids", savedUuids))
-                .andExpect(status().isBadRequest());
-        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
 
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
                         .queryParam("uuids", savedUuids)
@@ -1928,6 +1924,7 @@ class ModificationControllerTest {
         String body = mapper.writeValueAsString(List.of(TEST_GROUP_ID, TEST_GROUP2_ID));
         mockMvc.perform(delete("/v1/groups")
                         .content(body)
+                        .header(HEADER_USER_ID, TEST_USER_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
