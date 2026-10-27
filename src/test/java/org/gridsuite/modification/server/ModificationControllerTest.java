@@ -40,6 +40,7 @@ import org.gridsuite.modification.server.impacts.TestImpactUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.DirectoryService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.gridsuite.modification.server.service.NotificationService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -70,8 +71,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
-import static org.gridsuite.modification.ModificationType.LINE_MODIFICATION;
+import static org.gridsuite.modification.ModificationType.*;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.BUSBAR_SECTION_NOT_FOUND;
@@ -86,7 +86,8 @@ import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -139,6 +140,9 @@ class ModificationControllerTest {
 
     @MockitoBean
     private DirectoryService directoryService;
+
+    @MockitoBean
+    private NotificationService notificationService;
 
     @Autowired
     private NetworkModificationService networkModificationService;
@@ -516,6 +520,7 @@ class ModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                 .queryParam("groupUuid", TEST_GROUP_ID.toString())
                 .queryParam("uuids", uuidString)
+                .queryParam(HEADER_USER_ID, "userId")
                 .content(mapper.writeValueAsString(metadata))
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HEADER_USER_ID, TEST_USER_ID)
@@ -530,6 +535,7 @@ class ModificationControllerTest {
         UUID untouchedUuid = modifications.get(1).getUuid();
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
+                .header(HEADER_USER_ID, TEST_USER_ID)
                 .queryParam("uuids", deactivatedUuid.toString())
                 .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
                 .queryParam("applicable", "false")
@@ -556,6 +562,7 @@ class ModificationControllerTest {
         List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         UUID modificationUuid = modifications.getFirst().getUuid();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
+                .header(HEADER_USER_ID, TEST_USER_ID)
                 .queryParam("uuids", modificationUuid.toString())
                 .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
                 .queryParam("applicable", "false")
@@ -566,6 +573,7 @@ class ModificationControllerTest {
                 .queryParam("groupUuids", TEST_GROUP_ID.toString())
                 .queryParam("oldTag", ROOT_NETWORK_TAG)
                 .queryParam("newTag", RENAMED_ROOT_NETWORK_TAG)
+                .header(HEADER_USER_ID, TEST_USER_ID)
         ).andExpect(status().isOk());
         assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
 
@@ -578,10 +586,35 @@ class ModificationControllerTest {
     }
 
     @Test
+    void testWrittenModificationsAreAssociatedWithTheRootNetworks() throws Exception {
+        EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH).equipmentAttributeName("open").equipmentAttributeValue(true).equipmentId("v1b1").build();
+        String bodyJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(switchStatusModificationInfos,
+                List.of(new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, UUID.randomUUID(), UUID.randomUUID(), ROOT_NETWORK_TAG))));
+        MvcResult mvcResult = runRequestAsync(mockMvc, post(URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID).content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+        UUID modificationUuid = modificationRepository.getModifications(TEST_GROUP_ID, true).getFirst().getUuid();
+        assertEquals(Map.of(ROOT_NETWORK_TAG, true), readApplicabilities(TEST_GROUP_ID).get(modificationUuid),
+                "A modification is associated with the root networks it is applied on as it is written");
+
+        // a copy of the group, maybe into another study, is associated with the root networks of the copy
+        UUID newGroupUuid = UUID.randomUUID();
+        mockMvc.perform(post("/v1/groups/" + TEST_GROUP_ID + "/duplicate")
+                .queryParam("groupUuid", newGroupUuid.toString())
+                .queryParam("nodeContainerUuid", UUID.randomUUID().toString())
+                .queryParam("studyRootContainerUuid", UUID.randomUUID().toString())
+                .queryParam("rootNetworkTags", RENAMED_ROOT_NETWORK_TAG)
+                .header(HEADER_USER_ID, TEST_USER_ID)
+        ).andExpect(status().isOk());
+        assertEquals(List.of(Map.of(ROOT_NETWORK_TAG, true, RENAMED_ROOT_NETWORK_TAG, true)), List.copyOf(readApplicabilities(newGroupUuid).values()));
+    }
+
+    @Test
     void testUpdateRootNetworkApplicabilityWithTooLongTag() throws Exception {
         List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
+                .header(HEADER_USER_ID, TEST_USER_ID)
                 .queryParam("uuids", modifications.getFirst().getUuid().toString())
                 .queryParam("rootNetworkTag", "TOO_LONG")
                 .queryParam("applicable", "false")
@@ -589,7 +622,7 @@ class ModificationControllerTest {
     }
 
     @Test
-    void updateModificationDescription() throws Exception {
+    void testUpdateModificationDescription() throws Exception {
         MvcResult mvcResult;
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .equipmentType(IdentifiableType.SWITCH)
@@ -608,15 +641,9 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         assertEquals("old description", modifications.getFirst().getDescription());
 
-        ModificationInfos metadata = new ModificationInfos();
-        metadata.setDescription("new description");
-        metadata.setType(LINE_MODIFICATION);
-        metadata.setActivated(null);
-        String uuidString = modifications.getFirst().getUuid().toString();
-        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("uuids", uuidString)
-                        .content(mapper.writeValueAsString(metadata))
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/" + modifications.getFirst().getUuid().toString() + "/name-and-description")
+                        .queryParam(HEADER_USER_ID, "userId")
+                        .content(mapper.writeValueAsString(ModificationMetadata.builder().description("new description").build()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(HEADER_USER_ID, TEST_USER_ID)
                 ).andExpect(status().isOk());
@@ -625,23 +652,18 @@ class ModificationControllerTest {
     }
 
     @Test
-    void updateModificationMetadataDoesNotModifyFieldsNotProvided() {
+    void testUpdateModificationActivation() {
         // create a composite modification and set all its metadata fields
         UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of(), "");
-        modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder()
-                .name("composite name")
-                .description("composite description")
-                .activated(false)
-                .build());
+        assertEquals(true, modificationRepository.getModificationInfo(compositeUuid).getActivated());
 
-        // update the metadata again without providing any field
-        modificationRepository.updateNetworkModificationMetadata(List.of(compositeUuid), CompositeModificationInfos.builder().build());
+        // update activation
+        modificationRepository.updateModificationActivation(List.of(compositeUuid), CompositeModificationInfos.builder().activated(false).build());
+        assertEquals(false, modificationRepository.getModificationInfo(compositeUuid).getActivated());
 
-        // every field not provided must keep its previous value
-        CompositeModificationInfos result = (CompositeModificationInfos) modificationRepository.getModificationInfo(compositeUuid);
-        assertEquals("composite name", result.getName());
-        assertEquals("composite description", result.getDescription());
-        assertEquals(false, result.getActivated());
+        // update activation without providing value
+        modificationRepository.updateModificationActivation(List.of(compositeUuid), CompositeModificationInfos.builder().build());
+        assertEquals(false, modificationRepository.getModificationInfo(compositeUuid).getActivated());
     }
 
     @Test
@@ -1915,6 +1937,28 @@ class ModificationControllerTest {
     }
 
     @Test
+    void testGetCompositeMetadata() throws Exception {
+        // create a single switch attribute modification in a group
+        UUID compositeUuid = createComposite(createSomeSwitchModifications(TEST_GROUP_ID, 2).stream().map(ModificationInfos::getUuid).toList());
+
+        // update name and description
+        modificationRepository.updateModificationNameAndDescription(compositeUuid, ModificationMetadata.builder()
+                .name("new name")
+                .description("new description")
+                .build());
+
+        MvcResult mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/metadata?ids={id}", compositeUuid)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        List<ModificationMetadata> metadata = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, metadata.size());
+        assertEquals(compositeUuid, metadata.getFirst().getId());
+        assertEquals(COMPOSITE_MODIFICATION, metadata.getFirst().getType());
+        assertEquals("new name", metadata.getFirst().getName());
+        assertEquals("new description", metadata.getFirst().getDescription());
+    }
+
+    @Test
     void testStandaloneDeletionError() throws Exception {
         // create a single switch attribute modification in a group
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
@@ -1959,6 +2003,32 @@ class ModificationControllerTest {
         mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications/verify", TEST_GROUP_ID)
                 .param("uuids", switchModificationId.toString()))
             .andExpect(status().isOk());
+    }
+
+    @Test
+    void testVerifyModificationsInsideComposite() throws Exception {
+        UUID modificationInCompositeId = createSomeSwitchModifications(TEST_GROUP_ID, 1).getFirst().getUuid();
+        assembleModificationsIntoComposite(List.of(modificationInCompositeId));
+        mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications/verify", TEST_GROUP_ID)
+                        .param("uuids", modificationInCompositeId.toString()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testVerifyModificationsThroughReference() throws Exception {
+        // the reference is at the root level
+        UUID leafUuid = createSomeSwitchModifications(TEST_GROUP_ID, 1).getFirst().getUuid();
+        String compositeUuid = assembleModificationsIntoComposite(List.of(leafUuid));
+        ModificationReferenceData refData = shareCompositeIntoGroup(TEST_GROUP_ID, compositeUuid, "Test Reference");
+        mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications/verify", TEST_GROUP_ID)
+                        .param("uuids", leafUuid.toString()))
+                .andExpect(status().isOk());
+
+        // the reference is inside a composite which is at the root level
+        assembleModificationsIntoComposite(List.of(refData.modificationUuid()));
+        mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications/verify", TEST_GROUP_ID)
+                        .param("uuids", leafUuid.toString()))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -2139,6 +2209,24 @@ class ModificationControllerTest {
                 put("/v1/network-composite-modifications/groups/" + groupId + "?action=INSERT")
                         .content(body).contentType(MediaType.APPLICATION_JSON),
                 status().isOk());
+    }
+
+    private String assembleModificationsIntoComposite(List<UUID> modificationsUuids) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(post("/v1/network-composite-modifications/")
+                        .content(mapper.writeValueAsString(modificationsUuids))
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        return mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+    }
+
+    private ModificationReferenceData shareCompositeIntoGroup(UUID groupUuid, String compositeUuid, String name) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(post("/v1/network-composite-modifications/" + compositeUuid + "/share")
+                        .param("groupUuid", groupUuid.toString())
+                        .param("name", name))
+                .andExpect(status().isOk()).andReturn();
+        return mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
     }
 
     /** Ordered root-level modification UUIDs of a group. */

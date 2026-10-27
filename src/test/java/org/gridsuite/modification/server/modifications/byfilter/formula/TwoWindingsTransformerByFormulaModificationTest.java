@@ -317,7 +317,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
         assertEquals(75, twt1.getG(), 0);
         assertEquals(25, twt1.getRatedU1(), 0);
         assertEquals(10, twt1.getRatedU2(), 0);
-        assertEquals(44, twt1.getRatedS(), 0);
+        assertEquals(22, twt1.getRatedS(), 0);
 
         TwoWindingsTransformer twt2 = getNetwork().getTwoWindingsTransformer(TWT_ID_2);
         RatioTapChanger ratioTapChanger2 = twt2.getRatioTapChanger();

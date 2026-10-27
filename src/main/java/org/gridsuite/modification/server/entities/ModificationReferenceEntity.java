@@ -10,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.server.dto.ModificationMetadata;
 
 import java.util.UUID;
 
@@ -54,6 +55,11 @@ public class ModificationReferenceEntity extends ModificationEntity {
     }
 
     @Override
+    public ModificationMetadata toModificationMetadata() {
+        throw new UnsupportedOperationException("Metadata deduced from the referenced modification");
+    }
+
+    @Override
     // Perhaps we should not allow updating reference info (recreating is better)
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
@@ -78,5 +84,10 @@ public class ModificationReferenceEntity extends ModificationEntity {
     @Override
     public String getMessageValues() {
         throw new UnsupportedOperationException("Value deduced from the referenced modification");
+    }
+
+    @Override
+    public void updateNameAndDescription(ModificationMetadata modificationMetadata) {
+        throw new UnsupportedOperationException("Metadata deduced from the referenced modification");
     }
 }

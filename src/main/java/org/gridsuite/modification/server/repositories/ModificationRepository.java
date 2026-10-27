@@ -32,6 +32,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     /**
      * @return the modifications of the container that are applied on the given root network tag, that is the activated
      * ones the tag does not deactivate. A reference is resolved to the shared modification carrying the applicability.
+     * A modification without applicability for the tag is kept, for the applicator to reject it and throw an exception.
      */
     @Query("""
             SELECT m FROM ModificationEntity m
@@ -49,7 +50,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
             + "FROM ModificationEntity m WHERE m.container.id = ?1 order by m.modificationsOrder")
     List<ModificationEntity> findAllBaseByContainerId(UUID containerId);
 
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
+    @Query(value = "SELECT new ModificationEntity(m.id, m.description, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
     List<ModificationEntity> findMetadataIn(List<UUID> uuids);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder")
@@ -75,7 +76,8 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<ModificationApplicability> findApplicabilitiesByIdIn(@Param("uuids") Collection<UUID> uuids);
 
     /**
-     * @return every modification held by the given containers, the content of their composites included.
+     * @return every modification held by the given containers, the content of their composites included. The references
+     * are returned, but not the shared modifications they point to, nor their content.
      */
     @Query("""
         WITH descendants AS (
@@ -336,4 +338,27 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
             SELECT EXISTS (SELECT 1 FROM descendants WHERE type = 'MODIFICATION_REFERENCE')
             """)
     boolean existsReferenceInContainersSubtrees(@Param("containerIds") Collection<UUID> containerIds);
+
+    /**
+     * @return those of {@code containerIds} (groups or composites) holding an unstashed modification reference,
+     * directly or nested in any of their unstashed composite descendants
+     */
+    @NativeQuery("""
+            WITH RECURSIVE descendants(root_id, id, type) AS (
+                SELECT m.container_id, m.id, m.type
+                  FROM modification m
+                 WHERE m.container_id IN (:containerIds)
+                   AND m.stashed = false
+                   AND m.type IN ('COMPOSITE_MODIFICATION', 'MODIFICATION_REFERENCE')
+                UNION ALL
+                SELECT d.root_id, m.id, m.type
+                  FROM modification m
+                  JOIN descendants d ON m.container_id = d.id
+                 WHERE d.type = 'COMPOSITE_MODIFICATION'
+                   AND m.stashed = false
+                   AND m.type IN ('COMPOSITE_MODIFICATION', 'MODIFICATION_REFERENCE')
+            )
+            SELECT DISTINCT CAST(root_id AS VARCHAR) FROM descendants WHERE type = 'MODIFICATION_REFERENCE'
+            """)
+    List<UUID> findContainersWithReferenceInSubtrees(@Param("containerIds") Collection<UUID> containerIds);
 }

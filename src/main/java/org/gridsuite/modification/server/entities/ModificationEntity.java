@@ -15,6 +15,7 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.hibernate.annotations.OnDelete;
@@ -26,7 +27,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.MODIFICATION_DESCRIPTION_MISSING;
 
@@ -98,8 +101,9 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         this.description = description;
     }
 
-    public ModificationEntity(UUID id, String type) {
+    public ModificationEntity(UUID id, String description, String type) {
         this.id = id;
+        this.description = description;
         this.type = type;
     }
 
@@ -140,12 +144,36 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         return modificationInfos;
     }
 
+    public ModificationMetadata toModificationMetadata() {
+        return ModificationMetadata.builder()
+            .id(this.id)
+            .name("")
+            .description(this.description)
+            .type(ModificationType.valueOf(this.type))
+            .build();
+    }
+
+    public boolean isComposite() {
+        return type.equals(ModificationType.COMPOSITE_MODIFICATION.name());
+    }
+
+    public boolean isReference() {
+        return type.equals(ModificationType.MODIFICATION_REFERENCE.name());
+    }
+
     public void update(ModificationInfos modificationInfos) {
         // Basic attributes are immutable in the database
         if (modificationInfos == null) {
             throw new NullPointerException("Impossible to update entity from null DTO");
         }
         assignAttributes(modificationInfos);
+    }
+
+    public void updateNameAndDescription(ModificationMetadata modificationMetadata) {
+        // TODO name when attribute is moved into ModificationEntity
+        if (modificationMetadata.getDescription() != null) {
+            this.setDescription(modificationMetadata.getDescription());
+        }
     }
 
     @SneakyThrows
@@ -166,6 +194,16 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         findApplicability(rootNetworkTag).ifPresentOrElse(
             applicability -> applicability.setApplicable(applicable),
             () -> applicabilities.add(new ModificationRootNetworkApplicabilityEntity(this, rootNetworkTag, applicable)));
+    }
+
+    public void setDefaultApplicabilityIfMissing(String rootNetworkTag) {
+        if (findApplicability(rootNetworkTag).isEmpty()) {
+            applicabilities.add(new ModificationRootNetworkApplicabilityEntity(this, rootNetworkTag, true));
+        }
+    }
+
+    public Set<String> getRootNetworkTags() {
+        return applicabilities.stream().map(ModificationRootNetworkApplicabilityEntity::getRootNetworkTag).collect(Collectors.toSet());
     }
 
     private Optional<ModificationRootNetworkApplicabilityEntity> findApplicability(String rootNetworkTag) {

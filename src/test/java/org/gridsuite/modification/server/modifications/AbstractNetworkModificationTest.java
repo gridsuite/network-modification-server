@@ -99,9 +99,6 @@ public abstract class AbstractNetworkModificationTest {
     @MockitoSpyBean
     protected DirectoryService directoryService;
 
-    /** Filter names as the directory knows them: filled with the filters the test sends, as the front picks them there */
-    protected final Map<UUID, String> directoryFilterNames = new HashMap<>();
-
     @Autowired
     protected NetworkModificationRepository networkModificationRepository;
 
@@ -109,6 +106,9 @@ public abstract class AbstractNetworkModificationTest {
     protected ObjectMapper mapper;
 
     private Network network;
+
+    /** Filter names as the directory knows them: filled with the filters the test sends, as the front picks them there */
+    protected final Map<UUID, String> directoryFilterNames = new HashMap<>();
 
     @BeforeEach
     public void setUp() {
