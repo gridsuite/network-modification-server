@@ -54,7 +54,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -88,6 +87,8 @@ import static org.gridsuite.modification.server.utils.assertions.Assertions.asse
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -1809,14 +1810,14 @@ class ModificationControllerTest {
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        Mockito.verify(directoryService, Mockito.never()).removeElementReferences(any(), any());
+        verify(directoryService, never()).removeElementReferences(any(), any());
 
         mockMvc.perform(delete("/v1/groups/stashed-modifications")
                 .header(HEADER_USER_ID, TEST_USER_ID)
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        Mockito.verify(directoryService).removeElementReferences(any(), eq(TEST_USER_ID));
+        verify(directoryService).removeElementReferences(any(), eq(TEST_USER_ID));
     }
 
     @Test
