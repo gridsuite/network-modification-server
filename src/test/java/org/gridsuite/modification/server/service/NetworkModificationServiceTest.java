@@ -11,6 +11,7 @@ import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.dto.ModificationMoveInfos;
@@ -22,6 +23,7 @@ import org.gridsuite.modification.server.error.ModificationBusinessErrorCode;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,6 +45,8 @@ import static org.mockito.Mockito.*;
  * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
  */
 @SpringBootTest
+@ContextConfigurationWithTestChannel
+@DisableElasticsearch
 class NetworkModificationServiceTest {
     private static final String TEST_USER_ID = "userId";
 
@@ -245,7 +249,7 @@ class NetworkModificationServiceTest {
 
         networkModificationService.checkModificationsPermission(List.of(modUuid), "userId");
 
-        verify(directoryService).checkPermission(List.of(modUuid), "userId", PermissionType.WRITE);
+        verify(directoryService).checkPermission(eq(List.of(modUuid)), eq("userId"), eq(PermissionType.WRITE));
     }
 
     @Test
@@ -264,7 +268,7 @@ class NetworkModificationServiceTest {
 
         networkModificationService.checkModificationsPermission(List.of(childModUuid), "userId");
 
-        verify(directoryService).checkPermission(List.of(sharedCompositeUuid), "userId", PermissionType.WRITE);
+        verify(directoryService).checkPermission(eq(List.of(sharedCompositeUuid)), eq("userId"), eq(PermissionType.WRITE));
     }
 
     @Test
@@ -332,7 +336,7 @@ class NetworkModificationServiceTest {
 
         networkModificationService.moveModifications(groupUuid, groupUuid, List.of(moveInfo), List.of(), false, "userId");
 
-        verify(directoryService).checkPermission(List.of(targetCompositeUuid), "userId", PermissionType.WRITE);
+        verify(directoryService).checkPermission(eq(List.of(targetCompositeUuid)), eq("userId"), eq(PermissionType.WRITE));
     }
 
     @Test
@@ -380,7 +384,7 @@ class NetworkModificationServiceTest {
 
         networkModificationService.updateRootNetworkApplicability(List.of(modUuid), "tag", true, "userId");
 
-        verify(directoryService).checkPermission(List.of(modUuid), "userId", PermissionType.WRITE);
+        verify(directoryService).checkPermission(eq(List.of(modUuid)), eq("userId"), eq(PermissionType.WRITE));
     }
 
     @Test
@@ -423,7 +427,7 @@ class NetworkModificationServiceTest {
 
         networkModificationService.stashNetworkModifications(groupUuid, List.of(childModUuid), "userId");
 
-        verify(directoryService).checkPermission(List.of(sharedCompositeUuid), "userId", PermissionType.WRITE);
+        verify(directoryService).checkPermission(eq(List.of(sharedCompositeUuid)), eq("userId"), eq(PermissionType.WRITE));
     }
 
     @Test
@@ -470,7 +474,7 @@ class NetworkModificationServiceTest {
 
         networkModificationService.assembleNetworkModificationsIntoNewComposite(childModUuids, UUID.randomUUID(), "userId");
 
-        verify(directoryService).checkPermission(List.of(sharedCompositeUuid), "userId", PermissionType.WRITE);
+        verify(directoryService).checkPermission(eq(List.of(sharedCompositeUuid)), eq("userId"), eq(PermissionType.WRITE));
     }
 
     @Test
