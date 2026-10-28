@@ -8,8 +8,8 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.StaticVarCompensator;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.regulation.RegulationMode;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.error.NetworkModificationExceptionType;
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
+import static com.powsybl.iidm.network.regulation.RegulationMode.VOLTAGE;
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -62,7 +62,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
                 .minSusceptance(200.0)
                 .maxQAtNominalV(null)
                 .minQAtNominalV(null)
-                .regulationMode(StaticVarCompensator.RegulationMode.VOLTAGE)
+                .regulationMode(RegulationMode.VOLTAGE)
                 .voltageSetpoint(120.0)
                 .reactivePowerSetpoint(300.0)
                 .voltageRegulationType(VoltageRegulationType.LOCAL)
@@ -172,7 +172,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
 
         compensatorCreationInfos.setMaxSusceptance(100.0);
         compensatorCreationInfos.setMinSusceptance(200.0);
-        compensatorCreationInfos.setRegulationMode(StaticVarCompensator.RegulationMode.REACTIVE_POWER);
+        compensatorCreationInfos.setRegulationMode(RegulationMode.REACTIVE_POWER);
         compensatorCreationInfos.setReactivePowerSetpoint(null);
         compensatorCreationInfosJson = getJsonBody(compensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -192,7 +192,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
                 ERROR_MESSAGE_KEY, reportService);
         compensatorCreationInfos.setMaxQAtNominalV(200.0);
         compensatorCreationInfos.setMinQAtNominalV(100.0);
-        compensatorCreationInfos.setRegulationMode(StaticVarCompensator.RegulationMode.REACTIVE_POWER);
+        compensatorCreationInfos.setRegulationMode(RegulationMode.REACTIVE_POWER);
         compensatorCreationInfos.setReactivePowerSetpoint(null);
         compensatorCreationInfosJson = getJsonBody(compensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -201,7 +201,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
                         "StaticVarCompensator 'idStaticVarCompensator2' : Reactive power setpoint is not set",
                 ERROR_MESSAGE_KEY, reportService);
 
-        compensatorCreationInfos.setRegulationMode(StaticVarCompensator.RegulationMode.VOLTAGE);
+        compensatorCreationInfos.setRegulationMode(RegulationMode.VOLTAGE);
         compensatorCreationInfos.setVoltageSetpoint(null);
         compensatorCreationInfosJson = getJsonBody(compensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -297,7 +297,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
                 ERROR_MESSAGE_KEY, reportService);
         compensatorCreationInfos.setRegulating(false);
         compensatorCreationInfos.setB0(250.0);
-        compensatorCreationInfos.setRegulationMode(StaticVarCompensator.RegulationMode.REACTIVE_POWER);
+        compensatorCreationInfos.setRegulationMode(RegulationMode.REACTIVE_POWER);
         compensatorCreationInfos.setStandby(true);
 
         compensatorCreationInfosJson = getJsonBody(compensatorCreationInfos, null);

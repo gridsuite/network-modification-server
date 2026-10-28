@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.iidm.network.regulation.RegulationMode;
 
 public final class NetworkUtil {
     private NetworkUtil() {
@@ -173,11 +174,10 @@ public final class NetworkUtil {
             .setId(id)
             .setName(id)
             .setTargetP(targetP)
-            .setTargetQ(targetQ)
+            .setLocalTargetQ(targetQ)
             .setNode(node)
             .setMinP(minP)
             .setMaxP(maxP)
-            .setVoltageRegulatorOn(false)
             .add();
 
         g.newExtension(ConnectablePositionAdder.class)
@@ -192,12 +192,11 @@ public final class NetworkUtil {
             .setId(id)
             .setName(id)
             .setTargetP(targetP)
-            .setTargetQ(targetQ)
+            .setLocalTargetQ(targetQ)
             .setBus(busId)
             .setConnectableBus(busId)
             .setMinP(-1.1)
             .setMaxP(1000.0)
-            .setVoltageRegulatorOn(false)
             .add();
     }
 
@@ -306,9 +305,12 @@ public final class NetworkUtil {
             .setId(id)
             .setName(name)
             .setNode(node)
-            .setTargetV(targetV)
-            .setTargetDeadband(targetDeadband)
-            .setVoltageRegulatorOn(voltageRegulatorOn)
+            .setLocalTargetV(targetV)
+            .newVoltageRegulation()
+                .withMode(RegulationMode.VOLTAGE)
+                .withTargetDeadband(targetDeadband)
+                .withRegulating(voltageRegulatorOn)
+                .add()
             .newLinearModel()
             .setMaximumSectionCount(maximumSectionCount)
             .setBPerSection(bPerSection)
@@ -324,19 +326,20 @@ public final class NetworkUtil {
     }
 
     public static void createStaticVarCompensator(VoltageLevel vl, String id, String name,
-                                                   int node, StaticVarCompensator.RegulationMode regulationMode, double voltageSetpoint,
+                                                   int node, RegulationMode regulationMode, double voltageSetpoint,
                                                    double reactivePowerSetpoint, double bMin, double bMax) {
         vl.newStaticVarCompensator()
             .setId(id)
             .setName(name)
-            .setRegulating(false)
-            .setRegulationMode(regulationMode)
-            .setVoltageSetpoint(voltageSetpoint)
-            .setReactivePowerSetpoint(reactivePowerSetpoint)
+            .setLocalTargetV(voltageSetpoint)
+            .setLocalTargetQ(reactivePowerSetpoint)
+            .newVoltageRegulation()
+                .withMode(regulationMode)
+                .withRegulating(false)
+                .add()
             .setBmin(bMin)
             .setBmax(bMax)
             .setNode(node)
-            .setRegulating(false)
             .add();
     }
 
@@ -348,7 +351,7 @@ public final class NetworkUtil {
             .setMinP(minP)
             .setMaxP(maxP)
             .setTargetP(targetP)
-            .setTargetQ(targetQ)
+            .setLocalTargetQ(targetQ)
             .setNode(node)
             .add();
     }
@@ -377,9 +380,12 @@ public final class NetworkUtil {
             .setName(name)
             .setNode(node)
             .setLossFactor(lossFactor)
-            .setReactivePowerSetpoint(reactivePowerSetpoint)
-            .setVoltageRegulatorOn(voltageRegulatorOn)
-            .setVoltageSetpoint(voltageSetpoint)
+            .setLocalTargetQ(reactivePowerSetpoint)
+            .setLocalTargetV(voltageSetpoint)
+            .newVoltageRegulation()
+                .withMode(RegulationMode.VOLTAGE)
+                .withRegulating(voltageRegulatorOn)
+                .add()
             .add();
 
         vsc.newMinMaxReactiveLimits().setMinQ(0).setMaxQ(10).add();

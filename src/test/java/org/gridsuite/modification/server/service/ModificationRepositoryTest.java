@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
+import static com.powsybl.iidm.network.regulation.RegulationMode.VOLTAGE;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
