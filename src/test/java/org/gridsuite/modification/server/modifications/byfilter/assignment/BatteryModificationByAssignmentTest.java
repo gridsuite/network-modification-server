@@ -36,7 +36,7 @@ class BatteryModificationByAssignmentTest extends AbstractModificationByAssignme
 
     @Override
     protected void createEquipments() {
-        getNetwork().getBattery(BATTERY_ID_1).setTargetP(100).setMaxP(500).setMinP(0).setTargetQ(80);
+        getNetwork().getBattery(BATTERY_ID_1).setTargetP(100).setMaxP(500).setMinP(0).setLocalTargetQ(80);
         getNetwork().getBattery(BATTERY_ID_1).newExtension(ActivePowerControlAdder.class).withDroop(1).add();
 
         createBattery(getNetwork().getVoltageLevel("v2"), BATTERY_ID_2, "v2Battery2", 20, 50, 2000, 200, 50);
@@ -127,7 +127,7 @@ class BatteryModificationByAssignmentTest extends AbstractModificationByAssignme
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertEquals(80, getNetwork().getBattery(BATTERY_ID_1).getMaxP(), 0);
-        assertEquals(2, getNetwork().getBattery(BATTERY_ID_1).getTargetQ(), 0);
+        assertEquals(2, getNetwork().getBattery(BATTERY_ID_1).getLocalTargetQ(), 0);
         ActivePowerControl activePowerControl1 = getNetwork().getBattery(BATTERY_ID_1).getExtension(ActivePowerControl.class);
         assertNotNull(activePowerControl1);
         assertEquals(2, activePowerControl1.getDroop(), 0);
@@ -139,7 +139,7 @@ class BatteryModificationByAssignmentTest extends AbstractModificationByAssignme
         assertEquals(80, getNetwork().getBattery(BATTERY_ID_4).getMaxP(), 0);
 
         assertEquals(30, getNetwork().getBattery(BATTERY_ID_5).getMinP(), 0);
-        assertEquals(2, getNetwork().getBattery(BATTERY_ID_5).getTargetQ(), 0);
+        assertEquals(2, getNetwork().getBattery(BATTERY_ID_5).getLocalTargetQ(), 0);
         ActivePowerControl activePowerControl5 = getNetwork().getBattery(BATTERY_ID_5).getExtension(ActivePowerControl.class);
         assertNotNull(activePowerControl5);
         assertEquals(2, activePowerControl5.getDroop(), 0);
@@ -150,7 +150,7 @@ class BatteryModificationByAssignmentTest extends AbstractModificationByAssignme
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertEquals(500, getNetwork().getBattery(BATTERY_ID_1).getMaxP(), 0);
-        assertEquals(80, getNetwork().getBattery(BATTERY_ID_1).getTargetQ(), 0);
+        assertEquals(80, getNetwork().getBattery(BATTERY_ID_1).getLocalTargetQ(), 0);
         ActivePowerControl activePowerControl1 = getNetwork().getBattery(BATTERY_ID_1).getExtension(ActivePowerControl.class);
         assertNotNull(activePowerControl1);
         assertEquals(1, activePowerControl1.getDroop(), 0);
@@ -162,7 +162,7 @@ class BatteryModificationByAssignmentTest extends AbstractModificationByAssignme
         assertEquals(350, getNetwork().getBattery(BATTERY_ID_4).getMaxP(), 0);
 
         assertEquals(50, getNetwork().getBattery(BATTERY_ID_5).getMinP(), 0);
-        assertEquals(140, getNetwork().getBattery(BATTERY_ID_5).getTargetQ(), 0);
+        assertEquals(140, getNetwork().getBattery(BATTERY_ID_5).getLocalTargetQ(), 0);
         ActivePowerControl activePowerControl5 = getNetwork().getBattery(BATTERY_ID_5).getExtension(ActivePowerControl.class);
         assertNotNull(activePowerControl5);
         assertEquals(4, activePowerControl5.getDroop(), 0);

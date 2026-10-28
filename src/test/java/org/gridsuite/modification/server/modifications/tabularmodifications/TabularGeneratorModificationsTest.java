@@ -8,8 +8,8 @@ package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.StaticVarCompensator;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.regulation.RegulationMode;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
@@ -593,7 +593,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                         .minSusceptance(200.0)
                         .maxQAtNominalV(null)
                         .minQAtNominalV(null)
-                        .regulationMode(StaticVarCompensator.RegulationMode.VOLTAGE)
+                        .regulationMode(RegulationMode.VOLTAGE)
                         .voltageSetpoint(120.0)
                         .reactivePowerSetpoint(300.0)
                         .voltageRegulationType(VoltageRegulationType.LOCAL)
