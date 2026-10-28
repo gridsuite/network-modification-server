@@ -1049,6 +1049,50 @@ public class NetworkModificationRepository {
         this.modificationRepository.saveAll(modificationEntities);
     }
 
+    @Transactional
+    public List<ModificationReferenceData> stashNetworkModifications(@NonNull UUID groupUuid, @NonNull List<UUID> modificationUuids) {
+        List<ModificationReferenceData> deletedReferences = deleteReferences(getModificationsReferences(modificationUuids, true));
+        Set<UUID> deletedReferenceUuids = deletedReferences.stream().map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet());
+        List<UUID> modificationUuidsToStash = modificationUuids.stream().filter(uuid -> !deletedReferenceUuids.contains(uuid)).toList();
+        moveCompositeChildrenToGroup(groupUuid, modificationUuidsToStash);
+        stashNetworkModifications(modificationUuidsToStash, getModificationsCount(groupUuid, true));
+        return deletedReferences;
+    }
+
+    /**
+     * Stashed modifications live at the root of their group: those nested in a composite are moved out first,
+     * one move per composite.
+     */
+    private void moveCompositeChildrenToGroup(UUID groupUuid, List<UUID> modificationUuids) {
+        if (modificationUuids.isEmpty()) {
+            return;
+        }
+        // one query for the whole list
+        Map<UUID, UUID> compositeByModification = modificationRepository.findCompositeContainersByModificationIdIn(modificationUuids).stream()
+                .collect(Collectors.toMap(c -> UUID.fromString(c.getId()), c -> UUID.fromString(c.getContainerId())));
+        // a move takes a source container, so they are gathered by the composites holding the modifications
+        Map<UUID, List<UUID>> modificationsByComposite = modificationUuids.stream()
+                .filter(compositeByModification::containsKey)
+                .collect(Collectors.groupingBy(compositeByModification::get));
+        modificationsByComposite.forEach((compositeUuid, modUuids) -> moveModifications(
+                new ModificationContainerInfos(compositeUuid, ModificationContainerType.COMPOSITE),
+                new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP),
+                modUuids, null));
+    }
+
+    /**
+     * @return the deleted references
+     */
+    @Transactional
+    public List<ModificationReferenceData> deleteModificationReferences(@NonNull UUID groupUuid) {
+        List<UUID> modificationUuids = modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(groupUuid));
+        return deleteReferences(getModificationsReferences(modificationUuids, false));
+    }
+
+    private List<ModificationReferenceData> deleteReferences(List<ModificationReferenceData> references) {
+        return deleteModifications(references.stream().map(ModificationReferenceData::modificationUuid).toList());
+    }
+
     /**
      * @return the given modifications, read in one query, in the order they were asked for — the order the
      * stash gives them
