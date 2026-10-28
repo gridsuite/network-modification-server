@@ -193,6 +193,7 @@ public class NetworkModificationRepository {
     /**
      * @return the modification references among the previous content, deleted
      */
+    @Transactional
     public List<ModificationReferenceData> replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<UUID> modificationUuids) {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
@@ -910,6 +911,7 @@ public class NetworkModificationRepository {
      */
     @Transactional
     public List<ModificationReferenceData> deleteModificationGroups(List<UUID> groupUuids) {
+        modificationApplicationInfosService.deleteAllByGroupUuids(groupUuids);
         List<ModificationGroupEntity> groupEntities = getModificationGroups(groupUuids);
         List<ModificationReferenceData> deletedReferences = deleteModifications(groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList());
         // deleting the group deletes its modification_container row (JOINED subtype delete)
@@ -923,6 +925,28 @@ public class NetworkModificationRepository {
     @Transactional // To have the find and delete in the same transaction (atomic)
     public List<ModificationReferenceData> deleteModifications(@NonNull Collection<UUID> uuids) {
         return deleteModifications(modificationRepository.findAllById(uuids));
+    }
+
+    @Transactional
+    public List<ModificationReferenceData> unshareModification(@NonNull UUID referenceModificationUuid) {
+        ModificationEntity referenceEntity = modificationRepository.findById(referenceModificationUuid)
+                .orElseThrow(() -> getModificationNotFoundException(referenceModificationUuid.toString()));
+        if (!referenceEntity.getType().equals(ModificationType.MODIFICATION_REFERENCE.name())) {
+            // Only a reference modification may be unshared
+            throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
+                String.format(MODIFICATION_BAD_TYPE.messageTemplate(), referenceModificationUuid, referenceEntity.getType(), ModificationType.MODIFICATION_REFERENCE),
+                Map.of(MODIFICATION_ID, referenceModificationUuid.toString(), "modificationType", referenceEntity.getType(), "expectedModificationType", ModificationType.MODIFICATION_REFERENCE));
+        }
+
+        // copy referenced modification
+        ModificationInfos referencedCompositeInfos = getModificationInfo(((ModificationReferenceEntity) referenceEntity).getReferencedId());
+        ModificationEntity copiedComposite = ModificationEntity.fromDTO(referencedCompositeInfos);
+
+        // put the new copied composite and delete the reference
+        AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
+        containerEntity.addModification(copiedComposite, referenceEntity.getModificationsOrder());
+        modificationRepository.save(copiedComposite);
+        return deleteModifications(List.of(referenceModificationUuid));
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
@@ -1383,7 +1407,7 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return the given modifications followed by the content of their composites at any depth, read in one query.
+     * @return the given modifications followed by the content of their composites at any depth
      */
     private List<ModificationEntity> withCompositesContent(List<ModificationEntity> modificationEntities) {
         List<UUID> compositeIds = modificationEntities.stream()
@@ -1394,7 +1418,7 @@ public class NetworkModificationRepository {
             return modificationEntities;
         }
         return Stream.concat(modificationEntities.stream(),
-                modificationRepository.findAllDescendantModificationsByContainerIds(compositeIds).stream()).distinct().toList();
+                modificationRepository.findAllById(modificationRepository.findAllDescendantModificationIdsByContainerIds(compositeIds)).stream()).distinct().toList();
     }
 
     private void deleteSomeLineTabularSubModifications(List<UUID> subModificationsIds) {
