@@ -337,7 +337,7 @@ public abstract class AbstractNetworkModificationTest {
 
     /** What is sent to the server was picked in the directory: registers there the filters it references, with their names */
     protected void registerFilterNames(ModificationInfos modificationInfos) {
-        modificationInfos.collectFilters()
+        modificationInfos.getFiltersStream()
                 .filter(filter -> filter.getName() != null)
                 .forEach(filter -> directoryFilterNames.put(filter.getId(), filter.getName()));
         contentOf(modificationInfos).forEach(this::registerFilterNames);

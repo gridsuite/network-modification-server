@@ -72,7 +72,7 @@ public class ModificationFilterNameService {
      */
     private void resolveFilterNames(Collection<ModificationInfos> modifications) {
         List<FilterInfos> filters = new ArrayList<>();
-        modifications.forEach(modification -> collectFilters(modification, filters));
+        modifications.forEach(modification -> getFiltersStream(modification, filters));
         if (filters.isEmpty()) {
             return;
         }
@@ -80,8 +80,8 @@ public class ModificationFilterNameService {
         filters.forEach(filter -> filter.setName(names.get(filter.getId())));
     }
 
-    private static void collectFilters(ModificationInfos modification, List<FilterInfos> filters) {
-        modification.collectFilters().forEach(filters::add);
-        contentOf(modification).forEach(content -> collectFilters(content, filters));
+    private static void getFiltersStream(ModificationInfos modification, List<FilterInfos> filters) {
+        modification.getFiltersStream().forEach(filters::add);
+        contentOf(modification).forEach(content -> getFiltersStream(content, filters));
     }
 }
