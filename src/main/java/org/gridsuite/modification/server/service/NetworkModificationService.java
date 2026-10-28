@@ -300,6 +300,7 @@ public class NetworkModificationService {
     @Transactional
     public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable, String userId) {
         assertRootNetworkTagFits(rootNetworkTag);
+        checkModificationsPermission(modificationUuids, userId);
         networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
 
         modificationRepository.findReferencedModificationIds(modificationUuids)
@@ -449,6 +450,11 @@ public class NetworkModificationService {
 
     @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids, @NonNull String userId) {
+
+        //Check permission only on parent composites
+        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(modificationUuids).values().stream().toList();
+        checkModificationsPermission(parentComposites, userId);
+
         // Collect referenced ancestor composites before stashing, since stashed modifications are moved out of their composite
         List<UUID> referencedAncestorUuids = networkModificationRepository.getAllReferencedModificationAncestorsUuids(modificationUuids);
 
@@ -758,6 +764,9 @@ public class NetworkModificationService {
 
     @Transactional
     public UUID assembleNetworkModificationsIntoNewComposite(@NonNull List<UUID> assembledModificationsUuids, UUID nodeUuid, @NonNull String userId) {
+
+        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(assembledModificationsUuids).values().stream().toList();
+        checkModificationsPermission(parentComposites, userId);
         CompositeModificationInfos newComposite =
                 networkModificationRepository.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids).toModificationInfos();
         // update the references whose container is now the new composite (and the root container is the node)
