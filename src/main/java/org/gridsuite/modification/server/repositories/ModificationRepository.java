@@ -90,19 +90,6 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findAllDescendantModificationIdsByContainerIds(@Param("containerIds") Collection<UUID> containerIds);
 
     /**
-     * @return like {@link #findAllDescendantModificationIdsByContainerIds}, but return the entities
-     */
-    @Query("""
-        WITH descendants AS (
-            SELECT m.id AS id FROM ModificationEntity m WHERE m.container.id IN (:containerIds)
-            UNION
-            SELECT m.id AS id FROM ModificationEntity m JOIN descendants d ON m.container.id = d.id
-        )
-        SELECT m FROM ModificationEntity m JOIN descendants d ON m.id = d.id
-        """)
-    List<ModificationEntity> findAllDescendantModificationsByContainerIds(@Param("containerIds") Collection<UUID> containerIds);
-
-    /**
      * @return the shared modifications the references among {@code ids} point to, deduplicated: several references
      * may well point to the same one.
      */

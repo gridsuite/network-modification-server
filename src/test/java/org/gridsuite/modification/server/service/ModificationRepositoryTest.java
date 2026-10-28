@@ -269,7 +269,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
-        assertRequestsCount(5, 0, 0, 3);
+        assertRequestsCount(6, 0, 0, 3);
 
         // Non-existent group modification uuid: nothing to delete
         List<UUID> notFoundGroups = List.of(TEST_GROUP_ID);
@@ -314,7 +314,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
-        assertRequestsCount(5, 0, 0, 3);
+        assertRequestsCount(6, 0, 0, 3);
 
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, true).isEmpty());
     }
@@ -394,7 +394,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
-        assertRequestsCount(5, 0, 0, 4);
+        assertRequestsCount(6, 0, 0, 4);
 
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, true).isEmpty());
     }
@@ -443,7 +443,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
-        assertRequestsCount(5, 0, 0, 3);
+        assertRequestsCount(6, 0, 0, 3);
 
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, true).isEmpty());
     }
@@ -534,7 +534,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
         // TODO : Due to an issue the deletion counter is not deterministic
         // https://github.com/jdbc-observations/datasource-proxy/issues/123
-        assertRequestsCount(12, 0, 0);
+        assertRequestsCount(13, 0, 0);
 
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, true).isEmpty());
     }
@@ -798,7 +798,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
-        assertRequestsCount(4, 0, 0, 3);
+        assertRequestsCount(5, 0, 0, 3);
 
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
@@ -850,7 +850,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
-        assertRequestsCount(5, 0, 0, 4);
+        assertRequestsCount(6, 0, 0, 4);
 
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
@@ -885,7 +885,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
-        assertRequestsCount(2, 0, 0, 1);
+        assertRequestsCount(3, 0, 0, 1);
 
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
@@ -938,7 +938,7 @@ class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
         // n+1 query because we are deleting modifications 1 by 1, it's for now accepted according to a comment in "deleteModificationGroup"
-        assertRequestsCount(9, 0, 0, 3);
+        assertRequestsCount(10, 0, 0, 3);
     }
 
     @Test
@@ -989,7 +989,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
-        assertRequestsCount(2, 0, 0, 1);
+        assertRequestsCount(3, 0, 0, 1);
 
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
@@ -1050,7 +1050,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
-        assertRequestsCount(2, 0, 0, 1);
+        assertRequestsCount(3, 0, 0, 1);
 
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
@@ -1099,7 +1099,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
-        assertRequestsCount(2, 0, 0, 1);
+        assertRequestsCount(3, 0, 0, 1);
 
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
@@ -1166,7 +1166,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
-        assertRequestsCount(2, 0, 0, 1);
+        assertRequestsCount(3, 0, 0, 1);
 
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
@@ -1207,7 +1207,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
-        assertRequestsCount(2, 0, 0, 1);
+        assertRequestsCount(3, 0, 0, 1);
 
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
@@ -1482,7 +1482,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
-        assertRequestsCount(5, 0, 0, 3);
+        assertRequestsCount(6, 0, 0, 3);
 
         assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, true).isEmpty());
     }

@@ -33,7 +33,6 @@ import org.gridsuite.modification.server.modifications.ModificationTypeWithPrelo
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
@@ -41,13 +40,9 @@ import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.util.Pair;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -56,10 +51,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.ModificationType.MODIFICATION_REFERENCE;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
-import static org.gridsuite.modification.server.repositories.NetworkModificationRepository.MODIFICATION_ID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -87,8 +80,6 @@ public class NetworkModificationService {
 
     private final DirectoryService directoryService;
 
-    private final ApplicationEventPublisher eventPublisher;
-
     static final String NETWORK_UUID = "networkUuid.keyword";
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
@@ -106,8 +97,7 @@ public class NetworkModificationService {
                                       ElasticsearchOperations elasticsearchOperations,
                                       ModificationRepository modificationRepository,
                                       FilterService filterService,
-                                      DirectoryService directoryService,
-                                      ApplicationEventPublisher eventPublisher) {
+                                      DirectoryService directoryService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -119,7 +109,6 @@ public class NetworkModificationService {
         this.modificationRepository = modificationRepository;
         this.filterService = filterService;
         this.directoryService = directoryService;
-        this.eventPublisher = eventPublisher;
     }
 
     public List<UUID> getModificationGroups() {
@@ -228,15 +217,9 @@ public class NetworkModificationService {
         return networkModificationRepository.getModificationsCount(containerUuid, stashed);
     }
 
-    @Transactional
-    public void deleteModificationGroups(List<UUID> groupUuids, String userId) {
-        deleteIndexedModificationGroups(groupUuids);
+    public void deleteModificationGroups(List<UUID> groupUuids, @NonNull String userId) {
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModificationGroups(groupUuids);
         removeDeletedElementReferences(deletedReferences, userId);
-    }
-
-    private void deleteIndexedModificationGroups(List<UUID> groupUuids) {
-        applicationInfosService.deleteAllByGroupUuids(groupUuids);
     }
 
     @Transactional
@@ -609,8 +592,7 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
-    @Transactional
-    public void deleteNetworkModifications(@NonNull List<UUID> modificationsUuids, String userId) {
+    public void deleteNetworkModifications(@NonNull List<UUID> modificationsUuids, @NonNull String userId) {
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModifications(modificationsUuids);
         removeDeletedElementReferences(deletedReferences, userId);
     }
@@ -622,18 +604,7 @@ public class NetworkModificationService {
         if (deletedReferences.isEmpty()) {
             return;
         }
-        if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The user is required to delete modification references");
-        }
-        eventPublisher.publishEvent(new ModificationReferencesDeletedEvent(deletedReferences, userId));
-    }
-
-    /**
-     * After the commit, not to hold the deletion transaction during the calls to directory-server
-     */
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onModificationReferencesDeleted(ModificationReferencesDeletedEvent event) {
-        directoryService.removeElementReferences(event.references(), event.userId());
+        directoryService.removeElementReferences(deletedReferences, userId);
     }
 
     public CompletableFuture<NetworkModificationsResult> moveModifications(
@@ -732,26 +703,9 @@ public class NetworkModificationService {
             new NetworkModificationsResult(ids, result));
     }
 
-    @Transactional
     public void unshareModification(@NonNull UUID referenceModificationUuid, String userId) {
-        ModificationEntity referenceEntity = modificationRepository.findById(referenceModificationUuid)
-                .orElseThrow(() -> networkModificationRepository.getModificationNotFoundException(referenceModificationUuid.toString()));
-        if (!referenceEntity.getType().equals(MODIFICATION_REFERENCE.name())) {
-            // Only a reference modification may be unshared
-            throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
-                String.format(MODIFICATION_BAD_TYPE.messageTemplate(), referenceModificationUuid, referenceEntity.getType(), MODIFICATION_REFERENCE),
-                Map.of(MODIFICATION_ID, referenceModificationUuid.toString(), "modificationType", referenceEntity.getType(), "expectedModificationType", MODIFICATION_REFERENCE));
-        }
-
-        // copy referenced modification
-        ModificationInfos referencedCompositeInfos = networkModificationRepository.getModificationInfo(((ModificationReferenceEntity) referenceEntity).getReferencedId());
-        ModificationEntity copiedComposite = ModificationEntity.fromDTO(referencedCompositeInfos);
-
-        // put the new copied composite and delete the reference, which unlinks it from directory server
-        AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
-        containerEntity.addModification(copiedComposite, referenceEntity.getModificationsOrder());
-        modificationRepository.save(copiedComposite);
-        deleteNetworkModifications(List.of(referenceModificationUuid), userId);
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.unshareModification(referenceModificationUuid);
+        removeDeletedElementReferences(deletedReferences, userId);
     }
 
     /**
@@ -829,7 +783,6 @@ public class NetworkModificationService {
         networkModificationRepository.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
     }
 
-    @Transactional
     public void replaceCompositeModification(@NonNull UUID compositeUuid, String name, List<UUID> modificationUuids, @NonNull String userId) {
         checkModificationsPermission(List.of(compositeUuid), userId);
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
@@ -841,8 +794,7 @@ public class NetworkModificationService {
         }
     }
 
-    @Transactional
-    public void deleteStashedModificationFromGroups(List<UUID> groupUuids, String userId) {
+    public void deleteStashedModificationFromGroups(List<UUID> groupUuids, @NonNull String userId) {
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteStashedModificationFromGroups(groupUuids);
         removeDeletedElementReferences(deletedReferences, userId);
     }
@@ -1015,6 +967,4 @@ public class NetworkModificationService {
         }
         return bbsIds;
     }
-
-    record ModificationReferencesDeletedEvent(List<ModificationReferenceData> references, String userId) { }
 }
