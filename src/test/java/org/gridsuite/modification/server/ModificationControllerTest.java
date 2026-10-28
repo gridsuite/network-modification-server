@@ -118,6 +118,7 @@ class ModificationControllerTest {
 
     private static final String ROOT_NETWORK_TAG = "PH1";
     private static final String RENAMED_ROOT_NETWORK_TAG = "PH2";
+    private static final String NEW_ROOT_NETWORK_TAG = "PH3";
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String NETWORK_MODIFICATION_URI = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
@@ -558,7 +559,7 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testRenameAndDeleteRootNetworkTag() throws Exception {
+    void testAddRenameAndDeleteRootNetworkTag() throws Exception {
         List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         UUID modificationUuid = modifications.getFirst().getUuid();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
@@ -568,6 +569,12 @@ class ModificationControllerTest {
                 .queryParam("applicable", "false")
         ).andExpect(status().isOk());
 
+        mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "/root-network-tag")
+                .queryParam("groupUuids", TEST_GROUP_ID.toString())
+                .queryParam("newTag", NEW_ROOT_NETWORK_TAG)
+        ).andExpect(status().isOk());
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, NEW_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+
         // renaming the root network tag carries along its applicabilities
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-tag")
                 .queryParam("groupUuids", TEST_GROUP_ID.toString())
@@ -575,14 +582,14 @@ class ModificationControllerTest {
                 .queryParam("newTag", RENAMED_ROOT_NETWORK_TAG)
                 .header(HEADER_USER_ID, TEST_USER_ID)
         ).andExpect(status().isOk());
-        assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+        assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false, NEW_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
 
         // and dropping the tag takes its applicabilities away
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE + "/root-network-tag")
                 .queryParam("groupUuids", TEST_GROUP_ID.toString())
                 .queryParam("rootNetworkTags", RENAMED_ROOT_NETWORK_TAG)
         ).andExpect(status().isOk());
-        assertEquals(Map.of(), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+        assertEquals(Map.of(NEW_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
     }
 
     @Test

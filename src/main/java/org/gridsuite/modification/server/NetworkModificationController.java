@@ -344,16 +344,17 @@ public class NetworkModificationController {
     }
 
     @PostMapping(value = "/containers/root-network-tags/authorized", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Check that the shared modifications the user cannot write on, among the ones the containers point to," +
-        " are associated with the root network tags")
+    @Operation(summary = "Check that the shared modifications the user cannot write on, among the given ones and the ones" +
+        " the containers or the modifications refer to, are associated with the root network tags")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "They all are associated with the tags"),
         @ApiResponse(responseCode = "403", description = "At least one of them is not associated with one of the tags")
     })
     public ResponseEntity<Void> areRootNetworkTagsAllowed(
-            @Parameter(description = "Containers to check and root network tags") @RequestBody RootNetworkTagsCheckInfos checkInfos,
+            @Parameter(description = "Modifications to check and root network tags") @RequestBody RootNetworkTagsCheckInfos checkInfos,
             @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.assertRootNetworkTagsAllowed(checkInfos.containerUuids(), checkInfos.tags(), userId);
+        networkModificationService.assertRootNetworkTagsAllowed(checkInfos.containerUuids(), checkInfos.modificationUuids(),
+                checkInfos.sharedUuids(), checkInfos.tags(), userId);
         return ResponseEntity.ok().build();
     }
 
@@ -397,6 +398,16 @@ public class NetworkModificationController {
             @Parameter(description = "Applicability on this root network tag") @RequestParam("applicable") boolean applicable,
             @RequestHeader(HEADER_USER_ID) String userId) {
         networkModificationService.updateRootNetworkApplicability(networkModificationUuids, rootNetworkTag, applicable, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(value = "/network-modifications/root-network-tag")
+    @Operation(summary = "Adds a root network tag to the applicabilities of the modifications of the given groups, if not present")
+    @ApiResponse(responseCode = "200", description = "The root network tag has been successfully added")
+    public ResponseEntity<Void> addRootNetworkTag(
+            @Parameter(description = "Modification groups UUIDs") @RequestParam("groupUuids") List<UUID> groupUuids,
+            @Parameter(description = "Root network tag to add") @RequestParam("newTag") String newTag) {
+        networkModificationService.addRootNetworkTag(groupUuids, newTag);
         return ResponseEntity.ok().build();
     }
 

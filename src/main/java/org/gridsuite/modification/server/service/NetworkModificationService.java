@@ -308,6 +308,12 @@ public class NetworkModificationService {
         emitReferencedAncestorsUpdated(modificationUuids, userId);
     }
 
+    @Transactional
+    public void addRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String newTag) {
+        assertRootNetworkTagFits(newTag);
+        networkModificationRepository.addRootNetworkTag(groupUuids, newTag);
+    }
+
     /**
      * Renames the root network tag of the modifications of the given groups. The shared modifications the user cannot
      * write on are left out of the renaming: their applicabilities, and the ones of their content, are left untouched.
@@ -333,15 +339,19 @@ public class NetworkModificationService {
     }
 
     /**
-     * Asserts that the shared modifications the user cannot write on, among the ones the given containers point to, are
-     * all associated with the given root network tags: the user cannot add the missing ones.
+     * Asserts that the shared modifications the user cannot write on, among the given ones and the ones the given
+     * containers or modifications refer to, are associated with the given root network tags: the user cannot add the
+     * missing ones. The containers themselves are not checked, only their content: a composite passed as a container,
+     * unlike a shared one, is left out.
      */
     @Transactional(readOnly = true)
-    public void assertRootNetworkTagsAllowed(@NonNull List<UUID> containerUuids, @NonNull List<String> rootNetworkTags, @NonNull String userId) {
+    public void assertRootNetworkTagsAllowed(@NonNull List<UUID> containerUuids, @NonNull List<UUID> modificationUuids,
+                                             @NonNull List<UUID> sharedUuids, @NonNull List<String> rootNetworkTags, @NonNull String userId) {
         if (rootNetworkTags.isEmpty()) {
             return;
         }
-        Set<UUID> notWritableUuids = getNotWritableUuids(networkModificationRepository.getReferencedModificationUuids(containerUuids), userId);
+        Set<UUID> notWritableUuids = getNotWritableUuids(
+                networkModificationRepository.getSharedModificationUuids(containerUuids, modificationUuids, sharedUuids), userId);
         if (notWritableUuids.isEmpty()) {
             return;
         }
