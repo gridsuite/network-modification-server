@@ -249,7 +249,8 @@ class NetworkModificationServiceTest {
 
         networkModificationService.checkModificationsPermission(List.of(modUuid), "userId");
 
-        verify(directoryService).checkPermission(eq(List.of(modUuid)), eq("userId"), eq(PermissionType.WRITE));
+        List<UUID> elementUuids = List.of(modUuid);
+        verify(directoryService).checkPermission(eq(elementUuids), eq("userId"), eq(PermissionType.WRITE));
     }
 
     @Test
@@ -266,9 +267,11 @@ class NetworkModificationServiceTest {
                 UUID.randomUUID(),
                 List.of(ModificationEntity.fromDTO(referenceTo(sharedCompositeUuid))));
 
-        networkModificationService.checkModificationsPermission(List.of(childModUuid), "userId");
+        List<UUID> elementUuids = List.of(childModUuid);
+        networkModificationService.checkModificationsPermission(elementUuids, "userId");
 
-        verify(directoryService).checkPermission(eq(List.of(sharedCompositeUuid)), eq("userId"), eq(PermissionType.WRITE));
+        List<UUID> elementsUuids = List.of(sharedCompositeUuid);
+        verify(directoryService).checkPermission(eq(elementsUuids), eq("userId"), eq(PermissionType.WRITE));
     }
 
     @Test
@@ -336,7 +339,8 @@ class NetworkModificationServiceTest {
 
         networkModificationService.moveModifications(groupUuid, groupUuid, List.of(moveInfo), List.of(), false, "userId");
 
-        verify(directoryService).checkPermission(eq(List.of(targetCompositeUuid)), eq("userId"), eq(PermissionType.WRITE));
+        List<UUID> elementUuids = List.of(targetCompositeUuid);
+        verify(directoryService).checkPermission(eq(elementUuids), eq("userId"), eq(PermissionType.WRITE));
     }
 
     @Test
@@ -384,7 +388,8 @@ class NetworkModificationServiceTest {
 
         networkModificationService.updateRootNetworkApplicability(List.of(modUuid), "tag", true, "userId");
 
-        verify(directoryService).checkPermission(eq(List.of(modUuid)), eq("userId"), eq(PermissionType.WRITE));
+        List<UUID> elementUuids = List.of(modUuid);
+        verify(directoryService).checkPermission(eq(elementUuids), eq("userId"), eq(PermissionType.WRITE));
     }
 
     @Test
@@ -427,7 +432,8 @@ class NetworkModificationServiceTest {
 
         networkModificationService.stashNetworkModifications(groupUuid, List.of(childModUuid), "userId");
 
-        verify(directoryService).checkPermission(eq(List.of(sharedCompositeUuid)), eq("userId"), eq(PermissionType.WRITE));
+        List<UUID> elementUuids = List.of(sharedCompositeUuid);
+        verify(directoryService).checkPermission(eq(elementUuids), eq("userId"), eq(PermissionType.WRITE));
     }
 
     @Test
@@ -474,7 +480,8 @@ class NetworkModificationServiceTest {
 
         networkModificationService.assembleNetworkModificationsIntoNewComposite(childModUuids, UUID.randomUUID(), "userId");
 
-        verify(directoryService).checkPermission(eq(List.of(sharedCompositeUuid)), eq("userId"), eq(PermissionType.WRITE));
+        List<UUID> elementUuids = List.of(sharedCompositeUuid);
+        verify(directoryService).checkPermission(eq(elementUuids), eq("userId"), eq(PermissionType.WRITE));
     }
 
     @Test
@@ -497,9 +504,10 @@ class NetworkModificationServiceTest {
         doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", HttpHeaders.EMPTY, new byte[0], null))
                 .when(directoryService).checkPermission(any(), eq("userId"), eq(PermissionType.WRITE));
 
+        UUID nodeUuid = UUID.randomUUID();
         NetworkModificationServerException ex = assertThrows(
                 NetworkModificationServerException.class,
-                () -> networkModificationService.assembleNetworkModificationsIntoNewComposite(childModUuids, UUID.randomUUID(), "userId")
+                () -> networkModificationService.assembleNetworkModificationsIntoNewComposite(childModUuids, nodeUuid, "userId")
         );
         assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, ex.getBusinessErrorCode());
     }
