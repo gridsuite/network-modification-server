@@ -200,14 +200,14 @@ public class NetworkModificationRepository {
 
         List<ModificationEntity> copyEntities = copyAsCompositeContent(modificationUuids);
 
-        //Delete previously held modifications
-        List<ModificationReferenceData> deletedReferences = deleteModifications(compositeEntity.getModifications());
         Set<String> rootNetworkTags = compositeEntity.getRootNetworkTags();
         // copiesOf resolves every reference: no shared modification here
         copyEntities.forEach(copy -> setTreeDefaultApplicabilitiesIfMissing(copy, rootNetworkTags));
+        List<ModificationEntity> previousModifications = compositeEntity.getModifications();
         compositeEntity.setModifications(copyEntities);
         compositeEntity.updateNameAndDescription(ModificationMetadata.builder().name(name).build());
-        return deletedReferences;
+        //Delete previously held modifications
+        return deleteModifications(previousModifications);
     }
 
     @Transactional
@@ -1324,7 +1324,7 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationReferenceData> deleteStashedModificationFromGroups(List<UUID> groupUuids) {
         return deleteModifications(getModificationGroups(groupUuids).stream()
-                .flatMap(group -> group.getStashedModifications().stream()).toList());
+                .flatMap(group -> group.removeAllStashedModifications().stream()).toList());
     }
 
     @Transactional(readOnly = true)
@@ -1346,6 +1346,8 @@ public class NetworkModificationRepository {
     }
 
     /**
+     * WARNING : the given modifications must no longer be held by a loaded container that outlives the deletion: its PERSIST
+     * cascade would cancel the deletion at flush time.
      * @return the modification references among the deleted modifications, the content of the composites included
      */
     private List<ModificationReferenceData> deleteModifications(@NonNull List<ModificationEntity> modificationEntities) {
@@ -1357,9 +1359,6 @@ public class NetworkModificationRepository {
         // efficient so no need to dig deeper about that for now.
 
         List<ModificationEntity> modificationEntitiesToDelete = withCompositesContent(modificationEntities);
-        // a loaded container still holding a deleted modification would cancel its deletion through its PERSIST cascade,
-        // so we need to remove the deleted modifications from the loaded containers manually
-        removeFromLoadedContainers(modificationEntitiesToDelete);
 
         // delete tabular modifications/creations
         List<TabularModificationsEntity> tabularModificationsToDelete = modificationEntitiesToDelete.stream().filter(TabularModificationsEntity.class::isInstance).map(
@@ -1394,20 +1393,6 @@ public class NetworkModificationRepository {
                 .map(ModificationReferenceEntity.class::cast)
                 .map(reference -> new ModificationReferenceData(reference.getId(), reference.getReferencedId(), null))
                 .toList();
-    }
-
-    /**
-     * A loaded container still holding a deleted modification would cancel its deletion through the PERSIST cascade of
-     * {@link AbstractModificationContainerEntity#modifications}.
-     */
-    private static void removeFromLoadedContainers(List<ModificationEntity> modificationEntities) {
-        List<UUID> uuids = modificationEntities.stream().map(ModificationEntity::getId).toList();
-        modificationEntities.stream()
-                .map(ModificationEntity::getContainer)
-                .filter(Objects::nonNull)
-                .filter(AbstractModificationContainerEntity::isContentLoaded)
-                .distinct()
-                .forEach(container -> container.removeModifications(uuids));
     }
 
     /**
