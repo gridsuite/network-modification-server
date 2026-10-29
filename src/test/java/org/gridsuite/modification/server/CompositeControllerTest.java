@@ -659,7 +659,8 @@ class CompositeControllerTest {
 
         // now delete the duplicate modification
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .queryParam("uuids", returnedNewId.toString()))
+                        .queryParam("uuids", returnedNewId.toString())
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         // source group has not changed
