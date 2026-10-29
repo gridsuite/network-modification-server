@@ -107,6 +107,15 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping(value = "/groups/{groupUuid}/references")
+    @Operation(summary = "Notify the recreation of all the modification-references of a group, including in its composites")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The recreation of the references of the group has been notified")})
+    public ResponseEntity<Void> recreateModificationReferences(@PathVariable("groupUuid") UUID groupUuid,
+                                                          @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.recreateModificationReferences(groupUuid, userId);
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping(value = "/groups/{groupUuid}/network-modifications/move", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Move modifications from a single origin group (or its composites) into a single target group (or its composites), in request order")
     @ApiResponse(responseCode = "200", description = "The modifications have been moved.")

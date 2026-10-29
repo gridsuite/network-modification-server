@@ -382,6 +382,11 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
+    public void recreateModificationReferences(@NonNull UUID groupUuid, @NonNull String userId) {
+        notificationService.emitModificationReferencesChanged(ElementReferenceAction.CREATE, groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
+    }
+
+    @Transactional(readOnly = true)
     public void removeElementReferences(@NonNull UUID groupUuid, String userId) {
         directoryService.removeElementReferences(getModificationReferencesNonTransactional(groupUuid), userId);
     }

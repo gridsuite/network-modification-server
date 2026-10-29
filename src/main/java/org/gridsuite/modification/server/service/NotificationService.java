@@ -7,6 +7,8 @@
 package org.gridsuite.modification.server.service;
 
 import lombok.NonNull;
+import org.gridsuite.modification.server.dto.ElementReferenceAction;
+import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.WorkflowType;
 import org.slf4j.Logger;
@@ -18,6 +20,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -38,6 +41,9 @@ public class NotificationService {
     public static final String HEADER_ELEMENT_UUID = "elementUuid";
     public static final String HEADER_MODIFIED_BY = "modifiedBy";
     public static final String HEADER_MODIFICATION_DATE = "modificationDate";
+    public static final String HEADER_ACTION = "action";
+    public static final String HEADER_GROUP_UUID = "groupUuid";
+    public static final String HEADER_USER_ID = "userId";
 
     @Autowired
     private StreamBridge publisher;
@@ -86,5 +92,22 @@ public class NotificationService {
                 .setHeader(HEADER_MODIFICATION_DATE, Instant.now())
                 .build();
         sendMessage(message, "publishElementUpdate-out-0");
+    }
+
+    /**
+     * Tells the owner of the group (study-server) that some modification-references of the group were created
+     * so it can keep the shared links registered in directory-server up to date.
+     */
+    public void emitModificationReferencesChanged(@NonNull ElementReferenceAction action, UUID groupUuid,
+                                                  @NonNull List<ModificationReferenceData> references, @NonNull String userId) {
+        if (groupUuid == null || references.isEmpty()) {
+            return;
+        }
+        Message<List<ModificationReferenceData>> message = MessageBuilder.withPayload(references)
+                .setHeader(HEADER_ACTION, action)
+                .setHeader(HEADER_GROUP_UUID, groupUuid)
+                .setHeader(HEADER_USER_ID, userId)
+                .build();
+        sendMessage(message, "publishCompositeReference-out-0");
     }
 }
