@@ -734,20 +734,20 @@ public class NetworkModificationService {
     private void moveReferenceElementsToCompositeFrom(@NonNull List<UUID> modificationsUuids, @NonNull UUID compositeUuid, @NonNull UUID nodeUuid, String userId) {
         // update the references whose container is now the new composite (and the root container is the node)
         List<ModificationReferenceData> references = getModificationsReferencesNonTransactional(modificationsUuids, false);
-        references.forEach(ref -> {
-                ReferenceAttributes referenceAttributes = ReferenceAttributes.createReferenceAttributes(
-                    ref.modificationUuid(),
-                    nodeUuid,
-                    compositeUuid,
-                    ReferenceAttributes.ReferenceType.STUDY_NODE_NETWORK_MODIFICATION
-                );
-                directoryService.updateElementReference(
-                    ref.referencedId(),
-                    referenceAttributes,
-                    userId
-                );
-            }
-        );
+        // one call per referenced shared element, carrying all its references to update
+        Map<UUID, List<ReferenceAttributes>> referencesAttributesByReferencedId = new LinkedHashMap<>();
+        for (ModificationReferenceData ref : references) {
+            ReferenceAttributes referenceAttributes = ReferenceAttributes.createReferenceAttributes(
+                ref.modificationUuid(),
+                nodeUuid,
+                compositeUuid,
+                ReferenceAttributes.ReferenceType.STUDY_NODE_NETWORK_MODIFICATION
+            );
+            referencesAttributesByReferencedId.computeIfAbsent(ref.referencedId(), k -> new ArrayList<>()).add(referenceAttributes);
+        }
+        for (Map.Entry<UUID, List<ReferenceAttributes>> entry : referencesAttributesByReferencedId.entrySet()) {
+            directoryService.updateElementReferences(entry.getKey(), entry.getValue(), userId);
+        }
     }
 
     @Transactional
