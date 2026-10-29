@@ -15,6 +15,7 @@ import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.dto.ModificationMoveInfos;
+import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.dto.PermissionType;
 import org.gridsuite.modification.server.dto.StashedFilter;
@@ -25,6 +26,7 @@ import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
@@ -34,7 +36,9 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -161,6 +165,75 @@ class NetworkModificationServiceTest {
                 "a reference nested two composites deep, a stashed one does not count");
         assertEquals(List.of(outerUuid), networkModificationService.getContainersWithModificationReferences(List.of(outerUuid)),
                 "a composite is a container too");
+    }
+
+    @Test
+    void shouldRemoveOnlyStashedReferencesWhenDeletingStashedModifications() {
+        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
+        UUID groupUuid = UUID.randomUUID();
+        // an active reference, a stashed reference, and a reference nested in a stashed composite
+        UUID activeReferenceUuid = saveReference(groupUuid, sharedUuid, false);
+        UUID stashedReferenceUuid = saveReference(groupUuid, sharedUuid, true);
+        UUID stashedCompositeUuid = networkModificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(
+                CompositeModificationInfos.builder()
+                        .uuid(UUID.randomUUID())
+                        .modificationsInfos(List.of(referenceTo(sharedUuid)))
+                        .stashed(true)
+                        .build()))).getFirst().getUuid();
+        UUID nestedReferenceUuid = networkModificationRepository.getModifications(stashedCompositeUuid, true).getFirst().getUuid();
+        // another group, with an active reference, not part of the deletion
+        UUID otherGroupUuid = UUID.randomUUID();
+        UUID otherGroupReferenceUuid = saveReference(otherGroupUuid, sharedUuid, false);
+
+        networkModificationService.deleteStashedModificationFromGroups(List.of(groupUuid), TEST_USER_ID);
+
+        assertEquals(Set.of(stashedReferenceUuid, nestedReferenceUuid), removedReferenceUuids());
+        assertEquals(List.of(activeReferenceUuid), networkModificationRepository.getModifications(groupUuid, true, StashedFilter.ALL)
+                .stream().map(ModificationInfos::getUuid).toList());
+        assertTrue(modificationRepository.findById(stashedReferenceUuid).isEmpty());
+        assertTrue(modificationRepository.findById(nestedReferenceUuid).isEmpty());
+        assertTrue(modificationRepository.findById(otherGroupReferenceUuid).isPresent());
+    }
+
+    @Test
+    void shouldRemoveNoReferenceWhenDeletingStashedModificationsOfGroupsWithoutStashedReference() {
+        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
+        // a group whose references are all active, and a group whose only stashed modification is not a reference
+        UUID groupWithActiveReferenceUuid = UUID.randomUUID();
+        UUID activeReferenceUuid = saveReference(groupWithActiveReferenceUuid, sharedUuid, false);
+        UUID groupWithStashedModificationUuid = UUID.randomUUID();
+        networkModificationRepository.saveModifications(groupWithStashedModificationUuid, List.of(ModificationEntity.fromDTO(
+                LoadModificationInfos.builder().uuid(UUID.randomUUID()).equipmentId("dummyEquipmentId").stashed(true).build())));
+
+        networkModificationService.deleteStashedModificationFromGroups(
+                List.of(groupWithActiveReferenceUuid, groupWithStashedModificationUuid, UUID.randomUUID()), TEST_USER_ID);
+
+        assertTrue(removedReferenceUuids().isEmpty());
+        assertTrue(modificationRepository.findById(activeReferenceUuid).isPresent());
+        assertEquals(0, networkModificationRepository.getModificationsCount(groupWithStashedModificationUuid, true));
+    }
+
+    /**
+     * @return the uuids of all the references the directory server was asked to remove
+     */
+    private Set<UUID> removedReferenceUuids() {
+        ArgumentCaptor<List<ModificationReferenceData>> captor = ArgumentCaptor.captor();
+        verify(directoryService, atLeast(0)).removeElementReferences(captor.capture(), eq(TEST_USER_ID));
+        return captor.getAllValues().stream().flatMap(List::stream).map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet());
+    }
+
+    /**
+     * @return the uuid of a reference to the given shared composite, saved at the root of the given group
+     */
+    private UUID saveReference(UUID groupUuid, UUID sharedCompositeUuid, boolean stashed) {
+        ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
+                .referencedId(sharedCompositeUuid)
+                .referencedInfos(CompositeModificationInfos.builder().uuid(sharedCompositeUuid).build())
+                .stashed(stashed)
+                .activated(true)
+                .build();
+        return networkModificationRepository.saveModificationInfos(groupUuid, List.of(referenceInfos), List.of()).getFirst().getUuid();
     }
 
     /**

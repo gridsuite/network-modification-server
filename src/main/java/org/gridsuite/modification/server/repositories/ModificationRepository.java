@@ -29,6 +29,9 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.container.id = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
     List<ModificationEntity> findAllByContainerId(@Param("containerId") UUID containerId, @Param("stashed") Boolean stashed);
 
+    @Query(value = "SELECT m.id FROM ModificationEntity m WHERE m.container.id IN (:containerIds) AND m.stashed = true")
+    List<UUID> findStashedModificationIdsByContainerIds(@Param("containerIds") Collection<UUID> containerIds);
+
     /**
      * @return the modifications of the container that are applied on the given root network tag, that is the activated
      * ones the tag does not deactivate. A reference is resolved to the shared modification carrying the applicability.
