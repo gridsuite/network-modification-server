@@ -447,7 +447,6 @@ public class NetworkModificationService {
         }
     }
 
-    @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids, @NonNull String userId) {
 
         //Check permission only on parent composites
@@ -457,33 +456,10 @@ public class NetworkModificationService {
         // Collect referenced ancestor composites before stashing, since stashed modifications are moved out of their composite
         List<UUID> referencedAncestorUuids = networkModificationRepository.getAllReferencedModificationAncestorsUuids(modificationUuids);
 
-        moveCompositeChildrenToGroup(groupUuid, modificationUuids);
-        networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
-
-        // break all the references pointing to those stashed modification references
-        directoryService.removeElementReferences(getModificationsReferencesNonTransactional(modificationUuids, true), userId);
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.stashNetworkModifications(groupUuid, modificationUuids);
+        removeDeletedElementReferences(deletedReferences, userId);
 
         emitReferencedModificationsUpdated(referencedAncestorUuids, userId);
-    }
-
-    /**
-     * Stashed modifications live at the root of their group: those nested in a composite are moved out first,
-     * one move per composite.
-     */
-    private void moveCompositeChildrenToGroup(UUID groupUuid, List<UUID> modificationUuids) {
-        if (modificationUuids.isEmpty()) {
-            return;
-        }
-        // one query for the whole list
-        Map<UUID, UUID> compositeByModification = findModificationParentCompositesNonTransactional(modificationUuids);
-        // a move takes a source container, so they are gathered by the composites holding the modifications
-        Map<UUID, List<UUID>> modificationsByComposite = modificationUuids.stream()
-                .filter(compositeByModification::containsKey)
-                .collect(Collectors.groupingBy(compositeByModification::get));
-        modificationsByComposite.forEach((compositeUuid, modUuids) -> networkModificationRepository.moveModifications(
-                new ModificationContainerInfos(compositeUuid, ModificationContainerType.COMPOSITE),
-                new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP),
-                modUuids, null));
     }
 
     @Transactional
@@ -492,14 +468,9 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void restoreNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids, UUID studyUuid, UUID nodeUuid, String userId) {
+    public void restoreNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         networkModificationRepository.restoreNetworkModifications(modificationUuids,
             networkModificationRepository.getModificationsCount(groupUuid, false));
-        if (studyUuid != null && nodeUuid != null) {
-            // recreate references
-            List<ModificationReferenceData> referencesData = getModificationsReferencesNonTransactional(modificationUuids, true);
-            directoryService.createElementReferences(nodeUuid, studyUuid, userId, referencesData);
-        }
     }
 
     public CompletableFuture<NetworkModificationsResult> createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo,
@@ -811,6 +782,11 @@ public class NetworkModificationService {
 
     public void deleteStashedModificationFromGroups(List<UUID> groupUuids, @NonNull String userId) {
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteStashedModificationFromGroups(groupUuids);
+        removeDeletedElementReferences(deletedReferences, userId);
+    }
+
+    public void deleteModificationReferences(@NonNull UUID groupUuid, @NonNull String userId) {
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModificationReferences(groupUuid);
         removeDeletedElementReferences(deletedReferences, userId);
     }
 
