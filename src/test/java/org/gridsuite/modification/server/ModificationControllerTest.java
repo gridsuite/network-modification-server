@@ -769,8 +769,8 @@ class ModificationControllerTest {
                 .andExpect(status().isOk());
 
         // the content of the deleted composite goes with it, and its reference is unlinked too
-        compositeContent.forEach(modification -> assertThrows(NetworkModificationServerException.class,
-                () -> modificationRepository.getModificationInfo(modification.getUuid())));
+        compositeContent.stream().map(ModificationInfos::getUuid).forEach(uuid -> assertThrows(NetworkModificationServerException.class,
+                () -> modificationRepository.getModificationInfo(uuid)));
         List<UUID> referenceUuids = List.of(rootReferenceUuid, compositeContent.getFirst().getUuid(), referenceToOtherSharedUuid);
         verify(directoryService).removeElementReferences(argThat(references -> references.size() == 3
                 && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq(TEST_USER_ID));

@@ -860,6 +860,10 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
+        return getModificationInfoNonTransactional(modificationUuid);
+    }
+
+    private ModificationInfos getModificationInfoNonTransactional(UUID modificationUuid) {
         return toModificationsInfosWithApplicabilities(getModificationEntity(modificationUuid));
     }
 
@@ -939,14 +943,14 @@ public class NetworkModificationRepository {
         }
 
         // copy referenced modification
-        ModificationInfos referencedCompositeInfos = getModificationInfo(((ModificationReferenceEntity) referenceEntity).getReferencedId());
+        ModificationInfos referencedCompositeInfos = getModificationInfoNonTransactional(((ModificationReferenceEntity) referenceEntity).getReferencedId());
         ModificationEntity copiedComposite = ModificationEntity.fromDTO(referencedCompositeInfos);
 
         // put the new copied composite and delete the reference
         AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
         containerEntity.addModification(copiedComposite, referenceEntity.getModificationsOrder());
         modificationRepository.save(copiedComposite);
-        return deleteModifications(List.of(referenceModificationUuid));
+        return deleteModifications(List.of(referenceEntity));
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
