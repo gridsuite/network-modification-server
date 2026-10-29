@@ -282,7 +282,8 @@ public class NetworkModificationService {
     @Transactional
     public void updateNetworkModificationActivation(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
         // TODO replace metadata by boolean in the endpoint
-        checkModificationsPermission(modificationUuids, userId);
+        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(modificationUuids).values().stream().toList();
+        checkModificationsPermission(parentComposites, userId);
         networkModificationRepository.updateModificationActivation(modificationUuids, metadata);
         emitReferencedAncestorsUpdated(modificationUuids, userId);
     }
