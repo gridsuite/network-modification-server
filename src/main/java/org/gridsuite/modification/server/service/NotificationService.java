@@ -7,7 +7,7 @@
 package org.gridsuite.modification.server.service;
 
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.ElementReferenceAction;
+import org.gridsuite.modification.server.dto.ElementSharedLinkAction;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.WorkflowType;
@@ -98,7 +98,7 @@ public class NotificationService {
      * Tells the owner of the group (study-server) that some modification-references of the group were created
      * so it can keep the shared links registered in directory-server up to date.
      */
-    public void emitModificationReferencesChanged(@NonNull ElementReferenceAction action, UUID groupUuid,
+    public void emitModificationReferencesChanged(@NonNull ElementSharedLinkAction action, UUID groupUuid,
                                                   @NonNull List<ModificationReferenceData> references, @NonNull String userId) {
         if (groupUuid == null || references.isEmpty()) {
             return;
@@ -108,6 +108,6 @@ public class NotificationService {
                 .setHeader(HEADER_GROUP_UUID, groupUuid)
                 .setHeader(HEADER_USER_ID, userId)
                 .build();
-        sendMessage(message, "publishCompositeReference-out-0");
+        sendMessage(message, "publishNetworkModificationReference-out-0");
     }
 }

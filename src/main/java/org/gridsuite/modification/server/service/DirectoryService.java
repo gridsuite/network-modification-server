@@ -53,7 +53,7 @@ public class DirectoryService {
      * @param referenceAttributes new attributes of the modification-reference including its own referenceUuid which doesn't change
      * @param userId id of the user who moves the reference
      */
-    public void updateElementReference(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, @NonNull String userId) {
+    public void updateElementSharedLink(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, @NonNull String userId) {
         var path = UriComponentsBuilder.fromPath(
                         DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references/{referenceUuid}")
                 .buildAndExpand(elementUuid, referenceAttributes.getReferenceId())
@@ -67,7 +67,7 @@ public class DirectoryService {
                 .toBodilessEntity();
     }
 
-    public void createElementReference(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, @NonNull String userId) {
+    public void createElementSharedLink(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, @NonNull String userId) {
         var path = UriComponentsBuilder.fromPath(
                         DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references")
                 .buildAndExpand(elementUuid)
@@ -82,9 +82,9 @@ public class DirectoryService {
                 .toBodilessEntity();
     }
 
-    public void removeElementReferences(@NonNull List<ModificationReferenceData> referencesData, String userId) {
+    public void removeElementSharedLinks(@NonNull List<ModificationReferenceData> referencesData, String userId) {
         //TODO modify endpoint in directory-server to allow batch deletion of references
-        referencesData.forEach(referenceData -> removeElementReference(referenceData.referencedId(), referenceData.modificationUuid(), userId));
+        referencesData.forEach(referenceData -> removeElementSharedLink(referenceData.referencedId(), referenceData.modificationUuid(), userId));
     }
 
     /**
@@ -93,7 +93,7 @@ public class DirectoryService {
      * @param userId id of the user who caused the unreferencing
      * @param sharedElementUuid uuid of the referenced shared element in the directory-server
      */
-    private void removeElementReference(UUID sharedElementUuid, UUID referenceUuid, String userId) {
+    private void removeElementSharedLink(UUID sharedElementUuid, UUID referenceUuid, String userId) {
         Objects.requireNonNull(referenceUuid);
         Objects.requireNonNull(sharedElementUuid);
 
@@ -153,7 +153,7 @@ public class DirectoryService {
         return permissions == null ? Map.of() : permissions;
     }
 
-    public void createElementReferences(@NonNull UUID nodeContainerUuid, @NonNull UUID studyRootContainerUuid, String userId, List<ModificationReferenceData> referencesData) {
+    public void createElementSharedLinks(@NonNull UUID nodeContainerUuid, @NonNull UUID studyRootContainerUuid, String userId, List<ModificationReferenceData> referencesData) {
         referencesData.forEach(ref -> {
             // local ModificationReferenceData data don't hold the node UUID so when containerId is null it means that this reference modification is at the root level
             // otherwise, the reference modification is inside a composite
@@ -164,7 +164,7 @@ public class DirectoryService {
                     insideComposite ? ref.containerId() : nodeContainerUuid,
                     insideComposite ? ReferenceAttributes.ReferenceType.STUDY_NODE_NETWORK_MODIFICATION
                             : ReferenceAttributes.ReferenceType.STUDY_NODE);
-            createElementReference(ref.referencedId(), referenceAttributes, userId);
+            createElementSharedLink(ref.referencedId(), referenceAttributes, userId);
         });
     }
 }

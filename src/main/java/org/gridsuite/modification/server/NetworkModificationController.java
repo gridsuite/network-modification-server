@@ -394,7 +394,7 @@ public class NetworkModificationController {
     public ResponseEntity<Void> deleteStashedModificationFromGroups(@Parameter(description = "Group UUIDs") @RequestBody List<UUID> groupUuids,
                                                                    @RequestHeader(HEADER_USER_ID) String userId) {
         networkModificationService.deleteStashedModificationFromGroups(groupUuids);
-        groupUuids.forEach(groupUuid -> networkModificationService.removeElementReferences(groupUuid, userId));
+        groupUuids.forEach(groupUuid -> networkModificationService.removeElementSharedLinks(groupUuid, userId));
         return ResponseEntity.ok().build();
     }
 

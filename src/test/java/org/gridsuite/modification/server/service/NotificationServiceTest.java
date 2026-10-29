@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.service;
 
-import org.gridsuite.modification.server.dto.ElementReferenceAction;
+import org.gridsuite.modification.server.dto.ElementSharedLinkAction;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,13 +49,13 @@ class NotificationServiceTest {
         String userId = "test-user";
         List<ModificationReferenceData> references = List.of(mock(ModificationReferenceData.class));
 
-        notificationService.emitModificationReferencesChanged(ElementReferenceAction.CREATE, groupUuid, references, userId);
+        notificationService.emitModificationReferencesChanged(ElementSharedLinkAction.CREATE, groupUuid, references, userId);
 
         ArgumentCaptor<Message<List<ModificationReferenceData>>> messageCaptor = ArgumentCaptor.forClass(Message.class);
-        verify(publisher).send(eq("publishCompositeReference-out-0"), messageCaptor.capture());
+        verify(publisher).send(eq("publishNetworkModificationReference-out-0"), messageCaptor.capture());
         Message<List<ModificationReferenceData>> sentMessage = messageCaptor.getValue();
         assertEquals(references, sentMessage.getPayload());
-        assertEquals(ElementReferenceAction.CREATE, sentMessage.getHeaders().get(NotificationService.HEADER_ACTION));
+        assertEquals(ElementSharedLinkAction.CREATE, sentMessage.getHeaders().get(NotificationService.HEADER_ACTION));
         assertEquals(groupUuid, sentMessage.getHeaders().get(NotificationService.HEADER_GROUP_UUID));
         assertEquals(userId, sentMessage.getHeaders().get(NotificationService.HEADER_USER_ID));
     }
@@ -64,7 +64,7 @@ class NotificationServiceTest {
     void emitModificationReferencesChangedWhenGroupUuidNullOrReferencesEmpty() {
         String userId = "test-user";
         List<ModificationReferenceData> references = Collections.emptyList();
-        notificationService.emitModificationReferencesChanged(ElementReferenceAction.CREATE, null, references, userId);
+        notificationService.emitModificationReferencesChanged(ElementSharedLinkAction.CREATE, null, references, userId);
         verify(publisher, never()).send(anyString(), any());
     }
 }

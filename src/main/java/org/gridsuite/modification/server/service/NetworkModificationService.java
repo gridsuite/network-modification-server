@@ -383,12 +383,12 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     public void recreateModificationReferences(@NonNull UUID groupUuid, @NonNull String userId) {
-        notificationService.emitModificationReferencesChanged(ElementReferenceAction.CREATE, groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
+        notificationService.emitModificationReferencesChanged(ElementSharedLinkAction.CREATE, groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
     }
 
     @Transactional(readOnly = true)
-    public void removeElementReferences(@NonNull UUID groupUuid, String userId) {
-        directoryService.removeElementReferences(getModificationReferencesNonTransactional(groupUuid), userId);
+    public void removeElementSharedLinks(@NonNull UUID groupUuid, String userId) {
+        directoryService.removeElementSharedLinks(getModificationReferencesNonTransactional(groupUuid), userId);
     }
 
     @Transactional
@@ -471,7 +471,7 @@ public class NetworkModificationService {
         networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
 
         // break all the references pointing to those stashed modification references
-        directoryService.removeElementReferences(getModificationsReferencesNonTransactional(modificationUuids, true), userId);
+        directoryService.removeElementSharedLinks(getModificationsReferencesNonTransactional(modificationUuids, true), userId);
 
         emitReferencedModificationsUpdated(referencedAncestorUuids, userId);
     }
@@ -508,7 +508,7 @@ public class NetworkModificationService {
         if (studyUuid != null && nodeUuid != null) {
             // recreate references
             List<ModificationReferenceData> referencesData = getModificationsReferencesNonTransactional(modificationUuids, true);
-            directoryService.createElementReferences(nodeUuid, studyUuid, userId, referencesData);
+            directoryService.createElementSharedLinks(nodeUuid, studyUuid, userId, referencesData);
         }
     }
 
@@ -673,12 +673,12 @@ public class NetworkModificationService {
                                @NonNull List<String> rootNetworkTags, String userId) {
         // the copies may come from another study, using other root network tags
         networkModificationRepository.duplicateUnstashedModifications(sourceGroupUuid, targetGroupUuid, rootNetworkTags);
-        createElementReferences(targetGroupUuid, nodeContainerUuid, studyContainerUuid, userId);
+        createElementSharedLinks(targetGroupUuid, nodeContainerUuid, studyContainerUuid, userId);
     }
 
-    public void createElementReferences(@NonNull UUID targetGroupUuid, UUID nodeContainerUuid, UUID studyContainerUuid, String userId) {
+    public void createElementSharedLinks(@NonNull UUID targetGroupUuid, UUID nodeContainerUuid, UUID studyContainerUuid, String userId) {
         if (nodeContainerUuid != null && studyContainerUuid != null) {
-            directoryService.createElementReferences(nodeContainerUuid, studyContainerUuid, userId, getModificationReferencesNonTransactional(targetGroupUuid));
+            directoryService.createElementSharedLinks(nodeContainerUuid, studyContainerUuid, userId, getModificationReferencesNonTransactional(targetGroupUuid));
         }
     }
 
@@ -744,7 +744,7 @@ public class NetworkModificationService {
                 new ModificationReferenceData(referenceModificationUuid,
                         ((ModificationReferenceEntity) referenceEntity).getReferencedId(),
                         containerEntity.getId()));
-        directoryService.removeElementReferences(referenceData, userId);
+        directoryService.removeElementSharedLinks(referenceData, userId);
     }
 
     /**
@@ -794,7 +794,7 @@ public class NetworkModificationService {
                     compositeUuid,
                     ReferenceAttributes.ReferenceType.STUDY_NODE_NETWORK_MODIFICATION
                 );
-                directoryService.updateElementReference(
+                directoryService.updateElementSharedLink(
                     ref.referencedId(),
                     referenceAttributes,
                     userId

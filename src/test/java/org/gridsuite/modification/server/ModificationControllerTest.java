@@ -2393,7 +2393,7 @@ class ModificationControllerTest {
                 .andExpect(status().isOk());
 
         verify(notificationService).emitModificationReferencesChanged(
-                eq(ElementReferenceAction.CREATE), eq(groupUuid), anyList(), eq(TEST_USER_ID));
+                eq(ElementSharedLinkAction.CREATE), eq(groupUuid), anyList(), eq(TEST_USER_ID));
     }
 
     @Test

@@ -11,7 +11,7 @@ import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
-import org.gridsuite.modification.server.dto.ElementReferenceAction;
+import org.gridsuite.modification.server.dto.ElementSharedLinkAction;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.ModificationMoveInfos;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
@@ -538,6 +538,6 @@ class NetworkModificationServiceTest {
 
         networkModificationService.recreateModificationReferences(groupUuid, userId);
 
-        verify(notificationService).emitModificationReferencesChanged(ElementReferenceAction.CREATE, groupUuid, refs, userId);
+        verify(notificationService).emitModificationReferencesChanged(ElementSharedLinkAction.CREATE, groupUuid, refs, userId);
     }
 }

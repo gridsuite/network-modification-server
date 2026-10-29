@@ -50,7 +50,7 @@ class DirectoryServiceTest {
     }
 
     @Test
-    void testUpdateElementReference() {
+    void testUpdateElementSharedLink() {
         UUID elementUuid = UUID.randomUUID();
         UUID referenceUuid = UUID.randomUUID();
         UUID rootContainerId = UUID.randomUUID();
@@ -71,11 +71,11 @@ class DirectoryServiceTest {
                 .andExpect(jsonPath("$.referenceId").value(referenceUuid.toString()))
                 .andRespond(withSuccess());
 
-        directoryService.updateElementReference(elementUuid, referenceAttributes, userId);
+        directoryService.updateElementSharedLink(elementUuid, referenceAttributes, userId);
     }
 
     @Test
-    void testCreateElementReference() {
+    void testCreateElementSharedLink() {
         UUID elementUuid = UUID.randomUUID();
         UUID referenceUuid = UUID.randomUUID();
         UUID rootContainerId = UUID.randomUUID();
@@ -96,11 +96,11 @@ class DirectoryServiceTest {
                 .andExpect(jsonPath("$.referenceId").value(referenceUuid.toString()))
                 .andRespond(withSuccess());
 
-        directoryService.createElementReference(elementUuid, referenceAttributes, userId);
+        directoryService.createElementSharedLink(elementUuid, referenceAttributes, userId);
     }
 
     @Test
-    void testRemoveElementReference() {
+    void testRemoveElementSharedLink() {
         UUID sharedElementUuid = UUID.randomUUID();
         UUID referenceUuid = UUID.randomUUID();
         String userId = "userId";
@@ -111,7 +111,7 @@ class DirectoryServiceTest {
                 .andExpect(header(HEADER_USER_ID, userId))
                 .andRespond(withSuccess());
 
-        directoryService.removeElementReferences(List.of(new ModificationReferenceData(referenceUuid, sharedElementUuid, null)), userId);
+        directoryService.removeElementSharedLinks(List.of(new ModificationReferenceData(referenceUuid, sharedElementUuid, null)), userId);
 
         directoryServer.verify();
     }
@@ -153,7 +153,7 @@ class DirectoryServiceTest {
                 .andExpect(jsonPath("$.referenceType").value(ReferenceAttributes.ReferenceType.STUDY_NODE.toString()))
                 .andRespond(withSuccess());
 
-        directoryService.createElementReferences(nodeContainerUuid, studyRootContainerUuid, userId, referencesData);
+        directoryService.createElementSharedLinks(nodeContainerUuid, studyRootContainerUuid, userId, referencesData);
 
         directoryServer.verify();
     }
