@@ -618,8 +618,14 @@ class NetworkModificationServiceTest {
 
     @Test
     void shouldCheckPermissionWhenUpdatingNetworkModificationActivation() {
+        UUID groupUuid = UUID.randomUUID();
         List<ModificationInfos> saved = networkModificationRepository.saveModifications(
-                UUID.randomUUID(), List.of(ModificationEntity.fromDTO(dummyModification(UUID.randomUUID()))));
+                groupUuid,
+                List.of(ModificationEntity.fromDTO(compositeModification(UUID.randomUUID(), List.of(
+                        dummyModification(UUID.randomUUID()),
+                        dummyModification(UUID.randomUUID())
+                )))));
+        CompositeModificationInfos savedComposite = (CompositeModificationInfos) saved.getFirst();
         UUID modUuid = saved.getFirst().getUuid();
 
         ModificationReferenceInfos ref = ModificationReferenceInfos.builder()
@@ -634,10 +640,10 @@ class NetworkModificationServiceTest {
 
         ModificationInfos metadata = new ModificationInfos();
         metadata.setActivated(false);
-        List<UUID> modUuids = List.of(modUuid);
+        List<UUID> childModUuids = savedComposite.getModificationsInfos().stream().map(ModificationInfos::getUuid).toList();
         NetworkModificationServerException ex = assertThrows(
                 NetworkModificationServerException.class,
-                () -> networkModificationService.updateNetworkModificationActivation(modUuids, metadata, "userId")
+                () -> networkModificationService.updateNetworkModificationActivation(childModUuids, metadata, "userId")
         );
         assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, ex.getBusinessErrorCode());
     }
