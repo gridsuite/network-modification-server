@@ -99,6 +99,8 @@ public final class EntityRegistry {
 
         register(BalancesAdjustmentModificationInfos.class, BalancesAdjustmentEntity.class);
 
+        register(NetworkReductionInfos.class, NetworkReductionEntity.class);
+
         // // deletion
         register(ByFilterDeletionInfos.class, ByFilterDeletionEntity.class);
         register(EquipmentDeletionInfos.class, EquipmentDeletionEntity.class);
