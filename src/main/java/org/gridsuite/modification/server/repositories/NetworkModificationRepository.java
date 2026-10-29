@@ -265,6 +265,12 @@ public class NetworkModificationRepository {
             @NonNull ModificationContainerInfos source,
             @NonNull ModificationContainerInfos target,
             @NonNull List<UUID> modificationUuids, UUID beforeModificationUuid) {
+        return addApplicabilities(moveModificationsNonTransactional(source, target, modificationUuids, beforeModificationUuid).stream()
+                .map(this::toModificationInfos).toList());
+    }
+
+    private List<ModificationEntity> moveModificationsNonTransactional(ModificationContainerInfos source, ModificationContainerInfos target,
+                                                                       List<UUID> modificationUuids, UUID beforeModificationUuid) {
         var sourceContainer = getContainer(source);
         var targetContainer = getContainer(target);
         var moved = moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid);
@@ -275,7 +281,7 @@ public class NetworkModificationRepository {
                     .ifPresent(composite -> setDefaultApplicabilitiesIfMissing(moved, composite.getRootNetworkTags()));
         }
         deleteStaleApplicationInfos(sourceContainer, targetContainer, moved);
-        return addApplicabilities(moved.stream().map(this::toModificationInfos).toList());
+        return moved;
     }
 
     private List<ModificationEntity> moveModificationsNonTransactional(AbstractModificationContainerEntity sourceContainer, AbstractModificationContainerEntity targetContainer,
@@ -981,6 +987,10 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public Integer getModificationsCount(@NonNull UUID groupUuid, boolean stashed) {
+        return getModificationsCountNonTransactional(groupUuid, stashed);
+    }
+
+    private Integer getModificationsCountNonTransactional(UUID groupUuid, boolean stashed) {
         return modificationRepository.countByContainerAndStashed(groupUuid, stashed);
     }
 
@@ -1032,6 +1042,10 @@ public class NetworkModificationRepository {
      */
     @Transactional
     public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> initialModificationUuids, boolean withChildren) {
+        return getModificationsReferencesNonTransactional(initialModificationUuids, withChildren);
+    }
+
+    private List<ModificationReferenceData> getModificationsReferencesNonTransactional(List<UUID> initialModificationUuids, boolean withChildren) {
         if (initialModificationUuids.isEmpty()) {
             return List.of();
         }
@@ -1044,6 +1058,10 @@ public class NetworkModificationRepository {
 
     @Transactional
     public void stashNetworkModifications(@NonNull List<UUID> modificationUuids, int stashedModificationCount) {
+        stashNetworkModificationsNonTransactional(modificationUuids, stashedModificationCount);
+    }
+
+    private void stashNetworkModificationsNonTransactional(List<UUID> modificationUuids, int stashedModificationCount) {
         int stashModificationOrder = -stashedModificationCount - 1;
         List<ModificationEntity> modificationEntities = getModificationEntitiesInOrder(modificationUuids);
         for (ModificationEntity modificationEntity : modificationEntities) {
@@ -1051,6 +1069,50 @@ public class NetworkModificationRepository {
             modificationEntity.setModificationsOrder(stashModificationOrder--);
         }
         this.modificationRepository.saveAll(modificationEntities);
+    }
+
+    @Transactional
+    public List<ModificationReferenceData> stashNetworkModifications(@NonNull UUID groupUuid, @NonNull List<UUID> modificationUuids) {
+        List<ModificationReferenceData> deletedReferences = deleteReferences(getModificationsReferencesNonTransactional(modificationUuids, true));
+        Set<UUID> deletedReferenceUuids = deletedReferences.stream().map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet());
+        List<UUID> modificationUuidsToStash = modificationUuids.stream().filter(uuid -> !deletedReferenceUuids.contains(uuid)).toList();
+        moveCompositeChildrenToGroup(groupUuid, modificationUuidsToStash);
+        stashNetworkModificationsNonTransactional(modificationUuidsToStash, getModificationsCountNonTransactional(groupUuid, true));
+        return deletedReferences;
+    }
+
+    /**
+     * Stashed modifications live at the root of their group: those nested in a composite are moved out first,
+     * one move per composite.
+     */
+    private void moveCompositeChildrenToGroup(UUID groupUuid, List<UUID> modificationUuids) {
+        if (modificationUuids.isEmpty()) {
+            return;
+        }
+        // one query for the whole list
+        Map<UUID, UUID> compositeByModification = modificationRepository.findCompositeContainersByModificationIdIn(modificationUuids).stream()
+                .collect(Collectors.toMap(c -> UUID.fromString(c.getId()), c -> UUID.fromString(c.getContainerId())));
+        // a move takes a source container, so they are gathered by the composites holding the modifications
+        Map<UUID, List<UUID>> modificationsByComposite = modificationUuids.stream()
+                .filter(compositeByModification::containsKey)
+                .collect(Collectors.groupingBy(compositeByModification::get));
+        modificationsByComposite.forEach((compositeUuid, modUuids) -> moveModificationsNonTransactional(
+                new ModificationContainerInfos(compositeUuid, ModificationContainerType.COMPOSITE),
+                new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP),
+                modUuids, null));
+    }
+
+    /**
+     * @return the deleted references
+     */
+    @Transactional
+    public List<ModificationReferenceData> deleteModificationReferences(@NonNull UUID groupUuid) {
+        List<UUID> modificationUuids = modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(groupUuid));
+        return deleteReferences(getModificationsReferencesNonTransactional(modificationUuids, false));
+    }
+
+    private List<ModificationReferenceData> deleteReferences(List<ModificationReferenceData> references) {
+        return deleteModifications(modificationRepository.findAllById(references.stream().map(ModificationReferenceData::modificationUuid).toList()));
     }
 
     /**
