@@ -29,9 +29,6 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.container.id = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
     List<ModificationEntity> findAllByContainerId(@Param("containerId") UUID containerId, @Param("stashed") Boolean stashed);
 
-    @Query(value = "SELECT m.id FROM ModificationEntity m WHERE m.container.id IN (:containerIds) AND m.stashed = true")
-    List<UUID> findStashedModificationIdsByContainerIds(@Param("containerIds") Collection<UUID> containerIds);
-
     /**
      * @return the modifications of the container that are applied on the given root network tag, that is the activated
      * ones the tag does not deactivate. A reference is resolved to the shared modification carrying the applicability.
@@ -79,13 +76,13 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<ModificationApplicability> findApplicabilitiesByIdIn(@Param("uuids") Collection<UUID> uuids);
 
     /**
-     * @return every modification held by the given containers, the content of their composites included. The references
-     * are returned, but not the shared modifications they point to, nor their content.
+     * @return the IDs of every modification held by the given containers, the content of their composites included. The
+     * references are returned, but not the shared modifications they point to, nor their content.
      */
     @Query("""
         WITH descendants AS (
             SELECT m.id AS id FROM ModificationEntity m WHERE m.container.id IN (:containerIds)
-            UNION ALL
+            UNION
             SELECT m.id AS id FROM ModificationEntity m JOIN descendants d ON m.container.id = d.id
         )
         SELECT d.id FROM descendants d
@@ -140,14 +137,6 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     // children of one / many containers (no type param — id disambiguates)
     @Query("SELECT m FROM ModificationEntity m WHERE m.container.id = :containerId ORDER BY m.modificationsOrder ASC")
     List<ModificationEntity> findAllByContainer(@Param("containerId") UUID containerId);
-
-    @Query("""
-          SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description)
-            FROM ModificationEntity m
-           WHERE m.container.id IN :containerIds
-           ORDER BY m.container.id, m.modificationsOrder ASC
-        """)
-    List<ModificationEntity> findAllByContainers(@Param("containerIds") Collection<UUID> containerIds);
 
     @Query(value = """
             SELECT CAST(m.container_id AS VARCHAR)

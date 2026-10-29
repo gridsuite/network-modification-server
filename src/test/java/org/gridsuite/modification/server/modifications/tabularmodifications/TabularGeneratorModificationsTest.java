@@ -399,10 +399,6 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
     - 1 select on group to check if it exists
     - 1 select to find modifications of this group
     - 2 selects to retrieve tabular sub-modifications IDs (1 per tabular modification)
-    - 3 selects to collect the references to remove from the directory server, before the deletion:
-        - select the stashed modifications IDs of the groups
-        - select their descendant modifications IDs
-        - select the references among them
     - 14 deletes (7 per tabular modification):
         - delete reactive_capability_curve_points
         - delete free_property
@@ -419,8 +415,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
-        // It is actually (7, 0, 0, 14) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(8, 0, 1, 0);
+        // It is actually (5, 0, 0, 14) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(6, 0, 1, 0);
         assertEquals(0, modificationRepository.count());
     }
 
@@ -431,46 +427,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
-        // It is actually (11, 0, 0, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(12, 0, 1, 0);
-        assertEquals(0, modificationRepository.count());
-    }
-
-    /*
-    DELETE /v1/network-modifications SQL requests analysis
-
-    Given an example with 2 tabular modifications having 1000 modifications each
-
-    - 1 select on group to check if it exists
-    - 1 select to find modifications of this group
-    - 2 selects to retrieve tabular sub-modifications IDs (1 per tabular modification)
-    - 14 deletes (7 per tabular modification):
-        - delete reactive_capability_curve_points
-        - delete free_property
-        - delete generator_modification
-        - delete tabular_modifications_modification
-        - delete modification for generators
-        - delete tabular_modification
-        - delete modification for tabular modifications
-     */
-    @Test
-    void testSqlRequestsCountOnDeleteNetworkModificationsInGroup() throws Exception {
-        createFewTabularModifications();
-
-        reset();
-        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId());
-        // It is actually (6, 0, 0, 14) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(6, 0, 1, 0);
-        assertEquals(0, modificationRepository.count());
-    }
-
-    @Test
-    void testSqlRequestsCountOnDeleteNetworkModificationsInGroup2() throws Exception {
-        createMoreTabularModifications();
-
-        reset();
-        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId());
-        // It is actually (10, 0, 0, 21) because deletes made in the native query are not counted
+        // It is actually (9, 0, 0, 21) because deletes made in the native query are not counted
         TestUtils.assertRequestsCount(10, 0, 1, 0);
         assertEquals(0, modificationRepository.count());
     }
@@ -480,8 +437,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
     Given an example with 2 tabular modifications having 1000 modifications each
 
-    - 1 select on group to check if it exists
-    - 1 select to find modifications of this group
+    - 1 select to find the modifications
     - 1 update to maintain modifications order
     - 2 select to retrieve tabular sub-modifications IDs (1 per tabular modification)
     - 14 deletes (7 per tabular modification):
@@ -499,9 +455,9 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         // removing only first tabular modification in the group
-        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), List.of(modifications.getFirst().getLeft()));
-        // It is actually (4, 0, 1, 7) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(4, 0, 1, 0);
+        ApiUtils.deleteNetworkModifications(mockMvc, List.of(modifications.getFirst().getLeft()));
+        // It is actually (3, 0, 1, 7) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(3, 0, 1, 0);
         assertEquals(4, modificationRepository.count()); // then second tabular still exists (and its sub-modifications)
     }
 
@@ -511,9 +467,9 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         // removing only 3 first tabular modifications in the group
-        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), modifications.subList(0, 3).stream().map(Pair::getLeft).toList());
-        // It is actually (8, 0, 1, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(8, 0, 1, 0);
+        ApiUtils.deleteNetworkModifications(mockMvc, modifications.subList(0, 3).stream().map(Pair::getLeft).toList());
+        // It is actually (7, 0, 1, 21) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(7, 0, 1, 0);
         assertEquals(31, modificationRepository.count()); // then last tabular still exists (and its sub-modifications)
     }
 
@@ -648,7 +604,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         List<UUID> ids = List.of(modifId);
         exception = assertThrows(
             UnsupportedOperationException.class,
-            () -> networkModificationRepository.deleteModifications(TEST_GROUP_ID, ids)
+            () -> networkModificationRepository.deleteModifications(ids)
         );
         assertEquals("No sub-modifications deletion method for type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
     }

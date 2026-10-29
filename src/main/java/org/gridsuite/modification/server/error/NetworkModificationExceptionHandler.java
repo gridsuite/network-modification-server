@@ -48,8 +48,6 @@ public class NetworkModificationExceptionHandler extends AbstractBusinessExcepti
                  MODIFICATION_CONTAINS_SHARED,
                  MODIFICATION_CONTAINER_BAD_TYPE,
                  MODIFICATION_INFOS_ERROR,
-                 MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN,
-                 MODIFICATION_DELETION_ARGUMENT_ERROR,
                  MODIFICATION_DUPLICATION_ARGUMENT_ERROR,
                  MODIFICATION_DESCRIPTION_MISSING,
                  MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR,
