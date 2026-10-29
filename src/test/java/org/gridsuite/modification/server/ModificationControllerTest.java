@@ -87,6 +87,7 @@ import static org.gridsuite.modification.server.utils.assertions.Assertions.asse
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -2381,6 +2382,18 @@ class ModificationControllerTest {
             assertEquals(referencedLoadModificationInfo.getUuid(), reference.referencedId());
             assertNull(reference.containerId());
         }
+    }
+
+    @Test
+    void testRecreateModificationReferences() throws Exception {
+        UUID groupUuid = UUID.randomUUID();
+
+        mockMvc.perform(post("/v1/groups/{groupUuid}/references", groupUuid)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        verify(notificationService).emitModificationReferencesChanged(
+                eq(ElementReferenceAction.CREATE), eq(groupUuid), anyList(), eq(TEST_USER_ID));
     }
 
     @Test

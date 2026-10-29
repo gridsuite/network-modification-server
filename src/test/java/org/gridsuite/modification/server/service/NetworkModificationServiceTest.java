@@ -11,8 +11,10 @@ import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.server.dto.ElementReferenceAction;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.ModificationMoveInfos;
+import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.dto.PermissionType;
 import org.gridsuite.modification.server.dto.StashedFilter;
@@ -35,6 +37,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -50,6 +53,9 @@ class NetworkModificationServiceTest {
 
     @MockitoBean
     private DirectoryService directoryService;
+
+    @MockitoBean
+    private NotificationService notificationService;
 
     @Autowired
     private NetworkModificationRepository networkModificationRepository;
@@ -520,5 +526,18 @@ class NetworkModificationServiceTest {
                     ((LoadModificationInfos) sharedComposite.getModificationsInfos().get(i)).getEquipmentId(),
                     ((LoadModificationInfos) copiedCompositeContent.get(i)).getEquipmentId());
         }
+    }
+
+    @Test
+    void recreateModificationReferences() {
+        UUID groupUuid = UUID.randomUUID();
+        String userId = "user";
+        List<ModificationReferenceData> refs = List.of(mock(ModificationReferenceData.class));
+        when(modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(groupUuid))).thenReturn(List.of(UUID.randomUUID()));
+        when(networkModificationRepository.getModificationsReferences(anyList(), eq(false))).thenReturn(refs);
+
+        networkModificationService.recreateModificationReferences(groupUuid, userId);
+
+        verify(notificationService).emitModificationReferencesChanged(ElementReferenceAction.CREATE, groupUuid, refs, userId);
     }
 }
