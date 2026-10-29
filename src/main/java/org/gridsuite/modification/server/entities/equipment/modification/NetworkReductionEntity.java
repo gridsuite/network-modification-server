@@ -29,7 +29,7 @@ public class NetworkReductionEntity extends ModificationEntity {
 
     @ElementCollection
     @CollectionTable(name = "network_reduction_excluded_voltage_levels")
-    private List<GeneratorsFilterEmbeddable> excludedVoltageLevels;
+    private List<FilterEmbeddable> excludedVoltageLevels;
 
     public NetworkReductionEntity(@NonNull NetworkReductionInfos networkReductionInfos) {
         super(networkReductionInfos);
@@ -56,11 +56,11 @@ public class NetworkReductionEntity extends ModificationEntity {
 
     private void assignAttributes(NetworkReductionInfos networkReductionInfos) {
         excludedVoltageLevels = networkReductionInfos.getFilters() == null ? null : networkReductionInfos.getFilters().stream()
-                .map(generator -> new GeneratorsFilterEmbeddable(generator.getId(), generator.getName()))
+                .map(generator -> new FilterEmbeddable(generator.getId(), generator.getName()))
                 .collect(Collectors.toList());
     }
 
-    private List<FilterInfos> toFilters(List<GeneratorsFilterEmbeddable> filters) {
+    private List<FilterInfos> toFilters(List<FilterEmbeddable> filters) {
         return filters != null ? filters
                 .stream()
                 .map(f -> new FilterInfos(f.getId(), f.getName()))
