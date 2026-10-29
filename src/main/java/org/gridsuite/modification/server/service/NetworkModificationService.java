@@ -375,11 +375,6 @@ public class NetworkModificationService {
         return getModificationReferencesNonTransactional(containerUuid);
     }
 
-    @Transactional(readOnly = true)
-    public void removeElementReferences(@NonNull UUID groupUuid, String userId) {
-        directoryService.removeElementReferences(getModificationReferencesNonTransactional(groupUuid), userId);
-    }
-
     @Transactional
     public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids, boolean fetchSubModifications) {
         return this.getModificationsReferencesNonTransactional(modificationUuids, fetchSubModifications);
