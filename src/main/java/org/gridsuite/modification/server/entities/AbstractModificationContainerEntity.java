@@ -10,7 +10,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
-import org.hibernate.Hibernate;
 
 import java.util.*;
 import java.util.function.Function;
@@ -120,6 +119,12 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
             .toList();
     }
 
+    public List<ModificationEntity> removeAllStashedModifications() {
+        List<ModificationEntity> stashedModifications = getStashedModifications();
+        modifications.removeAll(stashedModifications);
+        return stashedModifications;
+    }
+
     public List<ModificationEntity> removeModifications(List<UUID> uuidsToRemove) {
         List<ModificationEntity> modificationsToBeRemoved = getOrderedModifications(uuidsToRemove);
         modifications.removeAll(modificationsToBeRemoved);
@@ -156,9 +161,5 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
             this.modifications.add(child);
         }
         resetPositionsOrder();
-    }
-
-    public static boolean isContentLoaded(AbstractModificationContainerEntity container) {
-        return Hibernate.isInitialized(container) && Hibernate.isInitialized(container.modifications);
     }
 }
