@@ -908,16 +908,26 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return the modification references among the deleted modifications
+     * @return the modification references among the deleted modifications, keyed by the group they were deleted from
      */
     @Transactional
-    public List<ModificationReferenceData> deleteModificationGroups(List<UUID> groupUuids) {
+    public Map<UUID, List<ModificationReferenceData>> deleteModificationGroups(List<UUID> groupUuids) {
         modificationApplicationInfosService.deleteAllByGroupUuids(groupUuids);
+
         List<ModificationGroupEntity> groupEntities = getModificationGroups(groupUuids);
-        List<ModificationReferenceData> deletedReferences = deleteModifications(groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList());
+
+        // the group of each modification, composites content included, read before their deletion
+        Map<UUID, UUID> groupByModification = new HashMap<>();
+        groupEntities.forEach(groupEntity -> withCompositesContent(groupEntity.getModifications())
+                .forEach(modification -> groupByModification.put(modification.getId(), groupEntity.getId())));
+        List<ModificationReferenceData> deletedReferences =
+            deleteModifications(groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList());
+
         // deleting the group deletes its modification_container row (JOINED subtype delete)
         modificationGroupRepository.deleteAll(groupEntities);
-        return deletedReferences;
+
+        return deletedReferences.stream()
+                .collect(Collectors.groupingBy(reference -> groupByModification.get(reference.modificationUuid())));
     }
 
     /**
