@@ -167,25 +167,25 @@ class VscCreationTest extends AbstractNetworkModificationTest {
 
         VscConverterStation vscConverterStation1 = (VscConverterStation) hvdcLine.getConverterStation1();
         assertNotNull(vscConverterStation1);
-        assertEquals(44, vscConverterStation1.getReactivePowerSetpoint(), 0);
+        assertEquals(44, vscConverterStation1.getRegulatingTargetQ(), 0);
         assertEquals(40, vscConverterStation1.getLossFactor(), 0);
         assertEquals(ReactiveLimitsKind.CURVE, vscConverterStation1.getReactiveLimits().getKind());
         ReactiveCapabilityCurve reactiveLimits1 = vscConverterStation1.getReactiveLimits(ReactiveCapabilityCurve.class);
         assertEquals(2, reactiveLimits1.getPointCount());
         assertEquals(0.6, reactiveLimits1.getMaxP(), 0);
         assertEquals(0.4, reactiveLimits1.getMinP(), 0);
-        assertEquals(66, vscConverterStation1.getVoltageSetpoint(), 0);
+        assertEquals(66, vscConverterStation1.getRegulatingTargetV(), 0);
         assertEquals("v1", vscConverterStation1.getTerminal().getVoltageLevel().getId());
 
         VscConverterStation vscConverterStation2 = (VscConverterStation) hvdcLine.getConverterStation2();
         assertNotNull(vscConverterStation2);
-        assertEquals(23, vscConverterStation2.getReactivePowerSetpoint(), 0);
+        assertEquals(23, vscConverterStation2.getRegulatingTargetQ(), 0);
         assertEquals(4, vscConverterStation2.getLossFactor(), 0);
         assertEquals(ReactiveLimitsKind.MIN_MAX, vscConverterStation2.getReactiveLimits().getKind());
         MinMaxReactiveLimits reactiveLimits2 = vscConverterStation2.getReactiveLimits(MinMaxReactiveLimits.class);
         assertEquals(66, reactiveLimits2.getMaxQ(), 0);
         assertEquals(55, reactiveLimits2.getMinQ(), 0);
-        assertEquals(34, vscConverterStation2.getVoltageSetpoint(), 0);
+        assertEquals(34, vscConverterStation2.getRegulatingTargetV(), 0);
         assertEquals("v2", vscConverterStation2.getTerminal().getVoltageLevel().getId());
     }
 

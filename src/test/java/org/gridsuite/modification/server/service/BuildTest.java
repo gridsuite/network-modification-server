@@ -12,6 +12,7 @@ import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.iidm.network.regulation.RegulationMode;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import mockwebserver3.Dispatcher;
@@ -794,8 +795,8 @@ class BuildTest {
         assertEquals(35., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorShortCircuit.class).getDirectTransX(), 0);
         assertEquals(25., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorShortCircuit.class).getStepUpTransformerX(), 0);
         assertEquals(MIN_MAX, network.getGenerator(NEW_GENERATOR_ID).getReactiveLimits().getKind());
-        assertTrue(network.getGenerator(NEW_GENERATOR_ID).isVoltageRegulatorOn());
-        assertEquals(225., network.getGenerator(NEW_GENERATOR_ID).getTargetV(), 0.1);
+        assertTrue(network.getGenerator(NEW_GENERATOR_ID).isRegulatingWithMode(RegulationMode.VOLTAGE));
+        assertEquals(225., network.getGenerator(NEW_GENERATOR_ID).getRegulatingTargetV(), 0.1);
         assertEquals("v1", network.getLine("newLine").getTerminal1().getVoltageLevel().getId());
         assertEquals("v2", network.getLine("newLine").getTerminal2().getVoltageLevel().getId());
         assertEquals(4., network.getLine("newLine").getB1(), 0.1);

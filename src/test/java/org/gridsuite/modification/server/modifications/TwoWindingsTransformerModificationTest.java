@@ -385,8 +385,9 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
 
         //set regulating to false and unset target deadband on the twtTransformer to modify
         TwoWindingsTransformer twtToModify = getNetwork().getTwoWindingsTransformer("trf1");
-        twtToModify.getRatioTapChanger().setRegulating(false);
-        twtToModify.getRatioTapChanger().setTargetDeadband(Double.NaN);
+        twtToModify.getRatioTapChanger().getVoltageRegulation()
+            .setRegulating(false)
+            .setTargetDeadband(Double.NaN);
         //unset regulating and modify target voltage
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulating(null);
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetV(new AttributeModification<>(250.0, OperationType.SET));

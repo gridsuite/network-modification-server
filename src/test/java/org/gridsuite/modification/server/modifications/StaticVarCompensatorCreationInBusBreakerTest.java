@@ -8,8 +8,8 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.StaticVarCompensator;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.regulation.RegulationMode;
 import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.StaticVarCompensatorCreationInfos;
@@ -59,7 +59,7 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
                 .minSusceptance(null)
                 .maxQAtNominalV(224.0)
                 .minQAtNominalV(200.0)
-                .regulationMode(StaticVarCompensator.RegulationMode.VOLTAGE)
+                .regulationMode(RegulationMode.VOLTAGE)
                 .voltageSetpoint(120.0)
                 .reactivePowerSetpoint(300.0)
                 .voltageRegulationType(VoltageRegulationType.DISTANT)
