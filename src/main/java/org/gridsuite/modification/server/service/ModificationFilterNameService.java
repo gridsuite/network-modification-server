@@ -35,16 +35,10 @@ public class ModificationFilterNameService {
         this.directoryService = directoryService;
     }
 
-    /**
-     * Sets, on the filters the given modification references, their current name in the directory.
-     */
     public void addFilterNames(ModificationInfos modification) {
         resolveFilterNames(List.of(modification));
     }
 
-    /**
-     * Sets, on the filters the given modifications reference, their current name in the directory.
-     */
     public void addFilterNames(List<ModificationInfos> modifications) {
         resolveFilterNames(modifications);
     }
@@ -63,13 +57,6 @@ public class ModificationFilterNameService {
         }
     }
 
-    /**
-     * Reads the name of every filter the given modifications reference, nested ones included, in a single call to the
-     * directory-server: the directory owns filter names, they are not stored. A filter the directory does not know
-     * anymore (deleted) gets a null name.
-     * <p>
-     * Remote call: never make it inside a transaction.
-     */
     private void resolveFilterNames(Collection<ModificationInfos> modifications) {
         List<FilterInfos> filters = new ArrayList<>();
         modifications.forEach(modification -> getFiltersStream(modification, filters));
