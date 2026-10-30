@@ -217,11 +217,9 @@ public class NetworkModificationService {
         return networkModificationRepository.getModificationsCount(containerUuid, stashed);
     }
 
-    @Transactional
     public void deleteModificationGroups(List<UUID> groupUuids, @NonNull String userId) {
-        // one deletion per group, so that the owner of each group is told about the references deleted from it
-        groupUuids.forEach(groupUuid -> removeDeletedElementReferences(groupUuid,
-                networkModificationRepository.deleteModificationGroups(List.of(groupUuid)), userId));
+        Map<UUID, List<ModificationReferenceData>> deletedReferences = networkModificationRepository.deleteModificationGroups(groupUuids);
+        removeDeletedElementReferences(deletedReferences, userId);
     }
 
     @Transactional
@@ -464,7 +462,7 @@ public class NetworkModificationService {
         List<UUID> referencedAncestorUuids = networkModificationRepository.getAllReferencedModificationAncestorsUuids(modificationUuids);
 
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.stashNetworkModifications(groupUuid, modificationUuids);
-        removeDeletedElementReferences(groupUuid, deletedReferences, userId);
+        removeDeletedElementReferencesByGroup(groupUuid, deletedReferences, userId);
 
         emitReferencedModificationsUpdated(referencedAncestorUuids, userId);
     }
@@ -586,7 +584,7 @@ public class NetworkModificationService {
         // the modifications may sit in several groups, read before their deletion
         Map<UUID, UUID> groupByReference = findGroupsOfReferences(modificationsUuids);
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModifications(modificationsUuids);
-        removeDeletedElementReferences(groupByReference, deletedReferences, userId);
+        removeDeletedElementReferencesByGroup(groupByReference, deletedReferences, userId);
     }
 
     /**
@@ -604,17 +602,21 @@ public class NetworkModificationService {
         return groupByReference;
     }
 
-    private void removeDeletedElementReferences(Map<UUID, UUID> groupByReference, List<ModificationReferenceData> deletedReferences, String userId) {
+    private void removeDeletedElementReferencesByGroup(Map<UUID, UUID> groupByReference, List<ModificationReferenceData> deletedReferences, String userId) {
         deletedReferences.stream()
                 .filter(reference -> groupByReference.containsKey(reference.modificationUuid()))
                 .collect(Collectors.groupingBy(reference -> groupByReference.get(reference.modificationUuid())))
-                .forEach((groupUuid, references) -> removeDeletedElementReferences(groupUuid, references, userId));
+                .forEach((groupUuid, references) -> removeDeletedElementReferencesByGroup(groupUuid, references, userId));
+    }
+
+    private void removeDeletedElementReferences(Map<UUID, List<ModificationReferenceData>> deletedReferencesByGroup, String userId) {
+        deletedReferencesByGroup.forEach((groupUuid, references) -> removeDeletedElementReferencesByGroup(groupUuid, references, userId));
     }
 
     /**
      * Unlink the deleted modification references from their shared modifications
      */
-    private void removeDeletedElementReferences(UUID groupUuid, List<ModificationReferenceData> deletedReferences, String userId) {
+    private void removeDeletedElementReferencesByGroup(UUID groupUuid, List<ModificationReferenceData> deletedReferences, String userId) {
         notificationService.emitModificationReferencesChanged(ElementReferenceAction.DELETE, groupUuid, deletedReferences, userId);
     }
 
@@ -711,7 +713,7 @@ public class NetworkModificationService {
         // the group owning the reference, read before its deletion; null if the reference is inside a shared composite
         UUID groupUuid = modificationRepository.findGroupIdByModificationId(referenceModificationUuid);
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.unshareModification(referenceModificationUuid);
-        removeDeletedElementReferences(groupUuid, deletedReferences, userId);
+        removeDeletedElementReferencesByGroup(groupUuid, deletedReferences, userId);
     }
 
     /**
@@ -781,7 +783,7 @@ public class NetworkModificationService {
         // the deleted references were inside the composite, so in its group
         UUID groupUuid = modificationRepository.findGroupIdByModificationId(compositeUuid);
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
-        removeDeletedElementReferences(groupUuid, deletedReferences, userId);
+        removeDeletedElementReferencesByGroup(groupUuid, deletedReferences, userId);
 
         // Notify directory-server if the replaced composite is itself referenced, then once per referenced ancestor composite (closest first)
         if (networkModificationRepository.isModificationReferenced(compositeUuid)) {
@@ -792,13 +794,13 @@ public class NetworkModificationService {
     @Transactional
     public void deleteStashedModificationFromGroups(List<UUID> groupUuids, @NonNull String userId) {
         // one deletion per group, so that the owner of each group is told about the references deleted from it
-        groupUuids.forEach(groupUuid -> removeDeletedElementReferences(groupUuid,
+        groupUuids.forEach(groupUuid -> removeDeletedElementReferencesByGroup(groupUuid,
                 networkModificationRepository.deleteStashedModificationFromGroups(List.of(groupUuid)), userId));
     }
 
     public void deleteModificationReferences(@NonNull UUID groupUuid, @NonNull String userId) {
         List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModificationReferences(groupUuid);
-        removeDeletedElementReferences(groupUuid, deletedReferences, userId);
+        removeDeletedElementReferencesByGroup(groupUuid, deletedReferences, userId);
     }
 
     public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {
