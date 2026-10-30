@@ -24,12 +24,22 @@ public class FilterWithDistributionKeysLoaderService implements FilterWithDistri
 
     private final FilterService filterService;
 
-    public FilterWithDistributionKeysLoaderService(FilterService filterService) {
+    private final DirectoryService directoryService;
+
+    public FilterWithDistributionKeysLoaderService(FilterService filterService, DirectoryService directoryService) {
         this.filterService = filterService;
+        this.directoryService = directoryService;
     }
 
     @Override
     public Map<UUID, FilterWithDistributionKeys> load(List<UUID> filterUuids) {
-        return filterService.getStandaloneFiltersWithDistributionKeys(filterUuids);
+        Map<UUID, FilterWithDistributionKeys> filters = filterService.getStandaloneFiltersWithDistributionKeys(filterUuids);
+        Map<UUID, String> names = directoryService.getElementNames(filters.keySet());
+        filters.forEach((filterUuid, filter) -> {
+            if (filter.getFilter() != null) {
+                filter.getFilter().setName(names.get(filterUuid));
+            }
+        });
+        return filters;
     }
 }

@@ -36,12 +36,13 @@ public class GeneratorsFrequencyReserveEntity {
 
     @ElementCollection
     @CollectionTable(name = "generatorsFrequencyReserveFilters")
-    private List<GeneratorsFilterEmbeddable> generatorsFilters;
+    @Column(name = "filter_id")
+    private List<UUID> generatorsFilters;
 
     @Column(name = "frequencyReserve")
     private double frequencyReserve;
 
-    public GeneratorsFrequencyReserveEntity(List<GeneratorsFilterEmbeddable> generatorsFilters, double frequencyReserve) {
+    public GeneratorsFrequencyReserveEntity(List<UUID> generatorsFilters, double frequencyReserve) {
         this.id = null;
         this.generatorsFilters = generatorsFilters;
         this.frequencyReserve = frequencyReserve;

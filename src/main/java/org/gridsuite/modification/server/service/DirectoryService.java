@@ -84,4 +84,21 @@ public class DirectoryService {
                 .body(new ParameterizedTypeReference<>() { });
         return permissions == null ? Map.of() : permissions;
     }
+
+    public Map<UUID, String> getElementNames(@NonNull Collection<UUID> elementUuids) {
+        if (elementUuids.isEmpty()) {
+            return Map.of();
+        }
+        var path = UriComponentsBuilder.fromPath(DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/names")
+                .queryParam("ids", elementUuids)
+                .queryParam("strictMode", false)
+                .buildAndExpand()
+                .toUriString();
+
+        Map<UUID, String> names = restClient.get()
+                .uri(getDirectoryServerBaseUri() + path)
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() { });
+        return names == null ? Map.of() : names;
+    }
 }
