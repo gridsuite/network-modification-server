@@ -101,11 +101,11 @@ class ModificationFilterNameServiceTest {
     }
 
     @Test
-    void anUnreachableDirectoryLeavesTheNamesForReportsUnset() {
+    void anUnreachableDirectoryLeavesTheNamesUnsetWhenNoErrorIsWanted() {
         FilterInfos filter = filter(UUID.randomUUID());
         when(directoryService.getElementNames(any())).thenThrow(new RestClientException("directory-server is down"));
 
-        modificationFilterNameService.addFilterNamesForReports(List.of(byFilterDeletion(filter)));
+        modificationFilterNameService.addFilterNames(List.of(byFilterDeletion(filter)));
 
         assertThat(filter.getName()).isNull();
     }

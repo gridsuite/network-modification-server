@@ -119,10 +119,10 @@ public class NetworkModificationService {
         return networkModificationRepository.getModificationGroupsUuids();
     }
 
-    @Transactional(readOnly = true)
-    // Need a transaction for collections lazy loading
     public List<ModificationInfos> getNetworkModifications(UUID containerUuid, boolean onlyMetadata, StashedFilter stashedFilter) {
-        return networkModificationRepository.getModifications(containerUuid, onlyMetadata, stashedFilter);
+        List<ModificationInfos> modifications = networkModificationRepository.getModifications(containerUuid, onlyMetadata, stashedFilter);
+        modificationFilterNameService.addFilterNames(modifications);
+        return modifications;
     }
 
     @Transactional(readOnly = true)
@@ -167,20 +167,21 @@ public class NetworkModificationService {
         return networkModificationRepository.findAllChildrenUuids(compositeModificationUuids);
     }
 
-    @Transactional(readOnly = true)
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
-        return networkModificationRepository.getModificationInfo(networkModificationUuid);
+        ModificationInfos modification = networkModificationRepository.getModificationInfo(networkModificationUuid);
+        modificationFilterNameService.addFilterNames(modification);
+        return modification;
     }
 
     public AbstractModification getStandaloneNetworkModification(UUID networkModificationUuid) {
         ModificationInfos modificationInfos = networkModificationRepository.getStandaloneModificationInfos(networkModificationUuid);
-        modificationFilterNameService.addFilterNamesForReports(List.of(modificationInfos));
+        modificationFilterNameService.addFilterNames(List.of(modificationInfos));
         return modificationInfos.toModification(modificationContextFactory.create());
     }
 
     public Map<UUID, AbstractModification> getStandaloneNetworkModifications(List<UUID> networkModificationUuids, boolean errorOnModificationNotFound) {
         List<ModificationInfos> modificationsInfos = networkModificationRepository.getStandaloneModificationsInfos(networkModificationUuids, errorOnModificationNotFound);
-        modificationFilterNameService.addFilterNamesForReports(modificationsInfos);
+        modificationFilterNameService.addFilterNames(modificationsInfos);
         ModificationContext modificationContext = modificationContextFactory.create();
         return modificationsInfos.stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, modificationInfos -> modificationInfos.toModification(modificationContext)));
@@ -474,7 +475,7 @@ public class NetworkModificationService {
      */
     private CompletableFuture<List<Optional<NetworkModificationResult>>> applyModifications(UUID groupUuid, List<ModificationInfos> modifications,
             List<ModificationApplicationContext> applicationContexts) {
-        modificationFilterNameService.addFilterNamesForReports(modifications);
+        modificationFilterNameService.addFilterNames(modifications);
         // Do we want to do these all in parallel (CompletableFuture.allOf) or sequentially (like in Flux.concatMap) or something in between ?
         // sequentially like before for now
         return scheduleApplyModifications(
@@ -526,8 +527,6 @@ public class NetworkModificationService {
 
             }
         );
-
-        modificationFilterNameService.addFilterNamesForReports(modificationGroupsInfos.stream().flatMap(group -> group.modifications().stream()).toList());
 
         PreloadingStrategy preloadingStrategy = modificationGroupsInfos.stream().map(ModificationApplicationGroup::modifications)
             .flatMap(Collection::stream)
@@ -891,10 +890,10 @@ public class NetworkModificationService {
         return boolQueryBuilder.build();
     }
 
-    @Transactional(readOnly = true)
     public NetworkModificationsWithMissingInfo getNetworkModificationsFromCompositeWithMissingInfo(List<UUID> compositeModificationUuids) {
         Set<UUID> foundUuids = modificationRepository.findExistingCompositeModificationIds(compositeModificationUuids);
         List<ModificationInfos> networkModifications = networkModificationRepository.getCompositeModificationsInfos(compositeModificationUuids);
+        modificationFilterNameService.addFilterNames(networkModifications);
         List<UUID> missingUuids = compositeModificationUuids.stream().filter(uuid -> !foundUuids.contains(uuid)).toList();
         return new NetworkModificationsWithMissingInfo(networkModifications, missingUuids);
     }

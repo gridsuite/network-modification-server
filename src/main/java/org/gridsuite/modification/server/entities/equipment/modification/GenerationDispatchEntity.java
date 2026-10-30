@@ -80,8 +80,8 @@ public class GenerationDispatchEntity extends ModificationEntity {
     private void assignAttributes(GenerationDispatchInfos generationDispatchInfos) {
         lossCoefficient = generationDispatchInfos.getLossCoefficient();
         defaultOutageRate = generationDispatchInfos.getDefaultOutageRate();
-        generatorsWithoutOutage = generationDispatchInfos.getGeneratorsWithoutOutage() != null ? generationDispatchInfos.getGeneratorsWithoutOutage().stream().map(FilterInfos::getId).toList() : null;
-        generatorsWithFixedSupply = generationDispatchInfos.getGeneratorsWithFixedSupply() != null ? generationDispatchInfos.getGeneratorsWithFixedSupply().stream().map(FilterInfos::getId).toList() : null;
+        generatorsWithoutOutage = toFilterIds(generationDispatchInfos.getGeneratorsWithoutOutage());
+        generatorsWithFixedSupply = toFilterIds(generationDispatchInfos.getGeneratorsWithFixedSupply());
 
         List<GeneratorsFrequencyReserveEntity> frequencyReserveEntities = toEmbeddableGeneratorsFrequencyReserve(generationDispatchInfos.getGeneratorsFrequencyReserve());
         if (generatorsFrequencyReserve == null) {
@@ -104,7 +104,6 @@ public class GenerationDispatchEntity extends ModificationEntity {
         }
     }
 
-
     public static List<GeneratorsFrequencyReserveEntity> toEmbeddableGeneratorsFrequencyReserve(List<GeneratorsFrequencyReserveInfos> generators) {
         List<GeneratorsFrequencyReserveEntity> generatorsFrequencyReserveEntities = null;
         if (generators != null) {
@@ -114,6 +113,10 @@ public class GenerationDispatchEntity extends ModificationEntity {
             }).collect(Collectors.toList());
         }
         return generatorsFrequencyReserveEntities;
+    }
+
+    private static List<UUID> toFilterIds(List<FilterInfos> filters) {
+        return filters != null ? filters.stream().map(FilterInfos::getId).toList() : null;
     }
 
     private List<FilterInfos> toFilterInfos(List<UUID> generatorsFilters) {

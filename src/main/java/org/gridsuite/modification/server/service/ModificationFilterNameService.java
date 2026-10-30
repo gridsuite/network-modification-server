@@ -11,12 +11,11 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -36,34 +35,17 @@ public class ModificationFilterNameService {
     }
 
     public void addFilterNames(ModificationInfos modification) {
-        resolveFilterNames(List.of(modification));
+        addFilterNames(List.of(modification));
     }
 
     public void addFilterNames(List<ModificationInfos> modifications) {
-        resolveFilterNames(modifications);
-    }
-
-    /**
-     * Sets, on the filters the given modifications reference, their current name in the directory, before applying them.
-     * <p>
-     * Filter names only feed the reports here: failing to resolve them must not prevent applying the modifications,
-     * the reports then number the filters instead.
-     */
-    public void addFilterNamesForReports(List<ModificationInfos> modifications) {
-        try {
-            resolveFilterNames(modifications);
-        } catch (RestClientException e) {
-            LOGGER.warn("Could not resolve filter names from the directory, reports will number the filters instead", e);
-        }
-    }
-
-    private void resolveFilterNames(Collection<ModificationInfos> modifications) {
         List<FilterInfos> filters = new ArrayList<>();
         modifications.forEach(modification -> getFiltersStream(modification, filters));
         if (filters.isEmpty()) {
             return;
         }
-        Map<UUID, String> names = directoryService.getElementNames(filters.stream().map(FilterInfos::getId).collect(Collectors.toSet()));
+        Set<UUID> filterUuids = filters.stream().map(FilterInfos::getId).collect(Collectors.toSet());
+        Map<UUID, String> names = directoryService.getElementNames(filterUuids);
         filters.forEach(filter -> filter.setName(names.get(filter.getId())));
     }
 
