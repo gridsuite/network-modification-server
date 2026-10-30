@@ -56,6 +56,7 @@ public final class ApiUtils {
                     .param("groupUuid", targetGroupUuid.toString())
                     .param("nodeContainerUuid", UUID.randomUUID().toString())
                     .param("studyRootContainerUuid", UUID.randomUUID().toString())
+                    .param("rootNetworkTags", "PH1")
             )
             .andExpectAll(status().isOk());
     }

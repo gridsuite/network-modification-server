@@ -300,7 +300,8 @@ class ModificationIndexationTest {
         // Create the composite modification to pass later to ?action=insert
         UUID compositeUuid = networkModificationService.createNetworkCompositeModification(
                 modifications.stream().map(ModificationInfos::getUuid).toList(),
-                "composite name"
+                "composite name",
+                List.of()
         );
 
         // Need to remove the listener created in the last modifications application

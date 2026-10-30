@@ -751,8 +751,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
-        return networkModificationRepository.createNetworkCompositeModification(modificationUuids, name);
+    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name, @NonNull Collection<String> rootNetworkTags) {
+        return networkModificationRepository.createNetworkCompositeModification(modificationUuids, name, rootNetworkTags);
     }
 
     @Transactional

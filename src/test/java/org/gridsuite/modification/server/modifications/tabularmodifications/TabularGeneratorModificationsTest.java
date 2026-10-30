@@ -174,7 +174,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
-        TestUtils.assertRequestsCount(14, 9, 2, 0);
+        TestUtils.assertRequestsCount(14, 10, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -186,7 +186,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
         // (95, 10, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
-        TestUtils.assertRequestsCount(22, 9, 2, 0);
+        TestUtils.assertRequestsCount(22, 10, 2, 0);
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -697,7 +697,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
     private static void assertTabularModificationsEquals(List<ModificationInfos> expectedModifications, List<ModificationInfos> modificationInfos) {
         assertThat(expectedModifications)
             .usingRecursiveComparison(DTOAssert.getRecursiveConfiguration(false))
-            .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
+            .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date", "applicabilityByRootNetworkTag")
             .isEqualTo(modificationInfos);
     }
 

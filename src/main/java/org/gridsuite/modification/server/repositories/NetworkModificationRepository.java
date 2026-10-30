@@ -178,15 +178,20 @@ public class NetworkModificationRepository {
     private List<ModificationEntity> saveModificationInfosNonTransactional(@NonNull UUID groupUuid, List<ModificationInfos> modifications,
                                                                            Collection<String> rootNetworkTags) {
         List<ModificationEntity> entities = modifications.stream().map(ModificationEntity::fromDTO).toList();
+        // a copy may carry applicabilities of another study: they are forgotten, only those of the root networks of its new study are kept
+        entities.forEach(entity -> retainTreeApplicabilities(entity, rootNetworkTags));
         setDefaultApplicabilitiesIfMissing(entities, rootNetworkTags);
         return saveModificationsNonTransactional(groupUuid, entities);
     }
 
     @Transactional
-    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
+    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name, @NonNull Collection<String> rootNetworkTags) {
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).name(name).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
-        compositeEntity.setModifications(copyAsCompositeContent(modificationUuids));
+        List<ModificationEntity> copyEntities = copyAsCompositeContent(modificationUuids);
+        // the copies only keep the applicabilities of the root networks of the study they are exported from, the others are forgotten
+        copyEntities.forEach(copy -> retainTreeApplicabilities(copy, rootNetworkTags));
+        compositeEntity.setModifications(copyEntities);
         return modificationRepository.save(compositeEntity).getId();
     }
 
@@ -1315,6 +1320,16 @@ public class NetworkModificationRepository {
         modificationRepository.findAllWithApplicabilitiesByIdIn(getSharedModificationTreesFrom(sharedUuids).allUuids()).stream()
                 .filter(Predicate.not(ModificationReferenceEntity.class::isInstance))
                 .forEach(modification -> rootNetworkTags.forEach(modification::setDefaultApplicabilityIfMissing));
+    }
+
+    private static void retainTreeApplicabilities(ModificationEntity modificationEntity, Collection<String> rootNetworkTags) {
+        if (rootNetworkTags.isEmpty() || modificationEntity instanceof ModificationReferenceEntity) {
+            return;
+        }
+        modificationEntity.retainApplicabilities(rootNetworkTags);
+        if (modificationEntity instanceof CompositeModificationEntity composite) {
+            composite.getModifications().forEach(content -> retainTreeApplicabilities(content, rootNetworkTags));
+        }
     }
 
     private static void setTreeDefaultApplicabilitiesIfMissing(ModificationEntity modificationEntity, Collection<String> rootNetworkTags) {
