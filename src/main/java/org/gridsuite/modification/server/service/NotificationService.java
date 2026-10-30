@@ -7,10 +7,11 @@
 package org.gridsuite.modification.server.service;
 
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.ElementSharedLinkAction;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.SharingLinkAction;
 import org.gridsuite.modification.server.dto.WorkflowType;
+import org.gridsuite.modification.server.utils.PostCompletion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,11 +96,12 @@ public class NotificationService {
     }
 
     /**
-     * Tells the owner of the group (study-server) that some modification-references of the group were created
-     * so it can keep the shared links registered in directory-server up to date.
+     * Tells the owner of the group (study-server) that some modification-references of the group were created, moved
+     * or deleted, so it can keep the references registered on the shared elements in directory-server up to date.
      */
-    public void emitModificationReferencesChanged(@NonNull ElementSharedLinkAction action, UUID groupUuid,
-                                                  @NonNull List<ModificationReferenceData> references, @NonNull String userId) {
+    @PostCompletion
+    public void emitSharingLinksChanged(@NonNull SharingLinkAction action, UUID groupUuid,
+                                        @NonNull List<ModificationReferenceData> references, @NonNull String userId) {
         if (groupUuid == null || references.isEmpty()) {
             return;
         }
@@ -108,6 +110,6 @@ public class NotificationService {
                 .setHeader(HEADER_GROUP_UUID, groupUuid)
                 .setHeader(HEADER_USER_ID, userId)
                 .build();
-        sendMessage(message, "publishNetworkModificationReference-out-0");
+        sendMessage(message, "publishCompositeLinks-out-0");
     }
 }

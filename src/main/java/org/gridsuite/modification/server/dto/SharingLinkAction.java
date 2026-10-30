@@ -7,10 +7,13 @@
 package org.gridsuite.modification.server.dto;
 
 /**
- * What happened to the modification-references of a notification sent on the network-modification.reference destination.
+ * What happened to the modification-references of a notification sent on the reference.composite destination.
  *
  * @author Maissa Souissi <maissa.souissi at rte-france.com>
  */
-public enum ElementSharedLinkAction {
+public enum SharingLinkAction {
     CREATE,
+    RECREATE,
+    UPDATE,
+    DELETE,
 }

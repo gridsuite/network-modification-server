@@ -51,10 +51,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.ModificationType.MODIFICATION_REFERENCE;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
-import static org.gridsuite.modification.server.repositories.NetworkModificationRepository.MODIFICATION_ID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -219,14 +217,9 @@ public class NetworkModificationService {
         return networkModificationRepository.getModificationsCount(containerUuid, stashed);
     }
 
-    @Transactional
-    public void deleteModificationGroups(List<UUID> groupUuids) {
-        deleteIndexedModificationGroups(groupUuids);
-        networkModificationRepository.deleteModificationGroups(groupUuids);
-    }
-
-    private void deleteIndexedModificationGroups(List<UUID> groupUuids) {
-        applicationInfosService.deleteAllByGroupUuids(groupUuids);
+    public void deleteModificationGroups(List<UUID> groupUuids, @NonNull String userId) {
+        Map<UUID, List<ModificationReferenceData>> deletedReferences = networkModificationRepository.deleteModificationGroups(groupUuids);
+        deleteSharingLinks(deletedReferences, userId);
     }
 
     @Transactional
@@ -282,7 +275,8 @@ public class NetworkModificationService {
     @Transactional
     public void updateNetworkModificationActivation(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
         // TODO replace metadata by boolean in the endpoint
-        checkModificationsPermission(modificationUuids, userId);
+        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(modificationUuids).values().stream().toList();
+        checkModificationsPermission(parentComposites, userId);
         networkModificationRepository.updateModificationActivation(modificationUuids, metadata);
         emitReferencedAncestorsUpdated(modificationUuids, userId);
     }
@@ -300,6 +294,7 @@ public class NetworkModificationService {
     @Transactional
     public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable, String userId) {
         assertRootNetworkTagFits(rootNetworkTag);
+        checkModificationsPermission(modificationUuids, userId);
         networkModificationRepository.updateRootNetworkApplicability(modificationUuids, rootNetworkTag, applicable);
 
         modificationRepository.findReferencedModificationIds(modificationUuids)
@@ -382,13 +377,9 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public void recreateModificationReferences(@NonNull UUID groupUuid, @NonNull String userId) {
-        notificationService.emitModificationReferencesChanged(ElementSharedLinkAction.CREATE, groupUuid, getModificationReferencesNonTransactional(groupUuid), userId);
-    }
-
-    @Transactional(readOnly = true)
-    public void removeElementSharedLinks(@NonNull UUID groupUuid, String userId) {
-        directoryService.removeElementSharedLinks(getModificationReferencesNonTransactional(groupUuid), userId);
+    public void createSharingLinks(@NonNull UUID groupUuid, boolean recreate, @NonNull String userId) {
+        List<ModificationReferenceData> modificationReferencesData = getModificationReferencesNonTransactional(groupUuid);
+        notificationService.emitSharingLinksChanged(recreate ? SharingLinkAction.RECREATE : SharingLinkAction.CREATE, groupUuid, modificationReferencesData, userId);
     }
 
     @Transactional
@@ -462,38 +453,19 @@ public class NetworkModificationService {
         }
     }
 
-    @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids, @NonNull String userId) {
+
+        //Check permission only on parent composites
+        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(modificationUuids).values().stream().toList();
+        checkModificationsPermission(parentComposites, userId);
+
         // Collect referenced ancestor composites before stashing, since stashed modifications are moved out of their composite
         List<UUID> referencedAncestorUuids = networkModificationRepository.getAllReferencedModificationAncestorsUuids(modificationUuids);
 
-        moveCompositeChildrenToGroup(groupUuid, modificationUuids);
-        networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
-
-        // break all the references pointing to those stashed modification references
-        directoryService.removeElementSharedLinks(getModificationsReferencesNonTransactional(modificationUuids, true), userId);
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.stashNetworkModifications(groupUuid, modificationUuids);
+        deleteSharingLinks(groupUuid, deletedReferences, userId);
 
         emitReferencedModificationsUpdated(referencedAncestorUuids, userId);
-    }
-
-    /**
-     * Stashed modifications live at the root of their group: those nested in a composite are moved out first,
-     * one move per composite.
-     */
-    private void moveCompositeChildrenToGroup(UUID groupUuid, List<UUID> modificationUuids) {
-        if (modificationUuids.isEmpty()) {
-            return;
-        }
-        // one query for the whole list
-        Map<UUID, UUID> compositeByModification = findModificationParentCompositesNonTransactional(modificationUuids);
-        // a move takes a source container, so they are gathered by the composites holding the modifications
-        Map<UUID, List<UUID>> modificationsByComposite = modificationUuids.stream()
-                .filter(compositeByModification::containsKey)
-                .collect(Collectors.groupingBy(compositeByModification::get));
-        modificationsByComposite.forEach((compositeUuid, modUuids) -> networkModificationRepository.moveModifications(
-                new ModificationContainerInfos(compositeUuid, ModificationContainerType.COMPOSITE),
-                new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP),
-                modUuids, null));
     }
 
     @Transactional
@@ -502,14 +474,9 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void restoreNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids, UUID studyUuid, UUID nodeUuid, String userId) {
+    public void restoreNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         networkModificationRepository.restoreNetworkModifications(modificationUuids,
             networkModificationRepository.getModificationsCount(groupUuid, false));
-        if (studyUuid != null && nodeUuid != null) {
-            // recreate references
-            List<ModificationReferenceData> referencesData = getModificationsReferencesNonTransactional(modificationUuids, true);
-            directoryService.createElementSharedLinks(nodeUuid, studyUuid, userId, referencesData);
-        }
     }
 
     public CompletableFuture<NetworkModificationsResult> createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo,
@@ -614,12 +581,44 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
-    public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
-        if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
-            throw new NetworkModificationServerException(MODIFICATIONS_NOT_FOUND,
-                String.format("Some of these modifications %s (to be deleted) were not found", modificationsUuids),
-                Map.of("ids", modificationsUuids));
-        }
+    public void deleteNetworkModifications(@NonNull List<UUID> modificationsUuids, @NonNull String userId) {
+        // the modifications may sit in several groups, read before their deletion
+        Map<UUID, UUID> groupUuidByReference = getGroupUuidsForModificationReferences(modificationsUuids);
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModifications(modificationsUuids);
+        deleteSharingLinks(groupUuidByReference, deletedReferences, userId);
+    }
+
+    /**
+     * @return the group holding each of the modification references among the given modifications and their content,
+     * keyed by reference id; a reference that doesn't belong to a group (e.g. inside a shared composite) is absent from the map
+     */
+    private Map<UUID, UUID> getGroupUuidsForModificationReferences(List<UUID> modificationUuids) {
+        Map<UUID, UUID> groupByReference = new HashMap<>();
+        getModificationsReferencesNonTransactional(modificationUuids, true).forEach(reference -> {
+            UUID groupUuid = modificationRepository.findGroupIdByModificationId(reference.modificationUuid());
+            if (groupUuid != null) {
+                groupByReference.put(reference.modificationUuid(), groupUuid);
+            }
+        });
+        return groupByReference;
+    }
+
+    private void deleteSharingLinks(Map<UUID, UUID> groupUuidByReference, List<ModificationReferenceData> modificationReferences, String userId) {
+        modificationReferences.stream()
+                .filter(reference -> groupUuidByReference.containsKey(reference.modificationUuid()))
+                .collect(Collectors.groupingBy(reference -> groupUuidByReference.get(reference.modificationUuid())))
+                .forEach((groupUuid, references) -> deleteSharingLinks(groupUuid, references, userId));
+    }
+
+    private void deleteSharingLinks(Map<UUID, List<ModificationReferenceData>> modificationReferencesByGroup, String userId) {
+        modificationReferencesByGroup.forEach((groupUuid, references) -> deleteSharingLinks(groupUuid, references, userId));
+    }
+
+    /**
+     * Unlink the deleted modification references from their shared modifications
+     */
+    private void deleteSharingLinks(UUID groupUuid, List<ModificationReferenceData> modificationReferences, String userId) {
+        notificationService.emitSharingLinksChanged(SharingLinkAction.DELETE, groupUuid, modificationReferences, userId);
     }
 
     public CompletableFuture<NetworkModificationsResult> moveModifications(
@@ -669,17 +668,9 @@ public class NetworkModificationService {
                 : new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP);
     }
 
-    public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid, UUID nodeContainerUuid, UUID studyContainerUuid,
-                               @NonNull List<String> rootNetworkTags, String userId) {
+    public void duplicateGroup(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid, @NonNull List<String> rootNetworkTags) {
         // the copies may come from another study, using other root network tags
         networkModificationRepository.duplicateUnstashedModifications(sourceGroupUuid, targetGroupUuid, rootNetworkTags);
-        createElementSharedLinks(targetGroupUuid, nodeContainerUuid, studyContainerUuid, userId);
-    }
-
-    public void createElementSharedLinks(@NonNull UUID targetGroupUuid, UUID nodeContainerUuid, UUID studyContainerUuid, String userId) {
-        if (nodeContainerUuid != null && studyContainerUuid != null) {
-            directoryService.createElementSharedLinks(nodeContainerUuid, studyContainerUuid, userId, getModificationReferencesNonTransactional(targetGroupUuid));
-        }
     }
 
     private CompletableFuture<Optional<NetworkModificationResult>> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
@@ -718,33 +709,11 @@ public class NetworkModificationService {
             new NetworkModificationsResult(ids, result));
     }
 
-    @Transactional
     public void unshareModification(@NonNull UUID referenceModificationUuid, String userId) {
-        ModificationEntity referenceEntity = modificationRepository.findById(referenceModificationUuid)
-                .orElseThrow(() -> networkModificationRepository.getModificationNotFoundException(referenceModificationUuid.toString()));
-        if (!referenceEntity.getType().equals(MODIFICATION_REFERENCE.name())) {
-            // Only a reference modification may be unshared
-            throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
-                String.format(MODIFICATION_BAD_TYPE.messageTemplate(), referenceModificationUuid, referenceEntity.getType(), MODIFICATION_REFERENCE),
-                Map.of(MODIFICATION_ID, referenceModificationUuid.toString(), "modificationType", referenceEntity.getType(), "expectedModificationType", MODIFICATION_REFERENCE));
-        }
-
-        // copy referenced modification
-        ModificationInfos referencedCompositeInfos = networkModificationRepository.getModificationInfo(((ModificationReferenceEntity) referenceEntity).getReferencedId());
-        ModificationEntity copiedComposite = ModificationEntity.fromDTO(referencedCompositeInfos);
-
-        // put the new copied composite and delete the reference
-        AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
-        containerEntity.addModification(copiedComposite, referenceEntity.getModificationsOrder());
-        modificationRepository.save(copiedComposite);
-        deleteNetworkModifications(containerEntity.isGroup() ? containerEntity.getId() : null, List.of(referenceModificationUuid));
-
-        // remove the reference from directory server
-        List<ModificationReferenceData> referenceData = List.of(
-                new ModificationReferenceData(referenceModificationUuid,
-                        ((ModificationReferenceEntity) referenceEntity).getReferencedId(),
-                        containerEntity.getId()));
-        directoryService.removeElementSharedLinks(referenceData, userId);
+        // the group owning the reference, read before its deletion; null if the reference is inside a shared composite
+        UUID groupUuid = modificationRepository.findGroupIdByModificationId(referenceModificationUuid);
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.unshareModification(referenceModificationUuid);
+        deleteSharingLinks(groupUuid, deletedReferences, userId);
     }
 
     /**
@@ -772,35 +741,22 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public UUID assembleNetworkModificationsIntoNewComposite(@NonNull List<UUID> assembledModificationsUuids, UUID nodeUuid, @NonNull String userId) {
+    public UUID assembleNetworkModificationsIntoNewComposite(@NonNull List<UUID> assembledModificationsUuids, @NonNull String userId) {
+
+        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(assembledModificationsUuids).values().stream().toList();
+        checkModificationsPermission(parentComposites, userId);
         CompositeModificationInfos newComposite =
                 networkModificationRepository.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids).toModificationInfos();
-        // update the references whose container is now the new composite (and the root container is the node)
-        moveReferenceElementsToCompositeFrom(assembledModificationsUuids, newComposite.getUuid(), nodeUuid, userId);
+
+        // the references among the assembled modifications are now located in the new composite
+        UUID groupUuid = modificationRepository.findGroupIdByModificationId(newComposite.getUuid());
+        notificationService.emitSharingLinksChanged(SharingLinkAction.UPDATE, groupUuid,
+                getModificationsReferencesNonTransactional(assembledModificationsUuids, false), userId);
 
         // Collect referenced ancestor composites before assembling, since assembled modifications are moved out of their composite
         emitReferencedAncestorsUpdated(assembledModificationsUuids, userId);
 
         return newComposite.getUuid();
-    }
-
-    private void moveReferenceElementsToCompositeFrom(@NonNull List<UUID> modificationsUuids, @NonNull UUID compositeUuid, @NonNull UUID nodeUuid, String userId) {
-        // update the references whose container is now the new composite (and the root container is the node)
-        List<ModificationReferenceData> references = getModificationsReferencesNonTransactional(modificationsUuids, false);
-        references.forEach(ref -> {
-                ReferenceAttributes referenceAttributes = ReferenceAttributes.createReferenceAttributes(
-                    ref.modificationUuid(),
-                    nodeUuid,
-                    compositeUuid,
-                    ReferenceAttributes.ReferenceType.STUDY_NODE_NETWORK_MODIFICATION
-                );
-                directoryService.updateElementSharedLink(
-                    ref.referencedId(),
-                    referenceAttributes,
-                    userId
-                );
-            }
-        );
     }
 
     @Transactional
@@ -822,10 +778,12 @@ public class NetworkModificationService {
         networkModificationRepository.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
     }
 
-    @Transactional
     public void replaceCompositeModification(@NonNull UUID compositeUuid, String name, List<UUID> modificationUuids, @NonNull String userId) {
         checkModificationsPermission(List.of(compositeUuid), userId);
-        networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
+        // the deleted references were inside the composite, so in its group
+        UUID groupUuid = modificationRepository.findGroupIdByModificationId(compositeUuid);
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
+        deleteSharingLinks(groupUuid, deletedReferences, userId);
 
         // Notify directory-server if the replaced composite is itself referenced, then once per referenced ancestor composite (closest first)
         if (networkModificationRepository.isModificationReferenced(compositeUuid)) {
@@ -833,8 +791,16 @@ public class NetworkModificationService {
         }
     }
 
-    public void deleteStashedModificationFromGroups(List<UUID> groupUuids) {
-        networkModificationRepository.deleteStashedModificationFromGroups(groupUuids);
+    @Transactional
+    public void deleteStashedModificationFromGroups(List<UUID> groupUuids, @NonNull String userId) {
+        // one deletion per group, so that the owner of each group is told about the references deleted from it
+        groupUuids.forEach(groupUuid -> deleteSharingLinks(groupUuid,
+                networkModificationRepository.deleteStashedModificationFromGroups(List.of(groupUuid)), userId));
+    }
+
+    public void deleteModificationReferences(@NonNull UUID groupUuid, @NonNull String userId) {
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.deleteModificationReferences(groupUuid);
+        deleteSharingLinks(groupUuid, deletedReferences, userId);
     }
 
     public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {

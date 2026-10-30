@@ -239,8 +239,8 @@ public abstract class AbstractNetworkModificationTest {
         UUID modificationUuid = saveModification(modificationToDelete);
 
         mockMvc.perform(delete(getNetworkModificationUri())
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("uuids", modificationUuid.toString()))
+                        .queryParam("uuids", modificationUuid.toString())
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
