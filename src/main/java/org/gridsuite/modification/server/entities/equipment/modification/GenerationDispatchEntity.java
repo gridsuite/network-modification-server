@@ -48,11 +48,11 @@ public class GenerationDispatchEntity extends ModificationEntity {
 
     @ElementCollection
     @CollectionTable(name = "generatorsWithoutOutage")
-    private List<GeneratorsFilterEmbeddable> generatorsWithoutOutage;
+    private List<FilterEmbeddable> generatorsWithoutOutage;
 
     @ElementCollection
     @CollectionTable(name = "generatorsWithFixedSupply")
-    private List<GeneratorsFilterEmbeddable> generatorsWithFixedSupply;
+    private List<FilterEmbeddable> generatorsWithFixedSupply;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderColumn(name = "pos_generators_frequency", nullable = false, columnDefinition = "integer default 0")
@@ -100,9 +100,9 @@ public class GenerationDispatchEntity extends ModificationEntity {
         }
     }
 
-    public static List<GeneratorsFilterEmbeddable> toEmbeddableGeneratorsFilters(List<FilterInfos> generators) {
+    public static List<FilterEmbeddable> toEmbeddableGeneratorsFilters(List<FilterInfos> generators) {
         return generators == null ? null : generators.stream()
-            .map(generator -> new GeneratorsFilterEmbeddable(generator.getId(), generator.getName()))
+            .map(generator -> new FilterEmbeddable(generator.getId(), generator.getName()))
             .collect(Collectors.toList());
     }
 
@@ -110,15 +110,15 @@ public class GenerationDispatchEntity extends ModificationEntity {
         List<GeneratorsFrequencyReserveEntity> generatorsFrequencyReserveEntities = null;
         if (generators != null) {
             generatorsFrequencyReserveEntities = generators.stream().map(generator -> {
-                List<GeneratorsFilterEmbeddable> generatorsFilterEmbeddables = generator.getGeneratorsFilters().stream().map(filter ->
-                    new GeneratorsFilterEmbeddable(filter.getId(), filter.getName())).collect(Collectors.toList());
+                List<FilterEmbeddable> generatorsFilterEmbeddables = generator.getGeneratorsFilters().stream().map(filter ->
+                    new FilterEmbeddable(filter.getId(), filter.getName())).collect(Collectors.toList());
                 return new GeneratorsFrequencyReserveEntity(generatorsFilterEmbeddables, generator.getFrequencyReserve());
             }).collect(Collectors.toList());
         }
         return generatorsFrequencyReserveEntities;
     }
 
-    private List<FilterInfos> toGeneratorsFilters(List<GeneratorsFilterEmbeddable> generatorsFilters) {
+    private List<FilterInfos> toGeneratorsFilters(List<FilterEmbeddable> generatorsFilters) {
         return generatorsFilters != null ? generatorsFilters
                 .stream()
                 .map(generator -> new FilterInfos(generator.getId(), generator.getName()))

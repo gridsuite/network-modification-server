@@ -20,7 +20,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Embeddable
-public class GeneratorsFilterEmbeddable {
+public class FilterEmbeddable {
     @Column(name = "filterId")
     private UUID id;
 

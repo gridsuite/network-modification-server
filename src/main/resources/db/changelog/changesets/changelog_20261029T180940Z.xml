@@ -1,0 +1,25 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="braquartdav (generated)" id="1793297435579-4">
+        <createTable tableName="network_reduction">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="network_reductionPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1793297435579-5">
+        <createTable tableName="network_reduction_excluded_voltage_levels">
+            <column name="network_reduction_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filter_id" type="UUID"/>
+            <column name="filter_name" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1793297435579-8">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="network_reduction" constraintName="FK5ess2gmg23rmshwki8tuns2dh" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1793297435579-9">
+        <addForeignKeyConstraint baseColumnNames="network_reduction_entity_id" baseTableName="network_reduction_excluded_voltage_levels" constraintName="FK8mn7xlfpmvlyhje4cvot1bmuu" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="network_reduction" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
