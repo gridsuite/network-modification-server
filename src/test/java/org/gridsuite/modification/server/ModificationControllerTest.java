@@ -87,6 +87,7 @@ import static org.gridsuite.modification.server.utils.assertions.Assertions.asse
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -119,6 +120,7 @@ class ModificationControllerTest {
 
     private static final String ROOT_NETWORK_TAG = "PH1";
     private static final String RENAMED_ROOT_NETWORK_TAG = "PH2";
+    private static final String NEW_ROOT_NETWORK_TAG = "PH3";
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String NETWORK_MODIFICATION_URI = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
@@ -486,6 +488,52 @@ class ModificationControllerTest {
                         .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
         assertEquals(true, modificationRepository.getModificationInfo(UUID.fromString(uuidString)).getStashed());
+
+        // modification references are not stashed but deleted, those nested in a stashed composite included
+        UUID sharedUuid = modificationRepository.saveModifications(TEST_GROUP2_ID,
+                List.of(ModificationEntity.fromDTO(compositeOf(List.of(switchStatusModificationInfos))))).getFirst().getUuid();
+        List<ModificationInfos> saved = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(
+                ModificationEntity.fromDTO(referenceTo(sharedUuid)),
+                ModificationEntity.fromDTO(compositeOf(List.of(referenceTo(sharedUuid), switchStatusModificationInfos)))));
+        UUID rootReferenceUuid = saved.get(0).getUuid();
+        UUID compositeUuid = saved.get(1).getUuid();
+        UUID nestedReferenceUuid = ((CompositeModificationInfos) saved.get(1)).getModificationsInfos().getFirst().getUuid();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", rootReferenceUuid.toString(), compositeUuid.toString())
+                        .queryParam("stashed", "true")
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        List<UUID> referenceUuids = List.of(rootReferenceUuid, nestedReferenceUuid);
+        verify(notificationService).emitModificationReferencesChanged(eq(ElementReferenceAction.DELETE), eq(TEST_GROUP_ID), argThat(references -> references.size() == 2
+                && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq(TEST_USER_ID));
+        // the composite goes to the trash without its reference
+        CompositeModificationInfos stashedComposite = (CompositeModificationInfos) modificationRepository.getModificationInfo(compositeUuid);
+        assertTrue(stashedComposite.getStashed());
+        assertEquals(1, stashedComposite.getModificationsInfos().size());
+    }
+
+    @Test
+    void testDeleteModificationReferencesOfAGroup() throws Exception {
+        UUID sharedUuid = modificationRepository.saveModifications(TEST_GROUP2_ID,
+                List.of(ModificationEntity.fromDTO(compositeOf(List.of(LoadModificationInfos.builder().equipmentId("v1load").build()))))).getFirst().getUuid();
+        // reference ; plain ; composite ── reference
+        List<ModificationInfos> saved = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(
+                ModificationEntity.fromDTO(referenceTo(sharedUuid)),
+                ModificationEntity.fromDTO(LoadModificationInfos.builder().equipmentId("v1load").build()),
+                ModificationEntity.fromDTO(compositeOf(List.of(referenceTo(sharedUuid))))));
+        List<UUID> referenceUuids = List.of(saved.get(0).getUuid(), ((CompositeModificationInfos) saved.get(2)).getModificationsInfos().getFirst().getUuid());
+
+        mockMvc.perform(delete("/v1/groups/{groupUuid}/references", TEST_GROUP_ID)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        // the references, those nested in a composite included, are deleted and unlinked from their shared composite
+        verify(notificationService).emitModificationReferencesChanged(eq(ElementReferenceAction.DELETE), eq(TEST_GROUP_ID), argThat(references -> references.size() == 2
+                && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq(TEST_USER_ID));
+        assertEquals(List.of(saved.get(1).getUuid(), saved.get(2).getUuid()),
+                modificationRepository.getModifications(TEST_GROUP_ID, true).stream().map(ModificationInfos::getUuid).toList());
     }
 
     @Test
@@ -553,7 +601,7 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testRenameAndDeleteRootNetworkTag() throws Exception {
+    void testAddRenameAndDeleteRootNetworkTag() throws Exception {
         List<ModificationInfos> modifications = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         UUID modificationUuid = modifications.getFirst().getUuid();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
@@ -563,6 +611,12 @@ class ModificationControllerTest {
                 .queryParam("applicable", "false")
         ).andExpect(status().isOk());
 
+        mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "/root-network-tag")
+                .queryParam("groupUuids", TEST_GROUP_ID.toString())
+                .queryParam("newTag", NEW_ROOT_NETWORK_TAG)
+        ).andExpect(status().isOk());
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, NEW_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+
         // renaming the root network tag carries along its applicabilities
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-tag")
                 .queryParam("groupUuids", TEST_GROUP_ID.toString())
@@ -570,14 +624,14 @@ class ModificationControllerTest {
                 .queryParam("newTag", RENAMED_ROOT_NETWORK_TAG)
                 .header(HEADER_USER_ID, TEST_USER_ID)
         ).andExpect(status().isOk());
-        assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+        assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false, NEW_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
 
         // and dropping the tag takes its applicabilities away
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE + "/root-network-tag")
                 .queryParam("groupUuids", TEST_GROUP_ID.toString())
                 .queryParam("rootNetworkTags", RENAMED_ROOT_NETWORK_TAG)
         ).andExpect(status().isOk());
-        assertEquals(Map.of(), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
+        assertEquals(Map.of(NEW_ROOT_NETWORK_TAG, false), readApplicabilities(TEST_GROUP_ID).get(modificationUuid));
     }
 
     @Test
@@ -679,51 +733,70 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .header(HEADER_USER_ID, TEST_USER_ID)
-                        .queryParam("groupUuid", UUID.randomUUID().toString())
-                        .queryParam("uuids", uuidString))
-                .andExpect(status().isNotFound());
-
-        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .header(HEADER_USER_ID, TEST_USER_ID)
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("uuids", uuidString))
+                        .queryParam("uuids", uuidString)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
 
-        /* non existing modification */
+        // deleting a modification that no longer exists does nothing
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .header(HEADER_USER_ID, TEST_USER_ID)
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("uuids", uuidString))
-                .andExpect(status().isNotFound());
+                        .queryParam("uuids", uuidString)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID)).andExpect(status().isOk());
         // deleting a group that no longer exists does nothing
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID).header(HEADER_USER_ID, TEST_USER_ID)).andExpect(status().isOk());
+
+        // a shared composite, and another one holding a reference to it
+        UUID sharedUuid = modificationRepository.saveModifications(TEST_GROUP2_ID,
+                List.of(ModificationEntity.fromDTO(compositeOf(List.of(switchStatusModificationInfos))))).getFirst().getUuid();
+        CompositeModificationInfos otherShared = (CompositeModificationInfos) modificationRepository.saveModifications(TEST_GROUP2_ID,
+                List.of(ModificationEntity.fromDTO(compositeOf(List.of(referenceTo(sharedUuid)))))).getFirst();
+        UUID referenceInOtherSharedUuid = otherShared.getModificationsInfos().getFirst().getUuid();
+        // reference ; composite ── (reference, leaf) ; reference to the other shared composite
+        List<ModificationInfos> saved = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(
+                ModificationEntity.fromDTO(referenceTo(sharedUuid)),
+                ModificationEntity.fromDTO(compositeOf(List.of(referenceTo(sharedUuid), switchStatusModificationInfos))),
+                ModificationEntity.fromDTO(referenceTo(otherShared.getUuid()))));
+        UUID rootReferenceUuid = saved.get(0).getUuid();
+        List<ModificationInfos> compositeContent = ((CompositeModificationInfos) saved.get(1)).getModificationsInfos();
+        UUID referenceToOtherSharedUuid = saved.get(2).getUuid();
+        String savedUuids = String.join(",", saved.stream().map(modification -> modification.getUuid().toString()).toList());
+
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .queryParam("uuids", savedUuids)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        // the content of the deleted composite goes with it, and its reference is unlinked too
+        compositeContent.stream().map(ModificationInfos::getUuid).forEach(uuid -> assertThrows(NetworkModificationServerException.class,
+                () -> modificationRepository.getModificationInfo(uuid)));
+        List<UUID> referenceUuids = List.of(rootReferenceUuid, compositeContent.getFirst().getUuid(), referenceToOtherSharedUuid);
+        verify(notificationService).emitModificationReferencesChanged(eq(ElementReferenceAction.DELETE), eq(TEST_GROUP_ID), argThat(references -> references.size() == 3
+                && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq(TEST_USER_ID));
+        // the content of a referenced shared composite is not touched
+        assertDoesNotThrow(() -> modificationRepository.getModificationInfo(referenceInOtherSharedUuid));
     }
 
-    //test delete all modifications
-    @Test
-    void testDeleteAllModification() throws Exception {
-        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
+    private static ModificationReferenceInfos referenceTo(UUID sharedCompositeUuid) {
+        return ModificationReferenceInfos.builder()
+                .referencedId(sharedCompositeUuid)
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
+                .build();
+    }
 
-        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
-        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .header(HEADER_USER_ID, TEST_USER_ID)
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString()))
-                .andExpect(status().isOk());
-        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
+    private static CompositeModificationInfos compositeOf(List<ModificationInfos> content) {
+        return CompositeModificationInfos.builder()
+                .uuid(UUID.randomUUID())
+                .modificationsInfos(content)
+                .build();
     }
 
     @Test
     void testDeleteModificationMissingParamError() throws Exception {
-        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE).header(HEADER_USER_ID, TEST_USER_ID))
-                .andExpect(status().isBadRequest())
-                .andExpect(result -> assertInstanceOf(NetworkModificationServerException.class, result.getResolvedException()))
-                .andExpect(result -> assertEquals(
-                        MODIFICATION_DELETION_ARGUMENT_ERROR.messageTemplate(),
-                        result.getResolvedException().getMessage()));
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -1876,6 +1949,7 @@ class ModificationControllerTest {
         String body = mapper.writeValueAsString(List.of(TEST_GROUP_ID, TEST_GROUP2_ID));
         mockMvc.perform(delete("/v1/groups").header(HEADER_USER_ID, TEST_USER_ID)
                         .content(body)
+                        .header(HEADER_USER_ID, TEST_USER_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -1939,22 +2013,6 @@ class ModificationControllerTest {
         assertEquals(COMPOSITE_MODIFICATION, metadata.getFirst().getType());
         assertEquals("new name", metadata.getFirst().getName());
         assertEquals("new description", metadata.getFirst().getDescription());
-    }
-
-    @Test
-    void testStandaloneDeletionError() throws Exception {
-        // create a single switch attribute modification in a group
-        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
-        UUID switchModificationId = modificationList.getFirst().getUuid();
-
-        // Try to delete this modification without its group: not allowed
-        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .header(HEADER_USER_ID, TEST_USER_ID)
-                        .queryParam("uuids", switchModificationId.toString()))
-                .andExpect(status().isBadRequest())
-                .andExpect(result -> assertEquals(
-                    String.format(MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN.messageTemplate(), switchModificationId, TEST_GROUP_ID),
-                    result.getResolvedException().getMessage()));
     }
 
     @Test

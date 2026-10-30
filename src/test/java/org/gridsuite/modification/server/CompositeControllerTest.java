@@ -668,8 +668,8 @@ class CompositeControllerTest {
 
         // now delete the duplicate modification
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .header(HEADER_USER_ID, TEST_USER_ID)
-                        .queryParam("uuids", returnedNewId.toString()))
+                        .queryParam("uuids", returnedNewId.toString())
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         // source group has not changed
@@ -1000,6 +1000,36 @@ class CompositeControllerTest {
     }
 
     @Test
+    void testAssembleNetworkModificationsForbiddenOnSharedParentComposite() throws Exception {
+        // Create 2 switch modifications and a composite containing them
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
+        List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "composite name 1")
+                        .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Make composite shared by adding a reference pointing to it
+        ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
+                .referencedId(sharedCompositeUuid)
+                .stashed(false)
+                .build();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(modificationReferenceInfo)));
+
+        List<UUID> childUuids = getContainerModifications(sharedCompositeUuid, false).stream().map(ModificationInfos::getUuid).toList();
+
+        doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null))
+                .when(directoryService).checkPermission(any(), eq("user1"), eq(PermissionType.WRITE));
+
+        mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
+                        .content(mapper.writeValueAsString(childUuids))
+                        .header(HEADER_USER_ID, "user1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void testCompositeReferenceNotifications() throws Exception {
         output.clear();
         UUID sharedModificationUuid = createSomeSwitchModifications(TEST_GROUP2_ID, 1).getFirst().getUuid();
@@ -1024,26 +1054,6 @@ class CompositeControllerTest {
         assertReferenceNotification(ElementReferenceAction.CREATE, duplicatedGroupUuid, "user1",
                 List.of(new ModificationReferenceData(duplicatedReferenceUuid, sharedModificationUuid, null)));
 
-        // stashing the reference deletes it
-        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
-                        .header(HEADER_USER_ID, "user2")
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("uuids", referenceUuid.toString())
-                        .queryParam("stashed", "true"))
-                .andExpect(status().isOk());
-        assertReferenceNotification(ElementReferenceAction.DELETE, TEST_GROUP_ID, "user2",
-                List.of(new ModificationReferenceData(referenceUuid, sharedModificationUuid, null)));
-
-        // restoring the reference creates it again
-        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
-                        .header(HEADER_USER_ID, "user2")
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("uuids", referenceUuid.toString())
-                        .queryParam("stashed", "false"))
-                .andExpect(status().isOk());
-        assertReferenceNotification(ElementReferenceAction.CREATE, TEST_GROUP_ID, "user2",
-                List.of(new ModificationReferenceData(referenceUuid, sharedModificationUuid, null)));
-
         // assembling the reference into a composite moves it into that composite
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .header(HEADER_USER_ID, "user3")
@@ -1054,14 +1064,31 @@ class CompositeControllerTest {
         assertReferenceNotification(ElementReferenceAction.UPDATE, TEST_GROUP_ID, "user3",
                 List.of(new ModificationReferenceData(referenceUuid, sharedModificationUuid, compositeUuid)));
 
-        // cleaning the group of a deleted node deletes all its references, nested ones included
-        mockMvc.perform(delete("/v1/groups/stashed-modifications")
-                        .header(HEADER_USER_ID, "user4")
-                        .content(mapper.writeValueAsString(List.of(TEST_GROUP_ID)))
-                        .contentType(MediaType.APPLICATION_JSON))
+        // stashing the composite deletes the reference it holds
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user2")
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", compositeUuid.toString())
+                        .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
-        assertReferenceNotification(ElementReferenceAction.DELETE, TEST_GROUP_ID, "user4",
-                List.of(new ModificationReferenceData(referenceUuid, sharedModificationUuid, compositeUuid)));
+        assertReferenceNotification(ElementReferenceAction.DELETE, TEST_GROUP_ID, "user2",
+                List.of(new ModificationReferenceData(referenceUuid, sharedModificationUuid, null)));
+
+        // restoring the composite doesn't bring the deleted reference back
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user2")
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", compositeUuid.toString())
+                        .queryParam("stashed", "false"))
+                .andExpect(status().isOk());
+        assertNull(output.receive(1000, compositeReferenceDestination));
+
+        // deleting a group deletes all its references
+        mockMvc.perform(delete("/v1/groups/{uuid}", duplicatedGroupUuid)
+                        .header(HEADER_USER_ID, "user4"))
+                .andExpect(status().isOk());
+        assertReferenceNotification(ElementReferenceAction.DELETE, duplicatedGroupUuid, "user4",
+                List.of(new ModificationReferenceData(duplicatedReferenceUuid, sharedModificationUuid, null)));
 
         // nothing is sent when no reference is involved
         mockMvc.perform(post("/v1/groups/{uuid}/references", TEST_GROUP2_ID)
@@ -1606,6 +1633,7 @@ class CompositeControllerTest {
     @Test
     void testRootNetworkTagsAllowedByTheSharedModificationsTheUserCannotWriteOn() throws Exception {
         UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
+        UUID referenceUuid = networkModificationRepository.getModifications(TEST_GROUP2_ID, true).getLast().getUuid();
         UUID childUuid = ((CompositeModificationInfos) networkModificationRepository.getModificationInfo(sharedCompositeUuid))
                 .getModificationsInfos().getFirst().getUuid();
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid, childUuid), "B", true);
@@ -1614,28 +1642,33 @@ class CompositeControllerTest {
         when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ));
 
         // a tag the shared modification and its content are associated with is allowed, whatever its applicability
-        mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP2_ID, "A", "B")).andExpect(status().isOk());
+        mockMvc.perform(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP2_ID, "A", "B")).andExpect(status().isOk());
 
-        // C is not: the shared modification is associated with it, but not its content
-        mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP2_ID, "A", "C")).andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.businessErrorCode").value("modification.rootNetworkTagsForbiddenByShared"))
-                .andExpect(jsonPath("$.businessErrorValues.allowedTags").value("A, B"))
-                .andExpect(jsonPath("$.businessErrorValues.allowedTagsCount").value(2));
+        // C is not, the shared modification being associated with it but not its content: from the container, from the
+        // reference or from the shared modification itself
+        for (var request : List.of(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP2_ID, "A", "C"),
+                areRootNetworkTagsAllowed("modificationUuids", referenceUuid, "C"),
+                areRootNetworkTagsAllowed("sharedUuids", sharedCompositeUuid, "C"))) {
+            mockMvc.perform(request).andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.businessErrorCode").value("modification.rootNetworkTagsForbiddenByShared"))
+                    .andExpect(jsonPath("$.businessErrorValues.allowedTags").value("A, B"))
+                    .andExpect(jsonPath("$.businessErrorValues.allowedTagsCount").value(2));
+        }
 
         // a user who can write on the shared modification may associate it with any tag
         when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.WRITE));
-        mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP2_ID, "C")).andExpect(status().isOk());
+        mockMvc.perform(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP2_ID, "C")).andExpect(status().isOk());
 
         // a container pointing at no shared modification does not even need the permission to be checked
         clearInvocations(directoryService);
-        mockMvc.perform(areRootNetworkTagsAllowed(TEST_GROUP_ID, "C")).andExpect(status().isOk());
+        mockMvc.perform(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP_ID, "C")).andExpect(status().isOk());
         verifyNoInteractions(directoryService);
     }
 
-    private MockHttpServletRequestBuilder areRootNetworkTagsAllowed(UUID containerUuid, String... tags) throws Exception {
+    private MockHttpServletRequestBuilder areRootNetworkTagsAllowed(String uuidsField, UUID uuid, String... tags) throws Exception {
         return post("/v1/containers/root-network-tags/authorized")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(new RootNetworkTagsCheckInfos(List.of(containerUuid), List.of(tags))))
+                .content(mapper.writeValueAsString(Map.of(uuidsField, List.of(uuid), "tags", List.of(tags))))
                 .header(HEADER_USER_ID, TEST_USER_ID);
     }
 
