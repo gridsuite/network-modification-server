@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -44,7 +46,7 @@ class NotificationServiceTest {
     }
 
     @Test
-    void emitModificationReferencesChanged() {
+    void emitSharingLinksChanged() {
         UUID groupUuid = UUID.randomUUID();
         String userId = "test-user";
         List<ModificationReferenceData> references = List.of(mock(ModificationReferenceData.class));
@@ -61,7 +63,7 @@ class NotificationServiceTest {
     }
 
     @Test
-    void emitModificationReferencesChangedWhenGroupUuidNullOrReferencesEmpty() {
+    void emitSharingLinksChangedWhenGroupUuidNullOrReferencesEmpty() {
         String userId = "test-user";
         List<ModificationReferenceData> references = Collections.emptyList();
         notificationService.emitSharingLinksChanged(SharingLinkAction.CREATE, null, references, userId);
