@@ -26,8 +26,6 @@ import static org.gridsuite.modification.server.utils.ModificationInfosUtils.con
  */
 @Service
 public class ModificationFilterNameService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ModificationFilterNameService.class);
-
     private final DirectoryService directoryService;
 
     public ModificationFilterNameService(DirectoryService directoryService) {
