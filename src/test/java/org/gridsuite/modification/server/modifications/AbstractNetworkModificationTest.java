@@ -22,6 +22,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.service.DirectoryService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.WireMockUtils;
@@ -91,6 +92,9 @@ public abstract class AbstractNetworkModificationTest {
 
     @MockitoBean
     protected ReportService reportService;
+
+    @MockitoBean
+    protected DirectoryService directoryService;
 
     @Autowired
     protected NetworkModificationRepository networkModificationRepository;
@@ -235,8 +239,8 @@ public abstract class AbstractNetworkModificationTest {
         UUID modificationUuid = saveModification(modificationToDelete);
 
         mockMvc.perform(delete(getNetworkModificationUri())
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("uuids", modificationUuid.toString()))
+                        .queryParam("uuids", modificationUuid.toString())
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
