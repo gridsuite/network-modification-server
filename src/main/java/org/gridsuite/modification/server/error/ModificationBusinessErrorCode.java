@@ -22,8 +22,6 @@ public enum ModificationBusinessErrorCode implements BusinessErrorCode {
     ROOT_NETWORK_TAGS_FORBIDDEN_BY_SHARED("modification.rootNetworkTagsForbiddenByShared", "Root network tags %s are missing on shared modifications %s, which only allow %s"),
     MODIFICATIONS_NOT_FOUND("modifications.notFound"),
     MODIFICATION_INFOS_ERROR("modification.infos.error", "Modification infos error : %s"),
-    MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN("modification.with_group.deletion.forbidden", "Deletion forbidden : modification %s is owned by group %s"),
-    MODIFICATION_DELETION_ARGUMENT_ERROR("modification.deletion.argument.error", "Modification deletion : need to specify the group or give a list of UUIDs"),
     MODIFICATION_DUPLICATION_ARGUMENT_ERROR("modification.duplication.argument.error", "Modification duplication : need to specify the group or give a list of UUIDs"),
     MODIFICATION_DESCRIPTION_MISSING("modification.description.missing"),
     MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR("modification.composite.move.cycle.error"),

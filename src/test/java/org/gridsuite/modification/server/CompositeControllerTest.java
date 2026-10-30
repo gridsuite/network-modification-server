@@ -659,7 +659,8 @@ class CompositeControllerTest {
 
         // now delete the duplicate modification
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .queryParam("uuids", returnedNewId.toString()))
+                        .queryParam("uuids", returnedNewId.toString())
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
         // source group has not changed
@@ -989,6 +990,37 @@ class CompositeControllerTest {
         assertContiguousOrder(modificationRepository.findAllByContainerId(TEST_GROUP_ID, false));
         assertContiguousOrder(modificationRepository.findAllByContainer(firstCompositeUuid));
         assertContiguousOrder(modificationRepository.findAllByContainer(twodepthCompositeUuid));
+    }
+
+    @Test
+    void testAssembleNetworkModificationsForbiddenOnSharedParentComposite() throws Exception {
+        // Create 2 switch modifications and a composite containing them
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
+        List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("name", "composite name 1")
+                        .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Make composite shared by adding a reference pointing to it
+        ModificationInfos modificationReferenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
+                .referencedId(sharedCompositeUuid)
+                .stashed(false)
+                .build();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(modificationReferenceInfo)));
+
+        List<UUID> childUuids = getContainerModifications(sharedCompositeUuid, false).stream().map(ModificationInfos::getUuid).toList();
+
+        doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null))
+                .when(directoryService).checkPermission(any(), eq("user1"), eq(PermissionType.WRITE));
+
+        mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
+                        .content(mapper.writeValueAsString(childUuids))
+                        .header(HEADER_USER_ID, "user1")
+                        .param("nodeContainerUuid", UUID.randomUUID().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
     }
 
     @Test
