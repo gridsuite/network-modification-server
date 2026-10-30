@@ -123,7 +123,7 @@ class CompositeControllerTest {
     @Autowired
     private OutputDestination output;
 
-    @Value("${spring.cloud.stream.bindings.publishCompositeReference-out-0.destination}")
+    @Value("${spring.cloud.stream.bindings.publishCompositeLinks-out-0.destination}")
     private String compositeReferenceDestination;
 
     private Network network;
@@ -1047,11 +1047,11 @@ class CompositeControllerTest {
                         .param("groupUuid", duplicatedGroupUuid.toString()))
                 .andExpect(status().isOk());
         assertNull(output.receive(1000, compositeReferenceDestination));
-        mockMvc.perform(post("/v1/groups/{uuid}/references", duplicatedGroupUuid)
+        mockMvc.perform(post("/v1/groups/{uuid}/sharing-links", duplicatedGroupUuid)
                         .header(HEADER_USER_ID, "user1"))
                 .andExpect(status().isOk());
         UUID duplicatedReferenceUuid = networkModificationRepository.getModifications(duplicatedGroupUuid, true).getFirst().getUuid();
-        assertReferenceNotification(ElementReferenceAction.CREATE, duplicatedGroupUuid, "user1",
+        assertReferenceNotification(SharingLinkAction.CREATE, duplicatedGroupUuid, "user1",
                 List.of(new ModificationReferenceData(duplicatedReferenceUuid, sharedModificationUuid, null)));
 
         // assembling the reference into a composite moves it into that composite
@@ -1061,7 +1061,7 @@ class CompositeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), UUID.class);
-        assertReferenceNotification(ElementReferenceAction.UPDATE, TEST_GROUP_ID, "user3",
+        assertReferenceNotification(SharingLinkAction.UPDATE, TEST_GROUP_ID, "user3",
                 List.of(new ModificationReferenceData(referenceUuid, sharedModificationUuid, compositeUuid)));
 
         // stashing the composite deletes the reference it holds
@@ -1071,7 +1071,7 @@ class CompositeControllerTest {
                         .queryParam("uuids", compositeUuid.toString())
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
-        assertReferenceNotification(ElementReferenceAction.DELETE, TEST_GROUP_ID, "user2",
+        assertReferenceNotification(SharingLinkAction.DELETE, TEST_GROUP_ID, "user2",
                 List.of(new ModificationReferenceData(referenceUuid, sharedModificationUuid, null)));
 
         // restoring the composite doesn't bring the deleted reference back
@@ -1087,17 +1087,17 @@ class CompositeControllerTest {
         mockMvc.perform(delete("/v1/groups/{uuid}", duplicatedGroupUuid)
                         .header(HEADER_USER_ID, "user4"))
                 .andExpect(status().isOk());
-        assertReferenceNotification(ElementReferenceAction.DELETE, duplicatedGroupUuid, "user4",
+        assertReferenceNotification(SharingLinkAction.DELETE, duplicatedGroupUuid, "user4",
                 List.of(new ModificationReferenceData(duplicatedReferenceUuid, sharedModificationUuid, null)));
 
         // nothing is sent when no reference is involved
-        mockMvc.perform(post("/v1/groups/{uuid}/references", TEST_GROUP2_ID)
+        mockMvc.perform(post("/v1/groups/{uuid}/sharing-links", TEST_GROUP2_ID)
                         .header(HEADER_USER_ID, "user1"))
                 .andExpect(status().isOk());
         assertNull(output.receive(1000, compositeReferenceDestination));
     }
 
-    private void assertReferenceNotification(ElementReferenceAction action, UUID groupUuid, String userId, List<ModificationReferenceData> expectedReferences) throws Exception {
+    private void assertReferenceNotification(SharingLinkAction action, UUID groupUuid, String userId, List<ModificationReferenceData> expectedReferences) throws Exception {
         Message<byte[]> message = output.receive(1000, compositeReferenceDestination);
         assertNotNull(message);
         assertEquals(action.name(), String.valueOf(message.getHeaders().get(NotificationService.HEADER_ACTION)));

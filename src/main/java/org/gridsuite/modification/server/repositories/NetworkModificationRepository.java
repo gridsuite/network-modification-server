@@ -922,14 +922,19 @@ public class NetworkModificationRepository {
     @Transactional
     public Map<UUID, List<ModificationReferenceData>> deleteModificationGroups(List<UUID> groupUuids) {
         modificationApplicationInfosService.deleteAllByGroupUuids(groupUuids);
+
         List<ModificationGroupEntity> groupEntities = getModificationGroups(groupUuids);
+
         // the group of each modification, composites content included, read before their deletion
         Map<UUID, UUID> groupByModification = new HashMap<>();
         groupEntities.forEach(groupEntity -> withCompositesContent(groupEntity.getModifications())
                 .forEach(modification -> groupByModification.put(modification.getId(), groupEntity.getId())));
-        List<ModificationReferenceData> deletedReferences = deleteModifications(groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList());
+        List<ModificationReferenceData> deletedReferences =
+            deleteModifications(groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList());
+
         // deleting the group deletes its modification_container row (JOINED subtype delete)
         modificationGroupRepository.deleteAll(groupEntities);
+
         return deletedReferences.stream()
                 .collect(Collectors.groupingBy(reference -> groupByModification.get(reference.modificationUuid())));
     }

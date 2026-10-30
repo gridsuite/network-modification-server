@@ -7,9 +7,9 @@
 package org.gridsuite.modification.server.service;
 
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.ElementReferenceAction;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.SharingLinkAction;
 import org.gridsuite.modification.server.dto.WorkflowType;
 import org.gridsuite.modification.server.utils.PostCompletion;
 import org.slf4j.Logger;
@@ -100,8 +100,8 @@ public class NotificationService {
      * or deleted, so it can keep the references registered on the shared elements in directory-server up to date.
      */
     @PostCompletion
-    public void emitModificationReferencesChanged(@NonNull ElementReferenceAction action, UUID groupUuid,
-                                                  @NonNull List<ModificationReferenceData> references, @NonNull String userId) {
+    public void emitSharingLinksChanged(@NonNull SharingLinkAction action, UUID groupUuid,
+                                        @NonNull List<ModificationReferenceData> references, @NonNull String userId) {
         if (groupUuid == null || references.isEmpty()) {
             return;
         }
@@ -110,6 +110,6 @@ public class NotificationService {
                 .setHeader(HEADER_GROUP_UUID, groupUuid)
                 .setHeader(HEADER_USER_ID, userId)
                 .build();
-        sendMessage(message, "publishCompositeReference-out-0");
+        sendMessage(message, "publishCompositeLinks-out-0");
     }
 }

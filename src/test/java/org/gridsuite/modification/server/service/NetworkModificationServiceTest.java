@@ -12,14 +12,7 @@ import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
-import org.gridsuite.modification.server.dto.ElementReferenceAction;
-import org.gridsuite.modification.server.dto.ModificationApplicationContext;
-import org.gridsuite.modification.server.dto.ModificationMetadata;
-import org.gridsuite.modification.server.dto.ModificationMoveInfos;
-import org.gridsuite.modification.server.dto.ModificationReferenceData;
-import org.gridsuite.modification.server.dto.NetworkModificationsResult;
-import org.gridsuite.modification.server.dto.PermissionType;
-import org.gridsuite.modification.server.dto.StashedFilter;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.error.ModificationBusinessErrorCode;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
@@ -226,7 +219,7 @@ class NetworkModificationServiceTest {
      */
     private Set<UUID> removedReferenceUuids() {
         ArgumentCaptor<List<ModificationReferenceData>> captor = ArgumentCaptor.captor();
-        verify(notificationService, atLeast(0)).emitModificationReferencesChanged(eq(ElementReferenceAction.DELETE), any(), captor.capture(), eq(TEST_USER_ID));
+        verify(notificationService, atLeast(0)).emitSharingLinksChanged(eq(SharingLinkAction.DELETE), any(), captor.capture(), eq(TEST_USER_ID));
         return captor.getAllValues().stream().flatMap(List::stream).map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet());
     }
 

@@ -506,7 +506,7 @@ class ModificationControllerTest {
                 .andExpect(status().isOk());
 
         List<UUID> referenceUuids = List.of(rootReferenceUuid, nestedReferenceUuid);
-        verify(notificationService).emitModificationReferencesChanged(eq(ElementReferenceAction.DELETE), eq(TEST_GROUP_ID), argThat(references -> references.size() == 2
+        verify(notificationService).emitSharingLinksChanged(eq(SharingLinkAction.DELETE), eq(TEST_GROUP_ID), argThat(references -> references.size() == 2
                 && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq(TEST_USER_ID));
         // the composite goes to the trash without its reference
         CompositeModificationInfos stashedComposite = (CompositeModificationInfos) modificationRepository.getModificationInfo(compositeUuid);
@@ -530,7 +530,7 @@ class ModificationControllerTest {
                 .andExpect(status().isOk());
 
         // the references, those nested in a composite included, are deleted and unlinked from their shared composite
-        verify(notificationService).emitModificationReferencesChanged(eq(ElementReferenceAction.DELETE), eq(TEST_GROUP_ID), argThat(references -> references.size() == 2
+        verify(notificationService).emitSharingLinksChanged(eq(SharingLinkAction.DELETE), eq(TEST_GROUP_ID), argThat(references -> references.size() == 2
                 && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq(TEST_USER_ID));
         assertEquals(List.of(saved.get(1).getUuid(), saved.get(2).getUuid()),
                 modificationRepository.getModifications(TEST_GROUP_ID, true).stream().map(ModificationInfos::getUuid).toList());
@@ -773,7 +773,7 @@ class ModificationControllerTest {
         compositeContent.stream().map(ModificationInfos::getUuid).forEach(uuid -> assertThrows(NetworkModificationServerException.class,
                 () -> modificationRepository.getModificationInfo(uuid)));
         List<UUID> referenceUuids = List.of(rootReferenceUuid, compositeContent.getFirst().getUuid(), referenceToOtherSharedUuid);
-        verify(notificationService).emitModificationReferencesChanged(eq(ElementReferenceAction.DELETE), eq(TEST_GROUP_ID), argThat(references -> references.size() == 3
+        verify(notificationService).emitSharingLinksChanged(eq(SharingLinkAction.DELETE), eq(TEST_GROUP_ID), argThat(references -> references.size() == 3
                 && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq(TEST_USER_ID));
         // the content of a referenced shared composite is not touched
         assertDoesNotThrow(() -> modificationRepository.getModificationInfo(referenceInOtherSharedUuid));
