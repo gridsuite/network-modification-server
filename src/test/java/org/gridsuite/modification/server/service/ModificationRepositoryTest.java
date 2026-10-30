@@ -2452,6 +2452,22 @@ class ModificationRepositoryTest {
     }
 
     @Test
+    void testExportingALoneSharedModificationKeepsItsOwnApplicabilities() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), OTHER_ROOT_NETWORK_TAG, false);
+
+        UUID exportedUuid = networkModificationRepository.createNetworkCompositeModification(List.of(referenceUuid), "exported",
+                List.of(ROOT_NETWORK_TAG));
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), networkModificationRepository.getModificationInfo(exportedUuid).getApplicabilityByRootNetworkTag(),
+                "The exported composite takes the place of the shared modification, and keeps its applicabilities on the root networks of the study");
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, OTHER_ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
+                "The shared modification is left alone");
+    }
+
+    @Test
     void testModificationsMovedIntoACompositeGetADefaultApplicabilityOnItsTags() {
         UUID modificationUuid = networkModificationRepository.saveModificationInfos(TEST_GROUP_ID_3, List.of(switchInfos("v1d1")),
                 List.of(ROOT_NETWORK_TAG)).getFirst().getUuid();

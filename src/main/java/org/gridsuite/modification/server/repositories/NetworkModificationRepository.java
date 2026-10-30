@@ -188,10 +188,15 @@ public class NetworkModificationRepository {
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name, @NonNull Collection<String> rootNetworkTags) {
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).name(name).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
-        List<ModificationEntity> copyEntities = copyAsCompositeContent(modificationUuids);
+        List<ModificationEntity> copyEntities = copyModificationsWithReferenceResolution(modificationUuids);
         // the copies only keep the applicabilities of the root networks of the study they are exported from, the others are forgotten
         copyEntities.forEach(copy -> retainTreeApplicabilities(copy, rootNetworkTags));
-        compositeEntity.setModifications(copyEntities);
+        loneComposite(copyEntities).ifPresentOrElse(loneComposite -> {
+            // the new composite takes the place of the lone composite, so it takes its applicabilities too
+            loneComposite.getApplicabilities().forEach(applicability ->
+                compositeEntity.setApplicability(applicability.getRootNetworkTag(), applicability.getApplicable()));
+            compositeEntity.setModifications(loneComposite.getModifications());
+        }, () -> compositeEntity.setModifications(copyEntities));
         return modificationRepository.save(compositeEntity).getId();
     }
 
@@ -716,10 +721,16 @@ public class NetworkModificationRepository {
      */
     private List<ModificationEntity> copyAsCompositeContent(List<UUID> modificationUuids) {
         List<ModificationEntity> copies = copyModificationsWithReferenceResolution(modificationUuids);
-        if (copies.size() == 1 && copies.getFirst() instanceof CompositeModificationEntity loneComposite) {
-            return loneComposite.getModifications();
-        }
-        return copies;
+        return loneComposite(copies).map(CompositeModificationEntity::getModifications).orElse(copies);
+    }
+
+    /**
+     * @return the composite when it is the only one of the copies: it is not wrapped in another composite
+     */
+    private static Optional<CompositeModificationEntity> loneComposite(List<ModificationEntity> copies) {
+        return copies.size() == 1 && copies.getFirst() instanceof CompositeModificationEntity loneComposite
+            ? Optional.of(loneComposite)
+            : Optional.empty();
     }
 
     /**
