@@ -96,14 +96,24 @@ public class NetworkModificationController {
     @Operation(summary = "Create a modification group based on another group")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group and its modifications have been duplicated")})
     public ResponseEntity<Void> duplicateGroup(@RequestParam("groupUuid") UUID groupUuid,
-                                               @RequestParam("nodeContainerUuid") UUID nodeContainerUuid,
-                                               @RequestParam("studyRootContainerUuid") UUID studyRootContainerUuid,
                                                @PathVariable("sourceGroupUuid") UUID sourceGroupUuid,
                                                @Parameter(description = "Root network tags of the study the group belongs to, which the copies are associated with")
-                                               @RequestParam(value = "rootNetworkTags", required = false) List<String> rootNetworkTags,
-                                               @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, nodeContainerUuid, studyRootContainerUuid,
-            rootNetworkTags == null ? List.of() : rootNetworkTags, userId);
+                                               @RequestParam(value = "rootNetworkTags", required = false) List<String> rootNetworkTags) {
+        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, rootNetworkTags == null ? List.of() : rootNetworkTags);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Fetches all the modification-references of the group, nested ones included, and asks the owner of the group (study-server)
+     * to recreate their references in directory-server. To be called once the group is resolvable by its owner (i.e. after a node duplication).
+     */
+    @PostMapping(value = "/groups/{groupUuid}/sharing-links")
+    @Operation(summary = "Notify the creation of sharing links for all the modification references of a group, including in its composites")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The creation of the sharing links of the group has been notified")})
+    public ResponseEntity<Void> createSharingLinks(@PathVariable("groupUuid") UUID groupUuid,
+                                                   @RequestParam(value = "recreate", required = false, defaultValue = "false") boolean recreate,
+                                                   @RequestHeader(HEADER_USER_ID) String userId) {
+        networkModificationService.createSharingLinks(groupUuid, recreate, userId);
         return ResponseEntity.ok().build();
     }
 
