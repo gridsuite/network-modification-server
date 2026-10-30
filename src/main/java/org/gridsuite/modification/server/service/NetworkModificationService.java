@@ -174,14 +174,12 @@ public class NetworkModificationService {
     }
 
     public AbstractModification getStandaloneNetworkModification(UUID networkModificationUuid) {
-        ModificationInfos modificationInfos = networkModificationRepository.getStandaloneModificationInfos(networkModificationUuid);
-        modificationFilterNameService.addFilterNames(List.of(modificationInfos));
-        return modificationInfos.toModification(modificationContextFactory.create());
+        return networkModificationRepository.getStandaloneModificationInfos(networkModificationUuid)
+                .toModification(modificationContextFactory.create());
     }
 
     public Map<UUID, AbstractModification> getStandaloneNetworkModifications(List<UUID> networkModificationUuids, boolean errorOnModificationNotFound) {
         List<ModificationInfos> modificationsInfos = networkModificationRepository.getStandaloneModificationsInfos(networkModificationUuids, errorOnModificationNotFound);
-        modificationFilterNameService.addFilterNames(modificationsInfos);
         ModificationContext modificationContext = modificationContextFactory.create();
         return modificationsInfos.stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, modificationInfos -> modificationInfos.toModification(modificationContext)));
@@ -475,7 +473,6 @@ public class NetworkModificationService {
      */
     private CompletableFuture<List<Optional<NetworkModificationResult>>> applyModifications(UUID groupUuid, List<ModificationInfos> modifications,
             List<ModificationApplicationContext> applicationContexts) {
-        modificationFilterNameService.addFilterNames(modifications);
         // Do we want to do these all in parallel (CompletableFuture.allOf) or sequentially (like in Flux.concatMap) or something in between ?
         // sequentially like before for now
         return scheduleApplyModifications(

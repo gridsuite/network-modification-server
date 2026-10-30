@@ -15,7 +15,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Adapts the filter server client to the loader contract expected by the modification library.
+ * Adapts the filter server client to the loader contract expected by the modification library, naming the filters
+ * after the directory, which owns their names.
  *
  * @author Achour BERRAHMA <achour.berrahma at rte-france.com>
  */
@@ -24,12 +25,18 @@ public class FilterLoaderService implements FilterLoader {
 
     private final FilterService filterService;
 
-    public FilterLoaderService(FilterService filterService) {
+    private final DirectoryService directoryService;
+
+    public FilterLoaderService(FilterService filterService, DirectoryService directoryService) {
         this.filterService = filterService;
+        this.directoryService = directoryService;
     }
 
     @Override
     public Map<UUID, Filter> load(List<UUID> filterUuids) {
-        return filterService.getStandaloneFilters(filterUuids);
+        Map<UUID, Filter> filters = filterService.getStandaloneFilters(filterUuids);
+        Map<UUID, String> names = directoryService.getElementNames(filters.keySet());
+        filters.forEach((filterUuid, filter) -> filter.setName(names.get(filterUuid)));
+        return filters;
     }
 }

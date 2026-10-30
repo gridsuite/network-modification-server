@@ -35,9 +35,24 @@ class FilterLoaderServiceTest {
                 .equipmentType(EquipmentType.GENERATOR).equipmentIds(Set.of("GEN1")).build());
         when(filterService.getStandaloneFilters(filterUuids)).thenReturn(filters);
 
-        Map<UUID, Filter> loadedFilters = new FilterLoaderService(filterService).load(filterUuids);
+        Map<UUID, Filter> loadedFilters = new FilterLoaderService(filterService, mock(DirectoryService.class)).load(filterUuids);
 
         assertThat(loadedFilters).isEqualTo(filters);
         verify(filterService).getStandaloneFilters(filterUuids);
+    }
+
+    @Test
+    void loadNamesTheFiltersAfterTheDirectory() {
+        FilterService filterService = mock(FilterService.class);
+        DirectoryService directoryService = mock(DirectoryService.class);
+        UUID filterId = UUID.randomUUID();
+        List<UUID> filterUuids = List.of(filterId);
+        when(filterService.getStandaloneFilters(filterUuids)).thenReturn(Map.of(filterId, IdentifierListFilter.builder()
+                .equipmentType(EquipmentType.GENERATOR).equipmentIds(Set.of("GEN1")).build()));
+        when(directoryService.getElementNames(Set.of(filterId))).thenReturn(Map.of(filterId, "filter"));
+
+        Map<UUID, Filter> loadedFilters = new FilterLoaderService(filterService, directoryService).load(filterUuids);
+
+        assertThat(loadedFilters.get(filterId).getName()).isEqualTo("filter");
     }
 }
