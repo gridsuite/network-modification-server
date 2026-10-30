@@ -2419,6 +2419,18 @@ class ModificationControllerTest {
     }
 
     @Test
+    void testRecreateModificationReferences() throws Exception {
+        UUID groupUuid = UUID.randomUUID();
+
+        mockMvc.perform(post("/v1/groups/{groupUuid}/references", groupUuid)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        verify(notificationService).emitSharingLinksChanged(
+                eq(SharingLinkAction.RECREATE), eq(groupUuid), anyList(), eq(TEST_USER_ID));
+    }
+
+    @Test
     void testGetReferencesWithSharedReference() throws Exception {
         // Two distinct modifications referencing the very same shared element: getReferences must return
         // both occurrences instead of collapsing them into a single entry (regression test)

@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -54,6 +55,9 @@ class NetworkModificationServiceTest {
     @MockitoBean
     private DirectoryService directoryService;
 
+    @MockitoBean
+    private NotificationService notificationService;
+
     @Autowired
     private NetworkModificationRepository networkModificationRepository;
 
@@ -62,9 +66,6 @@ class NetworkModificationServiceTest {
 
     @MockitoBean
     private NetworkStoreService networkStoreService;
-
-    @MockitoBean
-    private NotificationService notificationService;
 
     @Test
     void shouldMoveModificationOutOfCompositeContainerWhenStashed() {
@@ -821,5 +822,18 @@ class NetworkModificationServiceTest {
                     ((LoadModificationInfos) sharedComposite.getModificationsInfos().get(i)).getEquipmentId(),
                     ((LoadModificationInfos) copiedCompositeContent.get(i)).getEquipmentId());
         }
+    }
+
+    @Test
+    void recreateSharingLinks() {
+        UUID groupUuid = UUID.randomUUID();
+        String userId = "user";
+        List<ModificationReferenceData> refs = List.of(mock(ModificationReferenceData.class));
+        when(modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(groupUuid))).thenReturn(List.of(UUID.randomUUID()));
+        when(networkModificationRepository.getModificationsReferences(anyList(), eq(false))).thenReturn(refs);
+
+        networkModificationService.createSharingLinks(groupUuid, true, userId);
+
+        verify(notificationService).emitSharingLinksChanged(SharingLinkAction.RECREATE, groupUuid, refs, userId);
     }
 }
