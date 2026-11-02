@@ -2422,7 +2422,8 @@ class ModificationControllerTest {
     void testRecreateModificationReferences() throws Exception {
         UUID groupUuid = UUID.randomUUID();
 
-        mockMvc.perform(post("/v1/groups/{groupUuid}/references", groupUuid)
+        mockMvc.perform(post("/v1/groups/{groupUuid}/sharing-links", groupUuid)
+                        .queryParam("recreate", "true")
                         .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
