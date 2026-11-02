@@ -54,7 +54,7 @@ class NotificationServiceTest {
         notificationService.emitSharingLinksChanged(SharingLinkAction.CREATE, groupUuid, references, userId);
 
         ArgumentCaptor<Message<List<ModificationReferenceData>>> messageCaptor = ArgumentCaptor.forClass(Message.class);
-        verify(publisher).send(eq("publishNetworkModificationReference-out-0"), messageCaptor.capture());
+        verify(publisher).send(eq("publishCompositeLinks-out-0"), messageCaptor.capture());
         Message<List<ModificationReferenceData>> sentMessage = messageCaptor.getValue();
         assertEquals(references, sentMessage.getPayload());
         assertEquals(SharingLinkAction.CREATE, sentMessage.getHeaders().get(NotificationService.HEADER_ACTION));
