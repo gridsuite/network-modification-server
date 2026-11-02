@@ -54,8 +54,6 @@ public final class ApiUtils {
                 post("/v1/groups/{uuid}/duplicate", originGroupUuid)
                     .header(HEADER_USER_ID, TEST_USER_ID)
                     .param("groupUuid", targetGroupUuid.toString())
-                    .param("nodeContainerUuid", UUID.randomUUID().toString())
-                    .param("studyRootContainerUuid", UUID.randomUUID().toString())
             )
             .andExpectAll(status().isOk());
     }
@@ -124,6 +122,7 @@ public final class ApiUtils {
     public static void deleteNetworkModifications(MockMvc mockMvc, List<UUID> uuids) throws Exception {
         mockMvc.perform(
                 delete("/v1/network-modifications")
+                    .header(HEADER_USER_ID, TEST_USER_ID)
                     .param("uuids", uuids.stream().map(Objects::toString).toList().toArray(new String[0]))
                     .header(HEADER_USER_ID, TEST_USER_ID)
             )

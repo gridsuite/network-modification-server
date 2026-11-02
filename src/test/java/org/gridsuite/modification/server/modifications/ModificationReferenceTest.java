@@ -12,6 +12,7 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @Tag("IntegrationTest")
+@ContextConfigurationWithTestChannel
 class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
     @Autowired

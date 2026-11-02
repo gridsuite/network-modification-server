@@ -40,11 +40,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.Message;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -116,6 +119,12 @@ class CompositeControllerTest {
 
     @MockitoSpyBean
     private NotificationService notificationService;
+
+    @Autowired
+    private OutputDestination output;
+
+    @Value("${spring.cloud.stream.bindings.publishCompositeLinks-out-0.destination}")
+    private String compositeReferenceDestination;
 
     private Network network;
 
@@ -914,7 +923,6 @@ class CompositeControllerTest {
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(assembledModificationUuids))
                         .header(HEADER_USER_ID, "user1")
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
@@ -961,7 +969,6 @@ class CompositeControllerTest {
         mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(assembledModificationUuids))
                         .header(HEADER_USER_ID, "user1")
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
@@ -1018,9 +1025,85 @@ class CompositeControllerTest {
         mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(childUuids))
                         .header(HEADER_USER_ID, "user1")
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testCompositeReferenceNotifications() throws Exception {
+        output.clear();
+        UUID sharedModificationUuid = createSomeSwitchModifications(TEST_GROUP2_ID, 1).getFirst().getUuid();
+        ModificationInfos referenceInfo = ModificationReferenceInfos.builder()
+                .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
+                .referencedId(sharedModificationUuid)
+                .stashed(false)
+                .build();
+        UUID referenceUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(referenceInfo))).getFirst().getUuid();
+
+        // duplicating the group creates a new reference in the target group, notified only once asked for
+        UUID duplicatedGroupUuid = UUID.randomUUID();
+        mockMvc.perform(post("/v1/groups/{uuid}/duplicate", TEST_GROUP_ID)
+                        .header(HEADER_USER_ID, "user1")
+                        .param("groupUuid", duplicatedGroupUuid.toString()))
+                .andExpect(status().isOk());
+        assertNull(output.receive(1000, compositeReferenceDestination));
+        mockMvc.perform(post("/v1/groups/{uuid}/sharing-links", duplicatedGroupUuid)
+                        .header(HEADER_USER_ID, "user1"))
+                .andExpect(status().isOk());
+        UUID duplicatedReferenceUuid = networkModificationRepository.getModifications(duplicatedGroupUuid, true).getFirst().getUuid();
+        assertReferenceNotification(SharingLinkAction.CREATE, duplicatedGroupUuid, "user1",
+                List.of(new ModificationReferenceData(duplicatedReferenceUuid, sharedModificationUuid, null)));
+
+        // assembling the reference into a composite moves it into that composite
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
+                        .header(HEADER_USER_ID, "user3")
+                        .content(mapper.writeValueAsString(List.of(referenceUuid)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID compositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), UUID.class);
+        assertReferenceNotification(SharingLinkAction.UPDATE, TEST_GROUP_ID, "user3",
+                List.of(new ModificationReferenceData(referenceUuid, sharedModificationUuid, compositeUuid)));
+
+        // stashing the composite deletes the reference it holds
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user2")
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", compositeUuid.toString())
+                        .queryParam("stashed", "true"))
+                .andExpect(status().isOk());
+        assertReferenceNotification(SharingLinkAction.DELETE, TEST_GROUP_ID, "user2",
+                List.of(new ModificationReferenceData(referenceUuid, sharedModificationUuid, null)));
+
+        // restoring the composite doesn't bring the deleted reference back
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .header(HEADER_USER_ID, "user2")
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", compositeUuid.toString())
+                        .queryParam("stashed", "false"))
+                .andExpect(status().isOk());
+        assertNull(output.receive(1000, compositeReferenceDestination));
+
+        // deleting a group deletes all its references
+        mockMvc.perform(delete("/v1/groups/{uuid}", duplicatedGroupUuid)
+                        .header(HEADER_USER_ID, "user4"))
+                .andExpect(status().isOk());
+        assertReferenceNotification(SharingLinkAction.DELETE, duplicatedGroupUuid, "user4",
+                List.of(new ModificationReferenceData(duplicatedReferenceUuid, sharedModificationUuid, null)));
+
+        // nothing is sent when no reference is involved
+        mockMvc.perform(post("/v1/groups/{uuid}/sharing-links", TEST_GROUP2_ID)
+                        .header(HEADER_USER_ID, "user1"))
+                .andExpect(status().isOk());
+        assertNull(output.receive(1000, compositeReferenceDestination));
+    }
+
+    private void assertReferenceNotification(SharingLinkAction action, UUID groupUuid, String userId, List<ModificationReferenceData> expectedReferences) throws Exception {
+        Message<byte[]> message = output.receive(1000, compositeReferenceDestination);
+        assertNotNull(message);
+        assertEquals(action.name(), String.valueOf(message.getHeaders().get(NotificationService.HEADER_ACTION)));
+        assertEquals(groupUuid.toString(), String.valueOf(message.getHeaders().get(NotificationService.HEADER_GROUP_UUID)));
+        assertEquals(userId, message.getHeaders().get(NotificationService.HEADER_USER_ID));
+        assertEquals(expectedReferences, mapper.readValue(message.getPayload(), new TypeReference<List<ModificationReferenceData>>() { }));
     }
 
     @Test
@@ -1033,7 +1116,6 @@ class CompositeControllerTest {
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
                         .content(mapper.writeValueAsString(List.of(leafUuid)))
                         .header(HEADER_USER_ID, "user1")
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UUID sharedCompositeUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });

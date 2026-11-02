@@ -99,6 +99,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @AutoConfigureMockMvc
 @SpringBootTest
+@ContextConfigurationWithTestChannel
 @Import(BaseExceptionHandler.class)
 @Tag("IntegrationTest")
 class ModificationControllerTest {
@@ -505,7 +506,7 @@ class ModificationControllerTest {
                 .andExpect(status().isOk());
 
         List<UUID> referenceUuids = List.of(rootReferenceUuid, nestedReferenceUuid);
-        verify(directoryService).removeElementReferences(argThat(references -> references.size() == 2
+        verify(notificationService).emitSharingLinksChanged(eq(SharingLinkAction.DELETE), eq(TEST_GROUP_ID), argThat(references -> references.size() == 2
                 && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq(TEST_USER_ID));
         // the composite goes to the trash without its reference
         CompositeModificationInfos stashedComposite = (CompositeModificationInfos) modificationRepository.getModificationInfo(compositeUuid);
@@ -529,7 +530,7 @@ class ModificationControllerTest {
                 .andExpect(status().isOk());
 
         // the references, those nested in a composite included, are deleted and unlinked from their shared composite
-        verify(directoryService).removeElementReferences(argThat(references -> references.size() == 2
+        verify(notificationService).emitSharingLinksChanged(eq(SharingLinkAction.DELETE), eq(TEST_GROUP_ID), argThat(references -> references.size() == 2
                 && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq(TEST_USER_ID));
         assertEquals(List.of(saved.get(1).getUuid(), saved.get(2).getUuid()),
                 modificationRepository.getModifications(TEST_GROUP_ID, true).stream().map(ModificationInfos::getUuid).toList());
@@ -772,7 +773,7 @@ class ModificationControllerTest {
         compositeContent.stream().map(ModificationInfos::getUuid).forEach(uuid -> assertThrows(NetworkModificationServerException.class,
                 () -> modificationRepository.getModificationInfo(uuid)));
         List<UUID> referenceUuids = List.of(rootReferenceUuid, compositeContent.getFirst().getUuid(), referenceToOtherSharedUuid);
-        verify(directoryService).removeElementReferences(argThat(references -> references.size() == 3
+        verify(notificationService).emitSharingLinksChanged(eq(SharingLinkAction.DELETE), eq(TEST_GROUP_ID), argThat(references -> references.size() == 3
                 && references.stream().map(ModificationReferenceData::modificationUuid).toList().containsAll(referenceUuids)), eq(TEST_USER_ID));
         // the content of a referenced shared composite is not touched
         assertDoesNotThrow(() -> modificationRepository.getModificationInfo(referenceInOtherSharedUuid));
@@ -1299,8 +1300,6 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
-                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
                 ).andExpect(status().isOk());
         List<ModificationInfos> stashedCopiedModifications = modificationRepository.getModifications(newGroupUuid, true, StashedFilter.STASHED);
         List<ModificationInfos> copiedModifications = modificationRepository.getModifications(newGroupUuid, true, StashedFilter.ALL);
@@ -1324,8 +1323,6 @@ class ModificationControllerTest {
         String copyGroupUriString = "/v1/groups/" + TEST_GROUP_ID + "/duplicate?groupUuid=" + newGroupUuid + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(
                 post(copyGroupUriString)
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
-                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
                         .header(HEADER_USER_ID, "user1")
                 ).andExpect(status().isOk());
 
@@ -1357,8 +1354,6 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
-                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
                 ).andExpect(status().isOk());
         testNetworkModificationsCount(duplicatedGroupUuid, 1);
 
@@ -1368,8 +1363,6 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
-                        .param("nodeContainerUuid", UUID.randomUUID().toString())
-                        .param("studyRootContainerUuid", UUID.randomUUID().toString())
         ).andExpect(status().isOk());
         assertFalse(networkModificationService.getModificationGroups().contains(targetOfUnexistingGroupUuid));
 
@@ -1954,7 +1947,7 @@ class ModificationControllerTest {
 
         // remove the first two groups
         String body = mapper.writeValueAsString(List.of(TEST_GROUP_ID, TEST_GROUP2_ID));
-        mockMvc.perform(delete("/v1/groups")
+        mockMvc.perform(delete("/v1/groups").header(HEADER_USER_ID, TEST_USER_ID)
                         .content(body)
                         .header(HEADER_USER_ID, TEST_USER_ID)
                         .contentType(MediaType.APPLICATION_JSON))

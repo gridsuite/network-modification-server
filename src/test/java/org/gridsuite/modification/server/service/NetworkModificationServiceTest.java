@@ -12,13 +12,7 @@ import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
 import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
-import org.gridsuite.modification.server.dto.ModificationApplicationContext;
-import org.gridsuite.modification.server.dto.ModificationMetadata;
-import org.gridsuite.modification.server.dto.ModificationMoveInfos;
-import org.gridsuite.modification.server.dto.ModificationReferenceData;
-import org.gridsuite.modification.server.dto.NetworkModificationsResult;
-import org.gridsuite.modification.server.dto.PermissionType;
-import org.gridsuite.modification.server.dto.StashedFilter;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.error.ModificationBusinessErrorCode;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
@@ -221,11 +215,11 @@ class NetworkModificationServiceTest {
     }
 
     /**
-     * @return the uuids of all the references the directory server was asked to remove
+     * @return the uuids of all the references the owners of the groups were asked to remove
      */
     private Set<UUID> removedReferenceUuids() {
         ArgumentCaptor<List<ModificationReferenceData>> captor = ArgumentCaptor.captor();
-        verify(directoryService, atLeast(0)).removeElementReferences(captor.capture(), eq(TEST_USER_ID));
+        verify(notificationService, atLeast(0)).emitSharingLinksChanged(eq(SharingLinkAction.DELETE), any(), captor.capture(), eq(TEST_USER_ID));
         return captor.getAllValues().stream().flatMap(List::stream).map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet());
     }
 
@@ -558,7 +552,7 @@ class NetworkModificationServiceTest {
                 UUID.randomUUID(),
                 List.of(ModificationEntity.fromDTO(referenceTo(sharedCompositeUuid))));
 
-        networkModificationService.assembleNetworkModificationsIntoNewComposite(childModUuids, UUID.randomUUID(), "userId");
+        networkModificationService.assembleNetworkModificationsIntoNewComposite(childModUuids, "userId");
 
         List<UUID> elementUuids = List.of(sharedCompositeUuid);
         verify(directoryService).checkPermission(elementUuids, "userId", PermissionType.WRITE);
@@ -584,10 +578,9 @@ class NetworkModificationServiceTest {
         doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", HttpHeaders.EMPTY, new byte[0], null))
                 .when(directoryService).checkPermission(any(), eq("userId"), eq(PermissionType.WRITE));
 
-        UUID nodeUuid = UUID.randomUUID();
         NetworkModificationServerException ex = assertThrows(
                 NetworkModificationServerException.class,
-                () -> networkModificationService.assembleNetworkModificationsIntoNewComposite(childModUuids, nodeUuid, "userId")
+                () -> networkModificationService.assembleNetworkModificationsIntoNewComposite(childModUuids, "userId")
         );
         assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, ex.getBusinessErrorCode());
     }
