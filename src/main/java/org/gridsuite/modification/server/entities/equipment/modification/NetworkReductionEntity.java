@@ -56,7 +56,7 @@ public class NetworkReductionEntity extends ModificationEntity {
 
     private void assignAttributes(NetworkReductionInfos networkReductionInfos) {
         excludedVoltageLevels = networkReductionInfos.getFilters() == null ? null : networkReductionInfos.getFilters().stream()
-                .map(generator -> new FilterEmbeddable(generator.getId(), generator.getName()))
+                .map(filter -> new FilterEmbeddable(filter.getId(), filter.getName()))
                 .collect(Collectors.toList());
     }
 
