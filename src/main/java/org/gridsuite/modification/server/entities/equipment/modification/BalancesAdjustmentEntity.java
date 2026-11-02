@@ -20,7 +20,7 @@ import org.gridsuite.modification.server.utils.CountriesUtils;
 import java.util.List;
 import java.util.UUID;
 
-import static com.powsybl.balances_adjustment.balance_computation.BalanceComputationParameters.DEFAULT_SUBTRACT_LOAD_FLOW_BALANCING;
+import static com.powsybl.balancesadjustment.computation.BalanceComputationParameters.DEFAULT_SUBTRACT_LOAD_FLOW_BALANCING;
 import static org.gridsuite.modification.dto.BalancesAdjustmentModificationInfos.*;
 
 /**
