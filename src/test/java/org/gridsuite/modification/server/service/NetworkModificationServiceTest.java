@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -827,10 +826,10 @@ class NetworkModificationServiceTest {
     @Test
     void recreateSharingLinks() {
         UUID groupUuid = UUID.randomUUID();
+        UUID sharedCompositeUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
+        UUID referenceUuid = saveReference(groupUuid, sharedCompositeUuid, false);
         String userId = "user";
-        List<ModificationReferenceData> refs = List.of(mock(ModificationReferenceData.class));
-        when(modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(groupUuid))).thenReturn(List.of(UUID.randomUUID()));
-        when(networkModificationRepository.getModificationsReferences(anyList(), eq(false))).thenReturn(refs);
+        List<ModificationReferenceData> refs = List.of(new ModificationReferenceData(referenceUuid, sharedCompositeUuid, null));
 
         networkModificationService.createSharingLinks(groupUuid, true, userId);
 
