@@ -377,9 +377,11 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public void createSharingLinks(@NonNull UUID groupUuid, boolean recreate, @NonNull String userId) {
-        List<ModificationReferenceData> modificationReferencesData = getModificationReferencesNonTransactional(groupUuid);
-        notificationService.emitSharingLinksChanged(recreate ? SharingLinkAction.RECREATE : SharingLinkAction.CREATE, groupUuid, modificationReferencesData, userId);
+    public void createSharingLinks(@NonNull List<UUID> groupUuids, boolean recreate, @NonNull String userId) {
+        getContainersWithModificationReferences(groupUuids).forEach(groupUuid -> {
+            List<ModificationReferenceData> modificationReferencesData = getModificationReferencesNonTransactional(groupUuid);
+            notificationService.emitSharingLinksChanged(recreate ? SharingLinkAction.RECREATE : SharingLinkAction.CREATE, groupUuid, modificationReferencesData, userId);
+        });
     }
 
     @Transactional
