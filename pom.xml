@@ -60,8 +60,6 @@
         <network-modification.version>2.4.0-SNAPSHOT</network-modification.version>
         <!-- FIXME remove this in the next gridsuite-dependencies update -->
         <filter.version>1.32.0</filter.version>
-        <!-- FIXME remove this in the next powsybl release update -->
-        <network-store.version>1.53.0-SNAPSHOT</network-store.version>
     </properties>
 
     <build>
@@ -140,20 +138,14 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-client</artifactId>
-            <!-- FIXME remove this in the next powsybl release update -->
-            <version>${network-store.version}</version>
         </dependency>
-        <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-iidm-impl</artifactId>
-            <version>${network-store.version}</version>
         </dependency>
-        <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-model</artifactId>
-            <version>${network-store.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>
