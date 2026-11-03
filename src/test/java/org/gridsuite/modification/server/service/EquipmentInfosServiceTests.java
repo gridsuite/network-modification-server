@@ -185,16 +185,21 @@ class EquipmentInfosServiceTests {
         equipmentInfosService.addAllEquipmentInfos(List.of(
             EquipmentInfos.builder().networkUuid(NETWORK_UUID).variantId(VARIANT_NAME_1).id("T1").name("T1").type(IdentifiableType.TWO_WINDINGS_TRANSFORMER.name()).build(),
             EquipmentInfos.builder().networkUuid(NETWORK_UUID).variantId(VARIANT_NAME_1).id("T1(1)").name("T1(1)").type(IdentifiableType.TWO_WINDINGS_TRANSFORMER.name()).build(),
-            EquipmentInfos.builder().networkUuid(NETWORK_UUID).variantId(VARIANT_NAME_1).id("POSTE T1").name("POSTE T1").type(IdentifiableType.LINE.name()).build()
+            EquipmentInfos.builder().networkUuid(NETWORK_UUID).variantId(VARIANT_NAME_1).id("POSTE T1").name("POSTE T1").type(IdentifiableType.LINE.name()).build(),
+            EquipmentInfos.builder().networkUuid(NETWORK_UUID).variantId(VARIANT_NAME_2).id("T1").name("T1").type(IdentifiableType.TWO_WINDINGS_TRANSFORMER.name()).build()
         ));
 
         assertEquals(List.of("T1"), equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("T1"), NETWORK_UUID, VARIANT_NAME_1).stream().map(EquipmentInfos::getId).toList());
+        assertEquals(List.of(VARIANT_NAME_1), equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("T1"), NETWORK_UUID, VARIANT_NAME_1).stream()
+            .map(EquipmentInfos::getVariantId).toList());
+        assertEquals(List.of("T1(1)"), equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("T1(1)"), NETWORK_UUID, VARIANT_NAME_1).stream().map(EquipmentInfos::getId).toList());
 
         equipmentInfosService.deleteEquipmentInfosList(List.of("T1"), NETWORK_UUID, VARIANT_NAME_1);
 
         assertFalse(existEquipmentInfos("T1", NETWORK_UUID, VARIANT_NAME_1));
         assertTrue(existEquipmentInfos("T1(1)", NETWORK_UUID, VARIANT_NAME_1));
         assertTrue(existEquipmentInfos("POSTE T1", NETWORK_UUID, VARIANT_NAME_1));
+        assertTrue(existEquipmentInfos("T1", NETWORK_UUID, VARIANT_NAME_2));
     }
 
     @Test
