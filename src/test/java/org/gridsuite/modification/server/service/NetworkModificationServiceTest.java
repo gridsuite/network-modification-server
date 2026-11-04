@@ -831,7 +831,7 @@ class NetworkModificationServiceTest {
         String userId = "user";
         List<ModificationReferenceData> refs = List.of(new ModificationReferenceData(referenceUuid, sharedCompositeUuid, null));
 
-        networkModificationService.createSharingLinks(groupUuid, true, userId);
+        networkModificationService.createSharingLinks(List.of(groupUuid), true, userId);
 
         verify(notificationService).emitSharingLinksChanged(SharingLinkAction.RECREATE, groupUuid, refs, userId);
     }

@@ -62,6 +62,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.client.HttpServerErrorException;
@@ -86,9 +87,7 @@ import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -147,7 +146,7 @@ class ModificationControllerTest {
     @MockitoBean
     private NotificationService notificationService;
 
-    @Autowired
+    @MockitoSpyBean
     private NetworkModificationService networkModificationService;
 
     @Autowired
@@ -2422,13 +2421,24 @@ class ModificationControllerTest {
     void testRecreateModificationReferences() throws Exception {
         UUID groupUuid = UUID.randomUUID();
 
-        mockMvc.perform(post("/v1/groups/{groupUuid}/sharing-links", groupUuid)
-                        .queryParam("recreate", "true")
-                        .header(HEADER_USER_ID, TEST_USER_ID))
-                .andExpect(status().isOk());
+        when(networkModificationService.getContainersWithModificationReferences(anyList())).thenReturn(List.of());
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .queryParam("recreate", "true")
+                .content(mapper.writeValueAsString(List.of(groupUuid)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        verify(notificationService, times(0)).emitSharingLinksChanged(eq(SharingLinkAction.RECREATE), eq(groupUuid), anyList(), eq(TEST_USER_ID));
 
-        verify(notificationService).emitSharingLinksChanged(
-                eq(SharingLinkAction.RECREATE), eq(groupUuid), anyList(), eq(TEST_USER_ID));
+        when(networkModificationService.getContainersWithModificationReferences(anyList())).thenReturn(List.of(groupUuid));
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .queryParam("recreate", "true")
+                .content(mapper.writeValueAsString(List.of(groupUuid)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        verify(notificationService, times(1)).emitSharingLinksChanged(eq(SharingLinkAction.RECREATE), eq(groupUuid), anyList(), eq(TEST_USER_ID));
+
     }
 
     @Test
