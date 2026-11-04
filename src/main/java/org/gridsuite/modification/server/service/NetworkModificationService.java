@@ -231,7 +231,7 @@ public class NetworkModificationService {
         Network network;
         try {
             network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
-        } catch (PowsyblException e) {
+        } catch (PowsyblException _) {
             throw new NetworkModificationServerException(NETWORK_NOT_FOUND, String.format(NETWORK_NOT_FOUND.messageTemplate(), networkUuid), Map.of("networkId", networkUuid));
         }
         boolean isVariantPresent = true;
@@ -420,7 +420,6 @@ public class NetworkModificationService {
         return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
     }
 
-    @Transactional(readOnly = true)
     public List<UUID> getContainersWithModificationReferences(@NonNull List<UUID> containerUuids) {
         return containerUuids.isEmpty() ? List.of() : modificationRepository.findContainersWithReferenceInSubtrees(containerUuids);
     }
@@ -534,14 +533,14 @@ public class NetworkModificationService {
         try {
             network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
             network.addListener(new NetworkVariantsListener(network, networkUuid, equipmentInfosService));
-        } catch (PowsyblException e) {
+        } catch (PowsyblException _) {
             throw new NetworkModificationServerException(NETWORK_NOT_FOUND, NETWORK_NOT_FOUND.messageTemplate(), Map.of("networkId", networkUuid));
         }
         String startingVariant = StringUtils.isBlank(originVariantId) ? VariantManagerConstants.INITIAL_VARIANT_ID : originVariantId;
         try {
             network.getVariantManager().cloneVariant(startingVariant, destinationVariantId, true);  // cloning variant
             network.getVariantManager().setWorkingVariant(destinationVariantId);  // set current variant to destination variant
-        } catch (PowsyblException e) {
+        } catch (PowsyblException _) {
             throw new NetworkModificationServerException(VARIANT_NOT_FOUND,
                 String.format(VARIANT_NOT_FOUND.messageTemplate(), destinationVariantId, networkUuid),
                 Map.of("variantId", destinationVariantId, "networkId", networkUuid));
