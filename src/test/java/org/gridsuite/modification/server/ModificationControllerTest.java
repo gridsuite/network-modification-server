@@ -62,7 +62,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.client.HttpServerErrorException;
@@ -146,7 +145,7 @@ class ModificationControllerTest {
     @MockitoBean
     private NotificationService notificationService;
 
-    @MockitoSpyBean
+    @Autowired
     private NetworkModificationService networkModificationService;
 
     @Autowired
@@ -2419,25 +2418,30 @@ class ModificationControllerTest {
 
     @Test
     void testRecreateModificationReferences() throws Exception {
-        UUID groupUuid = UUID.randomUUID();
+        UUID sharedModificationUuid = createSomeSwitchModifications(TEST_GROUP2_ID, 1).getFirst().getUuid();
+        ModificationInfos referenceInfo = ModificationReferenceInfos.builder()
+            .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
+            .referencedId(sharedModificationUuid)
+            .stashed(false)
+            .build();
+        UUID referenceUuid = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(referenceInfo))).getFirst().getUuid();
+        ModificationReferenceData modificationReferenceData = new ModificationReferenceData(referenceUuid, sharedModificationUuid, null);
 
-        when(networkModificationService.getContainersWithModificationReferences(anyList())).thenReturn(List.of());
         mockMvc.perform(post("/v1/groups/sharing-links")
                 .header(HEADER_USER_ID, TEST_USER_ID)
                 .queryParam("recreate", "true")
-                .content(mapper.writeValueAsString(List.of(groupUuid)))
+                .content(mapper.writeValueAsString(List.of(TEST_GROUP_ID)))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        verify(notificationService, times(0)).emitSharingLinksChanged(eq(SharingLinkAction.RECREATE), eq(groupUuid), anyList(), eq(TEST_USER_ID));
+        verify(notificationService, times(1)).emitSharingLinksChanged(eq(SharingLinkAction.RECREATE), eq(TEST_GROUP_ID), eq(List.of(modificationReferenceData)), eq(TEST_USER_ID));
 
-        when(networkModificationService.getContainersWithModificationReferences(anyList())).thenReturn(List.of(groupUuid));
         mockMvc.perform(post("/v1/groups/sharing-links")
                 .header(HEADER_USER_ID, TEST_USER_ID)
                 .queryParam("recreate", "true")
-                .content(mapper.writeValueAsString(List.of(groupUuid)))
+                .content(mapper.writeValueAsString(List.of(TEST_GROUP2_ID)))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        verify(notificationService, times(1)).emitSharingLinksChanged(eq(SharingLinkAction.RECREATE), eq(groupUuid), anyList(), eq(TEST_USER_ID));
+        verify(notificationService, times(0)).emitSharingLinksChanged(eq(SharingLinkAction.RECREATE), eq(TEST_GROUP2_ID), anyList(), eq(TEST_USER_ID));
 
     }
 
