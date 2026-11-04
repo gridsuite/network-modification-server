@@ -107,7 +107,7 @@ public class NetworkModificationController {
      * Fetches all the modification-references of the group, nested ones included, and asks the owner of the group (study-server)
      * to recreate their references in directory-server. To be called once the group is resolvable by its owner (i.e. after a node duplication).
      */
-    @PostMapping(value = "/groups/sharing-links")
+    @PostMapping(value = "/groups/sharing-links", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Notify the creation of sharing links for all the modification references of groups, including in their composites")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The creation of the sharing links of the groups has been notified")})
     public ResponseEntity<Void> createSharingLinks(@RequestBody List<UUID> groupUuids,
