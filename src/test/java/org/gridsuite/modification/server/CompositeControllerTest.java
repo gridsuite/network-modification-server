@@ -1047,9 +1047,11 @@ class CompositeControllerTest {
                         .param("groupUuid", duplicatedGroupUuid.toString()))
                 .andExpect(status().isOk());
         assertNull(output.receive(1000, compositeReferenceDestination));
-        mockMvc.perform(post("/v1/groups/{uuid}/sharing-links", duplicatedGroupUuid)
-                        .header(HEADER_USER_ID, "user1"))
-                .andExpect(status().isOk());
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, "user1")
+                .content(mapper.writeValueAsString(List.of(duplicatedGroupUuid)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
         UUID duplicatedReferenceUuid = networkModificationRepository.getModifications(duplicatedGroupUuid, true).getFirst().getUuid();
         assertReferenceNotification(SharingLinkAction.CREATE, duplicatedGroupUuid, "user1",
                 List.of(new ModificationReferenceData(duplicatedReferenceUuid, sharedModificationUuid, null)));
@@ -1091,9 +1093,11 @@ class CompositeControllerTest {
                 List.of(new ModificationReferenceData(duplicatedReferenceUuid, sharedModificationUuid, null)));
 
         // nothing is sent when no reference is involved
-        mockMvc.perform(post("/v1/groups/{uuid}/sharing-links", TEST_GROUP2_ID)
-                        .header(HEADER_USER_ID, "user1"))
-                .andExpect(status().isOk());
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, "user1")
+                .content(mapper.writeValueAsString(List.of(TEST_GROUP2_ID)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
         assertNull(output.receive(1000, compositeReferenceDestination));
     }
 

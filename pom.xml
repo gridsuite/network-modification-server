@@ -62,7 +62,7 @@
         <!-- FIXME remove this in the next gridsuite-dependencies update -->
         <filter.version>1.33.0</filter.version>
         <!-- FIXME remove this in the next powsybl release update -->
-        <network-store.version>1.51.0</network-store.version>
+        <network-store.version>1.52.0</network-store.version>
     </properties>
 
     <build>
@@ -98,6 +98,24 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
+            <!-- FIXME remove this in the next powsybl release update -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-network-store-client</artifactId>
+                <version>${network-store.version}</version>
+            </dependency>
+            <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-network-store-iidm-impl</artifactId>
+                <version>${network-store.version}</version>
+            </dependency>
+            <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-network-store-model</artifactId>
+                <version>${network-store.version}</version>
+            </dependency>
             <!-- FIXME remove this in the next gridsuite-dependencies update -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
@@ -141,20 +159,14 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-client</artifactId>
-            <!-- FIXME remove this in the next powsybl release update -->
-            <version>${network-store.version}</version>
         </dependency>
-        <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-iidm-impl</artifactId>
-            <version>${network-store.version}</version>
         </dependency>
-        <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-model</artifactId>
-            <version>${network-store.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>
