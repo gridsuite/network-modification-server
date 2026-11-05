@@ -868,7 +868,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public ModificationInfos getStandaloneModificationInfos(UUID modificationUuid) {
+    public ModificationInfos getModificationInfos(UUID modificationUuid) {
         return toModificationsInfos(List.of(getModificationEntity(modificationUuid))).getFirst();
     }
 

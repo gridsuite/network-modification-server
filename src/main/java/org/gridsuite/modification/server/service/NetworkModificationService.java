@@ -174,7 +174,7 @@ public class NetworkModificationService {
     }
 
     public AbstractModification getStandaloneNetworkModification(UUID networkModificationUuid) {
-        return networkModificationRepository.getStandaloneModificationInfos(networkModificationUuid)
+        return networkModificationRepository.getModificationInfos(networkModificationUuid)
                 .toModification(modificationContextFactory.create());
     }
 

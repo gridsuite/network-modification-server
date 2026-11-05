@@ -19,6 +19,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -38,7 +39,7 @@ class FilterWithDistributionKeysLoaderServiceTest {
                 .build());
         when(filterService.getStandaloneFiltersWithDistributionKeys(filterUuids)).thenReturn(filters);
 
-        Map<UUID, FilterWithDistributionKeys> loadedFilters = new FilterWithDistributionKeysLoaderService(filterService, mock(DirectoryService.class)).load(filterUuids);
+        Map<UUID, FilterWithDistributionKeys> loadedFilters = new FilterWithDistributionKeysLoaderService(filterService, mock(DirectoryService.class)).getLoader().load(filterUuids);
 
         assertThat(loadedFilters).isEqualTo(filters);
         verify(filterService).getStandaloneFiltersWithDistributionKeys(filterUuids);
@@ -56,7 +57,7 @@ class FilterWithDistributionKeysLoaderServiceTest {
                 .build()));
         when(directoryService.getElementNames(Set.of(filterId))).thenReturn(Map.of(filterId, "filter"));
 
-        Map<UUID, FilterWithDistributionKeys> loadedFilters = new FilterWithDistributionKeysLoaderService(filterService, directoryService).load(filterUuids);
+        Map<UUID, FilterWithDistributionKeys> loadedFilters = new FilterWithDistributionKeysLoaderService(filterService, directoryService).getLoaderWithNames().load(filterUuids);
 
         assertThat(loadedFilters.get(filterId).getFilter().getName()).isEqualTo("filter");
     }
@@ -67,7 +68,7 @@ class FilterWithDistributionKeysLoaderServiceTest {
         List<UUID> filterUuids = List.of();
         when(filterService.getStandaloneFiltersWithDistributionKeys(filterUuids)).thenReturn(Map.of());
 
-        Map<UUID, FilterWithDistributionKeys> loadedFilters = new FilterWithDistributionKeysLoaderService(filterService, mock(DirectoryService.class)).load(filterUuids);
+        Map<UUID, FilterWithDistributionKeys> loadedFilters = new FilterWithDistributionKeysLoaderService(filterService, mock(DirectoryService.class)).getLoader().load(filterUuids);
 
         assertThat(loadedFilters).isEmpty();
         verify(filterService).getStandaloneFiltersWithDistributionKeys(filterUuids);

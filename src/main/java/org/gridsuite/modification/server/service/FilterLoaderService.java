@@ -10,7 +10,6 @@ import org.gridsuite.filter.wip.Filter;
 import org.gridsuite.modification.context.FilterLoader;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -21,7 +20,7 @@ import java.util.UUID;
  * @author Achour BERRAHMA <achour.berrahma at rte-france.com>
  */
 @Service
-public class FilterLoaderService implements FilterLoader {
+public class FilterLoaderService {
 
     private final FilterService filterService;
 
@@ -32,11 +31,16 @@ public class FilterLoaderService implements FilterLoader {
         this.directoryService = directoryService;
     }
 
-    @Override
-    public Map<UUID, Filter> load(List<UUID> filterUuids) {
-        Map<UUID, Filter> filters = filterService.getStandaloneFilters(filterUuids);
-        Map<UUID, String> names = directoryService.getElementNames(filters.keySet());
-        filters.forEach((filterUuid, filter) -> filter.setName(names.get(filterUuid)));
-        return filters;
+    public FilterLoader getLoader() {
+        return filterService::getStandaloneFilters;
+    }
+
+    public FilterLoader getLoaderWithNames() {
+        return filterUuids -> {
+            Map<UUID, Filter> filters = filterService.getStandaloneFilters(filterUuids);
+            Map<UUID, String> names = directoryService.getElementNames(filters.keySet());
+            filters.forEach((filterUuid, filter) -> filter.setName(names.get(filterUuid)));
+            return filters;
+        };
     }
 }

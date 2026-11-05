@@ -31,8 +31,16 @@ public class ModificationContextFactory {
 
     public ModificationContext create() {
         return ModificationContext.builder()
-                .filterLoader(filterLoaderService)
-                .filterWithDistributionKeysLoader(filterWithDistributionKeysLoaderService)
+                .filterLoader(filterLoaderService.getLoader())
+                .filterWithDistributionKeysLoader(filterWithDistributionKeysLoaderService.getLoader())
+                .loadFlowParametersLoader(loadFlowParametersLoaderService)
+                .build();
+    }
+
+    public ModificationContext createWithFilterNames() {
+        return ModificationContext.builder()
+                .filterLoader(filterLoaderService.getLoaderWithNames())
+                .filterWithDistributionKeysLoader(filterWithDistributionKeysLoaderService.getLoaderWithNames())
                 .loadFlowParametersLoader(loadFlowParametersLoaderService)
                 .build();
     }

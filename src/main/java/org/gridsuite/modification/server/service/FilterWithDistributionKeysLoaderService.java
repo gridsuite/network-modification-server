@@ -10,7 +10,6 @@ import org.gridsuite.modification.context.FilterWithDistributionKeysLoader;
 import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -20,7 +19,7 @@ import java.util.UUID;
  * @author Kamil MARUT <kamil.marut at rte-france.com>
  */
 @Service
-public class FilterWithDistributionKeysLoaderService implements FilterWithDistributionKeysLoader {
+public class FilterWithDistributionKeysLoaderService {
 
     private final FilterService filterService;
 
@@ -31,15 +30,20 @@ public class FilterWithDistributionKeysLoaderService implements FilterWithDistri
         this.directoryService = directoryService;
     }
 
-    @Override
-    public Map<UUID, FilterWithDistributionKeys> load(List<UUID> filterUuids) {
-        Map<UUID, FilterWithDistributionKeys> filters = filterService.getStandaloneFiltersWithDistributionKeys(filterUuids);
-        Map<UUID, String> names = directoryService.getElementNames(filters.keySet());
-        filters.forEach((filterUuid, filter) -> {
-            if (filter.getFilter() != null) {
-                filter.getFilter().setName(names.get(filterUuid));
-            }
-        });
-        return filters;
+    public FilterWithDistributionKeysLoader getLoader() {
+        return filterService::getStandaloneFiltersWithDistributionKeys;
+    }
+
+    public FilterWithDistributionKeysLoader getLoaderWithNames() {
+        return filterUuids -> {
+            Map<UUID, FilterWithDistributionKeys> filters = filterService.getStandaloneFiltersWithDistributionKeys(filterUuids);
+            Map<UUID, String> names = directoryService.getElementNames(filters.keySet());
+            filters.forEach((filterUuid, filter) -> {
+                if (filter.getFilter() != null) {
+                    filter.getFilter().setName(names.get(filterUuid));
+                }
+            });
+            return filters;
+        };
     }
 }
