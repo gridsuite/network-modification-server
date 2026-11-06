@@ -1,0 +1,60 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1798514317652-1">
+        <createTable tableName="static_var_compensator_modification">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="static_var_compensator_modificationPK"/>
+            </column>
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name_op" type="VARCHAR(255)"/>
+            <column name="equipment_name_value" type="VARCHAR(255)"/>
+            <column name="voltage_level_id_op" type="VARCHAR(255)"/>
+            <column name="voltage_level_id_value" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id_op" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id_value" type="VARCHAR(255)"/>
+            <column name="connection_name" type="VARCHAR(255)"/>
+            <column name="connection_name_op" type="VARCHAR(255)"/>
+            <column name="connection_direction" type="VARCHAR(255)"/>
+            <column name="connection_direction_op" type="VARCHAR(255)"/>
+            <column name="connection_position" type="INT"/>
+            <column name="connection_position_op" type="VARCHAR(255)"/>
+            <column name="connected" type="BOOLEAN"/>
+            <column name="connected_op" type="VARCHAR(255)"/>
+            <column name="p_measurement_value" type="FLOAT(53)"/>
+            <column name="p_measurement_value_op" type="VARCHAR(255)"/>
+            <column name="p_measurement_validity" type="BOOLEAN"/>
+            <column name="p_measurement_validity_op" type="VARCHAR(255)"/>
+            <column name="q_measurement_value" type="FLOAT(53)"/>
+            <column name="q_measurement_value_op" type="VARCHAR(255)"/>
+            <column name="q_measurement_validity" type="BOOLEAN"/>
+            <column name="q_measurement_validity_op" type="VARCHAR(255)"/>
+            <column name="max_susceptance" type="FLOAT(53)"/>
+            <column name="max_susceptance_op" type="VARCHAR(255)"/>
+            <column name="min_susceptance" type="FLOAT(53)"/>
+            <column name="min_susceptance_op" type="VARCHAR(255)"/>
+            <column name="maxqat_nominalv" type="FLOAT(53)"/>
+            <column name="maxqat_nominalvop" type="VARCHAR(255)"/>
+            <column name="minqat_nominalv" type="FLOAT(53)"/>
+            <column name="minqat_nominalvop" type="VARCHAR(255)"/>
+            <column name="regulation_mode" type="VARCHAR(255)"/>
+            <column name="regulation_mode_op" type="VARCHAR(255)"/>
+            <column name="regulating" type="BOOLEAN"/>
+            <column name="regulating_op" type="VARCHAR(255)"/>
+            <column name="voltage_setpoint" type="FLOAT(53)"/>
+            <column name="voltage_setpoint_op" type="VARCHAR(255)"/>
+            <column name="reactive_power_setpoint" type="FLOAT(53)"/>
+            <column name="reactive_power_setpoint_op" type="VARCHAR(255)"/>
+            <column name="voltage_regulation_type" type="VARCHAR(255)"/>
+            <column name="voltage_regulation_type_op" type="VARCHAR(255)"/>
+            <column name="regulating_terminal_id" type="VARCHAR(255)"/>
+            <column name="regulating_terminal_id_op" type="VARCHAR(255)"/>
+            <column name="regulating_terminal_type" type="VARCHAR(255)"/>
+            <column name="regulating_terminal_type_op" type="VARCHAR(255)"/>
+            <column name="regulating_terminal_vl_id" type="VARCHAR(255)"/>
+            <column name="regulating_terminal_vl_id_op" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1798514317652-2">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="static_var_compensator_modification" constraintName="staticVarCompensatorModification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
