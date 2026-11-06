@@ -1068,7 +1068,7 @@ class ModificationControllerTest {
     }
 
     @Test
-    void createNetworkReduction() throws Exception {
+    void testCreateNetworkReduction() throws Exception {
         network = NetworkCreation.createForDeleteVoltageLevelOnLine(TEST_NETWORK_ID);
         UUID filterId1 = UUID.randomUUID();
         UUID filterId2 = UUID.randomUUID();
@@ -1091,7 +1091,7 @@ class ModificationControllerTest {
     }
 
     @Test
-    void createGeneratorWithStartup() throws Exception {
+    void testCreateGeneratorWithStartup() throws Exception {
         // create and build generator without startup
         GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v2", "idGenerator1", "nameGenerator1", "1B", "v2load", "LOAD", "v1");
         String generatorCreationInfosJson = TestUtils.getJsonBody(generatorCreationInfos, TEST_NETWORK_ID, null);
