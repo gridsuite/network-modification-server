@@ -413,6 +413,15 @@ public class NetworkModificationService {
                 .collect(Collectors.toMap(c -> UUID.fromString(c.getId()), c -> UUID.fromString(c.getContainerId())));
     }
 
+    /**
+     * @return the groups containing the given modification: directly, through a reference, or through composites holding
+     * these, shared or not. What is stashed on the way does not count.
+     */
+    @Transactional(readOnly = true)
+    public Set<UUID> getGroupsContainingModification(@NonNull UUID modificationUuid) {
+        return modificationRepository.findGroupsContainingModification(modificationUuid);
+    }
+
     @Transactional(readOnly = true)
     public boolean hasModificationReferences(@NonNull List<UUID> containerUuids) {
         return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);

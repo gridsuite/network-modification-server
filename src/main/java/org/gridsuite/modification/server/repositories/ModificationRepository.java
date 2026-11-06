@@ -374,4 +374,30 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
             SELECT DISTINCT CAST(root_id AS VARCHAR) FROM descendants WHERE type = 'MODIFICATION_REFERENCE'
             """)
     List<UUID> findContainersWithReferenceInSubtrees(@Param("containerIds") Collection<UUID> containerIds);
+
+    /**
+     * Walks up from the modification: what holds it or a reference to it, then what holds or references these
+     * composites, and so on. Nothing stashed is followed. UNION drops what is already found, so it always ends.
+     * @return the groups containing the given modification, directly, through a reference or through composites
+     */
+    @NativeQuery("""
+            WITH RECURSIVE holders(container_id) AS (
+                SELECT m.container_id
+                  FROM modification m
+                  LEFT JOIN modification_reference r ON r.id = m.id
+                 WHERE m.stashed = false
+                   AND (m.id = :modificationUuid OR r.referenced_id = :modificationUuid)
+                UNION
+                SELECT m.container_id
+                  FROM modification m
+                  LEFT JOIN modification_reference r ON r.id = m.id
+                  JOIN holders h ON m.id = h.container_id OR r.referenced_id = h.container_id
+                 WHERE m.stashed = false
+            )
+            SELECT CAST(c.id AS VARCHAR)
+              FROM holders h
+              JOIN modification_container c ON c.id = h.container_id
+             WHERE c.type = 'GROUP'
+            """)
+    Set<UUID> findGroupsContainingModification(@Param("modificationUuid") UUID modificationUuid);
 }

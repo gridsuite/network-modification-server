@@ -143,6 +143,36 @@ class NetworkModificationServiceTest {
     }
 
     @Test
+    void shouldGetGroupsContainingModification() {
+        UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
+        assertEquals(1, networkModificationService.getGroupsContainingModification(sharedUuid).size(), "the group holding it");
+
+        UUID referencingGroupUuid = UUID.randomUUID();
+        networkModificationRepository.saveModifications(referencingGroupUuid, List.of(ModificationEntity.fromDTO(referenceTo(sharedUuid))));
+        // group ── outer ── inner ── reference to the shared composite
+        UUID nestingGroupUuid = UUID.randomUUID();
+        saveComposite(nestingGroupUuid, List.of(compositeModification(UUID.randomUUID(), List.of(referenceTo(sharedUuid)))));
+        // group ── reference to a composite holding a reference to the shared composite
+        UUID intermediateGroupUuid = UUID.randomUUID();
+        UUID intermediateUuid = saveComposite(intermediateGroupUuid, List.of(referenceTo(sharedUuid)));
+        UUID transitiveGroupUuid = UUID.randomUUID();
+        networkModificationRepository.saveModifications(transitiveGroupUuid, List.of(ModificationEntity.fromDTO(referenceTo(intermediateUuid))));
+        // the only reference of this group is in the bin
+        UUID groupWithStashedReferenceUuid = UUID.randomUUID();
+        networkModificationRepository.saveModifications(groupWithStashedReferenceUuid, List.of(ModificationEntity.fromDTO(
+                CompositeModificationInfos.builder()
+                        .uuid(UUID.randomUUID())
+                        .modificationsInfos(List.of(referenceTo(sharedUuid)))
+                        .stashed(true)
+                        .build())));
+
+        Set<UUID> groupUuids = networkModificationService.getGroupsContainingModification(sharedUuid);
+        assertTrue(groupUuids.containsAll(Set.of(referencingGroupUuid, nestingGroupUuid, intermediateGroupUuid, transitiveGroupUuid)));
+        assertFalse(groupUuids.contains(groupWithStashedReferenceUuid), "a stashed composite does not use its content");
+        assertTrue(networkModificationService.getGroupsContainingModification(UUID.randomUUID()).isEmpty(), "an unknown modification");
+    }
+
+    @Test
     void shouldGetContainersWithReferencesNestedInComposites() {
         UUID sharedUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
         UUID groupWithoutReferenceUuid = UUID.randomUUID();

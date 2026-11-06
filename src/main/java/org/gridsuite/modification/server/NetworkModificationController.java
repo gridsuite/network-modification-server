@@ -441,6 +441,14 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping(value = "/network-modifications/{uuid}/containing-groups", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get the groups containing a network modification, including through references and composites")
+    @ApiResponse(responseCode = "200", description = "The groups containing the network modification, empty if none")
+    public ResponseEntity<Set<UUID>> getGroupsContainingModification(
+            @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID modificationUuid) {
+        return ResponseEntity.ok().body(networkModificationService.getGroupsContainingModification(modificationUuid));
+    }
+
     @DeleteMapping(value = "/network-modifications/root-network-tag")
     @Operation(summary = "Deletes root network tags from the applicabilities of the modifications of the given groups")
     @ApiResponse(responseCode = "200", description = "The root network tags have been successfully deleted")
