@@ -54,6 +54,9 @@ class NetworkModificationServiceTest {
     @MockitoBean
     private DirectoryService directoryService;
 
+    @MockitoBean
+    private NotificationService notificationService;
+
     @Autowired
     private NetworkModificationRepository networkModificationRepository;
 
@@ -62,9 +65,6 @@ class NetworkModificationServiceTest {
 
     @MockitoBean
     private NetworkStoreService networkStoreService;
-
-    @MockitoBean
-    private NotificationService notificationService;
 
     @Test
     void shouldMoveModificationOutOfCompositeContainerWhenStashed() {
@@ -821,5 +821,18 @@ class NetworkModificationServiceTest {
                     ((LoadModificationInfos) sharedComposite.getModificationsInfos().get(i)).getEquipmentId(),
                     ((LoadModificationInfos) copiedCompositeContent.get(i)).getEquipmentId());
         }
+    }
+
+    @Test
+    void recreateSharingLinks() {
+        UUID groupUuid = UUID.randomUUID();
+        UUID sharedCompositeUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
+        UUID referenceUuid = saveReference(groupUuid, sharedCompositeUuid, false);
+        String userId = "user";
+        List<ModificationReferenceData> refs = List.of(new ModificationReferenceData(referenceUuid, sharedCompositeUuid, null));
+
+        networkModificationService.createSharingLinks(List.of(groupUuid), true, userId);
+
+        verify(notificationService).emitSharingLinksChanged(SharingLinkAction.RECREATE, groupUuid, refs, userId);
     }
 }
