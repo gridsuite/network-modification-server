@@ -23,15 +23,17 @@ public class NetworkStoreServicePublic extends NetworkStoreService {
         super(baseUri, defaultPreloadingStrategy);
     }
 
-    public NetworkStoreServicePublic(RestClient restClient, PreloadingStrategy defaultPreloadingStrategy) {
+    public NetworkStoreServicePublic(ResourceAttributesRestClient restClient, PreloadingStrategy defaultPreloadingStrategy) {
         super(restClient, defaultPreloadingStrategy);
     }
 
-    public NetworkStoreServicePublic(RestClient restClient, PreloadingStrategy defaultPreloadingStrategy, TriFunction<RestClient, PreloadingStrategy, ExecutorService, NetworkStoreClient> decorator) {
+    public NetworkStoreServicePublic(ResourceAttributesRestClient restClient, PreloadingStrategy defaultPreloadingStrategy,
+                                     TriFunction<ResourceAttributesRestClient, PreloadingStrategy, ExecutorService, NetworkStoreClient> decorator) {
         super(restClient, defaultPreloadingStrategy, decorator);
     }
 
-    public NetworkStoreServicePublic(String baseUri, PreloadingStrategy defaultPreloadingStrategy, TriFunction<RestClient, PreloadingStrategy, ExecutorService, NetworkStoreClient> decorator) {
+    public NetworkStoreServicePublic(String baseUri, PreloadingStrategy defaultPreloadingStrategy,
+                                     TriFunction<ResourceAttributesRestClient, PreloadingStrategy, ExecutorService, NetworkStoreClient> decorator) {
         super(baseUri, defaultPreloadingStrategy, decorator);
     }
 }
