@@ -10,6 +10,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.DiscreteMeasurement;
+import com.powsybl.iidm.network.extensions.DiscreteMeasurements;
+import com.powsybl.iidm.network.extensions.DiscreteMeasurementsAdder;
 import com.powsybl.iidm.network.extensions.TwoWindingsTransformerToBeEstimated;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
@@ -31,6 +34,7 @@ import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applica
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR;
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
 import static org.gridsuite.modification.modifications.TwoWindingsTransformerModification.processPhaseTapRegulation;
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createTwoWindingsTransformer;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -38,6 +42,7 @@ import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -66,6 +71,8 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .ratedS(new AttributeModification<>(7., OperationType.SET))
                 .ratioTapChangerToBeEstimated(new AttributeModification<>(true, OperationType.SET))
                 .phaseTapChangerToBeEstimated(new AttributeModification<>(false, OperationType.SET))
+                .ratioTapChangerPositionMeasurement(new AttributeModification<>(4, OperationType.SET))
+                .phaseTapChangerPositionMeasurement(new AttributeModification<>(5, OperationType.SET))
                 .enableOLGModification(true)
                 .operationalLimitsGroups(List.of(
                         OperationalLimitsGroupModificationInfos.builder()
@@ -191,6 +198,8 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .ratedU1(new AttributeModification<>(5.1, OperationType.SET))
                 .ratedU2(new AttributeModification<>(6.1, OperationType.SET))
                 .ratedS(new AttributeModification<>(7.1, OperationType.SET))
+                // the phase tap position measurement is left null: the stored request must be removed
+                .ratioTapChangerPositionMeasurement(new AttributeModification<>(6, OperationType.SET))
                 .enableOLGModification(true)
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<>(true, OperationType.SET))
@@ -288,6 +297,112 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         assertNotNull(toBeEstimated);
         assertTrue(toBeEstimated.shouldEstimateRatioTapChanger());
         assertFalse(toBeEstimated.shouldEstimatePhaseTapChanger());
+        // tap position measurements
+        assertTapPositionMeasurement(modifiedTwoWindingsTransformer, DiscreteMeasurement.TapChanger.RATIO_TAP_CHANGER, 4);
+        assertTapPositionMeasurement(modifiedTwoWindingsTransformer, DiscreteMeasurement.TapChanger.PHASE_TAP_CHANGER, 5);
+    }
+
+    private static List<DiscreteMeasurement> getTapPositionMeasurements(TwoWindingsTransformer twt, DiscreteMeasurement.TapChanger tapChanger) {
+        DiscreteMeasurements<?> measurements = (DiscreteMeasurements<?>) twt.getExtension(DiscreteMeasurements.class);
+        if (measurements == null) {
+            return List.of();
+        }
+        return measurements.getDiscreteMeasurements(DiscreteMeasurement.Type.TAP_POSITION).stream()
+                .filter(m -> m.getTapChanger() == tapChanger)
+                .toList();
+    }
+
+    private static void assertTapPositionMeasurement(TwoWindingsTransformer twt, DiscreteMeasurement.TapChanger tapChanger, int expectedValue) {
+        List<DiscreteMeasurement> tapPositionMeasurements = getTapPositionMeasurements(twt, tapChanger);
+        assertEquals(1, tapPositionMeasurements.size());
+        assertEquals(expectedValue, tapPositionMeasurements.get(0).getValueAsInt());
+        assertTrue(tapPositionMeasurements.get(0).isValid());
+    }
+
+    private static DiscreteMeasurement addTapPositionMeasurement(TwoWindingsTransformer twt, DiscreteMeasurement.TapChanger tapChanger, int value, boolean valid) {
+        DiscreteMeasurements<?> measurements = (DiscreteMeasurements<?>) twt.getExtension(DiscreteMeasurements.class);
+        if (measurements == null) {
+            measurements = (DiscreteMeasurements<?>) twt.newExtension(DiscreteMeasurementsAdder.class).add();
+        }
+        return measurements.newDiscreteMeasurement()
+                .setId(UUID.randomUUID().toString())
+                .setType(DiscreteMeasurement.Type.TAP_POSITION)
+                .setTapChanger(tapChanger)
+                .setValue(value)
+                .setValid(valid)
+                .add();
+    }
+
+    @Test
+    void testTapPositionMeasurementsDoNotModifyTapChangers() throws Exception {
+        TwoWindingsTransformer twt = getNetwork().getTwoWindingsTransformer("trf1");
+        int ratioTapPosition = twt.getRatioTapChanger().getTapPosition();
+        boolean ratioRegulating = twt.getRatioTapChanger().isRegulating();
+        assertNull(twt.getPhaseTapChanger());
+        // existing invalid measurement must be updated in place and become valid
+        DiscreteMeasurement existingRatioMeasurement = addTapPositionMeasurement(twt, DiscreteMeasurement.TapChanger.RATIO_TAP_CHANGER, 9, false);
+        existingRatioMeasurement.putProperty("source", "scada");
+        String existingRatioMeasurementId = existingRatioMeasurement.getId();
+        assertNotNull(existingRatioMeasurementId);
+
+        // out of range for the steps of the tap changer: no position validity check is expected
+        TwoWindingsTransformerModificationInfos infos = TwoWindingsTransformerModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("trf1")
+                .ratioTapChangerPositionMeasurement(new AttributeModification<>(42, OperationType.SET))
+                .phaseTapChangerPositionMeasurement(new AttributeModification<>(-3, OperationType.SET))
+                .build();
+        runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(getJsonBody(infos, null)).contentType(MediaType.APPLICATION_JSON), status().isOk());
+
+        assertTapPositionMeasurement(twt, DiscreteMeasurement.TapChanger.RATIO_TAP_CHANGER, 42);
+        assertTapPositionMeasurement(twt, DiscreteMeasurement.TapChanger.PHASE_TAP_CHANGER, -3);
+        DiscreteMeasurement updatedRatioMeasurement = getTapPositionMeasurements(twt, DiscreteMeasurement.TapChanger.RATIO_TAP_CHANGER).get(0);
+        assertEquals(existingRatioMeasurementId, updatedRatioMeasurement.getId());
+        assertEquals("scada", updatedRatioMeasurement.getProperty("source"));
+        // actual tap changers are untouched
+        assertEquals(ratioTapPosition, twt.getRatioTapChanger().getTapPosition());
+        assertEquals(ratioRegulating, twt.getRatioTapChanger().isRegulating());
+        assertNull(twt.getPhaseTapChanger());
+    }
+
+    @Test
+    void testNullTapPositionMeasurementsAreNotModifications() throws Exception {
+        TwoWindingsTransformer twt = getNetwork().getTwoWindingsTransformer("trf1");
+        addTapPositionMeasurement(twt, DiscreteMeasurement.TapChanger.RATIO_TAP_CHANGER, 9, false);
+        addTapPositionMeasurement(twt, DiscreteMeasurement.TapChanger.PHASE_TAP_CHANGER, 8, false);
+
+        TwoWindingsTransformerModificationInfos infos = TwoWindingsTransformerModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("trf1")
+                .equipmentName(new AttributeModification<>("2wt renamed", OperationType.SET))
+                .build();
+        runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(getJsonBody(infos, null)).contentType(MediaType.APPLICATION_JSON), status().isOk());
+
+        assertEquals("2wt renamed", twt.getNameOrId());
+        // null means no modification: neither deletion, nor value or validity change
+        List<DiscreteMeasurement> ratioMeasurements = getTapPositionMeasurements(twt, DiscreteMeasurement.TapChanger.RATIO_TAP_CHANGER);
+        assertEquals(1, ratioMeasurements.size());
+        assertEquals(9, ratioMeasurements.get(0).getValueAsInt());
+        assertFalse(ratioMeasurements.get(0).isValid());
+        List<DiscreteMeasurement> phaseMeasurements = getTapPositionMeasurements(twt, DiscreteMeasurement.TapChanger.PHASE_TAP_CHANGER);
+        assertEquals(1, phaseMeasurements.size());
+        assertEquals(8, phaseMeasurements.get(0).getValueAsInt());
+        assertFalse(phaseMeasurements.get(0).isValid());
+    }
+
+    @Test
+    void testUpdateWithNullTapPositionMeasurementRemovesStoredRequest() throws Exception {
+        TwoWindingsTransformerModificationInfos modification = (TwoWindingsTransformerModificationInfos) buildModification();
+        UUID modificationUuid = saveModification(modification);
+
+        TwoWindingsTransformerModificationInfos update = (TwoWindingsTransformerModificationInfos) buildModificationUpdate();
+        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(mapper.writeValueAsString(update)).contentType(MediaType.APPLICATION_JSON)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk());
+
+        TwoWindingsTransformerModificationInfos stored = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
+        assertEquals(new AttributeModification<>(6, OperationType.SET), stored.getRatioTapChangerPositionMeasurement());
+        assertNull(stored.getPhaseTapChangerPositionMeasurement());
     }
 
     @Override
@@ -308,6 +423,8 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         // limits
         assertNull(modifiedTwoWindingsTransformer.getNullableCurrentLimits1());
         assertNull(modifiedTwoWindingsTransformer.getNullableCurrentLimits2());
+        assertTrue(getTapPositionMeasurements(modifiedTwoWindingsTransformer, DiscreteMeasurement.TapChanger.RATIO_TAP_CHANGER).isEmpty());
+        assertTrue(getTapPositionMeasurements(modifiedTwoWindingsTransformer, DiscreteMeasurement.TapChanger.PHASE_TAP_CHANGER).isEmpty());
     }
 
     @Test
