@@ -59,6 +59,7 @@ public final class EntityRegistry {
         register(GeneratorModificationInfos.class, GeneratorModificationEntity.class);
         register(LoadModificationInfos.class, LoadModificationEntity.class);
         register(BatteryModificationInfos.class, BatteryModificationEntity.class);
+        register(StaticVarCompensatorModificationInfos.class, StaticVarCompensatorModificationEntity.class);
         register(ShuntCompensatorModificationInfos.class, ShuntCompensatorModificationEntity.class);
         register(VscModificationInfos.class, VscModificationEntity.class);
         register(ConverterStationModificationInfos.class, ConverterStationModificationEntity.class);
