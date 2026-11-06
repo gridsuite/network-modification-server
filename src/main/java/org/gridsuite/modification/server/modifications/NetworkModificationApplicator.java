@@ -208,7 +208,7 @@ public class NetworkModificationApplicator {
         } else {
             reportNode = ReportNode.NO_OP;
         }
-        ModificationContext modificationContext = modificationContextFactory.create();
+        ModificationContext modificationContext = modificationContextFactory.createWithFilterNames();
         ApplicationStatus groupApplicationStatus = modificationGroupInfos.modifications().stream()
                 .filter(m -> m.isActivatedOn(modificationGroupInfos.rootNetworkTag()))
                 .map(m -> {
