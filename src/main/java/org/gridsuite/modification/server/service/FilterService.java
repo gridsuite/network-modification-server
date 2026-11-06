@@ -6,28 +6,21 @@
  */
 package org.gridsuite.modification.server.service;
 
-import com.powsybl.iidm.network.Network;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.filter.utils.FilterServiceUtils;
 import org.gridsuite.filter.wip.Filter;
 import org.gridsuite.modification.IFilterService;
 import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
-import org.gridsuite.modification.dto.FilterEquipments;
-import org.gridsuite.modification.dto.IdentifiableAttributes;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -74,10 +67,6 @@ public class FilterService implements IFilterService {
             .body(new ParameterizedTypeReference<>() { });
     }
 
-    public Stream<org.gridsuite.filter.identifierlistfilter.FilterEquipments> exportFilters(List<UUID> filtersUuids, Network network) {
-        return FilterServiceUtils.getFilterEquipmentsFromUuid(network, filtersUuids, this::getFilters).stream();
-    }
-
     /**
      * Retrieves self-contained filter definitions, which can then be evaluated locally against a network.
      *
@@ -117,13 +106,5 @@ public class FilterService implements IFilterService {
                 .retrieve()
                 .body(STANDALONE_FILTERS_WITH_DISTRIBUTION_KEYS_BY_ID);
         return filters == null ? Map.of() : filters;
-    }
-
-    public Map<UUID, FilterEquipments> getUuidFilterEquipmentsMap(Network network, Map<UUID, String> filters) {
-        return exportFilters(new ArrayList<>(filters.keySet()), network)
-            .map(f -> new FilterEquipments(f.getFilterId(), filters.get(f.getFilterId()),
-                f.getIdentifiableAttributes().stream().map(i -> new IdentifiableAttributes(i.getId(), i.getType(), i.getDistributionKey())).toList(),
-                f.getNotFoundEquipments()))
-            .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
     }
 }
