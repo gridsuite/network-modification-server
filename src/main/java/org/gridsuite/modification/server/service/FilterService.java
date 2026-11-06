@@ -11,7 +11,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.utils.FilterServiceUtils;
 import org.gridsuite.filter.wip.Filter;
-import org.gridsuite.modification.IFilterService;
 import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
 import org.gridsuite.modification.dto.FilterEquipments;
 import org.gridsuite.modification.dto.IdentifiableAttributes;
@@ -33,7 +32,7 @@ import java.util.stream.Stream;
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 @Service
-public class FilterService implements IFilterService {
+public class FilterService {
 
     private static final String FILTER_SERVER_API_VERSION = "v1";
 
