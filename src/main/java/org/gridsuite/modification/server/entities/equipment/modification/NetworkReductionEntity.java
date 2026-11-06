@@ -16,6 +16,7 @@ import org.gridsuite.modification.dto.NetworkReductionInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -29,7 +30,8 @@ public class NetworkReductionEntity extends ModificationEntity {
 
     @ElementCollection
     @CollectionTable(name = "network_reduction_excluded_voltage_levels")
-    private List<FilterEmbeddable> excludedVoltageLevels;
+    @Column(name = "filter_id")
+    private List<UUID> excludedVoltageLevels;
 
     public NetworkReductionEntity(@NonNull NetworkReductionInfos networkReductionInfos) {
         super(networkReductionInfos);
@@ -44,7 +46,7 @@ public class NetworkReductionEntity extends ModificationEntity {
                 .stashed(getStashed())
                 .activated(getActivated())
                 .description(getDescription())
-                .filters(toFilters(excludedVoltageLevels))
+                .filters(toFilterInfos(excludedVoltageLevels))
                 .build();
     }
 
@@ -55,15 +57,17 @@ public class NetworkReductionEntity extends ModificationEntity {
     }
 
     private void assignAttributes(NetworkReductionInfos networkReductionInfos) {
-        excludedVoltageLevels = networkReductionInfos.getFilters() == null ? null : networkReductionInfos.getFilters().stream()
-                .map(filter -> new FilterEmbeddable(filter.getId(), filter.getName()))
-                .collect(Collectors.toList());
+        excludedVoltageLevels = toFilterIds(networkReductionInfos.getFilters());
     }
 
-    private List<FilterInfos> toFilters(List<FilterEmbeddable> filters) {
+    private static List<UUID> toFilterIds(List<FilterInfos> filters) {
+        return filters != null ? filters.stream().map(FilterInfos::getId).toList() : null;
+    }
+
+    private List<FilterInfos> toFilterInfos(List<UUID> filters) {
         return filters != null ? filters
                 .stream()
-                .map(f -> new FilterInfos(f.getId(), f.getName()))
+                .map(filterId -> FilterInfos.builder().id(filterId).build())
                 .collect(Collectors.toList()) : null;
     }
 }

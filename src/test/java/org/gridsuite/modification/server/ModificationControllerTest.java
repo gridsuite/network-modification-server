@@ -1072,7 +1072,7 @@ class ModificationControllerTest {
         network = NetworkCreation.createForDeleteVoltageLevelOnLine(TEST_NETWORK_ID);
         UUID filterId1 = UUID.randomUUID();
         UUID filterId2 = UUID.randomUUID();
-        var loadedFilters = filterLoaderService.load(List.of(filterId1, filterId2));
+        var loadedFilters = filterLoaderService.getLoader().load(List.of(filterId1, filterId2));
         when(loadedFilters.get(filterId1).evaluate(eq(network), any(ReportNode.class))).thenReturn(List.of(network.getVoltageLevel("v2")));
         when(loadedFilters.get(filterId2).evaluate(eq(network), any(ReportNode.class))).thenReturn(List.of(network.getVoltageLevel("v3")));
 
@@ -1087,7 +1087,8 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         assertEquals(NETWORK_REDUCTION, modifications.getFirst().getType());
         NetworkReductionInfos savedNetworkReductionInfos = assertInstanceOf(NetworkReductionInfos.class, modifications.getFirst());
-        assertEquals(networkReductionInfos.getFilters(), savedNetworkReductionInfos.getFilters());
+        assertEquals(networkReductionInfos.getFilters().stream().map(FilterInfos::getId).toList(),
+                savedNetworkReductionInfos.getFilters().stream().map(FilterInfos::getId).toList());
     }
 
     @Test
