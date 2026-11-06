@@ -237,7 +237,7 @@ class EquipmentIndexationTest {
         assertEquals(voltageLevelName, equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1"), networkUuid, variantId).get(0).getName());
 
         // assert linked load has been updated (linked connectable)
-        assertTrue(checkEquipmentHasVoltageLevelWithName(networkUuid, variantId, "v1Load", voltageLevelName));
+        assertTrue(checkEquipmentHasVoltageLevelWithName(networkUuid, variantId, "v1load", voltageLevelName));
 
         // assert switch has not been indexed
         assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Switch"), networkUuid, variantId).isEmpty());
