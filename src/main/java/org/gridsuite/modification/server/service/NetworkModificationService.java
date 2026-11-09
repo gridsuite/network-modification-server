@@ -776,8 +776,8 @@ public class NetworkModificationService {
         deleteSharingLinks(groupUuid, deletedReferences, userId);
     }
 
-    public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {
-        return networkModificationRepository.getModificationsMetadata(ids);
+    public List<ModificationMetadata> getModificationsBaseInfos(List<UUID> ids) {
+        return networkModificationRepository.getModificationsBaseInfos(ids);
     }
 
     public static String escapeLucene(String s) {
@@ -812,7 +812,7 @@ public class NetworkModificationService {
         List<ModificationApplicationInfos> rawSearchModificationInfos = searchNetworkModificationInfos(networkUuid, userInput);
 
         List<UUID> modificationUuids = rawSearchModificationInfos.stream().map(ModificationApplicationInfos::getModificationUuid).toList();
-        Map<UUID, ModificationEntity> modificationEntitiesById = getModificationsByUuids(modificationUuids).stream()
+        Map<UUID, ModificationEntity> modificationEntitiesById = modificationRepository.findMetadataByIdIn(modificationUuids).stream()
             .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
 
         List<ModificationsSearchResult> filteredSearchModificationsResult = rawSearchModificationInfos.stream()
@@ -823,7 +823,7 @@ public class NetworkModificationService {
     }
 
     private Map<UUID, List<ModificationsSearchResult>> groupSearchResultsByGroupUuid(List<ModificationsSearchResult> modificationsSearchResults,
-            List<ModificationApplicationInfos> modificationApplicationInfos) {
+                                                                                     List<ModificationApplicationInfos> modificationApplicationInfos) {
         Map<UUID, UUID> modificationToGroupMap = modificationApplicationInfos.stream()
                 .collect(Collectors.toMap(
                         ModificationApplicationInfos::getModificationUuid,
@@ -837,10 +837,8 @@ public class NetworkModificationService {
                 ));
     }
 
-    private ModificationsSearchResult findMatchingEquipmentResults(
-            ModificationEntity modificationEntity,
-            ModificationApplicationInfos matchedModification,
-            String userInput) {
+    private ModificationsSearchResult findMatchingEquipmentResults(ModificationEntity modificationEntity,
+                                                                   ModificationApplicationInfos matchedModification, String userInput) {
         Pattern pattern = Pattern.compile(Pattern.quote(stripAccents(userInput)), Pattern.CASE_INSENSITIVE);
 
         List<String> impactedEquipmentIds = Stream.of(

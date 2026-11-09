@@ -219,6 +219,11 @@ public class NetworkModificationRepository {
             .orElseThrow(() -> getModificationNotFoundException(modificationReferenceEntity.getReferencedId() + " (referenced modification)"));
     }
 
+    private ModificationEntity getReferencedModificationMetadata(ModificationEntity modificationReferenceEntity) {
+        return modificationRepository.findReferencedMetadataByRefId(modificationReferenceEntity.getId())
+            .orElseThrow(() -> getModificationNotFoundException(modificationReferenceEntity.getId() + " (reference modification)"));
+    }
+
     private List<ModificationEntity> saveModificationsNonTransactional(@NonNull UUID groupUuid, List<ModificationEntity> modifications) {
         int order = modificationRepository.countByContainerAndStashed(groupUuid, false);
         ModificationGroupEntity group = getOrCreateModificationGroup(groupUuid);
@@ -344,15 +349,6 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @param containerUuid a group or a composite modification
-     * @return its modifications with their base columns only
-     */
-    @Transactional(readOnly = true)
-    public List<ModificationEntity> getBaseModifications(UUID containerUuid) {
-        return modificationRepository.findAllBaseByContainerId(containerUuid);
-    }
-
-    /**
      * The number of levels below a modification, the way the modification tree unfolds it:
      * the content of a composite, a reference standing for the composite it points to, at any level.
      *
@@ -458,7 +454,7 @@ public class NetworkModificationRepository {
         String messageType;
         String messageValues;
         if (ModificationType.MODIFICATION_REFERENCE.name().equals(modificationEntity.getType())) {
-            ModificationEntity sharedModification = getReferencedModification((ModificationReferenceEntity) modificationEntity);
+            ModificationEntity sharedModification = getReferencedModificationMetadata(modificationEntity);
             messageType = sharedModification.getMessageType();
             messageValues = sharedModification.getMessageValues();
         } else {
@@ -1410,7 +1406,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationMetadata> getModificationsMetadata(List<UUID> uuids) {
+    public List<ModificationMetadata> getModificationsBaseInfos(List<UUID> uuids) {
         // TODO remove when name attribute moved into ModificationEntity
         List<ModificationMetadata> modificationsMetadata =
             compositeModificationRepository.findAllById(uuids)
@@ -1419,7 +1415,7 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toCollection(ArrayList::new));
 
         // custom query to read only the required fields (metadata)
-        modificationsMetadata.addAll(modificationRepository.findMetadataIn(uuids).stream()
+        modificationsMetadata.addAll(modificationRepository.findBaseByIdIn(uuids).stream()
             .filter(m -> !m.isComposite()) // To be removed see TODO below
             .map(m -> m.toModificationMetadata())
             .toList());

@@ -15,10 +15,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -47,14 +44,18 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
                                                                     @Param("rootNetworkTag") String rootNetworkTag);
 
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) "
-            + "FROM ModificationEntity m WHERE m.container.id = ?1 order by m.modificationsOrder")
-    List<ModificationEntity> findAllBaseByContainerId(UUID containerId);
+            + "FROM ModificationEntity m WHERE m.id IN (?1) order by m.modificationsOrder")
+    List<ModificationEntity> findMetadataByIdIn(List<UUID> uuids);
 
     @Query(value = "SELECT new ModificationEntity(m.id, m.description, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
-    List<ModificationEntity> findMetadataIn(List<UUID> uuids);
+    List<ModificationEntity> findBaseByIdIn(List<UUID> uuids);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder")
     List<ModificationEntity> findAllByIdIn(List<UUID> uuids);
+
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) " +
+        "from ModificationEntity m WHERE m.id = (select r.referencedId from ModificationReferenceEntity r WHERE r.id = ?1)")
+    Optional<ModificationEntity> findReferencedMetadataByRefId(UUID uuid);
 
     /**
      * @return the given modifications, their applicabilities loaded with them
