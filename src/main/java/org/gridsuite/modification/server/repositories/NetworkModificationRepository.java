@@ -454,6 +454,25 @@ public class NetworkModificationRepository {
         return modification.toModificationInfos();
     }
 
+    public ModificationsSearchResult toSearchMetadata(ModificationEntity modificationEntity, List<String> impactedEquipmentIds) {
+        String messageType;
+        String messageValues;
+        if (ModificationType.MODIFICATION_REFERENCE.name().equals(modificationEntity.getType())) {
+            ModificationEntity sharedModification = getReferencedModification((ModificationReferenceEntity) modificationEntity);
+            messageType = sharedModification.getMessageType();
+            messageValues = sharedModification.getMessageValues();
+        } else {
+            messageType = modificationEntity.getMessageType();
+            messageValues = modificationEntity.getMessageValues();
+        }
+        return ModificationsSearchResult.builder()
+            .modificationUuid(modificationEntity.getId())
+            .messageType(messageType)
+            .messageValues(messageValues)
+            .impactedEquipmentIds(impactedEquipmentIds)
+            .build();
+    }
+
     /**
      * @return the applicability per root network tag of each of the given modifications, in one query.
      * A reference gets the applicability of the shared modification it points to, which the query resolves.

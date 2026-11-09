@@ -811,7 +811,9 @@ public class NetworkModificationService {
     public Map<UUID, List<ModificationsSearchResult>> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
         List<ModificationApplicationInfos> rawSearchModificationInfos = searchNetworkModificationInfos(networkUuid, userInput);
 
-        Map<UUID, ModificationEntity> modificationEntitiesById = getModificationEntitiesById(rawSearchModificationInfos);
+        List<UUID> modificationUuids = rawSearchModificationInfos.stream().map(ModificationApplicationInfos::getModificationUuid).toList();
+        Map<UUID, ModificationEntity> modificationEntitiesById = getModificationsByUuids(modificationUuids).stream()
+            .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
 
         List<ModificationsSearchResult> filteredSearchModificationsResult = rawSearchModificationInfos.stream()
                 .map(result -> findMatchingEquipmentResults(modificationEntitiesById.get(result.getModificationUuid()), result, userInput))
@@ -835,14 +837,6 @@ public class NetworkModificationService {
                 ));
     }
 
-    private Map<UUID, ModificationEntity> getModificationEntitiesById(List<ModificationApplicationInfos> modificationInfos) {
-        return getModificationsByUuids(modificationInfos.stream()
-                .map(ModificationApplicationInfos::getModificationUuid)
-                .toList())
-                .stream()
-                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
-    }
-
     private ModificationsSearchResult findMatchingEquipmentResults(
             ModificationEntity modificationEntity,
             ModificationApplicationInfos matchedModification,
@@ -860,9 +854,7 @@ public class NetworkModificationService {
                 .filter(id -> pattern.matcher(stripAccents(id)).find())
                 .toList();
 
-        return ModificationsSearchResult.fromModificationEntity(modificationEntity)
-                        .impactedEquipmentIds(impactedEquipmentIds)
-                        .build();
+        return networkModificationRepository.toSearchMetadata(modificationEntity, impactedEquipmentIds);
     }
 
     private static String stripAccents(String input) {
