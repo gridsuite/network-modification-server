@@ -1,0 +1,83 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1794228579455-1">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="standby_automaton_on" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-2">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="standby_automaton_on_op" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-3">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="standby" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-4">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="standby_op" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-5">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="b0" type="FLOAT(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-6">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="b0op" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-7">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="q0" type="FLOAT(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-8">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="q0op" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-9">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="low_voltage_setpoint" type="FLOAT(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-10">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="low_voltage_setpoint_op" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-11">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="high_voltage_setpoint" type="FLOAT(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-12">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="high_voltage_setpoint_op" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-13">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="low_voltage_threshold" type="FLOAT(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-14">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="low_voltage_threshold_op" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-15">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="high_voltage_threshold" type="FLOAT(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1794228579455-16">
+        <addColumn tableName="static_var_compensator_modification">
+            <column name="high_voltage_threshold_op" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
