@@ -714,32 +714,31 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public UUID assembleNetworkModificationsIntoNewComposite(@NonNull List<UUID> assembledModificationsUuids, @NonNull String userId) {
+    public UUID createCompositeModificationByAssembling(@NonNull List<UUID> assembledModificationsUuids, @NonNull String userId) {
 
         List<UUID> parentComposites = findModificationParentCompositesNonTransactional(assembledModificationsUuids).values().stream().toList();
         checkModificationsPermission(parentComposites, userId);
-        CompositeModificationInfos newComposite =
-                networkModificationRepository.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids).toModificationInfos();
+        UUID newCompositeUuid = networkModificationRepository.createCompositeModificationByAssembling(assembledModificationsUuids);
 
         // the references among the assembled modifications are now located in the new composite
-        UUID groupUuid = modificationRepository.findGroupIdByModificationId(newComposite.getUuid());
+        UUID groupUuid = modificationRepository.findGroupIdByModificationId(newCompositeUuid);
         notificationService.emitSharingLinksChanged(SharingLinkAction.UPDATE, groupUuid,
                 getModificationsReferencesNonTransactional(assembledModificationsUuids, false), userId);
 
         // Collect referenced ancestor composites before assembling, since assembled modifications are moved out of their composite
         emitReferencedAncestorsUpdated(assembledModificationsUuids, userId);
 
-        return newComposite.getUuid();
+        return newCompositeUuid;
     }
 
     @Transactional
-    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
-        return networkModificationRepository.createNetworkCompositeModification(modificationUuids, name);
+    public UUID createCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
+        return networkModificationRepository.createCompositeModification(modificationUuids, name);
     }
 
     @Transactional
-    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name, String description) {
-        return networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name, description);
+    public ModificationReferenceData shareCompositeModification(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name, String description) {
+        return networkModificationRepository.shareCompositeModification(groupUuid, modificationUuid, name, description);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {

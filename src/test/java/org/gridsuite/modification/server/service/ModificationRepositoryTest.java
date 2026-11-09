@@ -1539,7 +1539,7 @@ class ModificationRepositoryTest {
     private UUID insertComposite(UUID targetGroupUuid, boolean shared, String... equipmentIds) {
         List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID,
                 Arrays.stream(equipmentIds).map(ModificationRepositoryTest::switchModification).toList());
-        UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(
+        UUID compositeUuid = networkModificationRepository.createCompositeModification(
                 modifications.stream().map(ModificationInfos::getUuid).toList(), "composite");
         return networkModificationRepository.insertCompositeModifications(targetGroupUuid,
                 List.of(new CompositeInfos(compositeUuid, "composite", shared, "description")), List.of()).getFirst().getUuid();
@@ -1620,7 +1620,7 @@ class ModificationRepositoryTest {
 
         // copying a modification goes through its infos, which have to carry the applicabilities
         SQLStatementCountValidator.reset();
-        UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(List.of(modificationUuid), "composite");
+        UUID compositeUuid = networkModificationRepository.createCompositeModification(List.of(modificationUuid), "composite");
         SQLStatementCountValidator.assertSelectCount(2);
 
         CompositeModificationInfos composite = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(compositeUuid);
@@ -1947,7 +1947,7 @@ class ModificationRepositoryTest {
         List<UUID> siblingUuids = networkModificationRepository.saveModifications(TEST_GROUP_ID_3,
                 List.of(switchModification("v2d1"), switchModification("v2d2"), switchModification("v2d3")))
                 .stream().map(ModificationInfos::getUuid).toList();
-        UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(
+        UUID compositeUuid = networkModificationRepository.createCompositeModification(
                 Stream.concat(Stream.of(innerUuid), siblingUuids.stream()).toList(), "source");
 
         List<UUID> contentUuids = modificationUuidsInside(compositeUuid);
@@ -1967,7 +1967,7 @@ class ModificationRepositoryTest {
     void testExportingACompositeKeepsTheApplicabilitiesOfItsWholeTree() {
         UUID sourceUuid = compositeWithEveryApplicabilityCase();
 
-        UUID exportedUuid = networkModificationRepository.createNetworkCompositeModification(List.of(sourceUuid), "exported");
+        UUID exportedUuid = networkModificationRepository.createCompositeModification(List.of(sourceUuid), "exported");
 
         assertEquals(applicabilitiesInDepth(sourceUuid), applicabilitiesInDepth(exportedUuid),
                 "Exporting a composite carries the applicabilities of everything it holds, however deep");
@@ -2081,7 +2081,7 @@ class ModificationRepositoryTest {
         // an inner composite, copied into a group, then wrapped with a sibling into an outer one
         UUID innerCompositeUuid = insertComposite(TEST_GROUP_ID_3, false, "v1d1");
         UUID siblingUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d2"))).getFirst().getUuid();
-        UUID outerSourceUuid = networkModificationRepository.createNetworkCompositeModification(List.of(innerCompositeUuid, siblingUuid), "outer");
+        UUID outerSourceUuid = networkModificationRepository.createCompositeModification(List.of(innerCompositeUuid, siblingUuid), "outer");
         UUID outerCompositeUuid = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID_2,
                 List.of(new CompositeInfos(outerSourceUuid, "outer", false, "description")), List.of()).getFirst().getUuid();
 
@@ -2113,7 +2113,7 @@ class ModificationRepositoryTest {
         UUID siblingUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d2"))).getFirst().getUuid();
 
         // wrapping the reference with a sibling into a new composite resolves it to an independent copy, not a link
-        UUID outerCompositeUuid = networkModificationRepository.createNetworkCompositeModification(List.of(innerReferenceUuid, siblingUuid), "outer");
+        UUID outerCompositeUuid = networkModificationRepository.createCompositeModification(List.of(innerReferenceUuid, siblingUuid), "outer");
 
         CompositeModificationInfos outerComposite = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(outerCompositeUuid);
         ModificationInfos innerCopy = outerComposite.getModificationsInfos().stream()
@@ -2142,7 +2142,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.moveModifications(group,
                 new ModificationContainerInfos(outerUuid, ModificationContainerType.COMPOSITE), List.of(innerUuid), null);
 
-        UUID copyUuid = networkModificationRepository.createNetworkCompositeModification(List.of(outerUuid), "copy");
+        UUID copyUuid = networkModificationRepository.createCompositeModification(List.of(outerUuid), "copy");
 
         ModificationInfos nestedCopy = compositeInside(compositeInside(networkModificationRepository.getModificationInfo(copyUuid)));
         assertFalse(nestedCopy instanceof ModificationReferenceInfos, "a reference nested in the copied content must be stored as a copy, not a link");
@@ -2166,7 +2166,7 @@ class ModificationRepositoryTest {
     void testCreatingACompositeFromAnUnknownModificationThrows() {
         UUID unknownUuid = UUID.randomUUID();
         assertEquals(MODIFICATIONS_NOT_FOUND, assertThrows(NetworkModificationServerException.class,
-                () -> networkModificationRepository.createNetworkCompositeModification(List.of(unknownUuid), "outer")).getBusinessErrorCode());
+                () -> networkModificationRepository.createCompositeModification(List.of(unknownUuid), "outer")).getBusinessErrorCode());
     }
 
     @Test
@@ -2176,7 +2176,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModifications(List.of(sharedModificationOf(referenceUuid)));
 
         assertEquals(MODIFICATIONS_NOT_FOUND, assertThrows(NetworkModificationServerException.class,
-                () -> networkModificationRepository.createNetworkCompositeModification(List.of(referenceUuid), "outer")).getBusinessErrorCode());
+                () -> networkModificationRepository.createCompositeModification(List.of(referenceUuid), "outer")).getBusinessErrorCode());
     }
 
     @Test
@@ -2364,7 +2364,7 @@ class ModificationRepositoryTest {
     void testInsertedCompositesGetADefaultApplicabilityDownToTheSharedModifications() {
         List<UUID> contentUuids = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(switchModification("v1d1")))
                 .stream().map(ModificationInfos::getUuid).toList();
-        UUID sourceUuid = networkModificationRepository.createNetworkCompositeModification(contentUuids, "composite");
+        UUID sourceUuid = networkModificationRepository.createCompositeModification(contentUuids, "composite");
 
         List<ModificationInfos> inserted = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID_3, List.of(
                 new CompositeInfos(sourceUuid, "copy", false, "description"),
@@ -2422,7 +2422,7 @@ class ModificationRepositoryTest {
         // gets the union of the tags of its content, an association being the presence of an applicability, whatever its value
         networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuids.get(1)), OTHER_ROOT_NETWORK_TAG, false);
 
-        UUID compositeUuid = networkModificationRepository.assembleNetworkModificationsIntoNewComposite(modificationUuids).getId();
+        UUID compositeUuid = networkModificationRepository.createCompositeModificationByAssembling(modificationUuids);
 
         assertEquals(Map.of(ROOT_NETWORK_TAG, true, OTHER_ROOT_NETWORK_TAG, true), getApplicabilities(TEST_GROUP_ID_3).get(compositeUuid),
                 "The new composite is applicable on every root network its content is associated with");

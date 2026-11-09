@@ -298,7 +298,7 @@ class ModificationIndexationTest {
         assertNotNull(result);
 
         // Create the composite modification to pass later to ?action=insert
-        UUID compositeUuid = networkModificationService.createNetworkCompositeModification(
+        UUID compositeUuid = networkModificationService.createCompositeModification(
                 modifications.stream().map(ModificationInfos::getUuid).toList(),
                 "composite name"
         );

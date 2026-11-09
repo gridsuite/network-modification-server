@@ -1021,7 +1021,7 @@ class BuildTest {
                 ModificationEntity.fromDTO(switchOpening("v1d1")),
                 ModificationEntity.fromDTO(switchOpening("v2d1")),
                 ModificationEntity.fromDTO(switchOpening("v2d2"))));
-        UUID sourceUuid = modificationRepository.createNetworkCompositeModification(
+        UUID sourceUuid = modificationRepository.createCompositeModification(
                 sources.stream().map(ModificationInfos::getUuid).toList(), "source");
         // set on the source: the copy carries the applicabilities over, and is applied as it is returned
         List<UUID> contentUuids = modificationRepository.getModifications(sourceUuid, true)

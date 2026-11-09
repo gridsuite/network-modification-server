@@ -552,7 +552,7 @@ class NetworkModificationServiceTest {
                 UUID.randomUUID(),
                 List.of(ModificationEntity.fromDTO(referenceTo(sharedCompositeUuid))));
 
-        networkModificationService.assembleNetworkModificationsIntoNewComposite(childModUuids, "userId");
+        networkModificationService.createCompositeModificationByAssembling(childModUuids, "userId");
 
         List<UUID> elementUuids = List.of(sharedCompositeUuid);
         verify(directoryService).checkPermission(elementUuids, "userId", PermissionType.WRITE);
@@ -580,7 +580,7 @@ class NetworkModificationServiceTest {
 
         NetworkModificationServerException ex = assertThrows(
                 NetworkModificationServerException.class,
-                () -> networkModificationService.assembleNetworkModificationsIntoNewComposite(childModUuids, "userId")
+                () -> networkModificationService.createCompositeModificationByAssembling(childModUuids, "userId")
         );
         assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, ex.getBusinessErrorCode());
     }
