@@ -8,9 +8,11 @@ package org.gridsuite.modification.server.service;
 
 import org.gridsuite.modification.context.FilterWithDistributionKeysLoader;
 import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -20,16 +22,36 @@ import java.util.UUID;
  * @author Kamil MARUT <kamil.marut at rte-france.com>
  */
 @Service
-public class FilterWithDistributionKeysLoaderService implements FilterWithDistributionKeysLoader {
+public class FilterWithDistributionKeysLoaderService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FilterWithDistributionKeysLoaderService.class);
 
     private final FilterService filterService;
 
-    public FilterWithDistributionKeysLoaderService(FilterService filterService) {
+    private final DirectoryService directoryService;
+
+    public FilterWithDistributionKeysLoaderService(FilterService filterService, DirectoryService directoryService) {
         this.filterService = filterService;
+        this.directoryService = directoryService;
     }
 
-    @Override
-    public Map<UUID, FilterWithDistributionKeys> load(List<UUID> filterUuids) {
-        return filterService.getStandaloneFiltersWithDistributionKeys(filterUuids);
+    public FilterWithDistributionKeysLoader getLoader() {
+        return filterService::getStandaloneFiltersWithDistributionKeys;
+    }
+
+    public FilterWithDistributionKeysLoader getLoaderWithNames() {
+        return filterUuids -> {
+            Map<UUID, FilterWithDistributionKeys> filters = filterService.getStandaloneFiltersWithDistributionKeys(filterUuids);
+            try {
+                Map<UUID, String> names = directoryService.getElementNames(filters.keySet());
+                filters.forEach((filterUuid, filter) -> {
+                    if (filter.getFilter() != null) {
+                        filter.getFilter().setName(names.get(filterUuid));
+                    }
+                });
+            } catch (RestClientException e) {
+                LOGGER.warn("Could not resolve filter names from the directory, they will be numbered instead", e);
+            }
+            return filters;
+        };
     }
 }
