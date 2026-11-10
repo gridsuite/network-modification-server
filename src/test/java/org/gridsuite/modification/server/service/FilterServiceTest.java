@@ -8,12 +8,12 @@ package org.gridsuite.modification.server.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.gridsuite.filter.ExpertFilter;
+import org.gridsuite.filter.Filter;
+import org.gridsuite.filter.IdentifierListFilter;
+import org.gridsuite.filter.rule.CombinatorExpertRule;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.filter.utils.expertfilter.CombinatorType;
-import org.gridsuite.filter.wip.ExpertFilter;
-import org.gridsuite.filter.wip.Filter;
-import org.gridsuite.filter.wip.IdentifierListFilter;
-import org.gridsuite.filter.wip.rule.CombinatorExpertRule;
 import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
 import org.gridsuite.modification.server.RestClientConfig;
 import org.junit.jupiter.api.BeforeEach;
