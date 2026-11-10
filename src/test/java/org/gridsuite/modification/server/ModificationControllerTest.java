@@ -1089,6 +1089,20 @@ class ModificationControllerTest {
         NetworkReductionInfos savedNetworkReductionInfos = assertInstanceOf(NetworkReductionInfos.class, modifications.getFirst());
         assertEquals(networkReductionInfos.getFilters().stream().map(FilterInfos::getId).toList(),
                 savedNetworkReductionInfos.getFilters().stream().map(FilterInfos::getId).toList());
+
+        // Update the existing modification and check that its attributes are persisted.
+        networkReductionInfos.setFilters(List.of(new FilterInfos(filterId2, "filter2")));
+        networkReductionInfos.setDescription("Updated network reduction");
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/{uuid}", savedNetworkReductionInfos.getUuid())
+                        .header(HEADER_USER_ID, TEST_USER_ID)
+                        .content(mapper.writeValueAsString(networkReductionInfos))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        NetworkReductionInfos updatedNetworkReductionInfos = assertInstanceOf(NetworkReductionInfos.class,
+                modificationRepository.getModificationInfo(savedNetworkReductionInfos.getUuid()));
+        assertEquals(List.of(filterId2), updatedNetworkReductionInfos.getFilters().stream().map(FilterInfos::getId).toList());
+        assertEquals(networkReductionInfos.getDescription(), updatedNetworkReductionInfos.getDescription());
     }
 
     @Test
