@@ -71,6 +71,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.ModificationType.*;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
@@ -2417,7 +2418,7 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testRecreateModificationReferences() throws Exception {
+    void testModificationSharingLinkCreation() throws Exception {
         UUID sharedModificationUuid = createSomeSwitchModifications(TEST_GROUP2_ID, 1).getFirst().getUuid();
         ModificationInfos referenceInfo = ModificationReferenceInfos.builder()
             .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
@@ -2433,7 +2434,7 @@ class ModificationControllerTest {
                 .content(mapper.writeValueAsString(List.of(TEST_GROUP_ID)))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        verify(notificationService, times(1)).emitSharingLinksChanged(eq(SharingLinkAction.RECREATE), eq(TEST_GROUP_ID), eq(List.of(modificationReferenceData)), eq(TEST_USER_ID));
+        verify(notificationService, times(1)).emitSharingLinksChanged(SharingLinkAction.RECREATE, TEST_GROUP_ID, List.of(modificationReferenceData), TEST_USER_ID);
 
         mockMvc.perform(post("/v1/groups/sharing-links")
                 .header(HEADER_USER_ID, TEST_USER_ID)
@@ -2441,8 +2442,7 @@ class ModificationControllerTest {
                 .content(mapper.writeValueAsString(List.of(TEST_GROUP2_ID)))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        verify(notificationService, times(0)).emitSharingLinksChanged(eq(SharingLinkAction.RECREATE), eq(TEST_GROUP2_ID), anyList(), eq(TEST_USER_ID));
-
+        verify(notificationService, times(0)).emitSharingLinksChanged(SharingLinkAction.RECREATE, TEST_GROUP2_ID, anyList(), TEST_USER_ID);
     }
 
     @Test

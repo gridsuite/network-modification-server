@@ -824,12 +824,16 @@ class NetworkModificationServiceTest {
     }
 
     @Test
-    void recreateSharingLinks() {
+    void createSharingLinks() {
         UUID groupUuid = UUID.randomUUID();
         UUID sharedCompositeUuid = saveComposite(UUID.randomUUID(), List.of(dummyModification(UUID.randomUUID())));
         UUID referenceUuid = saveReference(groupUuid, sharedCompositeUuid, false);
         String userId = "user";
         List<ModificationReferenceData> refs = List.of(new ModificationReferenceData(referenceUuid, sharedCompositeUuid, null));
+
+        networkModificationService.createSharingLinks(List.of(groupUuid), false, userId);
+
+        verify(notificationService).emitSharingLinksChanged(SharingLinkAction.CREATE, groupUuid, refs, userId);
 
         networkModificationService.createSharingLinks(List.of(groupUuid), true, userId);
 
