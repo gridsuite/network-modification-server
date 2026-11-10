@@ -55,9 +55,7 @@ public class NetworkModificationApplicator {
 
     private final ReportService reportService;
 
-
     private final ModificationContextFactory modificationContextFactory;
-
 
     private final LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
 
