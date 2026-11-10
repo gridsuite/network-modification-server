@@ -2442,7 +2442,7 @@ class ModificationControllerTest {
                 .content(mapper.writeValueAsString(List.of(TEST_GROUP2_ID)))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        verify(notificationService, times(0)).emitSharingLinksChanged(SharingLinkAction.RECREATE, TEST_GROUP2_ID, anyList(), TEST_USER_ID);
+        verify(notificationService, times(0)).emitSharingLinksChanged(SharingLinkAction.RECREATE, TEST_GROUP2_ID, List.of(modificationReferenceData), TEST_USER_ID);
     }
 
     @Test
