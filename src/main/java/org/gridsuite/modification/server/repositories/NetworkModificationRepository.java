@@ -219,11 +219,6 @@ public class NetworkModificationRepository {
             .orElseThrow(() -> getModificationNotFoundException(modificationReferenceEntity.getReferencedId() + " (referenced modification)"));
     }
 
-    private ModificationEntity getReferencedModificationMetadata(ModificationEntity modificationReferenceEntity) {
-        return modificationRepository.findReferencedMetadataByRefId(modificationReferenceEntity.getId())
-            .orElseThrow(() -> getModificationNotFoundException(modificationReferenceEntity.getId() + " (reference modification)"));
-    }
-
     private List<ModificationEntity> saveModificationsNonTransactional(@NonNull UUID groupUuid, List<ModificationEntity> modifications) {
         int order = modificationRepository.countByContainerAndStashed(groupUuid, false);
         ModificationGroupEntity group = getOrCreateModificationGroup(groupUuid);
@@ -450,11 +445,15 @@ public class NetworkModificationRepository {
         return modification.toModificationInfos();
     }
 
-    public ModificationsSearchResult toSearchMetadata(ModificationEntity modificationEntity, List<String> impactedEquipmentIds) {
+    public ModificationsSearchResult toSearchMetadata(ModificationEntity modificationEntity, List<String> impactedEquipmentIds,
+                                                      Map<UUID, ModificationEntity> sharedModifications) {
         String messageType;
         String messageValues;
-        if (ModificationType.MODIFICATION_REFERENCE.name().equals(modificationEntity.getType())) {
-            ModificationEntity sharedModification = getReferencedModificationMetadata(modificationEntity);
+        if (modificationEntity instanceof ModificationReferenceEntity referenceEntity) {
+            ModificationEntity sharedModification = sharedModifications.get(referenceEntity.getReferencedId());
+            if (sharedModification == null) {
+                throw getModificationNotFoundException(referenceEntity.getReferencedId() + " (referenced modification)");
+            }
             messageType = sharedModification.getMessageType();
             messageValues = sharedModification.getMessageValues();
         } else {

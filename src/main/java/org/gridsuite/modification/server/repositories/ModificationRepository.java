@@ -10,6 +10,7 @@ import org.gridsuite.modification.server.dto.ModificationApplicability;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationReferenceEntity;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -53,10 +54,6 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder")
     List<ModificationEntity> findAllByIdIn(List<UUID> uuids);
 
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) " +
-        "from ModificationEntity m WHERE m.id = (select r.referencedId from ModificationReferenceEntity r WHERE r.id = ?1)")
-    Optional<ModificationEntity> findReferencedMetadataByRefId(UUID uuid);
-
     /**
      * @return the given modifications, their applicabilities loaded with them
      */
@@ -96,6 +93,9 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      */
     @Query("SELECT DISTINCT r.referencedId FROM ModificationReferenceEntity r WHERE r.id IN :ids")
     List<UUID> findReferencedModificationIds(@Param("ids") Collection<UUID> ids);
+
+    @Query(value = "SELECT r from ModificationReferenceEntity r WHERE r.id IN (?1)")
+    List<ModificationReferenceEntity> findReferenceModificationByIdIn(List<UUID> uuids);
 
     /**
      * @return true if at least one modification reference points to {@code referencedId}
