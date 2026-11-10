@@ -793,7 +793,7 @@ public class NetworkModificationService {
         return sb.toString();
     }
 
-    public List<ModificationApplicationInfos> searchNetworkModificationInfos(@NonNull UUID networkUuid, @NonNull String userInput) {
+    private List<ModificationApplicationInfos> searchNetworkModificationInfos(@NonNull UUID networkUuid, @NonNull String userInput) {
         BoolQuery boolQueryBuilder = buildSearchModificationsQuery(userInput, networkUuid);
 
         NativeQuery nativeQuery = new NativeQueryBuilder()
