@@ -80,9 +80,6 @@ class ModificationSearchTest {
     @Autowired
     private NetworkModificationRepository networkModificationRepository;
 
-    @Autowired
-    private SupervisionService supervisionService;
-
     UUID networkUuid = UUID.randomUUID();
     UUID groupUuid = UUID.randomUUID();
     UUID group2Uuid = UUID.randomUUID();

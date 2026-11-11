@@ -141,8 +141,14 @@ public class NetworkModificationRepository {
             Map.of(CONTAINER_ID, containerId, "containerType", containerTypeName));
     }
 
-    public NetworkModificationServerException getModificationNotFoundException(String modificationId) {
-        return new NetworkModificationServerException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND.messageTemplate(), modificationId), Map.of(MODIFICATION_ID, modificationId));
+    public NetworkModificationServerException getModificationNotFoundException(UUID modificationId) {
+        return new NetworkModificationServerException(MODIFICATION_NOT_FOUND,
+            String.format(MODIFICATION_NOT_FOUND.messageTemplate(), modificationId), Map.of(MODIFICATION_ID, modificationId.toString()));
+    }
+
+    public NetworkModificationServerException getSharedModificationNotFoundException(UUID sharedModificationId) {
+        return new NetworkModificationServerException(SHARED_MODIFICATION_NOT_FOUND,
+            String.format(SHARED_MODIFICATION_NOT_FOUND.messageTemplate(), sharedModificationId), Map.of(MODIFICATION_ID, sharedModificationId.toString()));
     }
 
     @Transactional // To have all the delete in the same transaction (atomic)
@@ -190,7 +196,7 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationReferenceData> replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<UUID> modificationUuids) {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
-                .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
+                .orElseThrow(() -> getModificationNotFoundException(compositeUuid));
 
         List<ModificationEntity> copyEntities = copyAsCompositeContent(modificationUuids);
 
@@ -216,7 +222,7 @@ public class NetworkModificationRepository {
 
     private ModificationEntity getReferencedModification(ModificationReferenceEntity modificationReferenceEntity) {
         return modificationRepository.findById(modificationReferenceEntity.getReferencedId())
-            .orElseThrow(() -> getModificationNotFoundException(modificationReferenceEntity.getReferencedId() + " (referenced modification)"));
+            .orElseThrow(() -> getSharedModificationNotFoundException(modificationReferenceEntity.getReferencedId()));
     }
 
     private List<ModificationEntity> saveModificationsNonTransactional(@NonNull UUID groupUuid, List<ModificationEntity> modifications) {
@@ -428,7 +434,7 @@ public class NetworkModificationRepository {
         }
         if (ModificationType.MODIFICATION_REFERENCE.name().equals(modification.getType())) {
             ModificationEntity shared = children.stream().findFirst()
-                    .orElseThrow(() -> getModificationNotFoundException(modification.getId() + " (referenced modification)"));
+                    .orElseThrow(() -> getSharedModificationNotFoundException(modification.getId()));
             // the message is the one of the shared modification
             return ModificationReferenceInfos.builder()
                     .uuid(modification.getId())
@@ -452,7 +458,7 @@ public class NetworkModificationRepository {
         if (modificationEntity instanceof ModificationReferenceEntity referenceEntity) {
             ModificationEntity sharedModification = sharedModifications.get(referenceEntity.getReferencedId());
             if (sharedModification == null) {
-                throw getModificationNotFoundException(referenceEntity.getReferencedId() + " (referenced modification)");
+                throw getSharedModificationNotFoundException(referenceEntity.getReferencedId());
             }
             messageType = sharedModification.getMessageType();
             messageValues = sharedModification.getMessageValues();
@@ -918,7 +924,7 @@ public class NetworkModificationRepository {
     public ModificationEntity getModificationEntity(UUID modificationUuid) {
         return modificationRepository
                 .findById(modificationUuid)
-                .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
+                .orElseThrow(() -> getModificationNotFoundException(modificationUuid));
     }
 
     /**
@@ -955,7 +961,7 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationReferenceData> unshareModification(@NonNull UUID referenceModificationUuid) {
         ModificationEntity referenceEntity = modificationRepository.findById(referenceModificationUuid)
-                .orElseThrow(() -> getModificationNotFoundException(referenceModificationUuid.toString()));
+                .orElseThrow(() -> getModificationNotFoundException(referenceModificationUuid));
         if (!referenceEntity.getType().equals(ModificationType.MODIFICATION_REFERENCE.name())) {
             // Only a reference modification may be unshared
             throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
@@ -1143,7 +1149,7 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
         return modificationUuids.stream()
                 .map(modificationUuid -> Optional.ofNullable(entitiesByUuid.get(modificationUuid))
-                        .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString())))
+                        .orElseThrow(() -> getModificationNotFoundException(modificationUuid)))
                 .toList();
     }
 
