@@ -54,6 +54,7 @@ public final class ApiUtils {
                 post("/v1/groups/{uuid}/duplicate", originGroupUuid)
                     .header(HEADER_USER_ID, TEST_USER_ID)
                     .param("groupUuid", targetGroupUuid.toString())
+                    .param("rootNetworkTags", "PH1")
             )
             .andExpectAll(status().isOk());
     }
