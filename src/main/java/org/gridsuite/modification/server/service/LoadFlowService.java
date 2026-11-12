@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.gridsuite.modification.ILoadFlowService;
 import org.gridsuite.modification.dto.LoadFlowParametersInfos;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
-public class LoadFlowService implements ILoadFlowService {
+public class LoadFlowService {
     private static final String LOADFLOW_SERVER_API_VERSION = "v1";
     private static final String DELIMITER = "/";
     private static final String PARAMETERS_URI = "/parameters/{parametersUuid}";
@@ -34,7 +33,6 @@ public class LoadFlowService implements ILoadFlowService {
         this.restClient = restClient;
     }
 
-    @Override
     public LoadFlowParametersInfos getLoadFlowParametersInfos(UUID uuid) {
         String path = UriComponentsBuilder.fromPath(DELIMITER + LOADFLOW_SERVER_API_VERSION + PARAMETERS_URI)
                 .buildAndExpand(uuid).toUriString();
