@@ -2418,7 +2418,7 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testModificationSharingLinkRecreation() throws Exception {
+    void testModificationSharingLinkCreation() throws Exception {
         UUID sharedModificationUuid = createSomeSwitchModifications(TEST_GROUP2_ID, 1).getFirst().getUuid();
         ModificationInfos referenceInfo = ModificationReferenceInfos.builder()
             .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
@@ -2428,6 +2428,23 @@ class ModificationControllerTest {
         UUID referenceUuid = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(referenceInfo))).getFirst().getUuid();
         ModificationReferenceData modificationReferenceData = new ModificationReferenceData(referenceUuid, sharedModificationUuid, null);
 
+        // Create
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .content(mapper.writeValueAsString(List.of(TEST_GROUP_ID)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        verify(notificationService, times(1)).emitSharingLinksChanged(SharingLinkAction.CREATE, TEST_GROUP_ID, List.of(modificationReferenceData), TEST_USER_ID);
+
+        // nothing is sent when no reference is involved
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .content(mapper.writeValueAsString(List.of(TEST_GROUP2_ID)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        verify(notificationService, never()).emitSharingLinksChanged(any(), any(), any(), any());
+
+        // Recreate
         mockMvc.perform(post("/v1/groups/sharing-links")
                 .header(HEADER_USER_ID, TEST_USER_ID)
                 .queryParam("recreate", "true")
@@ -2442,7 +2459,7 @@ class ModificationControllerTest {
                 .content(mapper.writeValueAsString(List.of(TEST_GROUP2_ID)))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        verify(notificationService, times(0)).emitSharingLinksChanged(SharingLinkAction.RECREATE, TEST_GROUP2_ID, List.of(modificationReferenceData), TEST_USER_ID);
+        verify(notificationService, never()).emitSharingLinksChanged(any(), any(), any(), any());
     }
 
     @Test
