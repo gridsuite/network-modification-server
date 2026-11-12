@@ -16,6 +16,7 @@ public enum ModificationBusinessErrorCode implements BusinessErrorCode {
     MODIFICATION_CONTAINER_TYPE_NOT_FOUND("modification.container.type.notFound", "Modification container type of %s is not found"),
     MODIFICATION_CONTAINER_BAD_TYPE("modification.container.badType", "Modification container type of %s is invalid : actual type %s -> expected type %s"),
     MODIFICATION_NOT_FOUND("modification.notFound", "Modification (%s) not found"),
+    SHARED_MODIFICATION_NOT_FOUND("modification.shared.notFound", "Shared Modification (%s) not found"),
     MODIFICATION_BAD_TYPE("modification.badType", "Modification type of %s is invalid : actual type %s -> expected type %s"),
     MODIFICATION_CONTAINS_SHARED("modification.containsShared", "Modification %s contains a shared modification"),
     MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED("modification.sharedWriteForbidden", "The write permission is missing on at least one shared modification of %s"),
