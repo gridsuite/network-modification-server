@@ -652,7 +652,7 @@ class ModificationControllerTest {
         assertEquals(Map.of(ROOT_NETWORK_TAG, true), readApplicabilities(TEST_GROUP_ID).get(modificationUuid),
                 "A modification is associated with the root networks it is applied on as it is written");
 
-        // a copy of the group, maybe into another study, is associated with the root networks of the copy
+        // a copy of the group, maybe into another study, is associated with the root networks of the copy, and only with them
         UUID newGroupUuid = UUID.randomUUID();
         mockMvc.perform(post("/v1/groups/" + TEST_GROUP_ID + "/duplicate")
                 .queryParam("groupUuid", newGroupUuid.toString())
@@ -661,7 +661,7 @@ class ModificationControllerTest {
                 .queryParam("rootNetworkTags", RENAMED_ROOT_NETWORK_TAG)
                 .header(HEADER_USER_ID, TEST_USER_ID)
         ).andExpect(status().isOk());
-        assertEquals(List.of(Map.of(ROOT_NETWORK_TAG, true, RENAMED_ROOT_NETWORK_TAG, true)), List.copyOf(readApplicabilities(newGroupUuid).values()));
+        assertEquals(List.of(Map.of(RENAMED_ROOT_NETWORK_TAG, true)), List.copyOf(readApplicabilities(newGroupUuid).values()));
     }
 
     @Test
@@ -709,7 +709,7 @@ class ModificationControllerTest {
     @Test
     void testUpdateModificationActivation() {
         // create a composite modification and set all its metadata fields
-        UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of(), "");
+        UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of(), "", List.of());
         assertEquals(true, modificationRepository.getModificationInfo(compositeUuid).getActivated());
 
         // update activation
@@ -1344,6 +1344,7 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
+                        .param("rootNetworkTags", ROOT_NETWORK_TAG)
                 ).andExpect(status().isOk());
         List<ModificationInfos> stashedCopiedModifications = modificationRepository.getModifications(newGroupUuid, true, StashedFilter.STASHED);
         List<ModificationInfos> copiedModifications = modificationRepository.getModifications(newGroupUuid, true, StashedFilter.ALL);
@@ -1367,6 +1368,7 @@ class ModificationControllerTest {
         String copyGroupUriString = "/v1/groups/" + TEST_GROUP_ID + "/duplicate?groupUuid=" + newGroupUuid + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(
                 post(copyGroupUriString)
+                        .param("rootNetworkTags", ROOT_NETWORK_TAG)
                         .header(HEADER_USER_ID, "user1")
                 ).andExpect(status().isOk());
 
@@ -1398,6 +1400,7 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
+                        .param("rootNetworkTags", ROOT_NETWORK_TAG)
                 ).andExpect(status().isOk());
         testNetworkModificationsCount(duplicatedGroupUuid, 1);
 
@@ -1407,6 +1410,7 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
+                        .param("rootNetworkTags", ROOT_NETWORK_TAG)
         ).andExpect(status().isOk());
         assertFalse(networkModificationService.getModificationGroups().contains(targetOfUnexistingGroupUuid));
 
@@ -2281,6 +2285,7 @@ class ModificationControllerTest {
                         post("/v1/network-composite-modifications")
                                 .content(mapper.writeValueAsString(modificationUuids))
                                 .param("name", "composite name")
+                                .param("rootNetworkTags", "PH1")
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         return mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
