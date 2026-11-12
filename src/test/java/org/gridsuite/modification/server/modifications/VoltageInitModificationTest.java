@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import com.powsybl.iidm.network.extensions.VoltageRegulation;
+import com.powsybl.iidm.network.regulation.RegulationMode;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -45,17 +45,23 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
         createSwitch(v2, "brNewGen", null, SwitchKind.BREAKER, true, false, false, 18, 19);
 
         Generator newGen = network.getGenerator("newGen");
-        newGen.setTargetV(224.);
-        newGen.setVoltageRegulatorOn(true);
+        newGen.setLocalTargetV(224.)
+            .newVoltageRegulation()
+                .withMode(RegulationMode.VOLTAGE)
+                .withRegulating(true)
+                .build();
 
         ThreeWindingsTransformer transformer = network.getThreeWindingsTransformer("trf6");
         transformer.getLeg2().newRatioTapChanger()
             .setLowTapPosition(0)
             .setTapPosition(1)
             .setLoadTapChangingCapabilities(false)
-            .setRegulating(false)
-            .setTargetDeadband(1.0)
-            .setTargetV(220.0)
+            .newVoltageRegulation()
+                .withMode(RegulationMode.VOLTAGE)
+                .withRegulating(false)
+                .withTargetDeadband(1.0)
+                .withTargetValue(220.0)
+                .add()
             .beginStep()
             .setR(39.78473)
             .setX(39.784725)
@@ -357,23 +363,23 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertLogMessage("Shunt compensator with id=shuntNotFound not found", "network.modification.shuntCompensatorNotFound", reportService);
-        assertEquals(10., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
-        assertEquals(226., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
-        assertEquals(75., getNetwork().getBattery("v1Battery").getExtension(VoltageRegulation.class).getTargetV(), 0.001);
-        assertEquals(26., getNetwork().getBattery("v1Battery").getTargetQ(), 0.001);
-        assertEquals(16., getNetwork().getBattery("v2Battery").getTargetQ(), 0.001);
+        assertEquals(10., getNetwork().getGenerator("idGenerator").getLocalTargetQ(), 0.001);
+        assertEquals(226., getNetwork().getGenerator("newGen").getRegulatingTargetV(), 0.001);
+        assertEquals(75., getNetwork().getBattery("v1Battery").getRegulatingTargetV(), 0.001);
+        assertEquals(26., getNetwork().getBattery("v1Battery").getLocalTargetQ(), 0.001);
+        assertEquals(16., getNetwork().getBattery("v2Battery").getLocalTargetQ(), 0.001);
         assertEquals(2, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
-        assertEquals(223, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTargetV(), 0.001);
+        assertEquals(223, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getVoltageRegulation().getTargetValue(), 0.001);
         assertEquals(2, getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTapPosition());
-        assertEquals(220., getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTargetV(), 0.001);
-        assertEquals(50., getNetwork().getStaticVarCompensator("v5Compensator").getReactivePowerSetpoint(), 0.001);
-        assertEquals(372., getNetwork().getStaticVarCompensator("v6Compensator").getVoltageSetpoint(), 0.001);
-        assertEquals(23., getNetwork().getVscConverterStation("v2vsc").getReactivePowerSetpoint(), 0.001);
-        assertEquals(560., getNetwork().getVscConverterStation("v2vsc").getVoltageSetpoint(), 0.001);
+        assertEquals(220., getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getVoltageRegulation().getTargetValue(), 0.001);
+        assertEquals(50., getNetwork().getStaticVarCompensator("v5Compensator").getRegulatingTargetQ(), 0.001);
+        assertEquals(372., getNetwork().getStaticVarCompensator("v6Compensator").getRegulatingTargetV(), 0.001);
+        assertEquals(23., getNetwork().getVscConverterStation("v2vsc").getRegulatingTargetQ(), 0.001);
+        assertEquals(560., getNetwork().getVscConverterStation("v2vsc").getRegulatingTargetV(), 0.001);
         assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
-        assertEquals(230., getNetwork().getShuntCompensator("v2shunt").getTargetV(), 0.001);
+        assertEquals(230., getNetwork().getShuntCompensator("v2shunt").getRegulatingTargetV(), 0.001);
         assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
-        assertEquals(221., getNetwork().getShuntCompensator("v5shunt").getTargetV(), 0.001);
+        assertEquals(221., getNetwork().getShuntCompensator("v5shunt").getRegulatingTargetV(), 0.001);
         assertEquals(1, getNetwork().getShuntCompensator("v6shunt").getSectionCount());
         assertEquals(230., getNetwork().getBusView().getBus("v1_0").getV(), 0.001);
         assertEquals(0.5, getNetwork().getBusView().getBus("v1_0").getAngle(), 0.001);
@@ -381,22 +387,22 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(1., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
-        assertEquals(224., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
-        assertNull(getNetwork().getBattery("v1Battery").getExtension(VoltageRegulation.class));
-        assertEquals(3., getNetwork().getBattery("v1Battery").getTargetQ(), 0.001);
-        assertEquals(11., getNetwork().getBattery("v2Battery").getTargetQ(), 0.001);
+        assertEquals(1., getNetwork().getGenerator("idGenerator").getLocalTargetQ(), 0.001);
+        assertEquals(224., getNetwork().getGenerator("newGen").getRegulatingTargetV(), 0.001);
+        assertNull(getNetwork().getBattery("v1Battery").getVoltageRegulation());
+        assertEquals(3., getNetwork().getBattery("v1Battery").getLocalTargetQ(), 0.001);
+        assertEquals(11., getNetwork().getBattery("v2Battery").getLocalTargetQ(), 0.001);
         assertEquals(1, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
-        assertEquals(220., getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTargetV(), 0.001);
+        assertEquals(220., getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getVoltageRegulation().getTargetValue(), 0.001);
         assertEquals(1, getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTapPosition());
-        assertEquals(100., getNetwork().getStaticVarCompensator("v5Compensator").getReactivePowerSetpoint(), 0.001);
-        assertEquals(380., getNetwork().getStaticVarCompensator("v6Compensator").getVoltageSetpoint(), 0.001);
-        assertEquals(40., getNetwork().getVscConverterStation("v2vsc").getReactivePowerSetpoint(), 0.001);
-        assertEquals(150., getNetwork().getVscConverterStation("v2vsc").getVoltageSetpoint(), 0.001);
+        assertEquals(100., getNetwork().getStaticVarCompensator("v5Compensator").getRegulatingTargetQ(), 0.001);
+        assertEquals(380., getNetwork().getStaticVarCompensator("v6Compensator").getRegulatingTargetV(), 0.001);
+        assertEquals(40., getNetwork().getVscConverterStation("v2vsc").getRegulatingTargetQ(), 0.001);
+        assertEquals(150., getNetwork().getVscConverterStation("v2vsc").getRegulatingTargetV(), 0.001);
         assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
-        assertEquals(225., getNetwork().getShuntCompensator("v2shunt").getTargetV(), 0.001);
+        assertEquals(225., getNetwork().getShuntCompensator("v2shunt").getRegulatingTargetV(), 0.001);
         assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
-        assertEquals(225., getNetwork().getShuntCompensator("v5shunt").getTargetV(), 0.001);
+        assertEquals(225., getNetwork().getShuntCompensator("v5shunt").getRegulatingTargetV(), 0.001);
         assertEquals(0, getNetwork().getShuntCompensator("v6shunt").getSectionCount());
     }
 

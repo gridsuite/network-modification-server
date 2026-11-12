@@ -10,6 +10,7 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControlAdder;
+import com.powsybl.iidm.network.regulation.RegulationMode;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.gridsuite.modification.utils.ModificationUtils;
 
@@ -26,6 +27,12 @@ public final class NetworkCreation {
 
     public static Network create(UUID uuid, boolean createHvdcLine) {
         return create(uuid, createHvdcLine, new NetworkFactoryImpl());
+    }
+
+    public static Network createWithSingleVariant(UUID uuid, boolean createHvdcLine) {
+        Network network = create(uuid, createHvdcLine);
+        network.getVariantManager().removeVariant(VARIANT_ID);
+        return network;
     }
 
     //Create a network with fictitious switch and different switch kind
@@ -137,14 +144,14 @@ public final class NetworkCreation {
         createLoad(v5, "v5load", "v5load", 2, 0., 0., "cn5", 5, ConnectablePosition.Direction.TOP);
         createShuntCompensator(v5, "v5shunt", "v5shunt", 4, 225., 10, true, 3, 1, 2, 2, "cn22", 33, ConnectablePosition.Direction.BOTTOM);
         createGenerator(v5, "v5generator", 3, 42.1, 1.0, "cn10", 10, ConnectablePosition.Direction.TOP);
-        createStaticVarCompensator(v5, "v5Compensator", "v5Compensator", 5, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
+        createStaticVarCompensator(v5, "v5Compensator", "v5Compensator", 5, RegulationMode.VOLTAGE, 380., 100, 2, 30);
 
         VoltageLevel v6 = createVoltageLevel(s3, "v6", "v6", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v6, "1B1", "1B1", 0);
         createLoad(v6, "v6load", "v6load", 2, 0., 0., "cn6", 6, ConnectablePosition.Direction.BOTTOM);
         createShuntCompensator(v6, "v6shunt", "v6shunt", 4, 225., 10, true, 3, 1, 2, 2, "cn33", 44, ConnectablePosition.Direction.BOTTOM);
         createGenerator(v6, "v6generator", 3, 42.1, 1.0, "cn11", 11, ConnectablePosition.Direction.TOP);
-        createStaticVarCompensator(v6, "v6Compensator", "v6Compensator", 5, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
+        createStaticVarCompensator(v6, "v6Compensator", "v6Compensator", 5, RegulationMode.VOLTAGE, 380., 100, 2, 30);
 
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
         VoltageLevel v3 = createVoltageLevel(s2, "v3", "v3", TopologyKind.NODE_BREAKER, 380.0, 15.0, 25.0);
@@ -154,7 +161,7 @@ public final class NetworkCreation {
         createSwitch(v3, "v3d1", "v3d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 1);
         createSwitch(v3, "v3b1", "v3b1", SwitchKind.BREAKER, true, false, false, 1, 2);
 
-        createStaticVarCompensator(v3, "v3Compensator", "v3Compensator", 4, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
+        createStaticVarCompensator(v3, "v3Compensator", "v3Compensator", 4, RegulationMode.VOLTAGE, 380., 100, 2, 30);
         createSwitch(v3, "v3dCompensator", "v3dCompensator", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
         createSwitch(v3, "v3bCompensator", "v3bCompensator", SwitchKind.BREAKER, true, false, false, 3, 4);
 
@@ -178,10 +185,13 @@ public final class NetworkCreation {
             .setLowTapPosition(0)
             .setTapPosition(1)
             .setLoadTapChangingCapabilities(true)
-            .setRegulating(true)
-            .setTargetDeadband(1.0)
-            .setTargetV(220.0)
-            .setRegulationTerminal(t2.getTerminal1())
+            .newVoltageRegulation()
+                .withMode(RegulationMode.VOLTAGE)
+                .withRegulating(true)
+                .withTargetDeadband(1.0)
+                .withTargetValue(220.0)
+                .withTerminal(t2.getTerminal1())
+                .add()
             .beginStep()
             .setR(39.78473)
             .setX(39.784725)

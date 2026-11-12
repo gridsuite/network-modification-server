@@ -50,7 +50,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
-        return NetworkCreation.create(networkUuid, true);
+        return NetworkCreation.createWithSingleVariant(networkUuid, true);
     }
 
     @Override
@@ -110,7 +110,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
         assertEquals("newV1Battery", modifiedBattery.getNameOrId());
         assertEquals(80.0, modifiedBattery.getTargetP());
-        assertEquals(40.0, modifiedBattery.getTargetQ());
+        assertEquals(40.0, modifiedBattery.getLocalTargetQ());
         assertEquals(0., modifiedBattery.getMinP());
         assertEquals(100., modifiedBattery.getMaxP());
         assertEquals(0.1f, modifiedBattery.getExtension(ActivePowerControl.class).getDroop());
@@ -142,7 +142,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         Battery battery = getNetwork().getBattery("v3Battery");
         assertEquals("v3Battery", battery.getNameOrId());
         assertEquals(1.0, battery.getTargetP());
-        assertEquals(1.0, battery.getTargetQ());
+        assertEquals(1.0, battery.getLocalTargetQ());
         assertEquals(0.0, battery.getMinP());
         assertEquals(10.0, battery.getMaxP());
         assertEquals(ReactiveLimitsKind.MIN_MAX, battery.getReactiveLimits().getKind());
