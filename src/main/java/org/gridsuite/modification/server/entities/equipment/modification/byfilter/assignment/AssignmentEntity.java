@@ -10,7 +10,6 @@ package org.gridsuite.modification.server.entities.equipment.modification.byfilt
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.*;
 import org.gridsuite.modification.modifications.data.assignment.DataType;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
@@ -80,7 +79,7 @@ public class AssignmentEntity extends AbstractAssignmentEntity {
 
         assignAttributes(assignmentInfos);
         assignmentInfos.setFilters(filters.stream()
-                .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName()))
+                .map(VariationFilterEntity::toFilterInfos)
                 .toList());
         return assignmentInfos;
     }

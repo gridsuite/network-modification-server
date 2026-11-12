@@ -19,7 +19,7 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.NonNull;
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.modification.context.ModificationContext;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.modifications.AbstractModification;
@@ -76,9 +76,11 @@ public class NetworkModificationService {
 
     private final ModificationApplicationInfosService applicationInfosService;
 
-    private final FilterService filterService;
-
     private final DirectoryService directoryService;
+
+    private final ModificationContextFactory modificationContextFactory;
+
+    private final ModificationFilterNameService modificationFilterNameService;
 
     static final String NETWORK_UUID = "networkUuid.keyword";
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
@@ -96,8 +98,9 @@ public class NetworkModificationService {
                                       ModificationApplicationInfosService applicationInfosService,
                                       ElasticsearchOperations elasticsearchOperations,
                                       ModificationRepository modificationRepository,
-                                      FilterService filterService,
-                                      DirectoryService directoryService) {
+                                      DirectoryService directoryService,
+                                      ModificationContextFactory modificationContextFactory,
+                                      ModificationFilterNameService modificationFilterNameService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -107,18 +110,19 @@ public class NetworkModificationService {
         this.applicationInfosService = applicationInfosService;
         this.elasticsearchOperations = elasticsearchOperations;
         this.modificationRepository = modificationRepository;
-        this.filterService = filterService;
         this.directoryService = directoryService;
+        this.modificationContextFactory = modificationContextFactory;
+        this.modificationFilterNameService = modificationFilterNameService;
     }
 
     public List<UUID> getModificationGroups() {
         return networkModificationRepository.getModificationGroupsUuids();
     }
 
-    @Transactional(readOnly = true)
-    // Need a transaction for collections lazy loading
     public List<ModificationInfos> getNetworkModifications(UUID containerUuid, boolean onlyMetadata, StashedFilter stashedFilter) {
-        return networkModificationRepository.getModifications(containerUuid, onlyMetadata, stashedFilter);
+        List<ModificationInfos> modifications = networkModificationRepository.getModifications(containerUuid, onlyMetadata, stashedFilter);
+        modificationFilterNameService.addFilterNames(modifications);
+        return modifications;
     }
 
     @Transactional(readOnly = true)
@@ -163,54 +167,22 @@ public class NetworkModificationService {
         return networkModificationRepository.findAllChildrenUuids(compositeModificationUuids);
     }
 
-    private void checkGenerationDispatchFilters(GenerationDispatchInfos generationDispatchInfos) {
-        // set filter name to null for non existing filters
-        Map<UUID, String> filterNamesByUuid = new LinkedHashMap<>();
-        generationDispatchInfos.getGeneratorsWithoutOutage().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()));
-        generationDispatchInfos.getGeneratorsWithFixedSupply().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()));
-        generationDispatchInfos.getGeneratorsFrequencyReserve().forEach(frequencyReserveInfos ->
-            frequencyReserveInfos.getGeneratorsFilters().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()))
-        );
-        if (!filterNamesByUuid.isEmpty()) {
-            List<AbstractFilter> filters = filterService.getFilters(new ArrayList<>(filterNamesByUuid.keySet()));
-            Set<UUID> validFilters = filters.stream().map(AbstractFilter::getId).collect(Collectors.toSet());
-            Set<UUID> missingFilters = filterNamesByUuid.keySet().stream().filter(filterId -> !validFilters.contains(filterId)).collect(Collectors.toSet());
-            generationDispatchInfos.getGeneratorsWithoutOutage().forEach(filterInfos -> {
-                if (missingFilters.contains(filterInfos.getId())) {
-                    filterInfos.setName(null);
-                }
-            });
-            generationDispatchInfos.getGeneratorsWithFixedSupply().forEach(filterInfos -> {
-                if (missingFilters.contains(filterInfos.getId())) {
-                    filterInfos.setName(null);
-                }
-            });
-            generationDispatchInfos.getGeneratorsFrequencyReserve().forEach(frequencyReserveInfos ->
-                frequencyReserveInfos.getGeneratorsFilters().forEach(filterInfos -> {
-                    if (missingFilters.contains(filterInfos.getId())) {
-                        filterInfos.setName(null);
-                    }
-                }));
-        }
-    }
-
-    @Transactional(readOnly = true)
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
-        ModificationInfos modificationInfos = networkModificationRepository.getModificationInfo(networkModificationUuid);
-        if (modificationInfos instanceof GenerationDispatchInfos generationDispatchInfos) {
-            checkGenerationDispatchFilters(generationDispatchInfos);
-        }
-        return modificationInfos;
+        ModificationInfos modification = networkModificationRepository.getModificationInfo(networkModificationUuid);
+        modificationFilterNameService.addFilterNames(modification);
+        return modification;
     }
 
-    @Transactional(readOnly = true)
     public AbstractModification getStandaloneNetworkModification(UUID networkModificationUuid) {
-        return networkModificationRepository.getStandaloneNetworkModification(networkModificationUuid);
+        return networkModificationRepository.getModificationInfos(networkModificationUuid)
+                .toModification(modificationContextFactory.create());
     }
 
-    @Transactional(readOnly = true)
     public Map<UUID, AbstractModification> getStandaloneNetworkModifications(List<UUID> networkModificationUuids, boolean errorOnModificationNotFound) {
-        return networkModificationRepository.getStandaloneNetworkModifications(networkModificationUuids, errorOnModificationNotFound);
+        List<ModificationInfos> modificationsInfos = networkModificationRepository.getStandaloneModificationsInfos(networkModificationUuids, errorOnModificationNotFound);
+        ModificationContext modificationContext = modificationContextFactory.create();
+        return modificationsInfos.stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, modificationInfos -> modificationInfos.toModification(modificationContext)));
     }
 
     public Integer getNetworkModificationsCount(UUID containerUuid, boolean stashed) {
@@ -231,7 +203,7 @@ public class NetworkModificationService {
         Network network;
         try {
             network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
-        } catch (PowsyblException e) {
+        } catch (PowsyblException _) {
             throw new NetworkModificationServerException(NETWORK_NOT_FOUND, String.format(NETWORK_NOT_FOUND.messageTemplate(), networkUuid), Map.of("networkId", networkUuid));
         }
         boolean isVariantPresent = true;
@@ -377,9 +349,11 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public void createSharingLinks(@NonNull UUID groupUuid, boolean recreate, @NonNull String userId) {
-        List<ModificationReferenceData> modificationReferencesData = getModificationReferencesNonTransactional(groupUuid);
-        notificationService.emitSharingLinksChanged(recreate ? SharingLinkAction.RECREATE : SharingLinkAction.CREATE, groupUuid, modificationReferencesData, userId);
+    public void createSharingLinks(@NonNull List<UUID> groupUuids, boolean recreate, @NonNull String userId) {
+        getContainersWithModificationReferences(groupUuids).forEach(groupUuid -> {
+            List<ModificationReferenceData> modificationReferencesData = getModificationReferencesNonTransactional(groupUuid);
+            notificationService.emitSharingLinksChanged(recreate ? SharingLinkAction.RECREATE : SharingLinkAction.CREATE, groupUuid, modificationReferencesData, userId);
+        });
     }
 
     @Transactional
@@ -418,7 +392,6 @@ public class NetworkModificationService {
         return !containerUuids.isEmpty() && modificationRepository.existsReferenceInContainersSubtrees(containerUuids);
     }
 
-    @Transactional(readOnly = true)
     public List<UUID> getContainersWithModificationReferences(@NonNull List<UUID> containerUuids) {
         return containerUuids.isEmpty() ? List.of() : modificationRepository.findContainersWithReferenceInSubtrees(containerUuids);
     }
@@ -532,14 +505,14 @@ public class NetworkModificationService {
         try {
             network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
             network.addListener(new NetworkVariantsListener(network, networkUuid, equipmentInfosService));
-        } catch (PowsyblException e) {
+        } catch (PowsyblException _) {
             throw new NetworkModificationServerException(NETWORK_NOT_FOUND, NETWORK_NOT_FOUND.messageTemplate(), Map.of("networkId", networkUuid));
         }
         String startingVariant = StringUtils.isBlank(originVariantId) ? VariantManagerConstants.INITIAL_VARIANT_ID : originVariantId;
         try {
             network.getVariantManager().cloneVariant(startingVariant, destinationVariantId, true);  // cloning variant
             network.getVariantManager().setWorkingVariant(destinationVariantId);  // set current variant to destination variant
-        } catch (PowsyblException e) {
+        } catch (PowsyblException _) {
             throw new NetworkModificationServerException(VARIANT_NOT_FOUND,
                 String.format(VARIANT_NOT_FOUND.messageTemplate(), destinationVariantId, networkUuid),
                 Map.of("variantId", destinationVariantId, "networkId", networkUuid));
@@ -760,8 +733,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
-        return networkModificationRepository.createNetworkCompositeModification(modificationUuids, name);
+    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name, @NonNull Collection<String> rootNetworkTags) {
+        return networkModificationRepository.createNetworkCompositeModification(modificationUuids, name, rootNetworkTags);
     }
 
     @Transactional
@@ -803,8 +776,8 @@ public class NetworkModificationService {
         deleteSharingLinks(groupUuid, deletedReferences, userId);
     }
 
-    public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {
-        return networkModificationRepository.getModificationsMetadata(ids);
+    public List<ModificationMetadata> getModificationsBaseInfos(List<UUID> ids) {
+        return networkModificationRepository.getModificationsBaseInfos(ids);
     }
 
     public static String escapeLucene(String s) {
@@ -820,7 +793,7 @@ public class NetworkModificationService {
         return sb.toString();
     }
 
-    public List<ModificationApplicationInfos> searchNetworkModificationInfos(@NonNull UUID networkUuid, @NonNull String userInput) {
+    private List<ModificationApplicationInfos> searchNetworkModificationInfos(@NonNull UUID networkUuid, @NonNull String userInput) {
         BoolQuery boolQueryBuilder = buildSearchModificationsQuery(userInput, networkUuid);
 
         NativeQuery nativeQuery = new NativeQueryBuilder()
@@ -838,17 +811,51 @@ public class NetworkModificationService {
     public Map<UUID, List<ModificationsSearchResult>> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
         List<ModificationApplicationInfos> rawSearchModificationInfos = searchNetworkModificationInfos(networkUuid, userInput);
 
-        Map<UUID, ModificationEntity> modificationEntitiesById = getModificationEntitiesById(rawSearchModificationInfos);
+        List<UUID> modificationUuids = rawSearchModificationInfos.stream().map(ModificationApplicationInfos::getModificationUuid).toList();
+        Map<UUID, ModificationEntity> modificationEntitiesById = modificationRepository.findMetadataByIdIn(modificationUuids).stream()
+            .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+        Map<UUID, ModificationEntity> sharedModifications = getSharedModificationsFromSearch(modificationEntitiesById);
 
         List<ModificationsSearchResult> filteredSearchModificationsResult = rawSearchModificationInfos.stream()
-                .map(result -> findMatchingEquipmentResults(modificationEntitiesById.get(result.getModificationUuid()), result, userInput))
+                .map(result ->
+                    findMatchingEquipmentResults(modificationEntitiesById.get(result.getModificationUuid()), result, userInput, sharedModifications)
+                )
                 .toList();
 
         return groupSearchResultsByGroupUuid(filteredSearchModificationsResult, rawSearchModificationInfos);
     }
 
+    private Map<UUID, ModificationEntity> getSharedModificationsFromSearch(Map<UUID, ModificationEntity> allModificationEntitiesById) {
+        // Replace reference modifications
+        List<ModificationReferenceEntity> referenceModifications = modificationRepository.findReferenceModificationByIdIn(allModificationEntitiesById.keySet().stream().toList());
+        referenceModifications.forEach(r -> allModificationEntitiesById.put(r.getId(), r));
+
+        // Return shared modifications from references
+        return modificationRepository.findMetadataByIdIn(referenceModifications.stream().map(ModificationReferenceEntity::getReferencedId).toList())
+            .stream()
+            .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+    }
+
+    private ModificationsSearchResult findMatchingEquipmentResults(ModificationEntity modificationEntity, ModificationApplicationInfos matchedModification,
+                                                                   String userInput, Map<UUID, ModificationEntity> sharedModifications) {
+        Pattern pattern = Pattern.compile(Pattern.quote(stripAccents(userInput)), Pattern.CASE_INSENSITIVE);
+
+        List<String> impactedEquipmentIds = Stream.of(
+                matchedModification.getCreatedEquipmentIds(),
+                matchedModification.getModifiedEquipmentIds(),
+                matchedModification.getDeletedEquipmentIds()
+            )
+            .filter(Objects::nonNull)
+            .flatMap(Collection::stream)
+            .distinct()
+            .filter(id -> pattern.matcher(stripAccents(id)).find())
+            .toList();
+
+        return networkModificationRepository.toSearchMetadata(modificationEntity, impactedEquipmentIds, sharedModifications);
+    }
+
     private Map<UUID, List<ModificationsSearchResult>> groupSearchResultsByGroupUuid(List<ModificationsSearchResult> modificationsSearchResults,
-            List<ModificationApplicationInfos> modificationApplicationInfos) {
+                                                                                     List<ModificationApplicationInfos> modificationApplicationInfos) {
         Map<UUID, UUID> modificationToGroupMap = modificationApplicationInfos.stream()
                 .collect(Collectors.toMap(
                         ModificationApplicationInfos::getModificationUuid,
@@ -860,36 +867,6 @@ public class NetworkModificationService {
                         result -> modificationToGroupMap.get(result.getModificationUuid()),
                         Collectors.toList()
                 ));
-    }
-
-    private Map<UUID, ModificationEntity> getModificationEntitiesById(List<ModificationApplicationInfos> modificationInfos) {
-        return getModificationsByUuids(modificationInfos.stream()
-                .map(ModificationApplicationInfos::getModificationUuid)
-                .toList())
-                .stream()
-                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
-    }
-
-    private ModificationsSearchResult findMatchingEquipmentResults(
-            ModificationEntity modificationEntity,
-            ModificationApplicationInfos matchedModification,
-            String userInput) {
-        Pattern pattern = Pattern.compile(Pattern.quote(stripAccents(userInput)), Pattern.CASE_INSENSITIVE);
-
-        List<String> impactedEquipmentIds = Stream.of(
-                        matchedModification.getCreatedEquipmentIds(),
-                        matchedModification.getModifiedEquipmentIds(),
-                        matchedModification.getDeletedEquipmentIds()
-                )
-                .filter(Objects::nonNull)
-                .flatMap(Collection::stream)
-                .distinct()
-                .filter(id -> pattern.matcher(stripAccents(id)).find())
-                .toList();
-
-        return ModificationsSearchResult.fromModificationEntity(modificationEntity)
-                        .impactedEquipmentIds(impactedEquipmentIds)
-                        .build();
     }
 
     private static String stripAccents(String input) {
@@ -928,10 +905,10 @@ public class NetworkModificationService {
         return boolQueryBuilder.build();
     }
 
-    @Transactional(readOnly = true)
     public NetworkModificationsWithMissingInfo getNetworkModificationsFromCompositeWithMissingInfo(List<UUID> compositeModificationUuids) {
         Set<UUID> foundUuids = modificationRepository.findExistingCompositeModificationIds(compositeModificationUuids);
         List<ModificationInfos> networkModifications = networkModificationRepository.getCompositeModificationsInfos(compositeModificationUuids);
+        modificationFilterNameService.addFilterNames(networkModifications);
         List<UUID> missingUuids = compositeModificationUuids.stream().filter(uuid -> !foundUuids.contains(uuid)).toList();
         return new NetworkModificationsWithMissingInfo(networkModifications, missingUuids);
     }
