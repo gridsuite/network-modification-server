@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -39,6 +40,7 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.TestImpactUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.DirectoryService;
+import org.gridsuite.modification.server.service.FilterLoaderService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NotificationService;
 import org.gridsuite.modification.server.service.ReportService;
@@ -54,6 +56,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Answers;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -143,6 +146,9 @@ class ModificationControllerTest {
 
     @MockitoBean
     private DirectoryService directoryService;
+
+    @MockitoBean(answers = Answers.RETURNS_DEEP_STUBS)
+    private FilterLoaderService filterLoaderService;
 
     @MockitoBean
     private NotificationService notificationService;
@@ -1062,7 +1068,45 @@ class ModificationControllerTest {
     }
 
     @Test
-    void createGeneratorWithStartup() throws Exception {
+    void testCreateNetworkReduction() throws Exception {
+        network = NetworkCreation.createForDeleteVoltageLevelOnLine(TEST_NETWORK_ID);
+        UUID filterId1 = UUID.randomUUID();
+        UUID filterId2 = UUID.randomUUID();
+        var loadedFilters = filterLoaderService.getLoader().load(List.of(filterId1, filterId2));
+        when(loadedFilters.get(filterId1).evaluate(eq(network), any(ReportNode.class))).thenReturn(List.of(network.getVoltageLevel("v2")));
+        when(loadedFilters.get(filterId2).evaluate(eq(network), any(ReportNode.class))).thenReturn(List.of(network.getVoltageLevel("v3")));
+
+        NetworkReductionInfos networkReductionInfos = NetworkReductionInfos.builder()
+                .filters(List.of(new FilterInfos(filterId1, "filter1"), new FilterInfos(filterId2, "filter2")))
+                .build();
+        String networkReductionInfosJson = TestUtils.getJsonBody(networkReductionInfos, TEST_NETWORK_ID, null);
+        MvcResult mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(networkReductionInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false);
+        assertEquals(1, modifications.size());
+        assertEquals(NETWORK_REDUCTION, modifications.getFirst().getType());
+        NetworkReductionInfos savedNetworkReductionInfos = assertInstanceOf(NetworkReductionInfos.class, modifications.getFirst());
+        assertEquals(networkReductionInfos.getFilters().stream().map(FilterInfos::getId).toList(),
+                savedNetworkReductionInfos.getFilters().stream().map(FilterInfos::getId).toList());
+
+        // Update the existing modification and check that its attributes are persisted.
+        networkReductionInfos.setFilters(List.of(new FilterInfos(filterId2, "filter2")));
+        networkReductionInfos.setDescription("Updated network reduction");
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/{uuid}", savedNetworkReductionInfos.getUuid())
+                        .header(HEADER_USER_ID, TEST_USER_ID)
+                        .content(mapper.writeValueAsString(networkReductionInfos))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        NetworkReductionInfos updatedNetworkReductionInfos = assertInstanceOf(NetworkReductionInfos.class,
+                modificationRepository.getModificationInfo(savedNetworkReductionInfos.getUuid()));
+        assertEquals(List.of(filterId2), updatedNetworkReductionInfos.getFilters().stream().map(FilterInfos::getId).toList());
+        assertEquals(networkReductionInfos.getDescription(), updatedNetworkReductionInfos.getDescription());
+    }
+
+    @Test
+    void testCreateGeneratorWithStartup() throws Exception {
         // create and build generator without startup
         GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v2", "idGenerator1", "nameGenerator1", "1B", "v2load", "LOAD", "v1");
         String generatorCreationInfosJson = TestUtils.getJsonBody(generatorCreationInfos, TEST_NETWORK_ID, null);
