@@ -54,9 +54,6 @@ class NetworkModificationServiceTest {
     @MockitoBean
     private DirectoryService directoryService;
 
-    @MockitoBean
-    private NotificationService notificationService;
-
     @Autowired
     private NetworkModificationRepository networkModificationRepository;
 
@@ -65,6 +62,9 @@ class NetworkModificationServiceTest {
 
     @MockitoBean
     private NetworkStoreService networkStoreService;
+
+    @MockitoBean
+    private NotificationService notificationService;
 
     @Test
     void shouldMoveModificationOutOfCompositeContainerWhenStashed() {
