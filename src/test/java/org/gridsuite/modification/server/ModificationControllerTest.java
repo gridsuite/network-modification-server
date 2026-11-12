@@ -2418,7 +2418,7 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testModificationSharingLinkCreation() throws Exception {
+    void testModificationSharingLinkRecreation() throws Exception {
         UUID sharedModificationUuid = createSomeSwitchModifications(TEST_GROUP2_ID, 1).getFirst().getUuid();
         ModificationInfos referenceInfo = ModificationReferenceInfos.builder()
             .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
