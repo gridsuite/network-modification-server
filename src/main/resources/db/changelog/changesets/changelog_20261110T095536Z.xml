@@ -1,0 +1,19 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <!-- @OrderColumn join tables: Hibernate expects (line_id, pos_line_segments) as primary key instead of a unique constraint -->
+    <changeSet author="rehiligha" id="20261110T095536-1">
+        <dropUniqueConstraint tableName="line_creation_line_segments" constraintName="line_creation_line_segments_pos_uk"/>
+        <addPrimaryKey tableName="line_creation_line_segments" columnNames="line_id, pos_line_segments" constraintName="line_creation_line_segmentsPK"/>
+    </changeSet>
+    <changeSet author="rehiligha" id="20261110T095536-2">
+        <dropUniqueConstraint tableName="line_modification_line_segments" constraintName="line_modification_line_segments_pos_uk"/>
+        <addPrimaryKey tableName="line_modification_line_segments" columnNames="line_id, pos_line_segments" constraintName="line_modification_line_segmentsPK"/>
+    </changeSet>
+    <changeSet author="rehiligha" id="20261110T095536-3">
+        <dropDefaultValue tableName="line_modification" columnName="apply_segments_limits" columnDataType="boolean"/>
+    </changeSet>
+    <!-- temporary backup table since the container_id migration (changelog_20260724T100727Z) -->
+    <changeSet author="rehiligha" id="20261110T095536-4">
+        <dropTable tableName="composite_modification_sub_modifications"/>
+    </changeSet>
+</databaseChangeLog>
