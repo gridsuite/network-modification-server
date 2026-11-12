@@ -98,8 +98,8 @@ public class NetworkModificationController {
     public ResponseEntity<Void> duplicateGroup(@RequestParam("groupUuid") UUID groupUuid,
                                                @PathVariable("sourceGroupUuid") UUID sourceGroupUuid,
                                                @Parameter(description = "Root network tags of the study the group belongs to, which the copies are associated with")
-                                               @RequestParam(value = "rootNetworkTags", required = false) List<String> rootNetworkTags) {
-        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, rootNetworkTags == null ? List.of() : rootNetworkTags);
+                                               @RequestParam("rootNetworkTags") List<String> rootNetworkTags) {
+        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid, rootNetworkTags);
         return ResponseEntity.ok().build();
     }
 
