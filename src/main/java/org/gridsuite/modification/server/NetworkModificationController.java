@@ -454,8 +454,8 @@ public class NetworkModificationController {
     @GetMapping(value = "/network-modifications/metadata", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get modifications metadata")
     @ApiResponse(responseCode = "200", description = "List of metadata used to describe modification elements")
-    public ResponseEntity<List<ModificationMetadata>> getModificationsMetadata(@RequestParam("ids") List<UUID> ids) {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.getModificationsMetadata(ids));
+    public ResponseEntity<List<ModificationMetadata>> getModificationsBaseInfos(@RequestParam("ids") List<UUID> ids) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.getModificationsBaseInfos(ids));
     }
 
     @DeleteMapping(value = "/network-modifications/index")
