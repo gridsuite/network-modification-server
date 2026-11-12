@@ -60,7 +60,7 @@
         <!-- FIXME remove this in the next gridsuite-dependencies update -->
         <network-modification.version>2.6.0</network-modification.version>
         <!-- FIXME remove this in the next gridsuite-dependencies update -->
-        <filter.version>1.36.0-SNAPSHOT</filter.version>
+        <filter.version>2.0.0</filter.version>
         <!-- FIXME remove this in the next powsybl release update -->
         <network-store.version>1.53.0</network-store.version>
     </properties>
