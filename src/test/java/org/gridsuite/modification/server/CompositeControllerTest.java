@@ -1059,7 +1059,8 @@ class CompositeControllerTest {
         UUID duplicatedGroupUuid = UUID.randomUUID();
         mockMvc.perform(post("/v1/groups/{uuid}/duplicate", TEST_GROUP_ID)
                         .header(HEADER_USER_ID, "user1")
-                        .param("groupUuid", duplicatedGroupUuid.toString()))
+                        .param("groupUuid", duplicatedGroupUuid.toString())
+                        .param("rootNetworkTags", "PH1"))
                 .andExpect(status().isOk());
         assertNull(output.receive(1000, compositeReferenceDestination));
         mockMvc.perform(post("/v1/groups/sharing-links")
