@@ -54,6 +54,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -2436,6 +2437,7 @@ class ModificationControllerTest {
             .andExpect(status().isOk());
         verify(notificationService, times(1)).emitSharingLinksChanged(SharingLinkAction.CREATE, TEST_GROUP_ID, List.of(modificationReferenceData), TEST_USER_ID);
 
+        Mockito.clearInvocations(notificationService);
         // nothing is sent when no reference is involved
         mockMvc.perform(post("/v1/groups/sharing-links")
                 .header(HEADER_USER_ID, TEST_USER_ID)
@@ -2453,6 +2455,7 @@ class ModificationControllerTest {
             .andExpect(status().isOk());
         verify(notificationService, times(1)).emitSharingLinksChanged(SharingLinkAction.RECREATE, TEST_GROUP_ID, List.of(modificationReferenceData), TEST_USER_ID);
 
+        Mockito.clearInvocations(notificationService);
         mockMvc.perform(post("/v1/groups/sharing-links")
                 .header(HEADER_USER_ID, TEST_USER_ID)
                 .queryParam("recreate", "true")
