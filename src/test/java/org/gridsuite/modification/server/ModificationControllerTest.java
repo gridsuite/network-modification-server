@@ -641,6 +641,21 @@ class ModificationControllerTest {
     }
 
     @Test
+    void testGetGroupsContainingModification() throws Exception {
+        UUID modificationUuid = createSomeSwitchModifications(TEST_GROUP_ID, 1).getFirst().getUuid();
+        assertEquals(Set.of(TEST_GROUP_ID), readGroupsContainingModification(modificationUuid));
+        assertEquals(Set.of(), readGroupsContainingModification(UUID.randomUUID()), "an unknown modification is in no group");
+    }
+
+    private Set<UUID> readGroupsContainingModification(UUID modificationUuid) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/{uuid}/containing-groups", modificationUuid))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        return mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+    }
+
+    @Test
     void testWrittenModificationsAreAssociatedWithTheRootNetworks() throws Exception {
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
                 .equipmentType(IdentifiableType.SWITCH).equipmentAttributeName("open").equipmentAttributeValue(true).equipmentId("v1b1").build();
