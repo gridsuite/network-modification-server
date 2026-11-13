@@ -57,6 +57,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Answers;
+import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -74,6 +75,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.ModificationType.*;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
@@ -89,9 +91,7 @@ import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -2465,6 +2465,53 @@ class ModificationControllerTest {
             assertEquals(referencedLoadModificationInfo.getUuid(), reference.referencedId());
             assertNull(reference.containerId());
         }
+    }
+
+    @Test
+    void testModificationSharingLinkCreation() throws Exception {
+        UUID sharedModificationUuid = createSomeSwitchModifications(TEST_GROUP2_ID, 1).getFirst().getUuid();
+        ModificationInfos referenceInfo = ModificationReferenceInfos.builder()
+            .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
+            .referencedId(sharedModificationUuid)
+            .stashed(false)
+            .build();
+        UUID referenceUuid = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(referenceInfo))).getFirst().getUuid();
+        ModificationReferenceData modificationReferenceData = new ModificationReferenceData(referenceUuid, sharedModificationUuid, null);
+
+        // Create
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .content(mapper.writeValueAsString(List.of(TEST_GROUP_ID)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        verify(notificationService, times(1)).emitSharingLinksChanged(SharingLinkAction.CREATE, TEST_GROUP_ID, List.of(modificationReferenceData), TEST_USER_ID);
+
+        Mockito.clearInvocations(notificationService);
+        // nothing is sent when no reference is involved
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .content(mapper.writeValueAsString(List.of(TEST_GROUP2_ID)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        verify(notificationService, never()).emitSharingLinksChanged(any(), any(), any(), any());
+
+        // Recreate
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .queryParam("recreate", "true")
+                .content(mapper.writeValueAsString(List.of(TEST_GROUP_ID)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        verify(notificationService, times(1)).emitSharingLinksChanged(SharingLinkAction.RECREATE, TEST_GROUP_ID, List.of(modificationReferenceData), TEST_USER_ID);
+
+        Mockito.clearInvocations(notificationService);
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .queryParam("recreate", "true")
+                .content(mapper.writeValueAsString(List.of(TEST_GROUP2_ID)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        verify(notificationService, never()).emitSharingLinksChanged(any(), any(), any(), any());
     }
 
     @Test

@@ -1107,14 +1107,6 @@ class CompositeControllerTest {
                 .andExpect(status().isOk());
         assertReferenceNotification(SharingLinkAction.DELETE, duplicatedGroupUuid, "user4",
                 List.of(new ModificationReferenceData(duplicatedReferenceUuid, sharedModificationUuid, null)));
-
-        // nothing is sent when no reference is involved
-        mockMvc.perform(post("/v1/groups/sharing-links")
-                .header(HEADER_USER_ID, "user1")
-                .content(mapper.writeValueAsString(List.of(TEST_GROUP2_ID)))
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
-        assertNull(output.receive(1000, compositeReferenceDestination));
     }
 
     private void assertReferenceNotification(SharingLinkAction action, UUID groupUuid, String userId, List<ModificationReferenceData> expectedReferences) throws Exception {
