@@ -7,8 +7,8 @@
 package org.gridsuite.modification.server.service;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.filter.wip.Filter;
+import org.gridsuite.filter.Filter;
+import org.gridsuite.filter.dto.AbstractFilter;
 import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;

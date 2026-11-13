@@ -9,8 +9,8 @@ package org.gridsuite.modification.server.modifications.scaling;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import lombok.SneakyThrows;
+import org.gridsuite.filter.IdentifierListFilter;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.filter.wip.IdentifierListFilter;
 import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.FilterWithDistributionKeysStub;

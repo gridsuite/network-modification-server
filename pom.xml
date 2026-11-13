@@ -58,9 +58,9 @@
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
         <!-- FIXME remove this in the next gridsuite-dependencies update -->
-        <network-modification.version>2.6.0</network-modification.version>
+        <network-modification.version>2.7.0</network-modification.version>
         <!-- FIXME remove this in the next gridsuite-dependencies update -->
-        <filter.version>1.34.0</filter.version>
+        <filter.version>2.0.0</filter.version>
         <!-- FIXME remove this in the next powsybl release update -->
         <network-store.version>1.53.0</network-store.version>
     </properties>

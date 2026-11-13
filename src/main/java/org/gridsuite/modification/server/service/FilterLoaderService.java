@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.service;
 
-import org.gridsuite.filter.wip.Filter;
+import org.gridsuite.filter.Filter;
 import org.gridsuite.modification.context.FilterLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
