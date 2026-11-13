@@ -1,0 +1,17 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="millotflo" id="migrationTabularCsvFilenameMessageValues">
+        <!-- the label of a tabular modification now shows its csv file name: add it to the existing ones,
+             except when the result would not fit in the column -->
+        <sql dbms="postgresql">
+            UPDATE modification m
+            SET message_values = (m.message_values::jsonb || jsonb_build_object('csvFilename', t.csv_filename))::text
+            FROM tabular_modifications t
+            WHERE t.id = m.id
+              AND m.message_values IS NOT NULL
+              AND t.csv_filename IS NOT NULL
+              AND btrim(t.csv_filename) &lt;&gt; ''
+              AND length((m.message_values::jsonb || jsonb_build_object('csvFilename', t.csv_filename))::text) &lt;= 255
+        </sql>
+    </changeSet>
+</databaseChangeLog>

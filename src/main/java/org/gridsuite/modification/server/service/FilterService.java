@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.service;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.wip.Filter;
-import org.gridsuite.modification.IFilterService;
 import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -26,7 +25,7 @@ import java.util.stream.Collectors;
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 @Service
-public class FilterService implements IFilterService {
+public class FilterService {
 
     private static final String FILTER_SERVER_API_VERSION = "v1";
 

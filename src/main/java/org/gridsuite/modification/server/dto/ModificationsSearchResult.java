@@ -11,7 +11,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,11 +36,4 @@ public class ModificationsSearchResult {
 
     @Schema(description = "List of impacted equipment IDs")
     private List<String> impactedEquipmentIds;
-
-    public static ModificationsSearchResult.ModificationsSearchResultBuilder fromModificationEntity(ModificationEntity modificationEntity) {
-        return ModificationsSearchResult.builder()
-                .modificationUuid(modificationEntity.getId())
-                .messageType(modificationEntity.getMessageType())
-                .messageValues(modificationEntity.getMessageValues());
-    }
 }
