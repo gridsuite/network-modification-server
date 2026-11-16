@@ -25,10 +25,10 @@ import java.util.UUID;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "modification_reference_id_fk_constraint"))
 public class ModificationReferenceEntity extends ModificationEntity {
 
-    @Column
+    @Column(nullable = false)
     UUID referencedId;
 
-    @Column
+    @Column(nullable = false)
     String referenceType;
 
     // Transient just for optimization purpose
