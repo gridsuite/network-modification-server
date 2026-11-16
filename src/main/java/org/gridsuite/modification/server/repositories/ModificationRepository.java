@@ -10,15 +10,13 @@ import org.gridsuite.modification.server.dto.ModificationApplicability;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationReferenceEntity;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -47,11 +45,11 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
                                                                     @Param("rootNetworkTag") String rootNetworkTag);
 
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) "
-            + "FROM ModificationEntity m WHERE m.container.id = ?1 order by m.modificationsOrder")
-    List<ModificationEntity> findAllBaseByContainerId(UUID containerId);
+            + "FROM ModificationEntity m WHERE m.id IN (?1) order by m.modificationsOrder")
+    List<ModificationEntity> findMetadataByIdIn(List<UUID> uuids);
 
     @Query(value = "SELECT new ModificationEntity(m.id, m.description, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
-    List<ModificationEntity> findMetadataIn(List<UUID> uuids);
+    List<ModificationEntity> findBaseByIdIn(List<UUID> uuids);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder")
     List<ModificationEntity> findAllByIdIn(List<UUID> uuids);
@@ -95,6 +93,9 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      */
     @Query("SELECT DISTINCT r.referencedId FROM ModificationReferenceEntity r WHERE r.id IN :ids")
     List<UUID> findReferencedModificationIds(@Param("ids") Collection<UUID> ids);
+
+    @Query(value = "SELECT r from ModificationReferenceEntity r WHERE r.id IN (?1)")
+    List<ModificationReferenceEntity> findReferenceModificationByIdIn(List<UUID> uuids);
 
     /**
      * @return true if at least one modification reference points to {@code referencedId}

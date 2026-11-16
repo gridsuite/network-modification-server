@@ -25,6 +25,7 @@ import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -207,6 +208,10 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
             boolean applicable = applicabilities.stream().noneMatch(applicability -> Boolean.FALSE.equals(applicability.getApplicable()));
             applicabilities.add(new ModificationRootNetworkApplicabilityEntity(this, rootNetworkTag, applicable));
         }
+    }
+
+    public void retainApplicabilities(Collection<String> rootNetworkTags) {
+        applicabilities.removeIf(applicability -> !rootNetworkTags.contains(applicability.getRootNetworkTag()));
     }
 
     public Set<String> getRootNetworkTags() {
