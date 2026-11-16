@@ -6,9 +6,9 @@
  */
 package org.gridsuite.modification.server.service;
 
+import org.gridsuite.filter.Filter;
+import org.gridsuite.filter.IdentifierListFilter;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.filter.wip.Filter;
-import org.gridsuite.filter.wip.IdentifierListFilter;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

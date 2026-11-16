@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -39,6 +40,7 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.TestImpactUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.DirectoryService;
+import org.gridsuite.modification.server.service.FilterLoaderService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NotificationService;
 import org.gridsuite.modification.server.service.ReportService;
@@ -54,6 +56,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Answers;
+import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -71,6 +75,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.ModificationType.*;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
@@ -86,9 +91,7 @@ import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -143,6 +146,9 @@ class ModificationControllerTest {
 
     @MockitoBean
     private DirectoryService directoryService;
+
+    @MockitoBean(answers = Answers.RETURNS_DEEP_STUBS)
+    private FilterLoaderService filterLoaderService;
 
     @MockitoBean
     private NotificationService notificationService;
@@ -661,7 +667,7 @@ class ModificationControllerTest {
         assertEquals(Map.of(ROOT_NETWORK_TAG, true), readApplicabilities(TEST_GROUP_ID).get(modificationUuid),
                 "A modification is associated with the root networks it is applied on as it is written");
 
-        // a copy of the group, maybe into another study, is associated with the root networks of the copy
+        // a copy of the group, maybe into another study, is associated with the root networks of the copy, and only with them
         UUID newGroupUuid = UUID.randomUUID();
         mockMvc.perform(post("/v1/groups/" + TEST_GROUP_ID + "/duplicate")
                 .queryParam("groupUuid", newGroupUuid.toString())
@@ -670,7 +676,7 @@ class ModificationControllerTest {
                 .queryParam("rootNetworkTags", RENAMED_ROOT_NETWORK_TAG)
                 .header(HEADER_USER_ID, TEST_USER_ID)
         ).andExpect(status().isOk());
-        assertEquals(List.of(Map.of(ROOT_NETWORK_TAG, true, RENAMED_ROOT_NETWORK_TAG, true)), List.copyOf(readApplicabilities(newGroupUuid).values()));
+        assertEquals(List.of(Map.of(RENAMED_ROOT_NETWORK_TAG, true)), List.copyOf(readApplicabilities(newGroupUuid).values()));
     }
 
     @Test
@@ -718,7 +724,7 @@ class ModificationControllerTest {
     @Test
     void testUpdateModificationActivation() {
         // create a composite modification and set all its metadata fields
-        UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of(), "");
+        UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of(), "", List.of());
         assertEquals(true, modificationRepository.getModificationInfo(compositeUuid).getActivated());
 
         // update activation
@@ -1077,7 +1083,45 @@ class ModificationControllerTest {
     }
 
     @Test
-    void createGeneratorWithStartup() throws Exception {
+    void testCreateNetworkReduction() throws Exception {
+        network = NetworkCreation.createForDeleteVoltageLevelOnLine(TEST_NETWORK_ID);
+        UUID filterId1 = UUID.randomUUID();
+        UUID filterId2 = UUID.randomUUID();
+        var loadedFilters = filterLoaderService.getLoader().load(List.of(filterId1, filterId2));
+        when(loadedFilters.get(filterId1).evaluate(eq(network), any(ReportNode.class))).thenReturn(List.of(network.getVoltageLevel("v2")));
+        when(loadedFilters.get(filterId2).evaluate(eq(network), any(ReportNode.class))).thenReturn(List.of(network.getVoltageLevel("v3")));
+
+        NetworkReductionInfos networkReductionInfos = NetworkReductionInfos.builder()
+                .filters(List.of(new FilterInfos(filterId1, "filter1"), new FilterInfos(filterId2, "filter2")))
+                .build();
+        String networkReductionInfosJson = TestUtils.getJsonBody(networkReductionInfos, TEST_NETWORK_ID, null);
+        MvcResult mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(networkReductionInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false);
+        assertEquals(1, modifications.size());
+        assertEquals(NETWORK_REDUCTION, modifications.getFirst().getType());
+        NetworkReductionInfos savedNetworkReductionInfos = assertInstanceOf(NetworkReductionInfos.class, modifications.getFirst());
+        assertEquals(networkReductionInfos.getFilters().stream().map(FilterInfos::getId).toList(),
+                savedNetworkReductionInfos.getFilters().stream().map(FilterInfos::getId).toList());
+
+        // Update the existing modification and check that its attributes are persisted.
+        networkReductionInfos.setFilters(List.of(new FilterInfos(filterId2, "filter2")));
+        networkReductionInfos.setDescription("Updated network reduction");
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/{uuid}", savedNetworkReductionInfos.getUuid())
+                        .header(HEADER_USER_ID, TEST_USER_ID)
+                        .content(mapper.writeValueAsString(networkReductionInfos))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        NetworkReductionInfos updatedNetworkReductionInfos = assertInstanceOf(NetworkReductionInfos.class,
+                modificationRepository.getModificationInfo(savedNetworkReductionInfos.getUuid()));
+        assertEquals(List.of(filterId2), updatedNetworkReductionInfos.getFilters().stream().map(FilterInfos::getId).toList());
+        assertEquals(networkReductionInfos.getDescription(), updatedNetworkReductionInfos.getDescription());
+    }
+
+    @Test
+    void testCreateGeneratorWithStartup() throws Exception {
         // create and build generator without startup
         GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v2", "idGenerator1", "nameGenerator1", "1B", "v2load", "LOAD", "v1");
         String generatorCreationInfosJson = TestUtils.getJsonBody(generatorCreationInfos, TEST_NETWORK_ID, null);
@@ -1315,6 +1359,7 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
+                        .param("rootNetworkTags", ROOT_NETWORK_TAG)
                 ).andExpect(status().isOk());
         List<ModificationInfos> stashedCopiedModifications = modificationRepository.getModifications(newGroupUuid, true, StashedFilter.STASHED);
         List<ModificationInfos> copiedModifications = modificationRepository.getModifications(newGroupUuid, true, StashedFilter.ALL);
@@ -1338,6 +1383,7 @@ class ModificationControllerTest {
         String copyGroupUriString = "/v1/groups/" + TEST_GROUP_ID + "/duplicate?groupUuid=" + newGroupUuid + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(
                 post(copyGroupUriString)
+                        .param("rootNetworkTags", ROOT_NETWORK_TAG)
                         .header(HEADER_USER_ID, "user1")
                 ).andExpect(status().isOk());
 
@@ -1369,6 +1415,7 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
+                        .param("rootNetworkTags", ROOT_NETWORK_TAG)
                 ).andExpect(status().isOk());
         testNetworkModificationsCount(duplicatedGroupUuid, 1);
 
@@ -1378,6 +1425,7 @@ class ModificationControllerTest {
         mockMvc.perform(
                 post(uriStringGroups)
                         .header(HEADER_USER_ID, "user1")
+                        .param("rootNetworkTags", ROOT_NETWORK_TAG)
         ).andExpect(status().isOk());
         assertFalse(networkModificationService.getModificationGroups().contains(targetOfUnexistingGroupUuid));
 
@@ -2252,6 +2300,7 @@ class ModificationControllerTest {
                         post("/v1/network-composite-modifications")
                                 .content(mapper.writeValueAsString(modificationUuids))
                                 .param("name", "composite name")
+                                .param("rootNetworkTags", "PH1")
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         return mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
@@ -2431,6 +2480,53 @@ class ModificationControllerTest {
             assertEquals(referencedLoadModificationInfo.getUuid(), reference.referencedId());
             assertNull(reference.containerId());
         }
+    }
+
+    @Test
+    void testModificationSharingLinkCreation() throws Exception {
+        UUID sharedModificationUuid = createSomeSwitchModifications(TEST_GROUP2_ID, 1).getFirst().getUuid();
+        ModificationInfos referenceInfo = ModificationReferenceInfos.builder()
+            .referenceType(ModificationReferenceInfos.Type.ELEMENTARY)
+            .referencedId(sharedModificationUuid)
+            .stashed(false)
+            .build();
+        UUID referenceUuid = modificationRepository.saveModifications(TEST_GROUP_ID, List.of(ModificationEntity.fromDTO(referenceInfo))).getFirst().getUuid();
+        ModificationReferenceData modificationReferenceData = new ModificationReferenceData(referenceUuid, sharedModificationUuid, null);
+
+        // Create
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .content(mapper.writeValueAsString(List.of(TEST_GROUP_ID)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        verify(notificationService, times(1)).emitSharingLinksChanged(SharingLinkAction.CREATE, TEST_GROUP_ID, List.of(modificationReferenceData), TEST_USER_ID);
+
+        Mockito.clearInvocations(notificationService);
+        // nothing is sent when no reference is involved
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .content(mapper.writeValueAsString(List.of(TEST_GROUP2_ID)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        verify(notificationService, never()).emitSharingLinksChanged(any(), any(), any(), any());
+
+        // Recreate
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .queryParam("recreate", "true")
+                .content(mapper.writeValueAsString(List.of(TEST_GROUP_ID)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        verify(notificationService, times(1)).emitSharingLinksChanged(SharingLinkAction.RECREATE, TEST_GROUP_ID, List.of(modificationReferenceData), TEST_USER_ID);
+
+        Mockito.clearInvocations(notificationService);
+        mockMvc.perform(post("/v1/groups/sharing-links")
+                .header(HEADER_USER_ID, TEST_USER_ID)
+                .queryParam("recreate", "true")
+                .content(mapper.writeValueAsString(List.of(TEST_GROUP2_ID)))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        verify(notificationService, never()).emitSharingLinksChanged(any(), any(), any(), any());
     }
 
     @Test

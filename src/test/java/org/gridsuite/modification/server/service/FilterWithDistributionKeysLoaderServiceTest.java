@@ -6,8 +6,8 @@
  */
 package org.gridsuite.modification.server.service;
 
+import org.gridsuite.filter.IdentifierListFilter;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.filter.wip.IdentifierListFilter;
 import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
 import org.junit.jupiter.api.Test;
 
