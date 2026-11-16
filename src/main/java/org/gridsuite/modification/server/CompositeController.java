@@ -81,8 +81,10 @@ public class CompositeController {
     @Operation(summary = "Create a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})
     public ResponseEntity<UUID> createCompositeModification(@Parameter(description = "Composite modifications name", required = true) @RequestParam("name") String name,
-                                                            @RequestBody List<UUID> modificationUuids) {
-        return ResponseEntity.ok().body(networkModificationService.createCompositeModification(modificationUuids, name));
+                                                            @Parameter(description = "Root network tags of the study the copies come from")
+                                                                   @RequestParam("rootNetworkTags") List<String> rootNetworkTags,
+                                                                   @RequestBody List<UUID> modificationUuids) {
+        return ResponseEntity.ok().body(networkModificationService.createCompositeModification(modificationUuids, name, rootNetworkTags));
     }
 
     @PostMapping(value = "/{uuid}/share", produces = MediaType.APPLICATION_JSON_VALUE)
