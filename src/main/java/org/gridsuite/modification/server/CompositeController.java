@@ -108,8 +108,10 @@ public class CompositeController {
     @PostMapping(value = "/duplication", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Duplicate some composite modifications")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The duplicated modifications uuids mapped with their source uuid")})
-    public ResponseEntity<Map<UUID, UUID>> duplicateCompositeModifications(@Parameter(description = "source modifications uuids list to duplicate") @RequestBody List<UUID> sourceModificationUuids) {
-        return ResponseEntity.ok().body(networkModificationService.duplicateCompositeModifications(sourceModificationUuids));
+    public ResponseEntity<Map<UUID, UUID>> duplicateCompositeModifications(
+            @Parameter(description = "source modifications uuids to duplicate, mapped with the name of their duplicate (null to keep the source name)")
+            @RequestBody Map<UUID, String> namesBySourceModificationUuid) {
+        return ResponseEntity.ok().body(networkModificationService.duplicateCompositeModifications(namesBySourceModificationUuid));
     }
 
     /**

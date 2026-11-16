@@ -323,14 +323,26 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * @param namesBySourceModificationUuid source composite uuids mapped with the name of their duplicate, null to keep the source name
+     * @return the duplicated composite uuids mapped with their source uuid
+     */
     @Transactional
-    public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {
-        List<ModificationEntity> sourceEntities = modificationRepository.findAllById(sourceModificationUuids);
-        // findAllById does not keep sourceModificationUuids order, but
-        // sourceEntities, copyEntities, newEntities have the same order.
-        List<ModificationEntity> copyEntities = toModificationsInfosWithApplicabilities(sourceEntities).stream()
-                .map(ModificationEntity::fromDTO)
-                .toList();
+    public Map<UUID, UUID> duplicateCompositeModifications(Map<UUID, String> namesBySourceModificationUuid) {
+        List<ModificationEntity> sourceEntities = modificationRepository.findAllById(namesBySourceModificationUuid.keySet());
+        // findAllById does not keep the source uuids order, but
+        // sourceEntities, sourceInfos, copyEntities, newEntities have the same order.
+        List<ModificationInfos> sourceInfos = toModificationsInfosWithApplicabilities(sourceEntities);
+        List<ModificationEntity> copyEntities = new ArrayList<>(sourceInfos.size());
+        for (int i = 0; i < sourceInfos.size(); i++) {
+            ModificationInfos copyInfos = sourceInfos.get(i);
+            // the duplicate is created directly with its new name, if one is given
+            String newName = namesBySourceModificationUuid.get(sourceEntities.get(i).getId());
+            if (newName != null && copyInfos instanceof CompositeModificationInfos compositeInfos) {
+                compositeInfos.setName(newName);
+            }
+            copyEntities.add(ModificationEntity.fromDTO(copyInfos));
+        }
         List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
 
         // Iterate through sourceEntities and newEntities collections simultaneously to map sourceId -> newId

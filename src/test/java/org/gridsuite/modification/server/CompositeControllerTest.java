@@ -32,6 +32,7 @@ import org.gridsuite.modification.server.service.DirectoryService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NotificationService;
 import org.gridsuite.modification.server.service.ReportService;
+import org.gridsuite.modification.server.utils.ApiUtils;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
@@ -658,7 +659,7 @@ class CompositeControllerTest {
         // Duplicate it without group ownership
         mvcResult = mockMvc.perform(
                         post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/duplication")
-                                .content(objectWriter.writeValueAsString(List.of(compositeModificationUuid)))
+                                .content(objectWriter.writeValueAsString(ApiUtils.withoutNewNames(List.of(compositeModificationUuid))))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
@@ -694,6 +695,44 @@ class CompositeControllerTest {
         // duplicate has been deleted
         assertEquals(ModificationBusinessErrorCode.MODIFICATION_NOT_FOUND, assertThrows(NetworkModificationServerException.class, ()
             -> networkModificationRepository.getModificationInfo(returnedNewId)).getBusinessErrorCode());
+    }
+
+    @Test
+    void testDuplicateCompositeModificationsWithNames() throws Exception {
+        List<UUID> modificationUuidList = createSomeSwitchModifications(TEST_GROUP_ID, 1).stream().map(ModificationInfos::getUuid).toList();
+        UUID firstCompositeUuid = createComposite("composite", modificationUuidList);
+        UUID secondCompositeUuid = createComposite("other composite", modificationUuidList);
+        CompositeModificationInfos firstSource = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(firstCompositeUuid);
+        CompositeModificationInfos secondSource = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(secondCompositeUuid);
+
+        // each composite is duplicated directly with its own new name, or keeps its source name if none is given
+        Map<UUID, String> namesBySourceUuid = new HashMap<>();
+        namesBySourceUuid.put(firstCompositeUuid, "composite (1)");
+        namesBySourceUuid.put(secondCompositeUuid, null);
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/duplication")
+                        .content(objectWriter.writeValueAsString(namesBySourceUuid))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        Map<UUID, UUID> returnedMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(2, returnedMap.size());
+
+        CompositeModificationInfos firstDuplicate = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(returnedMap.get(firstCompositeUuid));
+        assertEquals("composite (1)", firstDuplicate.getName());
+        // apart from the name (and uuid), the duplicate has the same data as the source
+        firstDuplicate.setName(firstSource.getName());
+        assertThat(firstSource).recursivelyEquals(firstDuplicate);
+        assertThat(secondSource).recursivelyEquals(networkModificationRepository.getModificationInfo(returnedMap.get(secondCompositeUuid)));
+
+        // the source composites are unchanged
+        assertThat(firstSource).recursivelyEquals(networkModificationRepository.getModificationInfo(firstCompositeUuid));
+        assertThat(secondSource).recursivelyEquals(networkModificationRepository.getModificationInfo(secondCompositeUuid));
+    }
+
+    private UUID createComposite(String name, List<UUID> modificationUuids) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("rootNetworkTags", "PH1").queryParam("name", name)
+                        .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        return mapper.readValue(mvcResult.getResponse().getContentAsString(), UUID.class);
     }
 
     @Test
