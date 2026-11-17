@@ -22,6 +22,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.service.DirectoryService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.WireMockUtils;
@@ -46,10 +47,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
+import static org.gridsuite.modification.server.utils.ModificationInfosUtils.contentOf;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -71,11 +75,12 @@ public abstract class AbstractNetworkModificationTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.randomUUID();
     private static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
+    protected static final String TEST_USER_ID = "userId";
     protected static final UUID TEST_GROUP_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     public static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
-    private static final String URI_NETWORK_MODIF_COPY = "/v1/containers/" + TEST_GROUP_ID + "?action=COPY";
+    private static final String URI_NETWORK_MODIF_COPY = "/v1/groups/" + TEST_GROUP_ID + "/network-modifications/copy";
 
     @Autowired
     protected MockMvc mockMvc;
@@ -90,6 +95,9 @@ public abstract class AbstractNetworkModificationTest {
     @MockitoBean
     protected ReportService reportService;
 
+    @MockitoBean
+    protected DirectoryService directoryService;
+
     @Autowired
     protected NetworkModificationRepository networkModificationRepository;
 
@@ -97,6 +105,9 @@ public abstract class AbstractNetworkModificationTest {
     protected ObjectMapper mapper;
 
     private Network network;
+
+    /** Filter names as the directory knows them: filled with the filters the test sends, as the front picks them there */
+    protected final Map<UUID, String> directoryFilterNames = new HashMap<>();
 
     @BeforeEach
     public void setUp() {
@@ -111,6 +122,8 @@ public abstract class AbstractNetworkModificationTest {
         wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
         wireMockUtils = new WireMockUtils(wireMockServer);
         wireMockServer.start();
+
+        doAnswer(invocation -> Map.copyOf(directoryFilterNames)).when(directoryService).getElementNames(any());
     }
 
     @AfterEach
@@ -144,12 +157,12 @@ public abstract class AbstractNetworkModificationTest {
         assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
         assertResultImpacts(getNetworkImpacts(networkModificationsResult));
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
-        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        ModificationInfos createdModification = getModificationsWithFilterNames().get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
     }
 
@@ -170,12 +183,12 @@ public abstract class AbstractNetworkModificationTest {
 
         assertEquals(0, getNetworkImpacts(networkModificationsResult).size());
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
-        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        ModificationInfos createdModification = getModificationsWithFilterNames().get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
         assertEquals(false, createdModificationWithOnlyMetadata.getActivated());
     }
@@ -204,17 +217,22 @@ public abstract class AbstractNetworkModificationTest {
         UUID modificationUuid = saveModification(modificationToUpdate);
 
         modificationToUpdate = buildModificationUpdate();
+        registerFilterNames(modificationToUpdate);
 
         String modificationToUpdateJson = mapper.writeValueAsString(modificationToUpdate);
 
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
-        ModificationInfos updatedModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        // TODO Need a test for substations impacted
+        //assertThat(bsmListResult.get(0)).recursivelyEquals(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"));
+
+        ModificationInfos updatedModification = getModificationsWithFilterNames().get(0);
         assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        ModificationInfos updatedModificationwithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationInfos updatedModificationwithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true).get(0);
         testUpdateModificationMessage(updatedModificationwithOnlyMetadata);
 
     }
@@ -226,11 +244,11 @@ public abstract class AbstractNetworkModificationTest {
         UUID modificationUuid = saveModification(modificationToDelete);
 
         mockMvc.perform(delete(getNetworkModificationUri())
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("uuids", modificationUuid.toString()))
+                        .queryParam("uuids", modificationUuid.toString())
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(status().isOk());
 
-        List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
 
         assertTrue(storedModifications.isEmpty());
     }
@@ -244,13 +262,13 @@ public abstract class AbstractNetworkModificationTest {
         String body = TestUtils.getJsonBody(List.of(modificationUuid), AbstractNetworkModificationTest.TEST_NETWORK_ID, null);
         ResultActions mockMvcResultActions = mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
                         .content(body)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HEADER_USER_ID, TEST_USER_ID))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
 
-        List<ModificationInfos> modifications = networkModificationRepository
-                .getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modifications = getModificationsWithFilterNames();
 
         assertEquals(2, modifications.size());
         assertThat(modifications.get(0)).recursivelyEquals(modificationToCopy);
@@ -261,7 +279,7 @@ public abstract class AbstractNetworkModificationTest {
         MvcResult mvcResult;
         String resultAsString;
         // get all modifications for the given group of a network
-        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
@@ -270,6 +288,7 @@ public abstract class AbstractNetworkModificationTest {
 
     /** Save a network modification into the repository and return its UUID. */
     protected UUID saveModification(ModificationInfos modificationInfos) {
+        registerFilterNames(modificationInfos);
         ModificationEntity entity = ModificationEntity.fromDTO(modificationInfos);
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(entity));
         return entity.getId();
@@ -300,7 +319,23 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     protected String getJsonBody(ModificationInfos modificationInfos, String variantId) throws JsonProcessingException {
+        registerFilterNames(modificationInfos);
         return TestUtils.getJsonBody(modificationInfos, AbstractNetworkModificationTest.TEST_NETWORK_ID, variantId);
+    }
+
+    /** Reads the modifications of the test group back as the front gets them: with the names of the filters they reference */
+    private List<ModificationInfos> getModificationsWithFilterNames() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications", TEST_GROUP_ID))
+                .andExpect(status().isOk()).andReturn();
+        return mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+    }
+
+    /** What is sent to the server was picked in the directory: registers there the filters it references, with their names */
+    protected void registerFilterNames(ModificationInfos modificationInfos) {
+        modificationInfos.getFiltersStream()
+                .filter(filter -> filter.getName() != null)
+                .forEach(filter -> directoryFilterNames.put(filter.getId(), filter.getName()));
+        contentOf(modificationInfos).forEach(this::registerFilterNames);
     }
 
     protected abstract Network createNetwork(UUID networkUuid);

@@ -10,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.server.dto.ModificationMetadata;
 
 import java.util.UUID;
 
@@ -24,10 +25,10 @@ import java.util.UUID;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "modification_reference_id_fk_constraint"))
 public class ModificationReferenceEntity extends ModificationEntity {
 
-    @Column
+    @Column(nullable = false)
     UUID referencedId;
 
-    @Column
+    @Column(nullable = false)
     String referenceType;
 
     // Transient just for optimization purpose
@@ -51,6 +52,11 @@ public class ModificationReferenceEntity extends ModificationEntity {
             .referenceType(ModificationReferenceInfos.Type.valueOf(getReferenceType()))
             .referencedInfos(getReferencedInfos())
             .build();
+    }
+
+    @Override
+    public ModificationMetadata toModificationMetadata() {
+        throw new UnsupportedOperationException("Metadata deduced from the referenced modification");
     }
 
     @Override
@@ -78,5 +84,10 @@ public class ModificationReferenceEntity extends ModificationEntity {
     @Override
     public String getMessageValues() {
         throw new UnsupportedOperationException("Value deduced from the referenced modification");
+    }
+
+    @Override
+    public void updateNameAndDescription(ModificationMetadata modificationMetadata) {
+        throw new UnsupportedOperationException("Metadata deduced from the referenced modification");
     }
 }

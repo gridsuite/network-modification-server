@@ -17,7 +17,6 @@ import com.powsybl.iidm.modification.topology.NamingStrategy;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import lombok.Getter;
 import org.gridsuite.modification.context.ModificationContext;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
@@ -35,6 +34,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -55,11 +55,7 @@ public class NetworkModificationApplicator {
 
     private final ReportService reportService;
 
-    @Getter private final FilterService filterService;
-
     private final ModificationContextFactory modificationContextFactory;
-
-    @Getter private final LoadFlowService loadFlowService;
 
     private final LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
 
@@ -75,18 +71,15 @@ public class NetworkModificationApplicator {
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ModificationApplicationInfosService applicationInfosService,
-                                         ReportService reportService, FilterService filterService,
+                                         ReportService reportService,
                                          ModificationContextFactory modificationContextFactory,
-                                         LoadFlowService loadFlowService,
                                          NetworkModificationObserver networkModificationObserver,
                                          LargeNetworkModificationExecutionService largeNetworkModificationExecutionService) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.applicationInfosService = applicationInfosService;
         this.reportService = reportService;
-        this.filterService = filterService;
         this.modificationContextFactory = modificationContextFactory;
-        this.loadFlowService = loadFlowService;
         this.networkModificationObserver = networkModificationObserver;
         this.largeNetworkModificationExecutionService = largeNetworkModificationExecutionService;
     }
@@ -200,13 +193,14 @@ public class NetworkModificationApplicator {
             UUID reporterId = modificationGroupInfos.reportInfos().getNodeUuid();
             reportNode = ReportNode.newRootReportNode()
                     .withAllResourceBundlesFromClasspath()
+                    .withLocale(Locale.ENGLISH)
                     .withMessageTemplate("network.modification.server.nodeUuid")
                     .withUntypedValue("nodeUuid", reporterId.toString())
                     .build();
         } else {
             reportNode = ReportNode.NO_OP;
         }
-        ModificationContext modificationContext = modificationContextFactory.create();
+        ModificationContext modificationContext = modificationContextFactory.createWithFilterNames();
         ApplicationStatus groupApplicationStatus = modificationGroupInfos.modifications().stream()
                 .filter(m -> m.isActivatedOn(modificationGroupInfos.rootNetworkTag()))
                 .map(m -> {
@@ -240,7 +234,7 @@ public class NetworkModificationApplicator {
         modification.check(network);
 
         // init application context
-        modification.initApplicationContext(this.filterService, this.loadFlowService, rootNetworkTag);
+        modification.initApplicationContext(rootNetworkTag);
 
         // apply all changes on the network
         modification.apply(network, getNamingStrategy(), subReportNode);

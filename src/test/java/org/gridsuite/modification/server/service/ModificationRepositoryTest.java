@@ -12,10 +12,13 @@ import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
+import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.CompositeInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicability;
 import org.gridsuite.modification.server.dto.ModificationContainerInfos;
+import org.gridsuite.modification.server.dto.ModificationReferenceData;
+import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.ModificationContainerType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
@@ -42,6 +45,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.dto.VoltageRegulationType.DISTANT;
@@ -63,12 +67,16 @@ class ModificationRepositoryTest {
     private static final String ROOT_NETWORK_TAG = "PH1";
     private static final String OTHER_ROOT_NETWORK_TAG = "PH2";
     private static final String RENAMED_ROOT_NETWORK_TAG = "PH3";
+    private static final String TARGET_ONLY_ROOT_NETWORK_TAG = "PH4";
 
     @Autowired
     private ModificationGroupRepository modificationGroupRepository;
 
     @Autowired
     private NetworkModificationRepository networkModificationRepository;
+
+    @Autowired
+    private NetworkModificationService networkModificationService;
 
     @Autowired
     private ModificationContainerRepository modificationContainerRepository;
@@ -141,9 +149,8 @@ class ModificationRepositoryTest {
     @Test
     void test() {
         assertEquals(List.of(), this.networkModificationRepository.getModificationGroupsUuids());
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
-        assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, true).isEmpty());
+        assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
 
         var nullModifEntity = ModificationEntity.fromDTO(
                 EquipmentAttributeModificationInfos.builder().equipmentId("id0").equipmentAttributeName("attribute").equipmentAttributeValue(null).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build(
@@ -167,7 +174,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(nullModifEntity, stringModifEntity, boolModifEntity, intModifEntity, floatModifEntity, doubleModifEntity,
                 enumModifEntity));
 
-        List<ModificationInfos> modificationEntities = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> modificationEntities = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         assertEquals(7, modificationEntities.size());
 
         // Order is also checked
@@ -188,15 +195,14 @@ class ModificationRepositoryTest {
 
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of());
-        assertEquals(7, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(stringModifEntity.getId(), boolModifEntity.getId()));
-        assertEquals(5, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        networkModificationRepository.deleteModifications(List.of());
+        assertEquals(7, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
+        networkModificationRepository.deleteModifications(List.of(stringModifEntity.getId(), boolModifEntity.getId()));
+        assertEquals(5, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
 
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
         assertEquals(0, modificationRepository.findAll().size());
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, true).isEmpty());
     }
 
     @Test
@@ -238,8 +244,8 @@ class ModificationRepositoryTest {
         assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
-        assertRequestsCount(3, 0, 0, 0);
+        networkModificationRepository.getModifications(TEST_GROUP_ID, true);
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         getEquipmentAttributeModification(modifEntity1.getId());
@@ -262,17 +268,16 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2));
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(modifEntity1.getId()));
-        assertRequestsCount(5, 0, 0, 2);
+        networkModificationRepository.deleteModifications(List.of(modifEntity1.getId()));
+        assertRequestsCount(4, 0, 0, 2);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
-        assertRequestsCount(5, 0, 0, 3);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
+        assertRequestsCount(6, 0, 0, 3);
 
-        // Non-existent group modification uuid
+        // Non-existent group modification uuid: nothing to delete
         List<UUID> notFoundGroups = List.of(TEST_GROUP_ID);
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.deleteModificationGroups(notFoundGroups, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertDoesNotThrow(() -> networkModificationRepository.deleteModificationGroups(notFoundGroups));
     }
 
     @Test
@@ -290,7 +295,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createLoadEntity1, createLoadEntity2, createLoadEntity3));
         assertRequestsCount(2, 3, 0, 0);
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         assertEquals(3, modificationInfos.size());
 
         assertThat(getLoadCreationModification(modificationInfos.get(0).getUuid()))
@@ -300,23 +305,22 @@ class ModificationRepositoryTest {
         assertThat(getLoadCreationModification(modificationInfos.get(2).getUuid()))
             .recursivelyEquals(createLoadEntity3.toModificationInfos());
 
-        assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createLoadEntity2.getId(), createLoadEntity3.getId()));
-        assertRequestsCount(6, 0, 0, 2);
+        networkModificationRepository.deleteModifications(List.of(createLoadEntity2.getId(), createLoadEntity3.getId()));
+        assertRequestsCount(5, 0, 0, 2);
 
         SQLStatementCountValidator.reset();
-        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(3, 0, 0, 0);
+        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
-        assertRequestsCount(5, 0, 0, 3);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
+        assertRequestsCount(6, 0, 0, 3);
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, true).isEmpty());
     }
 
     @Test
@@ -371,7 +375,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createGeneratorEntity1, createGeneratorEntity2, createGeneratorEntity3));
         assertRequestsCount(2, 4, 0, 0);
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         assertEquals(3, modificationInfos.size());
 
         assertThat(getGeneratorCreationModification(modificationInfos.get(0).getUuid()))
@@ -381,23 +385,22 @@ class ModificationRepositoryTest {
         assertThat(getGeneratorCreationModification(modificationInfos.get(2).getUuid()))
             .recursivelyEquals(createGeneratorEntity3.toModificationInfos());
 
-        assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createGeneratorEntity2.getId(), createGeneratorEntity3.getId()));
-        assertRequestsCount(6, 0, 0, 3);
+        networkModificationRepository.deleteModifications(List.of(createGeneratorEntity2.getId(), createGeneratorEntity3.getId()));
+        assertRequestsCount(5, 0, 0, 3);
 
         SQLStatementCountValidator.reset();
-        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(3, 0, 0, 0);
+        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
-        assertRequestsCount(5, 0, 0, 4);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
+        assertRequestsCount(6, 0, 0, 4);
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, true).isEmpty());
     }
 
     @Test
@@ -423,7 +426,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createShuntCompensatorEntity1, createShuntCompensatorEntity2));
         assertRequestsCount(2, 3, 0, 0);
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         assertEquals(2, modificationInfos.size());
 
         assertThat(getShuntCompensatorCreationModification(modificationInfos.get(0).getUuid()))
@@ -431,23 +434,22 @@ class ModificationRepositoryTest {
         assertThat(getShuntCompensatorCreationModification(modificationInfos.get(1).getUuid()))
             .recursivelyEquals(createShuntCompensatorEntity2.toModificationInfos());
 
-        assertEquals(2, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        assertEquals(2, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createShuntCompensatorEntity2.getId()));
-        assertRequestsCount(5, 0, 0, 2);
+        networkModificationRepository.deleteModifications(List.of(createShuntCompensatorEntity2.getId()));
+        assertRequestsCount(4, 0, 0, 2);
 
         SQLStatementCountValidator.reset();
-        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(3, 0, 0, 0);
+        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
-        assertRequestsCount(5, 0, 0, 3);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
+        assertRequestsCount(6, 0, 0, 3);
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, true).isEmpty());
     }
 
     @Test
@@ -507,7 +509,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createLineEntity1, createLineEntity2, createLineEntity3, createLineEntity4));
         assertRequestsCount(2, 6, 0, 0);
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         assertEquals(4, modificationInfos.size());
 
         assertThat(getLineCreationModification(modificationInfos.get(0).getUuid()))
@@ -519,27 +521,26 @@ class ModificationRepositoryTest {
         assertThat(getLineCreationModification(modificationInfos.get(3).getUuid()))
             .recursivelyEquals(createLineEntity4.toModificationInfos());
 
-        assertEquals(4, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        assertEquals(4, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createLineEntity2.getId(), createLineEntity3.getId()));
+        networkModificationRepository.deleteModifications(List.of(createLineEntity2.getId(), createLineEntity3.getId()));
         // TODO : Due to an issue the deletion counter is not deterministic
         // https://github.com/jdbc-observations/datasource-proxy/issues/123
-        assertRequestsCount(14, 0, 0);
+        assertRequestsCount(13, 0, 0);
 
         SQLStatementCountValidator.reset();
-        assertEquals(2, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        assertRequestsCount(11, 0, 0, 0);
+        assertEquals(2, networkModificationRepository.getModifications(TEST_GROUP_ID, false).size());
+        assertRequestsCount(12, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
         // TODO : Due to an issue the deletion counter is not deterministic
         // https://github.com/jdbc-observations/datasource-proxy/issues/123
-        assertRequestsCount(12, 0, 0);
+        assertRequestsCount(13, 0, 0);
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, true).isEmpty());
     }
 
     @Test
@@ -564,19 +565,19 @@ class ModificationRepositoryTest {
         var groovyScriptEntity5 = GroovyScriptInfos.builder().script("script5").build();
 
         List<ModificationInfos> modifications = List.of(groovyScriptEntity1, groovyScriptEntity2, groovyScriptEntity3, groovyScriptEntity4, groovyScriptEntity5, tabularModificationEntity);
-        networkModificationRepository.saveModificationInfos(TEST_GROUP_ID, modifications);
+        networkModificationRepository.saveModificationInfos(TEST_GROUP_ID, modifications, List.of());
         assertRequestsCount(3, 8, 0, 0);
 
-        var modificationOriginal = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        var modificationOriginal = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.moveModifications(
                 new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP),
                 new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP),
                 List.of(modificationOriginal.get(5).getUuid()), modificationOriginal.get(1).getUuid());
-        assertRequestsCount(6, 0, 2, 0);
+        assertRequestsCount(7, 0, 2, 0);
 
-        var modification = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        var modification = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         // [0:1, 1:6, 2:2, 3:3, 4:4 ,5:5 ]
         var expected = List.of(modificationOriginal.get(0), modificationOriginal.get(5),
             modificationOriginal.get(1), modificationOriginal.get(2), modificationOriginal.get(3), modificationOriginal.get(4));
@@ -588,10 +589,10 @@ class ModificationRepositoryTest {
                 new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP),
                 new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP),
                 List.of(modificationOriginal.get(2).getUuid(), modificationOriginal.get(5).getUuid()), null);
-        assertRequestsCount(6, 0, 2, 0);
+        assertRequestsCount(7, 0, 2, 0);
 
         // [0:1, 1:2, 2:4, 3:5, 4:6, 5:3 ]
-        modification = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        modification = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         expected = List.of(modificationOriginal.get(0), modificationOriginal.get(1), modificationOriginal.get(3),
             modificationOriginal.get(4), modificationOriginal.get(2), modificationOriginal.get(5));
         assertEquals(getIds(expected), getIds(modification));
@@ -615,8 +616,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID_2, List.of(groovyScriptEntity5, groovyScriptEntity6));
         assertRequestsCount(2, 3, 0, 0);
 
-        var modificationOriginal1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
-        var modificationOriginal2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
+        var modificationOriginal1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
+        var modificationOriginal2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true);
 
         SQLStatementCountValidator.reset();
         List<UUID> uuidsToMove = List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId());
@@ -626,10 +627,10 @@ class ModificationRepositoryTest {
             new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
             uuidsToMove, null);
         assertEquals(uuidsToMove.size(), movedModifications.size());
-        assertRequestsCount(5, 0, 1, 0);
+        assertRequestsCount(6, 0, 1, 0);
 
-        var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
-        var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
+        var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
+        var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true);
 
         var expected1 = List.of(modificationOriginal1.get(0), modificationOriginal1.get(3));
         var expected2 = List.of(modificationOriginal2.get(0), modificationOriginal2.get(1), modificationOriginal1.get(1), modificationOriginal1.get(2));
@@ -645,10 +646,10 @@ class ModificationRepositoryTest {
             new ModificationContainerInfos(TEST_GROUP_ID_3, ModificationContainerType.GROUP),
             uuidsToMove, null);
         assertEquals(uuidsToMove.size(), movedModifications.size());
-        assertRequestsCount(4, 1, 1, 0);
+        assertRequestsCount(5, 1, 1, 0);
 
-        modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
-        var modification3 = networkModificationRepository.getModifications(TEST_GROUP_ID_3, true, true);
+        modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true);
+        var modification3 = networkModificationRepository.getModifications(TEST_GROUP_ID_3, true);
 
         expected2 = List.of(modificationOriginal1.get(1), modificationOriginal1.get(2));
         var expected3 = List.of(modificationOriginal2.get(0), modificationOriginal2.get(1));
@@ -674,8 +675,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID_2, List.of(groovyScriptEntity5, groovyScriptEntity6));
         assertRequestsCount(2, 3, 0, 0);
 
-        var modificationOriginal1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
-        var modificationOriginal2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
+        var modificationOriginal1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
+        var modificationOriginal2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true);
 
         SQLStatementCountValidator.reset();
         List<UUID> uuidsToMove = List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId());
@@ -684,10 +685,10 @@ class ModificationRepositoryTest {
             new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
             uuidsToMove, groovyScriptEntity6.getId());
         assertEquals(uuidsToMove.size(), movedModifications.size());
-        assertRequestsCount(5, 0, 1, 0);
+        assertRequestsCount(6, 0, 1, 0);
 
-        var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
-        var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
+        var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
+        var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true);
 
         var expected1 = List.of(modificationOriginal1.get(0), modificationOriginal1.get(3));
         var expected2 = List.of(modificationOriginal2.get(0), modificationOriginal1.get(1), modificationOriginal1.get(2), modificationOriginal2.get(1));
@@ -716,9 +717,9 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(groovyScriptEntity5, groovyScriptEntity6));
         assertRequestsCount(2, 3, 0, 0);
 
-        var modificationOriginal1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
-        var modificationOriginal2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
-        var modificationOriginal3 = networkModificationRepository.getModifications(TEST_GROUP_ID_3, true, true);
+        var modificationOriginal1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
+        var modificationOriginal2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true);
+        var modificationOriginal3 = networkModificationRepository.getModifications(TEST_GROUP_ID_3, true);
 
         // moving modifications with a good and a bad modification should work (the bad one will be ignored)
         SQLStatementCountValidator.reset();
@@ -727,7 +728,7 @@ class ModificationRepositoryTest {
                 new ModificationContainerInfos(TEST_GROUP_ID, ModificationContainerType.GROUP),
                 new ModificationContainerInfos(TEST_GROUP_ID_3, ModificationContainerType.GROUP),
                 modificationsToMoveUuid, null);
-        assertRequestsCount(5, 0, 1, 0);
+        assertRequestsCount(6, 0, 1, 0);
         // only the valid modification is moved
         assertEquals(1, movedModifications.size());
         assertEquals(groovyScriptEntity1.getId(), movedModifications.get(0).getUuid());
@@ -751,11 +752,11 @@ class ModificationRepositoryTest {
                 source, target,
                 modificationsToMoveUuid2, referenceNodeUuid),
                 new NetworkModificationServerException(MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR).getMessage());
-        assertRequestsCount(5, 0, 0, 0);
+        assertRequestsCount(4, 0, 0, 0);
 
-        var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
-        var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
-        var modification3 = networkModificationRepository.getModifications(TEST_GROUP_ID_3, true, true);
+        var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
+        var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true);
+        var modification3 = networkModificationRepository.getModifications(TEST_GROUP_ID_3, true);
 
         var expected1 = List.of(modificationOriginal1.get(1));
         var expected3 = List.of(modificationOriginal3.get(0), modificationOriginal3.get(1), modificationOriginal1.get(0));
@@ -778,7 +779,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1, groovyScriptEntity2, groovyScriptEntity3));
         assertRequestsCount(2, 3, 0, 0);
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(3, modificationInfos.size());
 
         assertThat(getGroovyScript(modificationInfos.get(0).getUuid()))
@@ -788,23 +789,22 @@ class ModificationRepositoryTest {
         assertThat(getGroovyScript(modificationInfos.get(2).getUuid()))
             .recursivelyEquals(groovyScriptEntity3.toModificationInfos());
 
-        assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
+        assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, false).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId()));
-        assertRequestsCount(4, 0, 0, 2);
+        networkModificationRepository.deleteModifications(List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId()));
+        assertRequestsCount(3, 0, 0, 2);
 
         SQLStatementCountValidator.reset();
-        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, false).size());
+        assertRequestsCount(3, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
-        assertRequestsCount(4, 0, 0, 3);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
+        assertRequestsCount(5, 0, 0, 3);
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
 
     @Test
@@ -831,7 +831,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createSubstationEntity1, createSubstationEntity2, createSubstationEntity3));
         assertRequestsCount(2, 4, 1, 0);
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(3, modificationInfos.size());
 
         assertThat(getSubstationCreationModification(modificationInfos.get(0).getUuid()))
@@ -841,23 +841,22 @@ class ModificationRepositoryTest {
         assertThat(getSubstationCreationModification(modificationInfos.get(2).getUuid()))
             .recursivelyEquals(createSubstationEntity3.toModificationInfos());
 
-        assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
+        assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, false).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createSubstationEntity2.getId(), createSubstationEntity3.getId()));
-        assertRequestsCount(6, 0, 0, 2);
+        networkModificationRepository.deleteModifications(List.of(createSubstationEntity2.getId(), createSubstationEntity3.getId()));
+        assertRequestsCount(5, 0, 0, 2);
 
         SQLStatementCountValidator.reset();
-        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        assertRequestsCount(3, 0, 0, 0);
+        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, false).size());
+        assertRequestsCount(4, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
-        assertRequestsCount(5, 0, 0, 4);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
+        assertRequestsCount(6, 0, 0, 4);
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
 
     @Test
@@ -878,22 +877,21 @@ class ModificationRepositoryTest {
                 .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createVoltLvlEntity1));
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(1, modificationInfos.size());
 
         assertThat(getVoltageLevelCreationModification(modificationInfos.get(0).getUuid()))
             .recursivelyEquals(createVoltLvlEntity1.toModificationInfos());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createVoltLvlEntity1.getId()));
-        assertRequestsCount(6, 0, 0, 4);
+        networkModificationRepository.deleteModifications(List.of(createVoltLvlEntity1.getId()));
+        assertRequestsCount(5, 0, 0, 4);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
-        assertRequestsCount(2, 0, 0, 1);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
+        assertRequestsCount(3, 0, 0, 1);
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
 
     private static VoltageLevelCreationInfos makeAVoltageLevelInfos() {
@@ -923,7 +921,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, entities);
         assertRequestsCount(2, 3, 0, 0);
 
-        List<OperatingStatusModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+        List<OperatingStatusModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false)
             .stream()
             .map(OperatingStatusModificationInfos.class::cast)
             .sorted(Comparator.comparing(OperatingStatusModificationInfos::getEquipmentId))
@@ -942,9 +940,9 @@ class ModificationRepositoryTest {
             .recursivelyEquals((OperatingStatusModificationInfos) entities.get(4).toModificationInfos());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
         // n+1 query because we are deleting modifications 1 by 1, it's for now accepted according to a comment in "deleteModificationGroup"
-        assertRequestsCount(9, 0, 0, 3);
+        assertRequestsCount(10, 0, 0, 3);
     }
 
     @Test
@@ -975,7 +973,7 @@ class ModificationRepositoryTest {
         VoltageLevelCreationEntity voltageLevelCreationEntity = new VoltageLevelCreationEntity(voltageLevelCreationInfos);
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineSplitEntity1, voltageLevelCreationEntity, lineSplitEntity2));
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(3, modificationInfos.size());
 
         assertThat(getLineSplitWithVoltageLevelModification(modificationInfos.get(0).getUuid()))
@@ -985,20 +983,19 @@ class ModificationRepositoryTest {
                 .recursivelyEquals(lineSplitEntity2.toModificationInfos());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineSplitEntity1.getId(),
+        networkModificationRepository.deleteModifications(List.of(lineSplitEntity1.getId(),
                 voltageLevelCreationEntity.getId(),
                 lineSplitEntity2.getId()));
-        assertRequestsCount(8, 0, 0);
+        assertRequestsCount(7, 0, 0);
 
-        modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(0, modificationInfos.size());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
-        assertRequestsCount(2, 0, 0, 1);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
+        assertRequestsCount(3, 0, 0, 1);
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
 
     @Test
@@ -1039,7 +1036,7 @@ class ModificationRepositoryTest {
                 .build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1, lineAttachToEntity2));
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(2, modificationInfos.size());
 
         assertThat(getLineAttachToVoltageLevelModification(modificationInfos.get(0).getUuid()))
@@ -1051,16 +1048,15 @@ class ModificationRepositoryTest {
                         lineAttachToEntity2.toModificationInfos());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1.getId(),
+        networkModificationRepository.deleteModifications(List.of(lineAttachToEntity1.getId(),
                 lineAttachToEntity2.getId()));
-        assertRequestsCount(12, 0, 0, 12);
+        assertRequestsCount(13, 0, 0, 12);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
-        assertRequestsCount(2, 0, 0, 1);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
+        assertRequestsCount(3, 0, 0, 1);
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
 
     @Test
@@ -1089,7 +1085,7 @@ class ModificationRepositoryTest {
                 .build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(linesAttachToEntity1, linesAttachToEntity2));
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(2, modificationInfos.size());
 
         assertThat(getLinesAttachToSplitLinesModification(modificationInfos.get(0).getUuid()))
@@ -1101,16 +1097,15 @@ class ModificationRepositoryTest {
                         linesAttachToEntity2.toModificationInfos());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(linesAttachToEntity1.getId(),
+        networkModificationRepository.deleteModifications(List.of(linesAttachToEntity1.getId(),
                 linesAttachToEntity2.getId()));
-        assertRequestsCount(4, 0, 0, 2);
+        assertRequestsCount(3, 0, 0, 2);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
-        assertRequestsCount(2, 0, 0, 1);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
+        assertRequestsCount(3, 0, 0, 1);
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
 
     @Test
@@ -1119,13 +1114,13 @@ class ModificationRepositoryTest {
         var groovyScriptEntity1 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().stashed(true).script("script1").build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1));
         //check the modification is in the repository
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(1, modificationInfos.size());
 
         //delete the modification
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1.getId()));
+        networkModificationRepository.deleteModifications(List.of(groovyScriptEntity1.getId()));
         //check the modification is not in the repository
-        modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(0, modificationInfos.size());
     }
 
@@ -1135,13 +1130,13 @@ class ModificationRepositoryTest {
         var groovyScriptEntity1 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().stashed(false).script("script1").build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1));
         //check the modification is in the repository
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(1, modificationInfos.size());
 
         //delete the modification
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1.getId()));
+        networkModificationRepository.deleteModifications(List.of(groovyScriptEntity1.getId()));
         //check the modification is not in the repository
-        modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(0, modificationInfos.size());
     }
 
@@ -1165,20 +1160,19 @@ class ModificationRepositoryTest {
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(deleteAttachingLineEntity, deleteAttachingLineEntity2));
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(2, modificationInfos.size());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(deleteAttachingLineEntity.getId(),
+        networkModificationRepository.deleteModifications(List.of(deleteAttachingLineEntity.getId(),
                 deleteAttachingLineEntity2.getId()));
-        assertRequestsCount(4, 0, 0, 2);
+        assertRequestsCount(3, 0, 0, 2);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
-        assertRequestsCount(2, 0, 0, 1);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
+        assertRequestsCount(3, 0, 0, 1);
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
 
     @Test
@@ -1199,7 +1193,7 @@ class ModificationRepositoryTest {
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(deleteVoltageLevelOnLineToEntity1, deleteVoltageLevelOnLineToEntity2));
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(2, modificationInfos.size());
 
         assertThat(getDeleteVoltageLevelOnLineModification(modificationInfos.get(0).getUuid()))
@@ -1211,16 +1205,15 @@ class ModificationRepositoryTest {
                         deleteVoltageLevelOnLineToEntity2.toModificationInfos());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(deleteVoltageLevelOnLineToEntity1.getId(),
+        networkModificationRepository.deleteModifications(List.of(deleteVoltageLevelOnLineToEntity1.getId(),
                 deleteVoltageLevelOnLineToEntity2.getId()));
-        assertRequestsCount(4, 0, 0, 2);
+        assertRequestsCount(3, 0, 0, 2);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
-        assertRequestsCount(2, 0, 0, 1);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
+        assertRequestsCount(3, 0, 0, 1);
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false).isEmpty());
     }
 
     private static <T> void testModificationEmbedded(IAttributeModificationEmbeddable<T> modification, T val) {
@@ -1323,7 +1316,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity));
         assertRequestsCount(2, 10, 0, 0);
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         assertEquals(1, modificationInfos.size());
 
         assertThat(getVoltageInitModification(modificationInfos.get(0).getUuid()))
@@ -1332,12 +1325,13 @@ class ModificationRepositoryTest {
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity.getId()));
-        assertRequestsCount(4, 0, 0, 9);
+        networkModificationRepository.deleteModifications(List.of(voltageInitModificationEntity.getId()));
+        assertRequestsCount(3, 0, 0, 9);
 
         SQLStatementCountValidator.reset();
-        assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(2, 0, 0, 0);
+        assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
+        // only the recursive query, not counted as a select, finding nothing to read
+        assertRequestsCount(0, 0, 0, 0);
     }
 
     @Test
@@ -1351,7 +1345,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(vscModificationEntity));
         assertRequestsCount(2, 5, 0, 0);
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         assertEquals(1, modificationInfos.size());
     }
 
@@ -1366,7 +1360,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lccModificationEntity));
         assertRequestsCount(2, 5, 0, 0);
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         assertEquals(1, modificationInfos.size());
     }
 
@@ -1471,7 +1465,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createStaticVarCompensator1, createStaticVarCompensator2, createStaticVarCompensator3));
         assertRequestsCount(2, 3, 0, 0);
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         assertEquals(3, modificationInfos.size());
 
         assertThat(getStaticVarCompensatorCreationModification(modificationInfos.get(0).getUuid()))
@@ -1479,23 +1473,22 @@ class ModificationRepositoryTest {
         assertThat(getStaticVarCompensatorCreationModification(modificationInfos.get(1).getUuid()))
                 .recursivelyEquals(createStaticVarCompensator2.toModificationInfos());
 
-        assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createStaticVarCompensator2.getId(), createStaticVarCompensator3.getId()));
-        assertRequestsCount(6, 0, 0, 2);
+        networkModificationRepository.deleteModifications(List.of(createStaticVarCompensator2.getId(), createStaticVarCompensator3.getId()));
+        assertRequestsCount(5, 0, 0, 2);
 
         SQLStatementCountValidator.reset();
-        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(3, 0, 0, 0);
+        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
+        assertRequestsCount(1, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID), true);
-        assertRequestsCount(5, 0, 0, 3);
+        networkModificationRepository.deleteModificationGroups(List.of(TEST_GROUP_ID));
+        assertRequestsCount(6, 0, 0, 3);
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-            new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, true).isEmpty());
     }
 
     @Test
@@ -1518,7 +1511,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageLevelTopologyModificationEntity));
         assertRequestsCount(2, 5, 1, 0);
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         assertEquals(1, modificationInfos.size());
     }
 
@@ -1534,7 +1527,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modification));
         assertRequestsCount(2, 3, 0, 0);
 
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         assertEquals(1, modificationInfos.size());
     }
 
@@ -1548,9 +1541,9 @@ class ModificationRepositoryTest {
         List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID,
                 Arrays.stream(equipmentIds).map(ModificationRepositoryTest::switchModification).toList());
         UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(
-                modifications.stream().map(ModificationInfos::getUuid).toList(), "composite");
+                modifications.stream().map(ModificationInfos::getUuid).toList(), "composite", List.of());
         return networkModificationRepository.insertCompositeModifications(targetGroupUuid,
-                List.of(new CompositeInfos(compositeUuid, "composite", shared, "description"))).getFirst().getUuid();
+                List.of(new CompositeInfos(compositeUuid, "composite", shared, "description")), List.of()).getFirst().getUuid();
     }
 
     /**
@@ -1565,13 +1558,40 @@ class ModificationRepositoryTest {
      * where every modification carries its own.
      */
     private Map<UUID, Map<String, Boolean>> getApplicabilities(UUID groupUuid) {
-        return networkModificationRepository.getModifications(groupUuid, true, true).stream()
+        return networkModificationRepository.getModifications(groupUuid, true).stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::getApplicabilityByRootNetworkTag));
     }
 
     private Map<UUID, Map<String, Boolean>> getApplicabilitiesByModificationsInside(UUID containerUuid) {
-        return networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(containerUuid)).stream()
+        return networkModificationRepository.getModifications(containerUuid, true).stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::getApplicabilityByRootNetworkTag));
+    }
+
+    private Map<UUID, Boolean> activationsByModificationsInside(UUID containerUuid) {
+        return networkModificationRepository.getModifications(containerUuid, true).stream()
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::getActivated));
+    }
+
+    private List<UUID> modificationUuidsInside(UUID containerUuid) {
+        return networkModificationRepository.getModifications(containerUuid, true).stream()
+                .map(ModificationInfos::getUuid).toList();
+    }
+
+    /**
+     * @return the uuid of the modification and of everything it holds, however deep
+     */
+    private List<UUID> modificationTreeUuids(UUID modificationUuid) {
+        return Stream.concat(
+                Stream.of(modificationUuid),
+                modificationUuidsInside(modificationUuid).stream()
+                        .flatMap(uuid -> modificationTreeUuids(uuid).stream()))
+                .toList();
+    }
+
+    private void updateActivation(UUID modificationUuid, boolean activated) {
+        ModificationInfos metadata = new ModificationInfos();
+        metadata.setActivated(activated);
+        networkModificationRepository.updateModificationActivation(List.of(modificationUuid), metadata);
     }
 
     @Test
@@ -1601,7 +1621,7 @@ class ModificationRepositoryTest {
 
         // copying a modification goes through its infos, which have to carry the applicabilities
         SQLStatementCountValidator.reset();
-        UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(List.of(modificationUuid), "composite");
+        UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(List.of(modificationUuid), "composite", List.of());
         SQLStatementCountValidator.assertSelectCount(2);
 
         CompositeModificationInfos composite = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(compositeUuid);
@@ -1618,7 +1638,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), ROOT_NETWORK_TAG, false);
 
         // the applicabilities are deleted by the database, so a modification carrying one is deleted like any other
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(modificationUuid));
+        networkModificationRepository.deleteModifications(List.of(modificationUuid));
 
         assertEquals(List.of(), modificationRepository.findApplicabilitiesByIdIn(List.of(modificationUuid)),
                 "The applicabilities of a deleted modification must not outlive it");
@@ -1637,17 +1657,43 @@ class ModificationRepositoryTest {
     }
 
     @Test
-    void testUpdateRootNetworkApplicabilityPropagatesToCompositeSubModifications() {
+    void testUpdateRootNetworkApplicabilityLeavesTheCompositeSubModificationsAlone() {
         UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        List<UUID> contentUuids = modificationUuidsInside(compositeUuid);
+        UUID deactivatedUuid = contentUuids.getFirst();
+        UUID untouchedUuid = contentUuids.getLast();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
 
+        // the composite is deactivated on the tag, then activated again
         networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), ROOT_NETWORK_TAG, true);
 
-        assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(compositeUuid));
-        Map<UUID, Map<String, Boolean>> applicabilitiesByModifications = getApplicabilitiesByModificationsInside(compositeUuid);
-        assertEquals(2, applicabilitiesByModifications.size());
-        applicabilitiesByModifications.values().forEach(applicability ->
-                assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicability,
-                        "Updating a composite must reach its sub modifications"));
+        assertEquals(Map.of(ROOT_NETWORK_TAG, true), getApplicabilities(TEST_GROUP_ID_2).get(compositeUuid));
+        Map<UUID, Map<String, Boolean>> applicabilities = getApplicabilitiesByModificationsInside(compositeUuid);
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), applicabilities.get(deactivatedUuid),
+                "Updating the applicability of a composite leaves its content untouched");
+        assertEquals(Map.of(), applicabilities.get(untouchedUuid),
+                "A sub modification nobody updated holds no applicability at all");
+    }
+
+    @Test
+    void testUpdateTheActivationLeavesTheCompositeSubModificationsAlone() {
+        UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        List<UUID> contentUuids = modificationUuidsInside(compositeUuid);
+        UUID deactivatedUuid = contentUuids.getFirst();
+        UUID untouchedUuid = contentUuids.getLast();
+        updateActivation(deactivatedUuid, false);
+
+        // the composite is deactivated globally, then activated again
+        updateActivation(compositeUuid, false);
+        updateActivation(compositeUuid, true);
+
+        assertEquals(Boolean.TRUE, networkModificationRepository.getModificationInfo(compositeUuid).getActivated());
+        Map<UUID, Boolean> activations = activationsByModificationsInside(compositeUuid);
+        assertEquals(Boolean.FALSE, activations.get(deactivatedUuid),
+                "Updating the activation of a composite leaves its content untouched");
+        assertEquals(Boolean.TRUE, activations.get(untouchedUuid),
+                "A sub modification nobody updated stays activated");
     }
 
     @Test
@@ -1657,8 +1703,11 @@ class ModificationRepositoryTest {
 
         networkModificationRepository.updateRootNetworkApplicability(List.of(referenceUuid), ROOT_NETWORK_TAG, false);
 
-        assertEquals(List.of(Map.of(ROOT_NETWORK_TAG, false)), List.copyOf(getApplicabilitiesByModificationsInside(sharedUuid).values()),
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false),
+                networkModificationRepository.getModificationInfo(sharedUuid).getApplicabilityByRootNetworkTag(),
                 "A reference has no applicability of its own: the update went to the shared modification it points to");
+        assertEquals(List.of(Map.of()), List.copyOf(getApplicabilitiesByModificationsInside(sharedUuid).values()),
+                "The shared modification is a composite, whose content keeps the applicability it carries itself");
         assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
                 "The reference is reported with the applicability of the shared modification");
     }
@@ -1695,10 +1744,10 @@ class ModificationRepositoryTest {
     }
 
     @Test
-    void testGetActiveModificationsLeavesOutTheChildrenOfADeactivatedComposite() {
+    void testGetActiveModificationsLeavesOutTheChildrenOfACompositeTheTagDeactivates() {
         UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        UUID childUuid = modificationUuidsInside(compositeUuid).getFirst();
         networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), ROOT_NETWORK_TAG, false);
-        UUID childUuid = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeUuid)).getFirst().getUuid();
 
         // we activate a child while the composite remains deactivated
         networkModificationRepository.updateRootNetworkApplicability(List.of(childUuid), ROOT_NETWORK_TAG, true);
@@ -1706,7 +1755,22 @@ class ModificationRepositoryTest {
         assertEquals(Map.of(ROOT_NETWORK_TAG, true), getApplicabilitiesByModificationsInside(compositeUuid).get(childUuid),
                 "Taken on its own the child is applicable on the tag");
         assertEquals(List.of(), activeModificationUuids(TEST_GROUP_ID_2, ROOT_NETWORK_TAG),
-                "A deactivated composite automatically deactivate its children whatever their own applicability is");
+                "A composite the tag deactivates automatically deactivates its children whatever their own applicability is");
+    }
+
+    @Test
+    void testGetActiveModificationsLeavesOutTheChildrenOfAGloballyDeactivatedComposite() {
+        UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        UUID childUuid = modificationUuidsInside(compositeUuid).getFirst();
+        updateActivation(compositeUuid, false);
+
+        // we activate a child while the composite remains deactivated
+        updateActivation(childUuid, true);
+
+        assertEquals(Boolean.TRUE, activationsByModificationsInside(compositeUuid).get(childUuid),
+                "Taken on its own the child is activated");
+        assertEquals(List.of(), activeModificationUuids(TEST_GROUP_ID_2, ROOT_NETWORK_TAG),
+                "A globally deactivated composite automatically deactivates its children whatever their own activation is");
     }
 
     @Test
@@ -1745,6 +1809,77 @@ class ModificationRepositoryTest {
                 .stream().map(ModificationInfos::getUuid).toList();
     }
 
+    private void renameRootNetworkTagBypassingPermissions(UUID groupUuid, String oldTag, String newTag) {
+        networkModificationRepository.renameRootNetworkTag(networkModificationRepository.getContainedModificationUuids(List.of(groupUuid)),
+                networkModificationRepository.getReferencedModificationUuids(List.of(groupUuid)), oldTag, newTag);
+    }
+
+    @Test
+    void testRenameRootNetworkTagLeavesTheSharedModificationsTheUserCannotWriteOnUntouched() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+        networkModificationRepository.updateRootNetworkApplicability(modificationTreeUuids(sharedUuid), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(modificationTreeUuids(sharedUuid), RENAMED_ROOT_NETWORK_TAG, true);
+
+        networkModificationRepository.renameRootNetworkTag(networkModificationRepository.getContainedModificationUuids(List.of(TEST_GROUP_ID_2)),
+                List.of(), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+
+        Map<String, Boolean> untouched = Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, true);
+        assertEquals(untouched, getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid));
+        assertEquals(List.of(untouched), List.copyOf(getApplicabilitiesByModificationsInside(sharedUuid).values()),
+                "The content of a shared modification the user cannot write on is left untouched too");
+    }
+
+    @Test
+    void testCommonRootNetworkTags() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID_3,
+                List.of(switchModification("v1d1"), switchModification("v1d2"), switchModification("v1d3")));
+        UUID bothTagsUuid = modifications.get(0).getUuid();
+        UUID otherTagUuid = modifications.get(1).getUuid();
+        UUID noTagUuid = modifications.get(2).getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(bothTagsUuid), ROOT_NETWORK_TAG, true);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(bothTagsUuid, otherTagUuid), OTHER_ROOT_NETWORK_TAG, false);
+
+        // a modification is associated with a tag whatever its applicability
+        assertEquals(List.of(ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG), networkModificationRepository.getCommonRootNetworkTags(Set.of(bothTagsUuid)));
+        assertEquals(List.of(OTHER_ROOT_NETWORK_TAG), networkModificationRepository.getCommonRootNetworkTags(Set.of(bothTagsUuid, otherTagUuid)));
+        assertEquals(List.of(), networkModificationRepository.getCommonRootNetworkTags(Set.of(bothTagsUuid, noTagUuid)));
+    }
+
+    @Test
+    void testAddRootNetworkTagFollowsTheApplicabilitiesOfTheGroupModifications() {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID_3,
+                List.of(switchModification("v1d1"), switchModification("v1d2"), switchModification("v1d3"), switchModification("v1d4")));
+        UUID activatedUuid = modifications.get(0).getUuid();
+        UUID deactivatedUuid = modifications.get(1).getUuid();
+        UUID memorizedUuid = modifications.get(2).getUuid();
+        UUID withoutApplicabilityUuid = modifications.get(3).getUuid();
+        UUID compositeUuid = insertComposite(TEST_GROUP_ID_3, false, "v1d5");
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_3, true, "v1d6");
+        networkModificationRepository.updateRootNetworkApplicability(List.of(activatedUuid, deactivatedUuid, memorizedUuid, compositeUuid), "A", true);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(activatedUuid), "B", true);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid, compositeUuid), "B", false);
+        // memorized by a copy from another study, whose root network had this tag
+        networkModificationRepository.updateRootNetworkApplicability(List.of(memorizedUuid), "D", false);
+
+        networkModificationRepository.addRootNetworkTag(List.of(TEST_GROUP_ID_3), "D");
+
+        Map<UUID, Map<String, Boolean>> applicabilities = getApplicabilities(TEST_GROUP_ID_3);
+        assertEquals(Map.of("A", true, "B", true, "D", true), applicabilities.get(activatedUuid),
+                "A modification applicable on all its root networks is applicable on the new one");
+        assertEquals(Map.of("A", true, "B", false, "D", false), applicabilities.get(deactivatedUuid),
+                "A modification not applicable on one of its root networks is not applicable on the new one");
+        assertEquals(Map.of("A", true, "D", false), applicabilities.get(memorizedUuid),
+                "The applicability already memorized for the new tag is kept");
+        assertEquals(Map.of("D", true), applicabilities.get(withoutApplicabilityUuid),
+                "A modification without applicability is applicable on the new root network");
+        assertEquals(List.of(Map.of("D", true)), List.copyOf(getApplicabilitiesByModificationsInside(compositeUuid).values()),
+                "The content of a composite is reached, and follows its own applicabilities");
+        assertEquals(Map.of("D", true), applicabilities.get(referenceUuid), "The shared modification a reference points to is reached");
+        assertEquals(List.of(Map.of("D", true)), List.copyOf(getApplicabilitiesByModificationsInside(sharedModificationOf(referenceUuid)).values()),
+                "So is its content");
+    }
+
     @Test
     void testRenameRootNetworkTagMovesTheApplicabilityOfTheGroupModifications() {
         List<ModificationInfos> modifications = networkModificationRepository.saveModifications(TEST_GROUP_ID_3,
@@ -1753,7 +1888,7 @@ class ModificationRepositoryTest {
         UUID untouchedUuid = modifications.get(1).getUuid();
         networkModificationRepository.updateRootNetworkApplicability(List.of(deactivatedUuid), ROOT_NETWORK_TAG, false);
 
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_3), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_3, ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
 
         Map<UUID, Map<String, Boolean>> applicabilities = getApplicabilities(TEST_GROUP_ID_3);
         assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), applicabilities.get(deactivatedUuid),
@@ -1766,9 +1901,10 @@ class ModificationRepositoryTest {
     void testRenameRootNetworkTagOnlyAddsToASharedModification() {
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
         UUID sharedUuid = sharedModificationOf(referenceUuid);
-        networkModificationRepository.updateRootNetworkApplicability(List.of(referenceUuid), ROOT_NETWORK_TAG, false);
+        // the shared composite and the modification it holds each carry an applicability of their own
+        networkModificationRepository.updateRootNetworkApplicability(modificationTreeUuids(sharedUuid), ROOT_NETWORK_TAG, false);
 
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_2, ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
 
         Map<String, Boolean> bothTags = Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, false);
         assertEquals(bothTags, getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
@@ -1786,7 +1922,7 @@ class ModificationRepositoryTest {
         // a leftover entry, the new tag naming no root network of the study yet
         networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), OTHER_ROOT_NETWORK_TAG, true);
 
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_3), ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG);
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_3, ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG);
 
         assertEquals(Map.of(OTHER_ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_3).get(modificationUuid),
                 "On a modification the study owns the tag is really renamed: if an entry already exists under the new name, it is replaced");
@@ -1813,12 +1949,10 @@ class ModificationRepositoryTest {
                 List.of(switchModification("v2d1"), switchModification("v2d2"), switchModification("v2d3")))
                 .stream().map(ModificationInfos::getUuid).toList();
         UUID compositeUuid = networkModificationRepository.createNetworkCompositeModification(
-                Stream.concat(Stream.of(innerUuid), siblingUuids.stream()).toList(), "source");
+                Stream.concat(Stream.of(innerUuid), siblingUuids.stream()).toList(), "source", List.of());
 
-        List<UUID> contentUuids = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(compositeUuid))
-                .stream().map(ModificationInfos::getUuid).toList();
-        List<UUID> innerUuids = networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(contentUuids.get(0)))
-                .stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> contentUuids = modificationUuidsInside(compositeUuid);
+        List<UUID> innerUuids = modificationUuidsInside(contentUuids.get(0));
         networkModificationRepository.updateRootNetworkApplicability(List.of(innerUuids.get(0)), ROOT_NETWORK_TAG, false);
         networkModificationRepository.updateRootNetworkApplicability(List.of(innerUuids.get(1)), ROOT_NETWORK_TAG, true);
         networkModificationRepository.updateRootNetworkApplicability(List.of(contentUuids.get(1)), ROOT_NETWORK_TAG, false);
@@ -1834,7 +1968,7 @@ class ModificationRepositoryTest {
     void testExportingACompositeKeepsTheApplicabilitiesOfItsWholeTree() {
         UUID sourceUuid = compositeWithEveryApplicabilityCase();
 
-        UUID exportedUuid = networkModificationRepository.createNetworkCompositeModification(List.of(sourceUuid), "exported");
+        UUID exportedUuid = networkModificationRepository.createNetworkCompositeModification(List.of(sourceUuid), "exported", List.of());
 
         assertEquals(applicabilitiesInDepth(sourceUuid), applicabilitiesInDepth(exportedUuid),
                 "Exporting a composite carries the applicabilities of everything it holds, however deep");
@@ -1845,7 +1979,7 @@ class ModificationRepositoryTest {
         UUID sourceUuid = compositeWithEveryApplicabilityCase();
 
         UUID insertedUuid = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID,
-                List.of(new CompositeInfos(sourceUuid, "composite", false, "description"))).getFirst().getUuid();
+                List.of(new CompositeInfos(sourceUuid, "composite", false, "description")), List.of()).getFirst().getUuid();
 
         assertEquals(applicabilitiesInDepth(sourceUuid), applicabilitiesInDepth(insertedUuid),
                 "Inserting a composite carries the applicabilities of everything it holds, however deep");
@@ -1863,19 +1997,19 @@ class ModificationRepositoryTest {
                 .equipmentType(IdentifiableType.SWITCH).build();
         created.setApplicabilityByRootNetworkTag(Map.of(ROOT_NETWORK_TAG, false));
         assertEquals(Map.of(ROOT_NETWORK_TAG, false),
-                networkModificationRepository.saveModificationInfos(TEST_GROUP_ID, List.of(created)).getFirst()
+                networkModificationRepository.saveModificationInfos(TEST_GROUP_ID, List.of(created), List.of()).getFirst()
                         .getApplicabilityByRootNetworkTag(),
                 "Saving a modification returns it with the applicabilities it was given");
 
         UUID sourceUuid = compositeWithEveryApplicabilityCase();
 
         List<ModificationInfos> inserted = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID,
-                List.of(new CompositeInfos(sourceUuid, "composite", false, "description")));
+                List.of(new CompositeInfos(sourceUuid, "composite", false, "description")), List.of());
         assertEquals(applicabilitiesInDepth(inserted.getFirst().getUuid()), applicabilitiesInDepth(inserted.getFirst()),
                 "Inserting a composite returns it with the applicabilities it was given");
 
         List<ModificationInfos> duplicated = networkModificationRepository.saveDuplicateModifications(
-                TEST_GROUP_ID_2, null, List.of(inserted.getFirst().getUuid()));
+                TEST_GROUP_ID_2, null, List.of(inserted.getFirst().getUuid()), List.of());
         assertEquals(applicabilitiesInDepth(duplicated.getFirst().getUuid()), applicabilitiesInDepth(duplicated.getFirst()),
                 "Duplicating a composite returns it with the applicabilities it was given");
 
@@ -1883,11 +2017,11 @@ class ModificationRepositoryTest {
             Map.of(), Map.of(ROOT_NETWORK_TAG, false), Map.of(ROOT_NETWORK_TAG, true), Map.of());
 
         List<ModificationInfos> extracted = networkModificationRepository.extractModificationsFromCompositesAndSave(
-                TEST_GROUP_ID_3, List.of(inserted.getFirst().getUuid()));
+                TEST_GROUP_ID_3, List.of(inserted.getFirst().getUuid()), List.of());
         assertEquals(contentApplicabilities, extracted.stream().map(ModificationInfos::getApplicabilityByRootNetworkTag).toList(),
                 "Splitting a composite returns its content with the applicabilities it was given");
 
-        List<ModificationInfos> moved = networkModificationRepository.moveModificationsFromGroup(
+        List<ModificationInfos> moved = networkModificationRepository.moveModifications(
                 new ModificationContainerInfos(TEST_GROUP_ID_3, ModificationContainerType.GROUP),
                 new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
                 extracted.stream().map(ModificationInfos::getUuid).toList(), null);
@@ -1901,7 +2035,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), ROOT_NETWORK_TAG, false);
 
         List<ModificationInfos> inserted = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID,
-                List.of(new CompositeInfos(sharedUuid, "composite", true, "description")));
+                List.of(new CompositeInfos(sharedUuid, "composite", true, "description")), List.of());
 
         assertEquals(Map.of(ROOT_NETWORK_TAG, false), inserted.getFirst().getApplicabilityByRootNetworkTag(),
                 "A reference holds no applicability of its own, so it is returned with the one of the modification it points to");
@@ -1912,7 +2046,7 @@ class ModificationRepositoryTest {
         UUID sharedUuid = compositeWithEveryApplicabilityCase();
 
         UUID referenceUuid = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID_2,
-                List.of(new CompositeInfos(sharedUuid, "composite", true, "description"))).getFirst().getUuid();
+                List.of(new CompositeInfos(sharedUuid, "composite", true, "description")), List.of()).getFirst().getUuid();
 
         ModificationReferenceInfos reference = (ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid);
 
@@ -1924,7 +2058,7 @@ class ModificationRepositoryTest {
      * @return the applicabilities of everything a modification holds, depth first, the order the content is read in
      */
     private List<Map<String, Boolean>> applicabilitiesInDepth(UUID containerUuid) {
-        return networkModificationRepository.getBasicNetworkModificationsFromComposite(List.of(containerUuid)).stream()
+        return networkModificationRepository.getModifications(containerUuid, true).stream()
                 .flatMap(content -> Stream.concat(Stream.of(content.getApplicabilityByRootNetworkTag()),
                         applicabilitiesInDepth(content.getUuid()).stream()))
                 .toList();
@@ -1948,12 +2082,13 @@ class ModificationRepositoryTest {
         // an inner composite, copied into a group, then wrapped with a sibling into an outer one
         UUID innerCompositeUuid = insertComposite(TEST_GROUP_ID_3, false, "v1d1");
         UUID siblingUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d2"))).getFirst().getUuid();
-        UUID outerSourceUuid = networkModificationRepository.createNetworkCompositeModification(List.of(innerCompositeUuid, siblingUuid), "outer");
+        UUID outerSourceUuid = networkModificationRepository.createNetworkCompositeModification(List.of(innerCompositeUuid, siblingUuid), "outer", List.of());
         UUID outerCompositeUuid = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID_2,
-                List.of(new CompositeInfos(outerSourceUuid, "outer", false, "description"))).getFirst().getUuid();
-        networkModificationRepository.updateRootNetworkApplicability(List.of(outerCompositeUuid), ROOT_NETWORK_TAG, false);
+                List.of(new CompositeInfos(outerSourceUuid, "outer", false, "description")), List.of()).getFirst().getUuid();
 
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+        networkModificationRepository.updateRootNetworkApplicability(modificationTreeUuids(outerCompositeUuid), ROOT_NETWORK_TAG, false);
+
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_2, ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
 
         assertEquals(4, assertApplicabilityRenamedInDepth(outerCompositeUuid, getApplicabilities(TEST_GROUP_ID_2).get(outerCompositeUuid)),
                 "the outer composite, the inner one and the sibling it holds, and the modification inside the inner one");
@@ -1979,7 +2114,7 @@ class ModificationRepositoryTest {
         UUID siblingUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d2"))).getFirst().getUuid();
 
         // wrapping the reference with a sibling into a new composite resolves it to an independent copy, not a link
-        UUID outerCompositeUuid = networkModificationRepository.createNetworkCompositeModification(List.of(innerReferenceUuid, siblingUuid), "outer");
+        UUID outerCompositeUuid = networkModificationRepository.createNetworkCompositeModification(List.of(innerReferenceUuid, siblingUuid), "outer", List.of());
 
         CompositeModificationInfos outerComposite = (CompositeModificationInfos) networkModificationRepository.getModificationInfo(outerCompositeUuid);
         ModificationInfos innerCopy = outerComposite.getModificationsInfos().stream()
@@ -2008,7 +2143,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.moveModifications(group,
                 new ModificationContainerInfos(outerUuid, ModificationContainerType.COMPOSITE), List.of(innerUuid), null);
 
-        UUID copyUuid = networkModificationRepository.createNetworkCompositeModification(List.of(outerUuid), "copy");
+        UUID copyUuid = networkModificationRepository.createNetworkCompositeModification(List.of(outerUuid), "copy", List.of());
 
         ModificationInfos nestedCopy = compositeInside(compositeInside(networkModificationRepository.getModificationInfo(copyUuid)));
         assertFalse(nestedCopy instanceof ModificationReferenceInfos, "a reference nested in the copied content must be stored as a copy, not a link");
@@ -2032,32 +2167,151 @@ class ModificationRepositoryTest {
     void testCreatingACompositeFromAnUnknownModificationThrows() {
         UUID unknownUuid = UUID.randomUUID();
         assertEquals(MODIFICATIONS_NOT_FOUND, assertThrows(NetworkModificationServerException.class,
-                () -> networkModificationRepository.createNetworkCompositeModification(List.of(unknownUuid), "outer")).getBusinessErrorCode());
+                () -> networkModificationRepository.createNetworkCompositeModification(List.of(unknownUuid), "outer", List.of())).getBusinessErrorCode());
     }
 
     @Test
     void testCreatingACompositeFromAReferenceWhoseSharedModificationIsGoneThrows() {
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
         // the shared modification the reference points to disappears, leaving the reference dangling
-        networkModificationRepository.deleteModifications(null, List.of(sharedModificationOf(referenceUuid)));
+        networkModificationRepository.deleteModifications(List.of(sharedModificationOf(referenceUuid)));
 
         assertEquals(MODIFICATIONS_NOT_FOUND, assertThrows(NetworkModificationServerException.class,
-                () -> networkModificationRepository.createNetworkCompositeModification(List.of(referenceUuid), "outer")).getBusinessErrorCode());
+                () -> networkModificationRepository.createNetworkCompositeModification(List.of(referenceUuid), "outer", List.of())).getBusinessErrorCode());
     }
 
     @Test
-    void testRenameRootNetworkTagReusesAnEntryTheSharedModificationAlreadyHas() {
+    void testRenameRootNetworkTagOverwritesAnEntryTheSharedModificationAlreadyHas() {
         UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
         UUID sharedUuid = sharedModificationOf(referenceUuid);
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), ROOT_NETWORK_TAG, false);
         // another group already named a root network of its own with the tag this one is being renamed to
         networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), RENAMED_ROOT_NETWORK_TAG, true);
 
-        networkModificationRepository.renameRootNetworkTag(List.of(TEST_GROUP_ID_2), ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_2, ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
 
-        assertEquals(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, true),
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, RENAMED_ROOT_NETWORK_TAG, false),
                 getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
-                "A shared modification is never overwritten: the entry the other group set is reused as it is");
+                "The renamed root network keeps its applicability, overwriting the entry the other group set");
+    }
+
+    @Test
+    void testRenameRootNetworkTagDropsTheEntryOfAModificationHoldingNoneForTheOldTag() {
+        UUID modificationUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d1"))).getFirst().getUuid();
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), RENAMED_ROOT_NETWORK_TAG, false);
+
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_3, ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+
+        assertEquals(Map.of(), getApplicabilities(TEST_GROUP_ID_3).get(modificationUuid),
+                "The modification was applicable on the renamed root network, it must stay so");
+        assertEquals(List.of(modificationUuid), activeModificationUuids(TEST_GROUP_ID_3, RENAMED_ROOT_NETWORK_TAG));
+    }
+
+    @Test
+    void testRenameRootNetworkTagDropsTheEntryOfASharedModificationHoldingNoneForTheOldTag() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), RENAMED_ROOT_NETWORK_TAG, false);
+
+        renameRootNetworkTagBypassingPermissions(TEST_GROUP_ID_2, ROOT_NETWORK_TAG, RENAMED_ROOT_NETWORK_TAG);
+
+        assertEquals(Map.of(), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
+                "The shared modification was applicable on the renamed root network, it must stay so");
+        assertEquals(List.of(Map.of()), List.copyOf(getApplicabilitiesByModificationsInside(sharedUuid).values()));
+    }
+
+    @Test
+    void testGetReferencedModificationUuidsFollowsTheSharedModifications() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID nestedReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d2");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+        UUID nestedSharedUuid = sharedModificationOf(nestedReferenceUuid);
+        // the second shared modification is only reached through the first one
+        networkModificationRepository.moveModifications(
+                new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
+                new ModificationContainerInfos(sharedUuid, ModificationContainerType.COMPOSITE),
+                List.of(nestedReferenceUuid), null);
+        insertComposite(TEST_GROUP_ID_3, false, "v1d3");
+
+        assertEquals(Set.of(sharedUuid, nestedSharedUuid), networkModificationRepository.getReferencedModificationUuids(List.of(TEST_GROUP_ID_2)),
+                "Both shared modifications, the nested one included, but none of their children");
+        assertEquals(Set.of(), networkModificationRepository.getReferencedModificationUuids(List.of(TEST_GROUP_ID_3)),
+                "A group containing no reference leads to no shared modification");
+    }
+
+    @Test
+    void testStashingReadsTheModificationsInOneQueryWhateverTheirNumber() {
+        List<UUID> modificationUuids = networkModificationRepository.saveModifications(TEST_GROUP_ID,
+                        List.of(switchModification("v1d1"), switchModification("v1d2"), switchModification("v1d3"), switchModification("v1d4")))
+                .stream().map(ModificationInfos::getUuid).toList();
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.stashNetworkModifications(modificationUuids.subList(0, 1), 0);
+        assertSelectCount(1);
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.stashNetworkModifications(modificationUuids.subList(1, 4), 1);
+        assertSelectCount(1);
+
+        assertEquals(modificationUuids,
+                networkModificationRepository.getModifications(TEST_GROUP_ID, true, StashedFilter.STASHED).stream()
+                        .map(ModificationInfos::getUuid).toList(),
+                "the modifications keep the order they were given");
+    }
+
+    @Test
+    void testReadingTheReferencesOfAContainerCostsTheSameWhateverTheirNumber() {
+        UUID firstReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+
+        List<UUID> descendantUuids = modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(TEST_GROUP_ID_2));
+        SQLStatementCountValidator.reset();
+        List<ModificationReferenceData> references = networkModificationRepository.getModificationsReferences(descendantUuids, false);
+        // a single query, which reports the composite holding each reference along the way
+        assertRequestsCount(1, 0, 0, 0);
+        assertEquals(List.of(firstReferenceUuid), references.stream().map(ModificationReferenceData::modificationUuid).toList());
+
+        UUID secondReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d2");
+        UUID thirdReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d3");
+
+        descendantUuids = modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(TEST_GROUP_ID_2));
+        SQLStatementCountValidator.reset();
+        references = networkModificationRepository.getModificationsReferences(descendantUuids, false);
+        assertRequestsCount(1, 0, 0, 0);
+        assertEquals(Set.of(firstReferenceUuid, secondReferenceUuid, thirdReferenceUuid),
+                references.stream().map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet()));
+    }
+
+    @Test
+    void testReadingTheGivenReferencesCostsTheSameWhateverTheirNumber() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID ownedUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_2, List.of(switchModification("v1d4"))).getFirst().getUuid();
+
+        SQLStatementCountValidator.reset();
+        List<ModificationReferenceData> references = networkModificationRepository.getModificationsReferences(List.of(referenceUuid, ownedUuid), false);
+        assertRequestsCount(1, 0, 0, 0);
+        assertEquals(List.of(referenceUuid), references.stream().map(ModificationReferenceData::modificationUuid).toList(),
+                "a modification that is not a reference is ignored");
+
+        UUID nestedReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d2");
+        UUID compositeUuid = sharedModificationOf(referenceUuid);
+        networkModificationRepository.moveModifications(
+                new ModificationContainerInfos(TEST_GROUP_ID_2, ModificationContainerType.GROUP),
+                new ModificationContainerInfos(compositeUuid, ModificationContainerType.COMPOSITE),
+                List.of(nestedReferenceUuid), null);
+
+        SQLStatementCountValidator.reset();
+        references = networkModificationRepository.getModificationsReferences(List.of(referenceUuid, nestedReferenceUuid, ownedUuid), false);
+        assertRequestsCount(1, 0, 0, 0);
+        assertEquals(Map.of(referenceUuid, Optional.<UUID>empty(), nestedReferenceUuid, Optional.of(compositeUuid)),
+                references.stream().collect(Collectors.toMap(ModificationReferenceData::modificationUuid,
+                        reference -> Optional.ofNullable(reference.containerId()))),
+                "only the nested reference reports a composite");
+
+        SQLStatementCountValidator.reset();
+        assertEquals(List.of(), networkModificationRepository.getModificationsReferences(List.of(ownedUuid), false));
+        assertRequestsCount(1, 0, 0, 0);
     }
 
     @Test
@@ -2076,6 +2330,190 @@ class ModificationRepositoryTest {
                 "The deleted root networks take their own applicabilities away, and only those");
         assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
                 "Another group may name a root network with that very tag, so a shared modification is never cleaned");
+    }
+
+    @Test
+    void testSavedModificationsGetADefaultApplicabilityOnTheMissingTags() {
+        ModificationInfos deactivated = switchInfos("v1d1");
+        deactivated.setApplicabilityByRootNetworkTag(Map.of(ROOT_NETWORK_TAG, false));
+
+        ModificationInfos saved = networkModificationRepository.saveModificationInfos(TEST_GROUP_ID_3, List.of(deactivated),
+                List.of(ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG)).getFirst();
+
+        Map<String, Boolean> expected = Map.of(ROOT_NETWORK_TAG, false, OTHER_ROOT_NETWORK_TAG, true);
+        assertEquals(expected, getApplicabilities(TEST_GROUP_ID_3).get(saved.getUuid()),
+                "A modification is applicable on the root networks it has no applicability for, the one already set is kept");
+        assertEquals(expected, saved.getApplicabilityByRootNetworkTag(),
+                "The modification is returned with its applicabilities, to be applied right away");
+    }
+
+    @Test
+    void testDuplicatedModificationsGetADefaultApplicabilityOnTheMissingTags() {
+        UUID sourceUuid = networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d1"))).getFirst().getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sourceUuid), ROOT_NETWORK_TAG, false);
+
+        ModificationInfos copy = networkModificationRepository.saveDuplicateModifications(TEST_GROUP_ID_2, null, List.of(sourceUuid),
+                List.of(ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG)).getFirst();
+
+        Map<String, Boolean> expected = Map.of(ROOT_NETWORK_TAG, false, OTHER_ROOT_NETWORK_TAG, true);
+        assertEquals(expected, getApplicabilities(TEST_GROUP_ID_2).get(copy.getUuid()));
+        assertEquals(expected, copy.getApplicabilityByRootNetworkTag());
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_3).get(sourceUuid), "The source is left alone");
+    }
+
+    @Test
+    void testInsertedCompositesGetADefaultApplicabilityDownToTheSharedModifications() {
+        List<UUID> contentUuids = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(switchModification("v1d1")))
+                .stream().map(ModificationInfos::getUuid).toList();
+        UUID sourceUuid = networkModificationRepository.createNetworkCompositeModification(contentUuids, "composite", List.of());
+
+        List<ModificationInfos> inserted = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID_3, List.of(
+                new CompositeInfos(sourceUuid, "copy", false, "description"),
+                new CompositeInfos(sourceUuid, "reference", true, "description")), List.of(ROOT_NETWORK_TAG));
+        UUID compositeUuid = inserted.get(0).getUuid();
+        UUID referenceUuid = inserted.get(1).getUuid();
+
+        Map<String, Boolean> applicable = Map.of(ROOT_NETWORK_TAG, true);
+        assertEquals(List.of(applicable), List.copyOf(getApplicabilitiesByModificationsInside(compositeUuid).values()),
+                "The content of an inserted composite is associated with the root network too");
+        assertEquals(applicable, getApplicabilities(TEST_GROUP_ID_3).get(referenceUuid),
+                "A reference reads the applicability of the shared modification it points to, which gets associated");
+        assertEquals(List.of(applicable), List.copyOf(getApplicabilitiesByModificationsInside(sourceUuid).values()),
+                "The content of the shared modification is associated with the root network too");
+        assertEquals(List.of(compositeUuid, referenceUuid), activeModificationUuids(TEST_GROUP_ID_3, ROOT_NETWORK_TAG));
+    }
+
+    @Test
+    void testDuplicatedGroupGetsADefaultApplicabilityOnTheMissingTags() {
+        networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d1")));
+
+        networkModificationRepository.duplicateUnstashedModifications(TEST_GROUP_ID_3, TEST_GROUP_ID_2, List.of(ROOT_NETWORK_TAG));
+
+        assertEquals(List.of(Map.of(ROOT_NETWORK_TAG, true)), List.copyOf(getApplicabilities(TEST_GROUP_ID_2).values()),
+                "The copy may come from another study: it is associated with the root networks of its own");
+    }
+
+    @Test
+    void testDuplicatedModificationsForgetTheApplicabilitiesOfTheOtherTags() {
+        UUID sourceUuid = networkModificationRepository.saveModificationInfos(TEST_GROUP_ID_3, List.of(switchInfos("v1d1")),
+                List.of(ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG)).getFirst().getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sourceUuid), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sourceUuid), OTHER_ROOT_NETWORK_TAG, false);
+
+        ModificationInfos copy = networkModificationRepository.saveDuplicateModifications(TEST_GROUP_ID_2, null, List.of(sourceUuid),
+                List.of(ROOT_NETWORK_TAG, TARGET_ONLY_ROOT_NETWORK_TAG)).getFirst();
+
+        Map<String, Boolean> expected = Map.of(ROOT_NETWORK_TAG, false, TARGET_ONLY_ROOT_NETWORK_TAG, true);
+        assertEquals(expected, getApplicabilities(TEST_GROUP_ID_2).get(copy.getUuid()),
+                "The copy only keeps the applicabilities of the root networks of its study, and is applicable on the new ones");
+        assertEquals(expected, copy.getApplicabilityByRootNetworkTag());
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, OTHER_ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_3).get(sourceUuid),
+                "The source is left alone");
+    }
+
+    @Test
+    void testInsertedCompositesForgetTheApplicabilitiesOfTheOtherTagsButTheSharedOnes() {
+        UUID sourceUuid = insertComposite(TEST_GROUP_ID_3, false, "v1d1");
+        List<UUID> sourceTreeUuids = Stream.concat(Stream.of(sourceUuid), modificationUuidsInside(sourceUuid).stream()).toList();
+        networkModificationRepository.updateRootNetworkApplicability(sourceTreeUuids, ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(sourceTreeUuids, OTHER_ROOT_NETWORK_TAG, false);
+
+        List<ModificationInfos> inserted = networkModificationRepository.insertCompositeModifications(TEST_GROUP_ID_2, List.of(
+                new CompositeInfos(sourceUuid, "copy", false, "description"),
+                new CompositeInfos(sourceUuid, "reference", true, "description")), List.of(ROOT_NETWORK_TAG, TARGET_ONLY_ROOT_NETWORK_TAG));
+
+        Map<String, Boolean> kept = Map.of(ROOT_NETWORK_TAG, false, TARGET_ONLY_ROOT_NETWORK_TAG, true);
+        assertEquals(List.of(kept, kept), applicabilitiesInDepth(TEST_GROUP_ID_2).subList(0, 2),
+                "The copied composite and its content only keep the applicabilities of the root networks of the study");
+        Map<String, Boolean> shared = Map.of(ROOT_NETWORK_TAG, false, OTHER_ROOT_NETWORK_TAG, false, TARGET_ONLY_ROOT_NETWORK_TAG, true);
+        assertEquals(shared, getApplicabilities(TEST_GROUP_ID_2).get(inserted.get(1).getUuid()),
+                "A shared modification keeps the applicabilities of the other studies it may be shared with");
+        assertEquals(List.of(shared), List.copyOf(getApplicabilitiesByModificationsInside(sourceUuid).values()));
+    }
+
+    @Test
+    void testExportedCompositesOnlyKeepTheApplicabilitiesOfTheGivenTags() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+        List<UUID> sharedTreeUuids = Stream.concat(Stream.of(sharedUuid), modificationUuidsInside(sharedUuid).stream()).toList();
+        networkModificationRepository.updateRootNetworkApplicability(sharedTreeUuids, ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(sharedTreeUuids, OTHER_ROOT_NETWORK_TAG, false);
+        UUID ownedUuid = networkModificationRepository.saveModificationInfos(TEST_GROUP_ID_2, List.of(switchInfos("v1d2")),
+                List.of(ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG)).getFirst().getUuid();
+
+        UUID exportedUuid = networkModificationRepository.createNetworkCompositeModification(List.of(referenceUuid, ownedUuid), "exported",
+                List.of(ROOT_NETWORK_TAG));
+
+        // one map per modification, depth first: the copy of the shared modification, its content, then the owned modification
+        assertEquals(List.of(Map.of(ROOT_NETWORK_TAG, false), Map.of(ROOT_NETWORK_TAG, false), Map.of(ROOT_NETWORK_TAG, true)),
+                applicabilitiesInDepth(exportedUuid),
+                "The copy of a shared modification, content included, only keeps the applicabilities of the root networks of the study");
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, OTHER_ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
+                "The shared modification is left alone");
+        assertEquals(List.of(Map.of(ROOT_NETWORK_TAG, false, OTHER_ROOT_NETWORK_TAG, false)),
+                List.copyOf(getApplicabilitiesByModificationsInside(sharedUuid).values()), "Its content too");
+    }
+
+    @Test
+    void testExportingALoneSharedModificationKeepsItsOwnApplicabilities() {
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID sharedUuid = sharedModificationOf(referenceUuid);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedUuid), OTHER_ROOT_NETWORK_TAG, false);
+
+        UUID exportedUuid = networkModificationRepository.createNetworkCompositeModification(List.of(referenceUuid), "exported",
+                List.of(ROOT_NETWORK_TAG));
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false), networkModificationRepository.getModificationInfo(exportedUuid).getApplicabilityByRootNetworkTag(),
+                "The exported composite takes the place of the shared modification, and keeps its applicabilities on the root networks of the study");
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, OTHER_ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
+                "The shared modification is left alone");
+    }
+
+    @Test
+    void testModificationsMovedIntoACompositeGetADefaultApplicabilityOnItsTags() {
+        UUID modificationUuid = networkModificationRepository.saveModificationInfos(TEST_GROUP_ID_3, List.of(switchInfos("v1d1")),
+                List.of(ROOT_NETWORK_TAG)).getFirst().getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuid), ROOT_NETWORK_TAG, false);
+        // the composite is also associated with a root network of another study, as a shared one may be
+        UUID compositeUuid = networkModificationRepository.saveModificationInfos(TEST_GROUP_ID_3,
+                List.of(CompositeModificationInfos.builder().name("composite").modificationsInfos(List.of()).build()),
+                List.of(ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG)).getFirst().getUuid();
+
+        ModificationInfos moved = networkModificationRepository.moveModifications(
+                new ModificationContainerInfos(TEST_GROUP_ID_3, ModificationContainerType.GROUP),
+                new ModificationContainerInfos(compositeUuid, ModificationContainerType.COMPOSITE),
+                List.of(modificationUuid), null).getFirst();
+
+        Map<String, Boolean> expected = Map.of(ROOT_NETWORK_TAG, false, OTHER_ROOT_NETWORK_TAG, true);
+        assertEquals(expected, getApplicabilitiesByModificationsInside(compositeUuid).get(modificationUuid),
+                "The modification is applicable on the root networks of the composite it has no applicability for, the one already set is kept");
+        assertEquals(expected, moved.getApplicabilityByRootNetworkTag());
+    }
+
+    @Test
+    void testAssembledCompositeIsAssociatedWithTheRootNetworksOfItsContent() {
+        List<UUID> modificationUuids = networkModificationRepository.saveModifications(TEST_GROUP_ID_3,
+                List.of(switchModification("v1d1"), switchModification("v1d2"))).stream().map(ModificationInfos::getUuid).toList();
+        networkModificationRepository.updateRootNetworkApplicability(modificationUuids, ROOT_NETWORK_TAG, true);
+        // only the second modification is associated with the other root network, and not applicable on it: the composite
+        // gets the union of the tags of its content, an association being the presence of an applicability, whatever its value
+        networkModificationRepository.updateRootNetworkApplicability(List.of(modificationUuids.get(1)), OTHER_ROOT_NETWORK_TAG, false);
+
+        UUID compositeUuid = networkModificationRepository.assembleNetworkModificationsIntoNewComposite(modificationUuids).getId();
+
+        assertEquals(Map.of(ROOT_NETWORK_TAG, true, OTHER_ROOT_NETWORK_TAG, true), getApplicabilities(TEST_GROUP_ID_3).get(compositeUuid),
+                "The new composite is applicable on every root network its content is associated with");
+    }
+
+    @Test
+    void testGetActiveModificationsRejectsAModificationNotAssociatedWithTheRootNetwork() {
+        networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(switchModification("v1d1")));
+
+        List<ModificationInfos> activeModifications = networkModificationRepository.getActiveModifications(TEST_GROUP_ID_3, ROOT_NETWORK_TAG);
+        assertEquals(1, activeModifications.size(), "The modification is kept for the applicator to reject it");
+        ModificationInfos modificationInfos = activeModifications.getFirst();
+        assertThrows(NetworkModificationException.class, () -> modificationInfos.isActivatedOn(ROOT_NETWORK_TAG));
     }
 
     private List<UUID> activeCompositeContentUuids(UUID groupUuid, String rootNetworkTag) {
@@ -2099,7 +2537,7 @@ class ModificationRepositoryTest {
                 .build());
         List<ModificationInfos> savedModificationInfos = networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modification));
 
-        AbstractModification standaloneNetworkModification = networkModificationRepository.getStandaloneNetworkModification(savedModificationInfos.getFirst().getUuid());
+        AbstractModification standaloneNetworkModification = networkModificationService.getStandaloneNetworkModification(savedModificationInfos.getFirst().getUuid());
 
         assertThat(standaloneNetworkModification).isEqualTo(savedModificationInfos.getFirst().toModification());
     }
@@ -2108,7 +2546,7 @@ class ModificationRepositoryTest {
     void testGetNonExistentStandaloneNetworkModificationThrowsException() {
         UUID nonExistingUuid = UUID.randomUUID();
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getStandaloneNetworkModification(nonExistingUuid));
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationService.getStandaloneNetworkModification(nonExistingUuid));
     }
 
     @Test
@@ -2136,7 +2574,7 @@ class ModificationRepositoryTest {
         Map<UUID, AbstractModification> expectedModifications = savedModificationInfos.stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification));
 
-        Map<UUID, AbstractModification> standaloneNetworkModifications = networkModificationRepository.getStandaloneNetworkModifications(List.of(savedModificationInfos.getFirst().getUuid(),
+        Map<UUID, AbstractModification> standaloneNetworkModifications = networkModificationService.getStandaloneNetworkModifications(List.of(savedModificationInfos.getFirst().getUuid(),
                 savedModificationInfos.getLast().getUuid()), false);
 
         assertThat(standaloneNetworkModifications).isEqualTo(expectedModifications);
@@ -2155,7 +2593,7 @@ class ModificationRepositoryTest {
         Map<UUID, AbstractModification> expectedModifications = savedModificationInfos.stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationInfos::toModification));
 
-        Map<UUID, AbstractModification> standaloneNetworkModifications = networkModificationRepository.getStandaloneNetworkModifications(List.of(savedModificationInfos.getFirst().getUuid(),
+        Map<UUID, AbstractModification> standaloneNetworkModifications = networkModificationService.getStandaloneNetworkModifications(List.of(savedModificationInfos.getFirst().getUuid(),
                 UUID.randomUUID()), false);
 
         assertThat(standaloneNetworkModifications).isEqualTo(expectedModifications);
@@ -2165,6 +2603,107 @@ class ModificationRepositoryTest {
     void testGetStandaloneNetworkModificationsWithErrorOnMissingModificationThrowsException() {
         List<UUID> nonExistingUuids = List.of(UUID.randomUUID(), UUID.randomUUID());
 
-        assertThrows(NetworkModificationServerException.class, () -> networkModificationRepository.getStandaloneNetworkModifications(nonExistingUuids, true));
+        assertThrows(NetworkModificationServerException.class, () -> networkModificationService.getStandaloneNetworkModifications(nonExistingUuids, true));
+    }
+
+    private static EquipmentAttributeModificationInfos switchInfos(String equipmentId) {
+        return EquipmentAttributeModificationInfos.builder()
+                .equipmentId(equipmentId).equipmentAttributeName("open").equipmentAttributeValue(true)
+                .equipmentType(IdentifiableType.SWITCH).build();
+    }
+
+    /** The sublevel count each composite or reference of a container gets in the metadata listing, as the front end reads it */
+    private Map<UUID, Integer> metadataSublevelCounts(UUID containerUuid) {
+        return networkModificationRepository.getModifications(containerUuid, true).stream()
+                .filter(infos -> sublevelCountOf(infos) != null)
+                .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationRepositoryTest::sublevelCountOf));
+    }
+
+    private static Integer sublevelCountOf(ModificationInfos infos) {
+        return infos instanceof SublevelCountHolderInfos holder ? holder.getSublevelCount() : null;
+    }
+
+    private void moveFromGroupInto(UUID groupUuid, UUID compositeOrReferenceUuid, UUID modificationUuid) {
+        networkModificationRepository.moveModifications(
+                new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP),
+                new ModificationContainerInfos(compositeOrReferenceUuid, ModificationContainerType.COMPOSITE),
+                List.of(modificationUuid), null);
+    }
+
+    @Test
+    void testSublevelCountOfCompositesAndReferences() {
+        UUID compositeUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d1", "v1d2");
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d3");
+        UUID emptyUuid = networkModificationRepository.saveModificationInfos(TEST_GROUP_ID_2, List.of(
+                CompositeModificationInfos.builder().name("empty").modificationsInfos(List.of()).build()), List.of()).getFirst().getUuid();
+
+        assertEquals(Map.of(compositeUuid, 1, referenceUuid, 1, emptyUuid, 0), metadataSublevelCounts(TEST_GROUP_ID_2),
+                "a reference stands for the composite it points to, an empty composite has nothing below it");
+    }
+
+    @Test
+    void testSublevelCountOfACompositeUnfoldsTheReferencesItHolds() {
+        // outer ── reference ⇢ shared ── leaf : the leaf is shown two levels below outer
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID outerUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d2");
+        moveFromGroupInto(TEST_GROUP_ID_2, outerUuid, referenceUuid);
+
+        assertEquals(Map.of(outerUuid, 2), metadataSublevelCounts(TEST_GROUP_ID_2), "#906 answers 1 here");
+        assertEquals(Map.of(referenceUuid, 1), metadataSublevelCounts(outerUuid));
+    }
+
+    @Test
+    void testSublevelCountOfAReferenceUnfoldsTheReferencesItsSharedCompositeHolds() {
+        UUID outerReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID innerReferenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d2");
+        // targeting a reference moves into the shared composite it points to
+        moveFromGroupInto(TEST_GROUP_ID_2, outerReferenceUuid, innerReferenceUuid);
+
+        assertEquals(Map.of(outerReferenceUuid, 2), metadataSublevelCounts(TEST_GROUP_ID_2));
+    }
+
+    @Test
+    void testSublevelCountIgnoresStashedContentWhicheverWayItIsRead() {
+        CompositeModificationInfos stashedInner = CompositeModificationInfos.builder().name("inner").stashed(true)
+                .modificationsInfos(List.of(switchInfos("v1d1"))).build();
+        UUID outerUuid = networkModificationRepository.saveModificationInfos(TEST_GROUP_ID, List.of(
+                CompositeModificationInfos.builder().name("outer")
+                        .modificationsInfos(List.of(stashedInner, switchInfos("v1d2"))).build()), List.of()).getFirst().getUuid();
+
+        assertEquals(Map.of(outerUuid, 1), metadataSublevelCounts(TEST_GROUP_ID));
+        assertEquals(1, ((CompositeModificationInfos) networkModificationRepository.getModificationInfo(outerUuid)).getSublevelCount());
+    }
+
+    @Test
+    void testFullInfosOfAReferenceCarryTheSameSublevelCountsAsTheMetadata() {
+        // group ── reference ⇢ shared ── [ inner ── leaf, leaf ] : what the front end unfolds when expanding the reference
+        UUID referenceUuid = insertComposite(TEST_GROUP_ID_2, true, "v1d1");
+        UUID innerUuid = insertComposite(TEST_GROUP_ID_2, false, "v1d2");
+        moveFromGroupInto(TEST_GROUP_ID_2, referenceUuid, innerUuid);
+
+        ModificationReferenceInfos reference = (ModificationReferenceInfos) networkModificationRepository.getModificationInfo(referenceUuid);
+        CompositeModificationInfos shared = (CompositeModificationInfos) reference.getReferencedInfos();
+
+        assertEquals(2, reference.getSublevelCount());
+        assertEquals(metadataSublevelCounts(TEST_GROUP_ID_2).get(referenceUuid), reference.getSublevelCount());
+        assertEquals(metadataSublevelCounts(shared.getUuid()), shared.getModificationsInfos().stream()
+                        .filter(CompositeModificationInfos.class::isInstance)
+                        .collect(Collectors.toMap(ModificationInfos::getUuid, ModificationRepositoryTest::sublevelCountOf)),
+                "a composite nested in a shared one carries its sublevel count whichever path reads it");
+    }
+
+    @Test
+    void testSublevelCountsCostOneQueryWhateverTheNumberOfComposites() {
+        insertComposite(TEST_GROUP_ID_2, false, "v1d1");
+        long selectsForOne = countSelects(() -> networkModificationRepository.getModifications(TEST_GROUP_ID_2, true));
+        insertComposite(TEST_GROUP_ID_2, false, "v1d2");
+        insertComposite(TEST_GROUP_ID_2, false, "v1d3");
+        assertEquals(selectsForOne, countSelects(() -> networkModificationRepository.getModifications(TEST_GROUP_ID_2, true)));
+    }
+
+    private static long countSelects(Runnable runnable) {
+        SQLStatementCountValidator.reset();
+        runnable.run();
+        return net.ttddyy.dsproxy.QueryCountHolder.getGrandTotal().getSelect();
     }
 }

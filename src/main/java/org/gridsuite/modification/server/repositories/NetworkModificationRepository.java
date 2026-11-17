@@ -6,30 +6,29 @@
  */
 package org.gridsuite.modification.server.repositories;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.collections4.SetUtils;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.context.ModificationContext;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.dto.SublevelCountHolderInfos;
 import org.gridsuite.modification.dto.tabular.LimitSetsTabularModificationInfos;
 import org.gridsuite.modification.dto.tabular.TabularBaseInfos;
 import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
-import org.gridsuite.modification.modifications.AbstractModification;
-import org.gridsuite.modification.server.dto.CompositeInfos;
-import org.gridsuite.modification.server.dto.ModificationContainerInfos;
-import org.gridsuite.modification.server.dto.ModificationMetadata;
-import org.gridsuite.modification.server.dto.ModificationReferenceData;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
-import org.gridsuite.modification.server.service.ModificationContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -45,6 +44,7 @@ import java.util.stream.Stream;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.*;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE;
+import static org.gridsuite.modification.server.utils.ModificationInfosUtils.contentOf;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -52,6 +52,16 @@ import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_
  */
 @Repository
 public class NetworkModificationRepository {
+
+    /**
+     * Two lists: the IDs of shared modifications and the IDs of all their children, however deep.
+     */
+    private record SharedModificationTrees(Set<UUID> sharedUuids, Set<UUID> childrenUuids) {
+        Set<UUID> allUuids() {
+            return SetUtils.union(sharedUuids, childrenUuids);
+        }
+    }
+
     private final ModificationGroupRepository modificationGroupRepository;
 
     private final ModificationRepository modificationRepository;
@@ -76,10 +86,12 @@ public class NetworkModificationRepository {
     private final CompositeContainerRepository compositeContainerRepository;
 
     private final ModificationApplicationInfosService modificationApplicationInfosService;
-    private final ModificationContextFactory modificationContextFactory;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationRepository.class);
-    private static final String MODIFICATION_ID = "modificationId";
+    public static final String MODIFICATION_ID = "modificationId";
+    private static final String CONTAINER_ID = "containerId";
+
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
@@ -99,8 +111,7 @@ public class NetworkModificationRepository {
                                          CompositeModificationRepository compositeModificationRepository,
                                          CompositeContainerRepository compositeContainerRepository,
                                          ModificationContainerRepository modificationContainerRepository,
-                                         ModificationApplicationInfosService modificationApplicationInfosService,
-                                         ModificationContextFactory modificationContextFactory) {
+                                         ModificationApplicationInfosService modificationApplicationInfosService) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
         this.generatorCreationRepository = generatorCreationRepository;
@@ -120,17 +131,24 @@ public class NetworkModificationRepository {
         this.compositeContainerRepository = compositeContainerRepository;
         this.modificationContainerRepository = modificationContainerRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
-        this.modificationContextFactory = modificationContextFactory;
     }
 
-    private NetworkModificationServerException getModificationContainerNotFoundException(String containerId, ModificationContainerType containerType) {
+    private static NetworkModificationServerException getModificationContainerNotFoundException(UUID containerUuid, ModificationContainerType containerType) {
+        String containerId = containerUuid.toString();
+        String containerTypeName = containerType != null ? containerType.name() : "UNKNOWN";
         return new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND,
-            String.format(MODIFICATION_CONTAINER_NOT_FOUND.messageTemplate(), containerId, containerType.name()),
-            Map.of("containerId", containerId, "containerType", containerType.name()));
+            String.format(MODIFICATION_CONTAINER_NOT_FOUND.messageTemplate(), containerId, containerTypeName),
+            Map.of(CONTAINER_ID, containerId, "containerType", containerTypeName));
     }
 
-    private NetworkModificationServerException getModificationNotFoundException(String modificationId) {
-        return new NetworkModificationServerException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND.messageTemplate(), modificationId), Map.of(MODIFICATION_ID, modificationId));
+    public NetworkModificationServerException getModificationNotFoundException(UUID modificationId) {
+        return new NetworkModificationServerException(MODIFICATION_NOT_FOUND,
+            String.format(MODIFICATION_NOT_FOUND.messageTemplate(), modificationId), Map.of(MODIFICATION_ID, modificationId.toString()));
+    }
+
+    public NetworkModificationServerException getSharedModificationNotFoundException(UUID sharedModificationId) {
+        return new NetworkModificationServerException(SHARED_MODIFICATION_NOT_FOUND,
+            String.format(SHARED_MODIFICATION_NOT_FOUND.messageTemplate(), sharedModificationId), Map.of(MODIFICATION_ID, sharedModificationId.toString()));
     }
 
     @Transactional // To have all the delete in the same transaction (atomic)
@@ -151,52 +169,70 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationInfos> saveModificationInfos(@NonNull UUID groupUuid, List<ModificationInfos> modifications) {
-        List<ModificationEntity> entities = saveModificationInfosNonTransactional(groupUuid, modifications);
+    public List<ModificationInfos> saveModificationInfos(@NonNull UUID groupUuid, List<ModificationInfos> modifications, @NonNull Collection<String> rootNetworkTags) {
+        List<ModificationEntity> entities = saveModificationInfosNonTransactional(groupUuid, modifications, rootNetworkTags);
         // We can't return input modifications directly because it wouldn't have the IDs coming from the saved entities
-        return savedInfos(entities);
+        return toModificationsInfosAlreadySaved(entities);
     }
 
-    private List<ModificationEntity> saveModificationInfosNonTransactional(@NonNull UUID groupUuid, List<ModificationInfos> modifications) {
+    private List<ModificationEntity> saveModificationInfosNonTransactional(@NonNull UUID groupUuid, List<ModificationInfos> modifications,
+                                                                           Collection<String> rootNetworkTags) {
         List<ModificationEntity> entities = modifications.stream().map(ModificationEntity::fromDTO).toList();
+        // a copy may carry applicabilities of another study: they are forgotten, only those of the root networks of its new study are kept
+        entities.forEach(entity -> retainTreeApplicabilities(entity, rootNetworkTags));
+        setDefaultApplicabilitiesIfMissing(entities, rootNetworkTags);
         return saveModificationsNonTransactional(groupUuid, entities);
     }
 
     @Transactional
-    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name) {
-        List<ModificationEntity> copyEntities = copiesOf(modificationUuids);
-
-        //TODO : separate creation and copy
-        if (copyEntities.size() == 1 && copyEntities.getFirst() instanceof CompositeModificationEntity single) {
-            return modificationRepository.save(single).getId();
-        }
-
+    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name, @NonNull Collection<String> rootNetworkTags) {
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).name(name).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
-        compositeEntity.setModifications(copyEntities);
+        List<ModificationEntity> copyEntities = copyModificationsWithReferenceResolution(modificationUuids);
+        // the copies only keep the applicabilities of the root networks of the study they are exported from, the others are forgotten
+        copyEntities.forEach(copy -> retainTreeApplicabilities(copy, rootNetworkTags));
+        loneComposite(copyEntities).ifPresentOrElse(loneComposite -> {
+            // the new composite takes the place of the lone composite, so it takes its applicabilities too
+            loneComposite.getApplicabilities().forEach(applicability ->
+                compositeEntity.setApplicability(applicability.getRootNetworkTag(), applicability.getApplicable()));
+            compositeEntity.setModifications(loneComposite.getModifications());
+        }, () -> compositeEntity.setModifications(copyEntities));
         return modificationRepository.save(compositeEntity).getId();
     }
 
-    public void replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<UUID> modificationUuids) {
+    /**
+     * @return the modification references among the previous content, deleted
+     */
+    @Transactional
+    public List<ModificationReferenceData> replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<UUID> modificationUuids) {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
-                .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
+                .orElseThrow(() -> getModificationNotFoundException(compositeUuid));
 
-        List<ModificationEntity> copyEntities = copiesOf(modificationUuids);
+        List<ModificationEntity> copyEntities = copyAsCompositeContent(modificationUuids);
 
-        //Delete previously held modifications
-        deleteModifications(compositeEntity.getModifications());
-
-        deleteCompositeChildrenSubtree(List.of(compositeEntity));
+        Set<String> rootNetworkTags = compositeEntity.getRootNetworkTags();
+        // copiesOf resolves every reference: no shared modification here
+        copyEntities.forEach(copy -> setTreeDefaultApplicabilitiesIfMissing(copy, rootNetworkTags));
+        List<ModificationEntity> previousModifications = compositeEntity.getModifications();
         compositeEntity.setModifications(copyEntities);
-        compositeModificationRepository.renameCompositeModification(compositeEntity, name);
+        compositeEntity.updateNameAndDescription(ModificationMetadata.builder().name(name).build());
+        //Delete previously held modifications
+        return deleteModifications(previousModifications);
     }
 
-    public void updateCompositeModification(@NonNull UUID compositeUuid, String name) {
-        CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
-                .orElseThrow(() -> getModificationNotFoundException(compositeUuid.toString()));
-        if (name != null) {
-            compositeModificationRepository.renameCompositeModification(compositeEntity, name);
+    @Transactional
+    public void updateModificationNameAndDescription(@NonNull UUID modificationUuid, @NonNull ModificationMetadata modificationMetadata) {
+        ModificationEntity modificationEntity = getModificationEntity(modificationUuid);
+        if (modificationEntity.isReference()) {
+            getReferencedModification((ModificationReferenceEntity) modificationEntity).updateNameAndDescription(modificationMetadata);
+        } else {
+            modificationEntity.updateNameAndDescription(modificationMetadata);
         }
+    }
+
+    private ModificationEntity getReferencedModification(ModificationReferenceEntity modificationReferenceEntity) {
+        return modificationRepository.findById(modificationReferenceEntity.getReferencedId())
+            .orElseThrow(() -> getSharedModificationNotFoundException(modificationReferenceEntity.getReferencedId()));
     }
 
     private List<ModificationEntity> saveModificationsNonTransactional(@NonNull UUID groupUuid, List<ModificationEntity> modifications) {
@@ -209,89 +245,64 @@ public class NetworkModificationRepository {
         return modificationRepository.saveAll(modifications);
     }
 
-    /**
-     * This function does a prepass to insure all modifications are contained in the same source container before moving them to the target container
-     */
-
-    @Transactional
-    // TODO Remove this method and use moveModifications instead, after refactoring the front-end to use the new API.
-    // This method is kept for backward compatibility with the old front-end.
-    // With the refactoring, the source container will be determined by each modification and moveSubModificationsToGroup has to be deleted
-    public List<ModificationInfos> moveModificationsFromGroup(
-            @NonNull ModificationContainerInfos sourceContainerInfos,
-            @NonNull ModificationContainerInfos targetContainerInfos,
-            @NonNull List<UUID> modificationUuids, UUID beforeModificationUuid) {
-        AbstractModificationContainerEntity sourceContainer = getContainer(sourceContainerInfos);
-        AbstractModificationContainerEntity targetContainer = getContainer(targetContainerInfos);
-        moveSubModificationsToGroup(sourceContainer, modificationUuids);
-        return addApplicabilities(moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid)
-            .stream().map(this::toModificationsInfosOptimized).toList());
+    private UUID resolveOwningGroupId(AbstractModificationContainerEntity container) {
+        var finalContainer = container;
+        while (!finalContainer.isGroup()) {
+            UUID parentId = modificationRepository.findCompositeContainerIdByModificationId(finalContainer.getId());
+            if (parentId == null) {
+                return null;
+            }
+            finalContainer = getContainer(new ModificationContainerInfos(parentId, ModificationContainerType.COMPOSITE));
+        }
+        return finalContainer.getId();
     }
 
-    @Transactional
-    public List<ModificationInfos> moveModifications(
-            @NonNull ModificationContainerInfos sourceContainerInfos,
-            @NonNull ModificationContainerInfos targetContainerInfos,
-            @NonNull List<UUID> modificationUuids, UUID beforeModificationUuid) {
-        AbstractModificationContainerEntity sourceContainer = getContainer(sourceContainerInfos);
-        AbstractModificationContainerEntity targetContainer = getContainer(targetContainerInfos);
-        return moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid)
-                .stream().map(this::toModificationsInfosOptimized).toList();
-    }
-
-    /**
-     * During a cut operation some selected modifications may currently be nested inside a composite other than
-     * {@code sourceId} (e.g. grouped under an unrelated composite ancestor). Before the requested
-     * move runs, promote each of those to be a direct child of {@code sourceId}, so that
-     * {@link #moveModificationsNonTransactional} always operates on modifications that are
-     * genuinely children of the source container. Composite roots among the selection, and
-     * modifications already covered by a selected composite ancestor, are left in place — only
-     * their loose descendants need surfacing.
-     * TODO To be removed (see moveModificationsFromGroup)
-     */
-    private void moveSubModificationsToGroup(AbstractModificationContainerEntity sourceContainer, List<UUID> modificationUuids) {
-        Set<UUID> selectedCompositeUuids = modificationRepository.findExistingCompositeModificationIds(modificationUuids);
-
-        Set<UUID> childrenOfSelectedComposites = selectedCompositeUuids
-            .stream()
-            .flatMap(uuid -> modificationRepository.findAllChildrenUuids(uuid).stream())
-            .collect(Collectors.toCollection(HashSet::new));
-        childrenOfSelectedComposites.removeAll(selectedCompositeUuids);
-
-        List<UUID> subModificationUuids = modificationUuids.stream()
-                .filter(uuid -> !childrenOfSelectedComposites.contains(uuid))
-                .toList();
-
-        for (UUID uuid : subModificationUuids) {
-            UUID parentCompositeUuid = modificationRepository.findCompositeContainerIdByModificationId(uuid);
-            if (parentCompositeUuid != null && !parentCompositeUuid.equals(sourceContainer.getId())) {
-                moveModificationsNonTransactional(
-                        getContainer(new ModificationContainerInfos(parentCompositeUuid, ModificationContainerType.COMPOSITE)),
-                        sourceContainer,
-                        List.of(uuid), null);
+    private void deleteStaleApplicationInfos(
+            AbstractModificationContainerEntity source,
+            AbstractModificationContainerEntity target,
+            List<ModificationEntity> moved) {
+        if (source != target) {
+            UUID sourceGroup = resolveOwningGroupId(source);
+            UUID targetGroup = resolveOwningGroupId(target);
+            if (sourceGroup != null && !sourceGroup.equals(targetGroup)) {
+                modificationApplicationInfosService.deleteAllByModificationIds(collectAllModificationUuids(moved));
             }
         }
     }
 
-    private List<ModificationEntity> moveModificationsNonTransactional(AbstractModificationContainerEntity sourceContainer, AbstractModificationContainerEntity targetContainer,
-                                                                        List<UUID> modificationUuids, UUID beforeModificationUuid) {
-        boolean sameContainer = sourceContainer.getId().equals(targetContainer.getId());
+    @Transactional
+    public List<ModificationInfos> moveModifications(
+            @NonNull ModificationContainerInfos source,
+            @NonNull ModificationContainerInfos target,
+            @NonNull List<UUID> modificationUuids, UUID beforeModificationUuid) {
+        return addApplicabilities(moveModificationsNonTransactional(source, target, modificationUuids, beforeModificationUuid).stream()
+                .map(this::toModificationInfos).toList());
+    }
 
-        if (sameContainer) {
+    private List<ModificationEntity> moveModificationsNonTransactional(ModificationContainerInfos source, ModificationContainerInfos target,
+                                                                       List<UUID> modificationUuids, UUID beforeModificationUuid) {
+        var sourceContainer = getContainer(source);
+        var targetContainer = getContainer(target);
+        var moved = moveModificationsNonTransactional(sourceContainer, targetContainer, modificationUuids, beforeModificationUuid);
+        // the moved modifications already are associated with the root networks of their study, but a composite may be
+        // shared with other studies, whose root networks they must be associated with too
+        if (targetContainer instanceof CompositeContainerEntity) {
+            compositeModificationRepository.findById(targetContainer.getId())
+                    .ifPresent(composite -> setDefaultApplicabilitiesIfMissing(moved, composite.getRootNetworkTags()));
+        }
+        deleteStaleApplicationInfos(sourceContainer, targetContainer, moved);
+        return moved;
+    }
+
+    private List<ModificationEntity> moveModificationsNonTransactional(AbstractModificationContainerEntity sourceContainer, AbstractModificationContainerEntity targetContainer,
+                                                                       List<UUID> modificationUuids, UUID beforeModificationUuid) {
+        if (sourceContainer.getId().equals(targetContainer.getId())) {
             return sourceContainer.moveModifications(modificationUuids, beforeModificationUuid);
         }
-
         List<ModificationEntity> modificationsMoved = sourceContainer.removeModifications(modificationUuids);
-        if (modificationsMoved.isEmpty()) {
-            return List.of();
+        if (!modificationsMoved.isEmpty()) {
+            targetContainer.insertModifications(modificationsMoved, beforeModificationUuid);
         }
-
-        if (sourceContainer.isGroup() && targetContainer.isGroup()) {
-            modificationApplicationInfosService.deleteAllByModificationIds(collectAllModificationUuids(modificationsMoved));
-        }
-
-        targetContainer.insertModifications(modificationsMoved, beforeModificationUuid);
-
         return modificationsMoved;
     }
 
@@ -317,8 +328,7 @@ public class NetworkModificationRepository {
         List<ModificationEntity> sourceEntities = modificationRepository.findAllById(sourceModificationUuids);
         // findAllById does not keep sourceModificationUuids order, but
         // sourceEntities, copyEntities, newEntities have the same order.
-        List<ModificationEntity> copyEntities = addApplicabilities(sourceEntities.stream()
-                .map(this::toModificationsInfosOptimized).toList()).stream()
+        List<ModificationEntity> copyEntities = toModificationsInfosWithApplicabilities(sourceEntities).stream()
                 .map(ModificationEntity::fromDTO)
                 .toList();
         List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
@@ -334,53 +344,149 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
-        return getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
+    public List<ModificationInfos> getModifications(UUID containerUuid, boolean onlyMetadata) {
+        return getModifications(containerUuid, onlyMetadata, StashedFilter.ALL);
     }
 
-    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean onlyStashed) {
-        try {
-            return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsInfos(List.of(groupUuid), onlyStashed);
-        } catch (NetworkModificationServerException e) {
-            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND && !errorOnGroupNotFound) {
-                return List.of();
-            }
-            throw e;
+    /**
+     * @param containerUuid a group or a composite modification
+     * @return its modifications, and an empty list when the container does not exist
+     */
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getModifications(UUID containerUuid, boolean onlyMetadata, StashedFilter stashedFilter) {
+        return onlyMetadata
+                ? getModificationsMetadata(containerUuid, stashedFilter)
+                : getModificationsInfos(containerUuid, stashedFilter);
+    }
+
+    /**
+     * The number of levels below a modification, the way the modification tree unfolds it:
+     * the content of a composite, a reference standing for the composite it points to, at any level.
+     *
+     * @return how many levels the given content of a composite spans
+     */
+    private static int getSublevelCountIn(List<ModificationInfos> content) {
+        return content.stream()
+                .filter(modificationInfos -> !Boolean.TRUE.equals(modificationInfos.getStashed()))
+                // one level for the child itself, plus its own sublevel count (0 for a plain modification)
+                .mapToInt(modificationInfos -> 1 + sublevelCountOf(modificationInfos))
+                .max()
+                .orElse(0);
+    }
+
+    /**
+     * @return the sublevel count the modification carries, 0 for a modification holding nothing
+     */
+    private static int sublevelCountOf(ModificationInfos modificationInfos) {
+        return modificationInfos instanceof SublevelCountHolderInfos holder ? Objects.requireNonNullElse(holder.getSublevelCount(), 0) : 0;
+    }
+
+    /**
+     * Computes the sublevel count of the given modifications and of everything they hold, from the tree they already
+     * carry, and fills them with it.
+     *
+     * @return the modifications it was given, filled with their sublevel counts
+     */
+    private static List<ModificationInfos> addSublevelCounts(List<ModificationInfos> modificationsInfos) {
+        modificationsInfos.forEach(NetworkModificationRepository::setSublevelCounts);
+        return modificationsInfos;
+    }
+
+    /**
+     * Sets the sublevel count of every composite and reference of the tree, from the bottom up: see
+     * {@link #getSublevelCountIn}.
+     */
+    private static void setSublevelCounts(ModificationInfos modification) {
+        List<ModificationInfos> content = contentOf(modification);
+        content.forEach(NetworkModificationRepository::setSublevelCounts);
+        if (modification instanceof CompositeModificationInfos composite) {
+            composite.setSublevelCount(getSublevelCountIn(content));
+        } else if (modification instanceof ModificationReferenceInfos reference) {
+            // a reference stands for the composite it points to
+            reference.setSublevelCount(sublevelCountOf(reference.getReferencedInfos()));
         }
     }
 
-    public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
-        UUID groupId = getModificationGroup(groupUuid).getId();
-        List<ModificationEntity> base = onlyStashed
-                ? modificationRepository.findAllBaseByContainerIdReverse(groupId)
-                : modificationRepository.findAllBaseByContainerId(groupId);
-        // TODO : move depth handling in specific code for composite
-        Map<UUID, Integer> depths = batchCompositeDepths(base);
-        Map<UUID, Map<String, Boolean>> applicabilities = batchApplicabilities(base);
-        return base.stream()
-                .filter(m -> !onlyStashed || m.getStashed())
-                .map(m -> toModificationMetadataInfos(m, depths, applicabilities))
-                .toList();
-    }
-
-    private Map<UUID, Integer> batchCompositeDepths(Collection<ModificationEntity> entities) {
-        List<UUID> compositeIds = entities.stream()
-                .filter(e -> ModificationType.COMPOSITE_MODIFICATION.name().equals(e.getType()))
-                .map(ModificationEntity::getId)
-                .toList();
-        return getCompositesMaxDepthMap(compositeIds);
-    }
-
     /**
-     * @return the applicability per root network tag of each modification.
-     * A reference gets the applicability of the shared modification it points to, which the query resolves.
+     * Reads the metadata of the modifications of the container as a tree: the children of a composite are its content,
+     * and the child of a reference the shared modification it points to, at any depth. The stashed filter
+     * applies to the root modifications of the container, a stashed modification is always left out of a content.
+     * <p>
+     * The whole tree is read in one query, filtered, then built.
+     *
+     * @return all the modifications of the container, including nested ones, or an empty list when it does not exist
      */
-    private Map<UUID, Map<String, Boolean>> batchApplicabilities(Collection<ModificationEntity> entities) {
-        return batchApplicabilities(entities.stream().map(ModificationEntity::getId).toList());
+    private List<ModificationInfos> getModificationsMetadata(UUID containerUuid, StashedFilter stashedFilter) {
+        Map<UUID, List<ModificationEntity>> childrenByContainer = new HashMap<>();
+        modificationRepository.findAllChildrenMetadata(containerUuid, stashedFilter.toSql())
+                .forEach(child -> childrenByContainer.computeIfAbsent(child.getContainerId(), _ -> new ArrayList<>())
+                        .add(child.toModificationEntity()));
+
+        List<ModificationEntity> rootModifications = childrenByContainer.getOrDefault(containerUuid, List.of());
+        List<ModificationInfos> modificationsMetadata = (stashedFilter == StashedFilter.STASHED ? rootModifications.reversed() : rootModifications).stream()
+                .map(modification -> toMetadataTreeNode(modification, childrenByContainer))
+                .toList();
+
+        addSublevelCounts(modificationsMetadata);
+        addApplicabilities(modificationsMetadata);
+        return modificationsMetadata;
     }
 
     /**
-     * @return the applicability per root network tag of each of the given modifications, in one query
+     * @return the metadata of the modification, with its children at any depth
+     */
+    private ModificationInfos toMetadataTreeNode(ModificationEntity modification, Map<UUID, List<ModificationEntity>> childrenByContainer) {
+        List<ModificationEntity> children = childrenByContainer.getOrDefault(modification.getId(), List.of());
+        if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modification.getType())) {
+            CompositeModificationInfos composite = loadCompositeModificationMetadata(modification);
+            composite.setModificationsInfos(children.stream().map(child -> toMetadataTreeNode(child, childrenByContainer)).toList());
+            return composite;
+        }
+        if (ModificationType.MODIFICATION_REFERENCE.name().equals(modification.getType())) {
+            ModificationEntity shared = children.stream().findFirst()
+                    .orElseThrow(() -> getSharedModificationNotFoundException(modification.getId()));
+            // the message is the one of the shared modification
+            return ModificationReferenceInfos.builder()
+                    .uuid(modification.getId())
+                    .date(modification.getDate())
+                    .stashed(modification.getStashed())
+                    .activated(modification.getActivated())
+                    .description(shared.getDescription())
+                    .messageType(shared.getMessageType())
+                    .messageValues(shared.getMessageValues())
+                    .referencedId(shared.getId())
+                    .referencedInfos(toMetadataTreeNode(shared, childrenByContainer))
+                    .build();
+        }
+        return modification.toModificationInfos();
+    }
+
+    public ModificationsSearchResult toSearchMetadata(ModificationEntity modificationEntity, List<String> impactedEquipmentIds,
+                                                      Map<UUID, ModificationEntity> sharedModifications) {
+        String messageType;
+        String messageValues;
+        if (modificationEntity instanceof ModificationReferenceEntity referenceEntity) {
+            ModificationEntity sharedModification = sharedModifications.get(referenceEntity.getReferencedId());
+            if (sharedModification == null) {
+                throw getSharedModificationNotFoundException(referenceEntity.getReferencedId());
+            }
+            messageType = sharedModification.getMessageType();
+            messageValues = sharedModification.getMessageValues();
+        } else {
+            messageType = modificationEntity.getMessageType();
+            messageValues = modificationEntity.getMessageValues();
+        }
+        return ModificationsSearchResult.builder()
+            .modificationUuid(modificationEntity.getId())
+            .messageType(messageType)
+            .messageValues(messageValues)
+            .impactedEquipmentIds(impactedEquipmentIds)
+            .build();
+    }
+
+    /**
+     * @return the applicability per root network tag of each of the given modifications, in one query.
+     * A reference gets the applicability of the shared modification it points to, which the query resolves.
      */
     private Map<UUID, Map<String, Boolean>> batchApplicabilities(List<UUID> uuids) {
         if (uuids.isEmpty()) {
@@ -494,14 +600,62 @@ public class NetworkModificationRepository {
                 .build();
     }
 
-    private void prefetchCompositeSubTree(CompositeModificationEntity compositeEntity) {
-        // Constant query count for the whole subtree: one recursive CTE + one fetch-join load.
-        List<UUID> compositeUuids = new ArrayList<>(modificationRepository.findOnlyCompositeChildrenUuids(compositeEntity.getId()));
-        compositeUuids.add(compositeEntity.getId());
+    private void prefetchCompositeSubTrees(List<ModificationEntity> modificationEntities) {
+        List<UUID> rootCompositeUuids = modificationEntities.stream()
+                .filter(CompositeModificationEntity.class::isInstance)
+                .map(ModificationEntity::getId)
+                .distinct()
+                .toList();
+        if (rootCompositeUuids.isEmpty()) {
+            return;
+        }
+        // Constant query count for all the subtrees: one recursive CTE + one fetch-join load.
+        List<UUID> compositeUuids = new ArrayList<>(modificationRepository.findOnlyCompositeChildrenUuids(rootCompositeUuids));
+        compositeUuids.addAll(rootCompositeUuids);
         modificationRepository.findAllCompositesWithModificationsByIdIn(compositeUuids);
     }
 
+    /**
+     * Loads, level by level, what converting the given modifications reaches, so that the conversion then finds it in
+     * the persistence context: the content of their composites and the shared modifications their references point
+     * to, then the content of those and the shared modifications they point to in turn, and so on.
+     */
+    private void prefetchContents(List<ModificationEntity> modificationEntities) {
+        Set<UUID> prefetchedUuids = new HashSet<>();
+        List<ModificationEntity> toPrefetch = modificationEntities;
+        while (!toPrefetch.isEmpty()) {
+            prefetchCompositeSubTrees(toPrefetch);
+            // we update prefetchedUuids
+            toPrefetch.forEach(modificationEntity -> prefetchedUuids.add(modificationEntity.getId()));
+            // we look for references
+            List<UUID> referencedUuids = toPrefetch.stream()
+                    .flatMap(NetworkModificationRepository::referencesIn)
+                    .map(ModificationReferenceEntity::getReferencedId)
+                    .filter(Predicate.not(prefetchedUuids::contains))
+                    .distinct()
+                    .toList();
+            // if we find references, we continue
+            toPrefetch = referencedUuids.isEmpty() ? List.of() : modificationRepository.findAllByIdIn(referencedUuids);
+        }
+    }
+
+    /**
+     * @return the given modification if it is a reference, otherwise the references its composite holds at any depth
+     */
+    private static Stream<ModificationReferenceEntity> referencesIn(ModificationEntity modificationEntity) {
+        if (modificationEntity instanceof ModificationReferenceEntity referenceEntity) {
+            return Stream.of(referenceEntity);
+        }
+        if (modificationEntity instanceof CompositeModificationEntity compositeEntity) {
+            return compositeEntity.getModifications().stream().flatMap(NetworkModificationRepository::referencesIn);
+        }
+        return Stream.empty();
+    }
+
     private CompositeModificationInfos loadCompositeModification(CompositeModificationEntity compositeEntity) {
+        List<ModificationInfos> content = compositeEntity.getModifications().stream()
+                .map(this::toModificationInfos)
+                .toList();
         return CompositeModificationInfos.builder()
                 .name(compositeEntity.getName())
                 .activated(compositeEntity.getActivated())
@@ -509,15 +663,12 @@ public class NetworkModificationRepository {
                 .date(compositeEntity.getDate())
                 .uuid(compositeEntity.getId())
                 .stashed(compositeEntity.getStashed())
-                .modificationsInfos(
-                        compositeEntity.getModifications()
-                                .stream()
-                                .map(m -> toModificationsInfosOptimized(m, false))
-                                .toList())
+                .modificationsInfos(content)
+                .sublevelCount(getSublevelCountIn(content))
                 .build();
     }
 
-    private CompositeModificationInfos loadCompositeModificationMetadata(ModificationEntity compositeEntity, Integer maxDepth) {
+    private CompositeModificationInfos loadCompositeModificationMetadata(ModificationEntity compositeEntity) {
         return CompositeModificationInfos.builder()
                 .activated(compositeEntity.getActivated())
                 .description(compositeEntity.getDescription())
@@ -526,37 +677,30 @@ public class NetworkModificationRepository {
                 .stashed(compositeEntity.getStashed())
                 .messageType(compositeEntity.getMessageType())
                 .messageValues(compositeEntity.getMessageValues())
-                .maxDepth(maxDepth)
                 .build();
     }
 
-    private ModificationInfos loadModificationReference(ModificationEntity modificationEntity) {
-        if (modificationEntity instanceof ModificationReferenceEntity referenceEntity) {
-            ModificationEntity referencedEntity = modificationRepository.findAllByIdIn(List.of(referenceEntity.getReferencedId())).stream().findFirst()
-                .orElseThrow(() -> getModificationNotFoundException(referenceEntity.getReferencedId() + " (referenced modification)"));
-            ModificationReferenceInfos modificationReferenceInfos = referenceEntity.toModificationInfos();
-            ModificationInfos refInfos = toModificationsInfosOptimized(referencedEntity);
+    private ModificationReferenceInfos loadModificationReference(ModificationReferenceEntity referenceEntity) {
+        // prefetched beforehand, the shared modification is read from the persistence context
+        ModificationEntity referencedEntity = getReferencedModification(referenceEntity);
+        ModificationInfos refInfos = toModificationInfos(referencedEntity);
+        if (refInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
+            composite.getModificationsInfos().forEach(this::initModificationMessage);
+        }
+        ModificationReferenceInfos modificationReferenceInfos = referenceEntity.toModificationInfos();
+        modificationReferenceInfos.setReferencedInfos(refInfos);
+        // a reference stands for the composite it points to
+        modificationReferenceInfos.setSublevelCount(sublevelCountOf(refInfos));
+        return modificationReferenceInfos;
+    }
 
-            if (refInfos instanceof CompositeModificationInfos composite && composite.getModificationsInfos() != null) {
-                composite.getModificationsInfos().forEach(compositeModificationRepository::generateModificationMessage);
-            }
-            modificationReferenceInfos.setReferencedInfos(refInfos);
-            return modificationReferenceInfos;
-        } else {
-            ModificationEntity referencedEntity = modificationRepository.findReferencedModificationMetadataByReferenceId(modificationEntity.getId());
-            if (referencedEntity == null) {
-                throw getModificationNotFoundException(modificationEntity.getId() + " (referenced modification)");
-            }
-            return ModificationReferenceInfos.builder()
-                .uuid(modificationEntity.getId())
-                .date(modificationEntity.getDate())
-                .stashed(modificationEntity.getStashed())
-                .activated(modificationEntity.getActivated())
-                .description(modificationEntity.getDescription())
-                .messageType(referencedEntity.getMessageType())
-                .messageValues(referencedEntity.getMessageValues())
-                .referencedId(referencedEntity.getId())
-                .build();
+    @SneakyThrows
+    private void initModificationMessage(ModificationInfos modificationInfos) {
+        if (modificationInfos.getMessageType() == null) {
+            modificationInfos.setMessageType(modificationInfos.getType().name());
+        }
+        if (modificationInfos.getMessageValues() == null) {
+            modificationInfos.setMessageValues(mapper.writeValueAsString(modificationInfos.getMapMessageValues()));
         }
     }
 
@@ -586,30 +730,46 @@ public class NetworkModificationRepository {
     }
 
     /**
+     * @return copies of the modifications, to be used as the content of a composite; a lone composite is not
+     * wrapped in another one, its own content is copied instead
+     */
+    private List<ModificationEntity> copyAsCompositeContent(List<UUID> modificationUuids) {
+        List<ModificationEntity> copies = copyModificationsWithReferenceResolution(modificationUuids);
+        return loneComposite(copies).map(CompositeModificationEntity::getModifications).orElse(copies);
+    }
+
+    /**
+     * @return the composite when it is the only one of the copies: it is not wrapped in another composite
+     */
+    private static Optional<CompositeModificationEntity> loneComposite(List<ModificationEntity> copies) {
+        return copies.size() == 1 && copies.getFirst() instanceof CompositeModificationEntity loneComposite
+            ? Optional.of(loneComposite)
+            : Optional.empty();
+    }
+
+    /**
      * Clone each selected modification so it can be stored inside a composite, keeping the caller-specified order
      * and duplicates: each occurrence gets its own fresh clone, its applicabilities included.
      */
-    private List<ModificationEntity> copiesOf(List<UUID> modificationUuids) {
+    private List<ModificationEntity> copyModificationsWithReferenceResolution(List<UUID> modificationUuids) {
         List<ModificationEntity> modificationsToCopy = modificationUuids.stream()
                 .map(getModificationEntities(modificationUuids.stream().distinct().toList(), true).stream()
                         .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()))::get)
                 .toList();
 
         // Substitute modification references with the modifications they point to, so the copy never holds a reference
-        Map<UUID, ModificationInfos> infosBySourceUuid = addApplicabilities(getApplicabilityHolders(modificationsToCopy).stream().distinct()
-                .map(this::toModificationsInfosOptimized)
+        Map<UUID, ModificationInfos> infosBySourceUuid = toModificationsInfosWithApplicabilities(getApplicabilityHolders(modificationsToCopy).stream().distinct().toList()).stream()
                 .map(NetworkModificationRepository::resolveNestedModificationReferences)
-                .toList()).stream()
                 .collect(Collectors.toMap(ModificationInfos::getUuid, Function.identity()));
 
-        return modificationsToCopy.stream().map(entity -> copyOf(entity, infosBySourceUuid)).toList();
+        return modificationsToCopy.stream().map(entity -> copyModificationWithReferenceResolution(entity, infosBySourceUuid)).toList();
     }
 
     /**
      * @return a fresh clone of the modification, built from its source infos; when the modification is a
      * reference, its own description is carried onto the clone, as it lives on the reference, not on the shared one
      */
-    private static ModificationEntity copyOf(ModificationEntity entity, Map<UUID, ModificationInfos> infosBySourceUuid) {
+    private static ModificationEntity copyModificationWithReferenceResolution(ModificationEntity entity, Map<UUID, ModificationInfos> infosBySourceUuid) {
         ModificationEntity clone = ModificationEntity.fromDTO(infosBySourceUuid.get(resolveReferenceUuid(entity)));
         if (entity instanceof ModificationReferenceEntity reference && reference.getDescription() != null && !reference.getDescription().isBlank()) {
             clone.setDescription(reference.getDescription());
@@ -636,10 +796,14 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return the infos of the saved modifications, filled with their applicabilities
+     * Converts modifications just saved, whose whole tree is therefore already in memory: nothing is read from the
+     * database but their applicabilities. For modifications read from the database, see
+     * {@link #toModificationsInfosWithApplicabilities(List)}, which avoids loading their content lazily.
+     *
+     * @return the infos of the given modifications, in the same order, filled with their applicabilities
      */
-    private List<ModificationInfos> savedInfos(List<ModificationEntity> savedEntities) {
-        return addApplicabilities(savedEntities.stream().map(ModificationEntity::toModificationInfos).toList());
+    private List<ModificationInfos> toModificationsInfosAlreadySaved(List<ModificationEntity> modificationEntities) {
+        return addApplicabilities(modificationEntities.stream().map(ModificationEntity::toModificationInfos).toList());
     }
 
     private static void collectNestedUuids(ModificationInfos modificationInfos, List<UUID> uuids) {
@@ -660,56 +824,49 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @return what a modification holds that carries an applicability of its own: the content of a composite, and the
-     * shared modification a reference points to. The content of a tabular is left out, applicabilities never reach it.
+     * Converts the given modification with {@link #toModificationsInfosWithApplicabilities(List)}.
+     *
+     * @return the infos of the given modification, with its applicabilities
      */
-    private static List<ModificationInfos> contentOf(ModificationInfos modificationInfos) {
-        if (modificationInfos instanceof CompositeModificationInfos composite) {
-            return composite.getModificationsInfos() == null ? List.of() : composite.getModificationsInfos();
-        }
-        if (modificationInfos instanceof ModificationReferenceInfos reference && reference.getReferencedInfos() != null) {
-            return List.of(reference.getReferencedInfos());
-        }
-        return List.of();
+    private ModificationInfos toModificationsInfosWithApplicabilities(ModificationEntity modificationEntity) {
+        return toModificationsInfosWithApplicabilities(List.of(modificationEntity)).getFirst();
     }
 
-    private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity) {
-        return toModificationsInfosOptimized(modificationEntity, true);
+    /**
+     * Converts the given modifications with {@link #toModificationsInfos(List)}, then fills them with their
+     * applicabilities: see {@link #addApplicabilities}.
+     *
+     * @return the infos of the given modifications, in the same order, with their applicabilities
+     */
+    private List<ModificationInfos> toModificationsInfosWithApplicabilities(List<ModificationEntity> modificationEntities) {
+        return addApplicabilities(toModificationsInfos(modificationEntities));
     }
 
-    private ModificationInfos toModificationsInfosOptimized(ModificationEntity modificationEntity, boolean rootModification) {
+    /**
+     * Converts the given modifications with {@link #toModificationInfos(ModificationEntity)}, once
+     * {@link #prefetchContents} has loaded what they hold.
+     *
+     * @return the infos of the given modifications, in the same order, without applicabilities
+     */
+    private List<ModificationInfos> toModificationsInfos(List<ModificationEntity> modificationEntities) {
+        prefetchContents(modificationEntities);
+        return modificationEntities.stream().map(this::toModificationInfos).toList();
+    }
+
+    /**
+     * Converts the given modification, relying on {@link #prefetchContents} to have loaded what it holds.
+     *
+     * @return the infos of the given modification, without applicabilities
+     */
+    private ModificationInfos toModificationInfos(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof CompositeModificationEntity compositeEntity) {
-            if (rootModification) {
-                prefetchCompositeSubTree(compositeEntity);
-            }
             return loadCompositeModification(compositeEntity);
-        } else if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
-            // defensive: a base projection that lost its subclass — metadata-only view, depth unknown
-            return loadCompositeModificationMetadata(modificationEntity, null);
         }
         if (modificationEntity instanceof TabularModificationsEntity tabularEntity) {
             return loadTabularModification(tabularEntity);
         }
-        if (ModificationType.MODIFICATION_REFERENCE.name().equals(modificationEntity.getType())) {
-            return loadModificationReference(modificationEntity);
-        }
-        return modificationEntity.toModificationInfos();
-    }
-
-    private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Map<UUID, Integer> depths,
-                                                          Map<UUID, Map<String, Boolean>> applicabilities) {
-        ModificationInfos modificationInfos = toModificationMetadataInfos(modificationEntity, depths);
-        // the entity comes from a projection, which drops the applicability: it is set back from the batch read
-        modificationInfos.setApplicabilityByRootNetworkTag(applicabilityOf(modificationEntity.getId(), applicabilities));
-        return modificationInfos;
-    }
-
-    private ModificationInfos toModificationMetadataInfos(ModificationEntity modificationEntity, Map<UUID, Integer> depths) {
-        if (ModificationType.COMPOSITE_MODIFICATION.name().equals(modificationEntity.getType())) {
-            return loadCompositeModificationMetadata(modificationEntity, depths.get(modificationEntity.getId()));
-        }
-        if (ModificationType.MODIFICATION_REFERENCE.name().equals(modificationEntity.getType())) {
-            return loadModificationReference(modificationEntity);
+        if (modificationEntity instanceof ModificationReferenceEntity referenceEntity) {
+            return loadModificationReference(referenceEntity);
         }
         return modificationEntity.toModificationInfos();
     }
@@ -718,49 +875,42 @@ public class NetworkModificationRepository {
     public List<ModificationInfos> getActiveModifications(UUID groupUuid, String rootNetworkTag) {
         // the applicator filters on the tag again: this only avoids loading the modifications it would drop
         List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByContainerId(groupUuid, rootNetworkTag);
-        return addApplicabilities(modificationsEntities.stream().map(this::toModificationsInfosOptimized).toList());
+        return toModificationsInfosWithApplicabilities(modificationsEntities);
     }
 
-    private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
-        return groupUuids.stream().flatMap(this::getModificationEntityStream)
-                .filter(m -> !onlyStashed || m.getStashed() == onlyStashed)
-                .map(this::toModificationsInfosOptimized).toList();
+    /**
+     * @return the modifications of the group or the composite content with the given uuid, none when it does not exist
+     */
+    private List<ModificationInfos> getModificationsInfos(UUID containerUuid, StashedFilter stashedFilter) {
+        return modificationContainerRepository.findById(containerUuid)
+                .map(container -> getModificationsInfos(container, stashedFilter))
+                .orElse(List.of());
     }
 
-    public List<ModificationInfos> getModificationsInfosToExport(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
-        try {
-            return groupUuids.stream().flatMap(this::getModificationEntityStream)
-                    .filter(modification -> !modification.getStashed())
-                    .map(this::toModificationsInfosOptimized).toList();
-        } catch (NetworkModificationServerException e) {
-            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND && !errorOnGroupNotFound) {
-                return List.of();
-            }
-            throw e;
-        }
+    private List<ModificationInfos> getModificationsInfos(AbstractModificationContainerEntity container, StashedFilter stashedFilter) {
+        return toModificationsInfosWithApplicabilities(container.getModifications().stream()
+                .filter(Objects::nonNull)
+                .filter(m -> stashedFilter.accepts(m.getStashed()))
+                .toList());
     }
 
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
-        return addApplicabilities(List.of(toModificationInfo(modificationUuid))).getFirst();
+        return getModificationInfoNonTransactional(modificationUuid);
     }
 
-    private ModificationInfos toModificationInfo(UUID modificationUuid) {
-        return toModificationsInfosOptimized(getModificationEntity(modificationUuid));
-    }
-
-    @Transactional(readOnly = true)
-    public AbstractModification getStandaloneNetworkModification(UUID modificationUuid) {
-        return toModificationsInfosOptimized(getModificationEntity(modificationUuid))
-                .toModification(modificationContextFactory.create());
+    private ModificationInfos getModificationInfoNonTransactional(UUID modificationUuid) {
+        return toModificationsInfosWithApplicabilities(getModificationEntity(modificationUuid));
     }
 
     @Transactional(readOnly = true)
-    public Map<UUID, AbstractModification> getStandaloneNetworkModifications(List<UUID> modificationUuids, boolean errorOnModificationNotFound) {
-        ModificationContext modificationContext = modificationContextFactory.create();
-        return getModificationEntities(modificationUuids, errorOnModificationNotFound).stream()
-                .map(this::toModificationsInfosOptimized)
-                .collect(Collectors.toMap(ModificationInfos::getUuid, modificationInfos -> modificationInfos.toModification(modificationContext)));
+    public ModificationInfos getModificationInfos(UUID modificationUuid) {
+        return toModificationsInfos(List.of(getModificationEntity(modificationUuid))).getFirst();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getStandaloneModificationsInfos(List<UUID> modificationUuids, boolean errorOnModificationNotFound) {
+        return toModificationsInfos(getModificationEntities(modificationUuids, errorOnModificationNotFound));
     }
 
     public List<ModificationEntity> getModificationEntities(List<UUID> modificationUuids, boolean errorOnModificationNotFound) {
@@ -790,65 +940,80 @@ public class NetworkModificationRepository {
     public ModificationEntity getModificationEntity(UUID modificationUuid) {
         return modificationRepository
                 .findById(modificationUuid)
-                .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
+                .orElseThrow(() -> getModificationNotFoundException(modificationUuid));
+    }
+
+    /**
+     * @return the modification references among the deleted modifications, keyed by the group they were deleted from
+     */
+    @Transactional
+    public Map<UUID, List<ModificationReferenceData>> deleteModificationGroups(List<UUID> groupUuids) {
+        modificationApplicationInfosService.deleteAllByGroupUuids(groupUuids);
+
+        List<ModificationGroupEntity> groupEntities = getModificationGroups(groupUuids);
+
+        // the group of each modification, composites content included, read before their deletion
+        Map<UUID, UUID> groupByModification = new HashMap<>();
+        groupEntities.forEach(groupEntity -> withCompositesContent(groupEntity.getModifications())
+                .forEach(modification -> groupByModification.put(modification.getId(), groupEntity.getId())));
+        List<ModificationReferenceData> deletedReferences =
+            deleteModifications(groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList());
+
+        // deleting the group deletes its modification_container row (JOINED subtype delete)
+        modificationGroupRepository.deleteAll(groupEntities);
+
+        return deletedReferences.stream()
+                .collect(Collectors.groupingBy(reference -> groupByModification.get(reference.modificationUuid())));
+    }
+
+    /**
+     * @return the modification references among the deleted modifications
+     */
+    @Transactional // To have the find and delete in the same transaction (atomic)
+    public List<ModificationReferenceData> deleteModifications(@NonNull Collection<UUID> uuids) {
+        return deleteModifications(modificationRepository.findAllById(uuids));
     }
 
     @Transactional
-    public void deleteModificationGroups(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
-        try {
-            List<ModificationGroupEntity> groupEntities = getModificationGroups(groupUuids);
-            if (groupEntities.size() != groupUuids.size()) {
-                List<UUID> notFoundGroups = groupUuids.stream().filter(uuid -> groupEntities.stream().noneMatch(groupEntity -> uuid.equals(groupEntity.getId()))).toList();
-                throw new NetworkModificationServerException(MODIFICATION_CONTAINER_NOT_FOUND, notFoundGroups.toString());
-            }
-            List<ModificationEntity> modifications = groupEntities.stream().flatMap(groupEntity -> groupEntity.getModifications().stream()).toList();
-            if (!modifications.isEmpty()) {
-                deleteModifications(modifications);
-            }
-            // deleting the group deletes its modification_container row (JOINED subtype delete)
-            modificationGroupRepository.deleteAll(groupEntities);
-        } catch (NetworkModificationServerException e) {
-            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND && !errorOnGroupNotFound) {
-                return;
-            }
-            throw e;
+    public List<ModificationReferenceData> unshareModification(@NonNull UUID referenceModificationUuid) {
+        ModificationEntity referenceEntity = modificationRepository.findById(referenceModificationUuid)
+                .orElseThrow(() -> getModificationNotFoundException(referenceModificationUuid));
+        if (!referenceEntity.getType().equals(ModificationType.MODIFICATION_REFERENCE.name())) {
+            // Only a reference modification may be unshared
+            throw new NetworkModificationServerException(MODIFICATION_BAD_TYPE,
+                String.format(MODIFICATION_BAD_TYPE.messageTemplate(), referenceModificationUuid, referenceEntity.getType(), ModificationType.MODIFICATION_REFERENCE),
+                Map.of(MODIFICATION_ID, referenceModificationUuid.toString(), "modificationType", referenceEntity.getType(), "expectedModificationType", ModificationType.MODIFICATION_REFERENCE));
         }
-    }
 
-    @Transactional // To have the find and delete in the same transaction (atomic)
-    public int deleteModifications(UUID groupUuid, List<UUID> uuids) {
-        List<ModificationEntity> modifications;
-        if (groupUuid != null) {
-            ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-            modifications = groupEntity.getModifications();
-            if (uuids != null) {
-                modifications = groupEntity.removeModifications(uuids);
-            } else {
-                groupEntity.removeAllModifications();
-            }
-        } else if (uuids != null) {
-            modifications = modificationRepository.findAllById(uuids);
-            Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getContainer() != null && m.getContainer().isGroup()).findFirst();
-            if (optionalModificationWithGroup.isPresent()) {
-                throw new NetworkModificationServerException(MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN,
-                    String.format(MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN.messageTemplate(), optionalModificationWithGroup.get().getId(), optionalModificationWithGroup.get().getContainerUuid()),
-                    Map.of(MODIFICATION_ID, optionalModificationWithGroup.get().getId(), "groupId", optionalModificationWithGroup.get().getContainerUuid()));
-            }
-        } else {
-            throw new NetworkModificationServerException(MODIFICATION_DELETION_ARGUMENT_ERROR, MODIFICATION_DELETION_ARGUMENT_ERROR.messageTemplate());
-        }
-        int count = modifications.size();
-        deleteModifications(modifications);
-        return count;
+        // copy referenced modification
+        ModificationInfos referencedCompositeInfos = getModificationInfoNonTransactional(((ModificationReferenceEntity) referenceEntity).getReferencedId());
+        ModificationEntity copiedComposite = ModificationEntity.fromDTO(referencedCompositeInfos);
+
+        // put the new copied composite and delete the reference
+        AbstractModificationContainerEntity containerEntity = referenceEntity.getContainer();
+        containerEntity.addModification(copiedComposite, referenceEntity.getModificationsOrder());
+        modificationRepository.save(copiedComposite);
+        return deleteModifications(List.of(referenceEntity));
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid)
-            .orElseThrow(() -> getModificationContainerNotFoundException(groupUuid.toString(), ModificationContainerType.GROUP));
+            .orElseThrow(() -> getModificationContainerNotFoundException(groupUuid, ModificationContainerType.GROUP));
     }
 
     private List<ModificationGroupEntity> getModificationGroups(List<UUID> groupUuids) {
         return this.modificationGroupRepository.findAllById(groupUuids);
+    }
+
+    public void assertContainerExists(UUID containerUuid) {
+        if (!modificationContainerRepository.existsById(containerUuid)) {
+            throw getModificationContainerNotFoundException(containerUuid, null);
+        }
+    }
+
+    private AbstractModificationContainerEntity getModificationContainer(UUID containerUuid) {
+        return modificationContainerRepository.findById(containerUuid)
+            .orElseThrow(() -> getModificationContainerNotFoundException(containerUuid, null));
     }
 
     private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
@@ -857,16 +1022,16 @@ public class NetworkModificationRepository {
                         () -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
     }
 
-    private Stream<ModificationEntity> getModificationEntityStream(UUID groupUuid) {
-        return getModificationGroup(groupUuid).getModifications().stream().filter(Objects::nonNull);
-    }
-
     @Transactional(readOnly = true)
     public Integer getModificationsCount(@NonNull UUID groupUuid, boolean stashed) {
+        return getModificationsCountNonTransactional(groupUuid, stashed);
+    }
+
+    private Integer getModificationsCountNonTransactional(UUID groupUuid, boolean stashed) {
         return modificationRepository.countByContainerAndStashed(groupUuid, stashed);
     }
 
-    private List<ModificationInfos> getModificationsInfosNonTransactional(List<UUID> uuids) {
+    private List<ModificationInfos> getModificationsInfosInGivenOrder(List<UUID> uuids) {
         // Spring-data findAllById doc says: the order of elements in the result is not guaranteed
         Map<UUID, ModificationEntity> entities = modificationRepository.findAllById(uuids)
                 .stream()
@@ -874,26 +1039,7 @@ public class NetworkModificationRepository {
                         ModificationEntity::getId,
                         Function.identity()
                 ));
-        return addApplicabilities(uuids.stream().map(entities::get).filter(Objects::nonNull)
-                .map(this::toModificationsInfosOptimized).toList());
-    }
-
-    /**
-     * returns the data from all the network modifications contained in the composite modifications sent as parameter
-     * but only returns the basic data common to all the modifications form the ModificationInfos, not from the extended classes
-     */
-    @Transactional(readOnly = true)
-    public List<ModificationInfos> getBasicNetworkModificationsFromComposite(@NonNull List<UUID> uuids) {
-        List<UUID> networkModificationsUuids = modificationRepository.findAllByContainers(uuids).stream().map(ModificationEntity::getId).toList();
-        Map<UUID, ModificationEntity> entitiesById = modificationRepository.findBaseDataByIdIn(networkModificationsUuids).stream()
-                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
-        Map<UUID, Integer> depths = batchCompositeDepths(entitiesById.values());
-        Map<UUID, Map<String, Boolean>> applicabilities = batchApplicabilities(entitiesById.values());
-        return networkModificationsUuids.stream()
-                .map(entitiesById::get)
-                .filter(Objects::nonNull)
-                .map(m -> toModificationMetadataInfos(m, depths, applicabilities))
-                .collect(Collectors.toCollection(ArrayList::new));
+        return toModificationsInfosWithApplicabilities(uuids.stream().map(entities::get).filter(Objects::nonNull).toList());
     }
 
     @Transactional(readOnly = true)
@@ -901,74 +1047,126 @@ public class NetworkModificationRepository {
         return compositeUuids.stream().flatMap(uuid -> modificationRepository.findAllChildrenUuids(uuid).stream()).toList();
     }
 
-    public Map<UUID, Integer> getCompositesMaxDepthMap(@NonNull List<UUID> compositeUuids) {
-        if (compositeUuids.isEmpty()) {
-            return Map.of();
-        }
-        return modificationRepository.getCompositesMaxDepth(compositeUuids).stream()
-                .collect(Collectors.toMap(c -> UUID.fromString(c.getId()), ModificationRepository.CompositeDepth::getDepth));
-    }
-
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getCompositeModificationsInfos(@NonNull List<UUID> uuids) {
-        return getModificationsInfosInsideCompositesNonTransactional(uuids);
-    }
-
-    private List<ModificationInfos> getModificationsInfosInsideCompositesNonTransactional(@NonNull List<UUID> compositeUuids) {
-        List<ModificationInfos> entities = new ArrayList<>();
-        compositeUuids.forEach(uuid -> {
-            List<UUID> foundEntities = modificationRepository.findAllByContainer(uuid).stream().map(ModificationEntity::getId).toList();
-            List<ModificationInfos> orderedModifications = foundEntities
-                    .stream()
-                    .map(this::toModificationInfo)
-                    .toList();
-            entities.addAll(orderedModifications);
-        }
-        );
-        return addApplicabilities(entities);
-    }
-
-    @Transactional(readOnly = true)
-    public List<ModificationInfos> getUnstashedModificationsInfos(@NonNull UUID groupUuid) {
-        return getUnstashedModificationsInfosNonTransactional(groupUuid);
-    }
-
-    private List<ModificationInfos> getUnstashedModificationsInfosNonTransactional(UUID groupUuid) {
-        return addApplicabilities(getModificationEntityStream(groupUuid).filter(m -> !m.getStashed())
-                .map(this::toModificationsInfosOptimized).toList());
+    public List<ModificationInfos> getCompositeModificationsInfos(@NonNull List<UUID> compositeUuids) {
+        return toModificationsInfosWithApplicabilities(compositeUuids.stream()
+                .flatMap(uuid -> modificationRepository.findAllByContainer(uuid).stream())
+                .toList());
     }
 
     /**
-     * @return ReferenceData : modification and elementUuid of the shared modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
+     * @return distinct referenced ancestor composite modification uuids of the given modifications, closest first;
+     *         empty if none of them is nested in a referenced composite
+     */
+    @Transactional(readOnly = true)
+    public List<UUID> getAllReferencedModificationAncestorsUuids(@NonNull Collection<UUID> modificationUuids) {
+        if (modificationUuids.isEmpty()) {
+            return List.of();
+        }
+        return modificationRepository.findAllReferencedModificationAncestorsUuids(modificationUuids);
+    }
+
+    /**
+     * @return true if {@code modificationUuid} is referenced by at least one modification reference
+     */
+    @Transactional(readOnly = true)
+    public boolean isModificationReferenced(@NonNull UUID modificationUuid) {
+        return modificationRepository.isModificationReferenced(modificationUuid);
+    }
+
+    /**
+     * @return ReferenceData : modification and elementUuid of the referenced modification -> Uuid of the composite containing the reference, null if the modification reference is at the root level
      */
     @Transactional
-    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> modificationUuids) {
-        List<ModificationEntity> modificationEntities = this.modificationRepository.findAllByIdIn(modificationUuids);
-        List<ModificationReferenceData> references = new ArrayList<>(List.of());
-        modificationEntities.forEach(modificationEntity -> {
-            if (modificationEntity instanceof ModificationReferenceEntity modificationReference) {
-                UUID containerId = modificationRepository.findCompositeContainerIdByModificationId(modificationEntity.getId());
-                references.add(new ModificationReferenceData(modificationEntity.getId(), modificationReference.getReferencedId(), containerId));
-            }
-        });
+    public List<ModificationReferenceData> getModificationsReferences(@NonNull List<UUID> initialModificationUuids, boolean withChildren) {
+        return getModificationsReferencesNonTransactional(initialModificationUuids, withChildren);
+    }
 
-        return references;
+    private List<ModificationReferenceData> getModificationsReferencesNonTransactional(List<UUID> initialModificationUuids, boolean withChildren) {
+        if (initialModificationUuids.isEmpty()) {
+            return List.of();
+        }
+        List<UUID> modificationUuids = new ArrayList<>(initialModificationUuids);
+        if (withChildren) {
+            modificationUuids.addAll(modificationRepository.findAllDescendantModificationIdsByContainerIds(modificationUuids));
+        }
+        return modificationRepository.findModificationReferenceDataByIdIn(modificationUuids);
     }
 
     @Transactional
     public void stashNetworkModifications(@NonNull List<UUID> modificationUuids, int stashedModificationCount) {
+        stashNetworkModificationsNonTransactional(modificationUuids, stashedModificationCount);
+    }
+
+    private void stashNetworkModificationsNonTransactional(List<UUID> modificationUuids, int stashedModificationCount) {
         int stashModificationOrder = -stashedModificationCount - 1;
-        List<ModificationEntity> modificationEntities = new ArrayList<>();
-        for (UUID modificationUuid : modificationUuids) {
-            ModificationEntity modificationEntity = this.modificationRepository
-                    .findById(modificationUuid)
-                    .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
+        List<ModificationEntity> modificationEntities = getModificationEntitiesInOrder(modificationUuids);
+        for (ModificationEntity modificationEntity : modificationEntities) {
             modificationEntity.setStashed(true);
-            modificationEntity.setModificationsOrder(stashModificationOrder);
-            modificationEntities.add(modificationEntity);
-            stashModificationOrder--;
+            modificationEntity.setModificationsOrder(stashModificationOrder--);
         }
         this.modificationRepository.saveAll(modificationEntities);
+    }
+
+    @Transactional
+    public List<ModificationReferenceData> stashNetworkModifications(@NonNull UUID groupUuid, @NonNull List<UUID> modificationUuids) {
+        List<ModificationReferenceData> deletedReferences = deleteReferences(getModificationsReferencesNonTransactional(modificationUuids, true));
+        Set<UUID> deletedReferenceUuids = deletedReferences.stream().map(ModificationReferenceData::modificationUuid).collect(Collectors.toSet());
+        List<UUID> modificationUuidsToStash = modificationUuids.stream().filter(uuid -> !deletedReferenceUuids.contains(uuid)).toList();
+        moveCompositeChildrenToGroup(groupUuid, modificationUuidsToStash);
+        stashNetworkModificationsNonTransactional(modificationUuidsToStash, getModificationsCountNonTransactional(groupUuid, true));
+        return deletedReferences;
+    }
+
+    /**
+     * Stashed modifications live at the root of their group: those nested in a composite are moved out first,
+     * one move per composite.
+     */
+    private void moveCompositeChildrenToGroup(UUID groupUuid, List<UUID> modificationUuids) {
+        if (modificationUuids.isEmpty()) {
+            return;
+        }
+        // one query for the whole list
+        Map<UUID, UUID> compositeByModification = modificationRepository.findCompositeContainersByModificationIdIn(modificationUuids).stream()
+                .collect(Collectors.toMap(c -> UUID.fromString(c.getId()), c -> UUID.fromString(c.getContainerId())));
+        // a move takes a source container, so they are gathered by the composites holding the modifications
+        Map<UUID, List<UUID>> modificationsByComposite = modificationUuids.stream()
+                .filter(compositeByModification::containsKey)
+                .collect(Collectors.groupingBy(compositeByModification::get));
+        modificationsByComposite.forEach((compositeUuid, modUuids) -> moveModificationsNonTransactional(
+                new ModificationContainerInfos(compositeUuid, ModificationContainerType.COMPOSITE),
+                new ModificationContainerInfos(groupUuid, ModificationContainerType.GROUP),
+                modUuids, null));
+    }
+
+    /**
+     * @return the deleted references
+     */
+    @Transactional
+    public List<ModificationReferenceData> deleteModificationReferences(@NonNull UUID groupUuid) {
+        List<UUID> modificationUuids = modificationRepository.findAllDescendantModificationIdsByContainerIds(List.of(groupUuid));
+        return deleteReferences(getModificationsReferencesNonTransactional(modificationUuids, false));
+    }
+
+    private List<ModificationReferenceData> deleteReferences(List<ModificationReferenceData> references) {
+        return deleteModifications(modificationRepository.findAllById(references.stream().map(ModificationReferenceData::modificationUuid).toList()));
+    }
+
+    /**
+     * @return the given modifications, read in one query, in the order they were asked for — the order the
+     * stash gives them
+     * @throws NetworkModificationServerException when one of them does not exist
+     */
+    private List<ModificationEntity> getModificationEntitiesInOrder(List<UUID> modificationUuids) {
+        if (modificationUuids.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, ModificationEntity> entitiesByUuid = modificationRepository.findAllByIdIn(modificationUuids).stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+        return modificationUuids.stream()
+                .map(modificationUuid -> Optional.ofNullable(entitiesByUuid.get(modificationUuid))
+                        .orElseThrow(() -> getModificationNotFoundException(modificationUuid)))
+                .toList();
     }
 
     @Transactional
@@ -1003,53 +1201,21 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
-        for (UUID modificationUuid : modificationUuids) {
-            ModificationEntity modificationEntity = this.modificationRepository
-                    .findById(modificationUuid)
-                    .orElseThrow(() -> getModificationNotFoundException(modificationUuid.toString()));
-            if (metadata.getDescription() != null) {
-                modificationEntity.setDescription(metadata.getDescription());
-            }
-            if (metadata.getActivated() != null) {
-                updateActivated(modificationEntity, metadata.getActivated());
-            }
-            if (metadata instanceof CompositeModificationInfos compositeMetadata
-                    && modificationEntity instanceof CompositeModificationEntity composite
-                    && compositeMetadata.getName() != null) {
-                compositeModificationRepository.updateCompositeModificationMetadata(composite, compositeMetadata);
-            }
+    public void updateModificationActivation(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
+        if (metadata.getActivated() == null) {
+            return;
         }
-    }
-
-    // TODO remove when activation for a sub modification (composite) is implemented : no need optimized load
-    private void updateActivated(ModificationEntity entity, boolean activated) {
-        entity.setActivated(activated);
-        if (entity instanceof CompositeModificationEntity composite) {
-            composite.getModifications().forEach(sub -> updateActivated(sub, activated));
-        }
-    }
-
-    @Transactional
-    public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable) {
-        setApplicabilityInDepth(getModificationEntitiesWithApplicabilities(modificationUuids), rootNetworkTag, applicable);
+        modificationRepository.findAllByIdIn(modificationUuids).forEach(m -> m.setActivated(metadata.getActivated()));
     }
 
     /**
-     * Sets the applicability of the given modifications and of everything the composites among them hold, one level
-     * of the tree at a time so that the references of a level are all resolved in a single query.
+     * Sets the applicability of the given modifications, and of them only: a composite among them keeps the
+     * applicabilities of its content untouched, as a composite and what it holds each carry their own state.
      */
-    private void setApplicabilityInDepth(List<ModificationEntity> entities, String rootNetworkTag, boolean applicable) {
-        List<ModificationEntity> holders = getApplicabilityHolders(entities);
-        holders.forEach(holder -> holder.setApplicability(rootNetworkTag, applicable));
-        List<ModificationEntity> content = holders.stream()
-            .filter(CompositeModificationEntity.class::isInstance)
-            .map(CompositeModificationEntity.class::cast)
-            .flatMap(composite -> composite.getModifications().stream())
-            .toList();
-        if (!content.isEmpty()) {
-            setApplicabilityInDepth(content, rootNetworkTag, applicable);
-        }
+    @Transactional
+    public void updateRootNetworkApplicability(@NonNull List<UUID> modificationUuids, @NonNull String rootNetworkTag, boolean applicable) {
+        getApplicabilityHolders(getModificationEntitiesWithApplicabilities(modificationUuids))
+            .forEach(holder -> holder.setApplicability(rootNetworkTag, applicable));
     }
 
     /**
@@ -1072,22 +1238,88 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * Moves the applicability entries of {@code oldTag} to {@code newTag} for the modifications of the given groups.
-     * A modification a group owns is renamed; a shared one, which other groups may still use the old tag for, only
-     * gets the new tag added.
+     * Gives an applicability for {@code newTag} to the modifications of the given groups and to the shared ones they
+     * point to, unless they already have one for it: they are applicable on it unless they are not applicable on
+     * another tag, of the study or not.
      */
     @Transactional
-    public void renameRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String oldTag, @NonNull String newTag) {
-        List<UUID> ownedUuids = getContainedModificationUuids(groupUuids);
+    public void addRootNetworkTag(@NonNull List<UUID> groupUuids, @NonNull String newTag) {
+        List<UUID> ownedUuids = getContainedModificationUuidsNonTransactional(groupUuids);
         if (ownedUuids.isEmpty()) {
             return;
         }
-        List<UUID> sharedUuids = getSharedApplicabilityHolderUuids(ownedUuids);
-        if (!sharedUuids.isEmpty()) {
-            modificationRepository.copyRootNetworkApplicability(sharedUuids, oldTag, newTag);
+        Set<UUID> sharedModificationTreesUuids = getSharedModificationTrees(ownedUuids).allUuids();
+        modificationRepository.findAllWithApplicabilitiesByIdIn(SetUtils.union(Set.copyOf(ownedUuids), sharedModificationTreesUuids)).stream()
+                .filter(Predicate.not(ModificationReferenceEntity.class::isInstance))
+                .forEach(modification -> modification.addApplicabilityIfMissing(newTag));
+    }
+
+    /**
+     * Moves the applicability entries of {@code oldTag} to {@code newTag}, after dropping the entries of {@code newTag}:
+     * <ul>
+     *     <li>on an owned modification, the entry of the old tag is renamed;</li>
+     *     <li>on a writable shared modification and its content, which may still be used elsewhere with the old tag, it
+     *     is copied under the new tag.</li>
+     * </ul>
+     *
+     * @param ownedUuids the owned modifications, the content of their composites included
+     * @param writableSharedUuids the shared modifications, among the ones the owned modifications point to, the user can write on
+     */
+    @Transactional
+    public void renameRootNetworkTag(@NonNull Collection<UUID> ownedUuids, @NonNull Collection<UUID> writableSharedUuids,
+                                     @NonNull String oldTag, @NonNull String newTag) {
+        if (ownedUuids.isEmpty()) {
+            return;
         }
-        modificationRepository.deleteRootNetworkApplicabilitiesTakenOverBy(ownedUuids, oldTag, newTag);
+        Set<UUID> writableSharedAndChildrenUuids = SetUtils.union(Set.copyOf(writableSharedUuids), Set.copyOf(getContainedModificationUuidsNonTransactional(writableSharedUuids)));
+        // owned UUIDs that are references does not contain applicability, so it will be ignored
+        modificationRepository.deleteRootNetworkApplicabilities(SetUtils.union(Set.copyOf(ownedUuids), writableSharedAndChildrenUuids), List.of(newTag));
+        if (!writableSharedAndChildrenUuids.isEmpty()) {
+            modificationRepository.copyRootNetworkApplicability(writableSharedAndChildrenUuids, oldTag, newTag);
+        }
         modificationRepository.renameRootNetworkApplicability(ownedUuids, oldTag, newTag);
+    }
+
+    /**
+     * @return the referenced modifications the given containers point to, directly or through other referenced modifications
+     */
+    @Transactional(readOnly = true)
+    public Set<UUID> getReferencedModificationUuids(@NonNull List<UUID> containerUuids) {
+        return getSharedModificationTrees(getContainedModificationUuidsNonTransactional(containerUuids)).sharedUuids();
+    }
+
+    /**
+     * @return the shared modifications the given modifications refer to, however deep
+     */
+    @Transactional(readOnly = true)
+    public Set<UUID> getSharedModificationUuids(@NonNull List<UUID> modificationUuids) {
+        return getSharedModificationTrees(modificationUuids).sharedUuids();
+    }
+
+    /**
+     * @return the shared modifications among or referred to by the given parameters, however deep
+     */
+    @Transactional(readOnly = true)
+    public Set<UUID> getSharedModificationUuids(@NonNull List<UUID> containerUuids, @NonNull List<UUID> modificationUuids,
+                                                @NonNull List<UUID> sharedUuids) {
+        List<UUID> modificationTreesUuids = ListUtils.union(modificationUuids,
+                getContainedModificationUuidsNonTransactional(ListUtils.union(containerUuids, modificationUuids)));
+        List<UUID> referencedUuids = modificationTreesUuids.isEmpty() ? List.of() : modificationRepository.findReferencedModificationIds(modificationTreesUuids);
+        return getSharedModificationTreesFrom(ListUtils.union(sharedUuids, referencedUuids)).sharedUuids();
+    }
+
+    /**
+     * @return the root network tags each given modification and its content holds an applicability for, sorted
+     */
+    @Transactional(readOnly = true)
+    public List<String> getCommonRootNetworkTags(@NonNull Set<UUID> modificationUuids) {
+        Set<UUID> modificationTreesUuids = SetUtils.union(modificationUuids, Set.copyOf(getContainedModificationUuidsNonTransactional(modificationUuids)));
+        return modificationRepository.findAllWithApplicabilitiesByIdIn(modificationTreesUuids).stream()
+                .filter(Predicate.not(ModificationReferenceEntity.class::isInstance))
+                .map(ModificationEntity::getRootNetworkTags)
+                .reduce(SetUtils::intersection)
+                .map(tags -> tags.stream().sorted().toList())
+                .orElse(List.of());
     }
 
     /**
@@ -1099,33 +1331,83 @@ public class NetworkModificationRepository {
         if (tags.isEmpty()) {
             return;
         }
-        List<UUID> ownedUuids = getContainedModificationUuids(groupUuids);
+        List<UUID> ownedUuids = getContainedModificationUuidsNonTransactional(groupUuids);
         if (!ownedUuids.isEmpty()) {
             modificationRepository.deleteRootNetworkApplicabilities(ownedUuids, tags);
         }
     }
 
-    private List<UUID> getContainedModificationUuids(List<UUID> containerUuids) {
+    private void setDefaultApplicabilitiesIfMissing(List<ModificationEntity> modificationEntities, Collection<String> rootNetworkTags) {
+        if (rootNetworkTags.isEmpty()) {
+            return;
+        }
+        modificationEntities.forEach(entity -> setTreeDefaultApplicabilitiesIfMissing(entity, rootNetworkTags));
+        List<UUID> sharedUuids = modificationEntities.stream()
+                .flatMap(NetworkModificationRepository::referencesIn)
+                .map(ModificationReferenceEntity::getReferencedId)
+                .toList();
+        if (sharedUuids.isEmpty()) {
+            return;
+        }
+        modificationRepository.findAllWithApplicabilitiesByIdIn(getSharedModificationTreesFrom(sharedUuids).allUuids()).stream()
+                .filter(Predicate.not(ModificationReferenceEntity.class::isInstance))
+                .forEach(modification -> rootNetworkTags.forEach(modification::setDefaultApplicabilityIfMissing));
+    }
+
+    private static void retainTreeApplicabilities(ModificationEntity modificationEntity, Collection<String> rootNetworkTags) {
+        if (rootNetworkTags.isEmpty() || modificationEntity instanceof ModificationReferenceEntity) {
+            return;
+        }
+        modificationEntity.retainApplicabilities(rootNetworkTags);
+        if (modificationEntity instanceof CompositeModificationEntity composite) {
+            composite.getModifications().forEach(content -> retainTreeApplicabilities(content, rootNetworkTags));
+        }
+    }
+
+    private static void setTreeDefaultApplicabilitiesIfMissing(ModificationEntity modificationEntity, Collection<String> rootNetworkTags) {
+        if (rootNetworkTags.isEmpty() || modificationEntity instanceof ModificationReferenceEntity) {
+            return;
+        }
+        rootNetworkTags.forEach(modificationEntity::setDefaultApplicabilityIfMissing);
+        if (modificationEntity instanceof CompositeModificationEntity composite) {
+            composite.getModifications().forEach(content -> setTreeDefaultApplicabilitiesIfMissing(content, rootNetworkTags));
+        }
+    }
+
+    /**
+     * @return the modifications the given containers hold, the content of their composites included. A given uuid which is
+     * not a container's, such as a modification other than a composite, is simply ignored.
+     */
+    @Transactional(readOnly = true)
+    public List<UUID> getContainedModificationUuids(@NonNull Collection<UUID> containerUuids) {
+        return getContainedModificationUuidsNonTransactional(containerUuids);
+    }
+
+    private List<UUID> getContainedModificationUuidsNonTransactional(Collection<UUID> containerUuids) {
         return containerUuids.isEmpty() ? List.of() : modificationRepository.findAllDescendantModificationIdsByContainerIds(containerUuids);
     }
 
     /**
-     * @return the shared modifications carrying the applicability of the references among {@code modificationUuids},
-     * the content of each one included. Recursively check the nested shared modification if there are.
+     * @return the shared modifications the references among {@code modificationUuids} point to, directly or through
+     * other shared modifications, and all their children
      */
-    private List<UUID> getSharedApplicabilityHolderUuids(List<UUID> modificationUuids) {
-        Set<UUID> holderUuids = new LinkedHashSet<>();
-        List<UUID> uuidsToResolve = modificationUuids;
-        while (!uuidsToResolve.isEmpty()) {
-            List<UUID> referencedUuids = modificationRepository.findReferencedModificationIds(uuidsToResolve).stream()
-                    .filter(referencedUuid -> !holderUuids.contains(referencedUuid))
+    private SharedModificationTrees getSharedModificationTrees(List<UUID> modificationUuids) {
+        return getSharedModificationTreesFrom(modificationRepository.findReferencedModificationIds(modificationUuids));
+    }
+
+    private SharedModificationTrees getSharedModificationTreesFrom(Collection<UUID> sharedModificationUuids) {
+        Set<UUID> sharedUuids = new LinkedHashSet<>();
+        Set<UUID> childrenUuids = new LinkedHashSet<>();
+        List<UUID> sharedUuidsToResolve = sharedModificationUuids.stream().distinct().toList();
+        while (!sharedUuidsToResolve.isEmpty()) {
+            sharedUuids.addAll(sharedUuidsToResolve);
+            List<UUID> nestedUuids = getContainedModificationUuidsNonTransactional(sharedUuidsToResolve);
+            childrenUuids.addAll(nestedUuids);
+            sharedUuidsToResolve = nestedUuids.isEmpty() ? List.of() : modificationRepository.findReferencedModificationIds(nestedUuids).stream()
+                    .filter(sharedUuid -> !sharedUuids.contains(sharedUuid))
                     .toList();
-            holderUuids.addAll(referencedUuids);
-            // next: check the nested modifications
-            uuidsToResolve = getContainedModificationUuids(referencedUuids);
-            holderUuids.addAll(uuidsToResolve);
         }
-        return List.copyOf(holderUuids);
+        return new SharedModificationTrees(sharedUuids, childrenUuids);
     }
 
     @Transactional
@@ -1145,52 +1427,55 @@ public class NetworkModificationRepository {
         }
     }
 
+    /**
+     * @return the modification references among the deleted modifications
+     */
     @Transactional
-    public void deleteStashedModificationFromGroups(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
-        try {
-            List<ModificationEntity> modifications = getModificationGroups(groupUuids).stream()
-                    .flatMap(group -> group.removeAllStashedModifications().stream()).collect(Collectors.toList());
-            if (!modifications.isEmpty()) {
-                deleteModifications(modifications);
-            }
-        } catch (NetworkModificationServerException e) {
-            if (e.getBusinessErrorCode() == MODIFICATION_CONTAINER_NOT_FOUND && !errorOnGroupNotFound) {
-                return;
-            }
-            throw e;
-        }
+    public List<ModificationReferenceData> deleteStashedModificationFromGroups(List<UUID> groupUuids) {
+        return deleteModifications(getModificationGroups(groupUuids).stream()
+                .flatMap(group -> group.removeAllStashedModifications().stream()).toList());
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationMetadata> getModificationsMetadata(List<UUID> uuids) {
-        // custom query to read only the required fields (id/type)
-        return modificationRepository.findMetadataIn(uuids)
+    public List<ModificationMetadata> getModificationsBaseInfos(List<UUID> uuids) {
+        // TODO remove when name attribute moved into ModificationEntity
+        List<ModificationMetadata> modificationsMetadata =
+            compositeModificationRepository.findAllById(uuids)
                 .stream()
-                .map(entity -> ModificationMetadata.builder()
-                        .id(entity.getId())
-                        .type(ModificationType.valueOf(entity.getType()))
-                        .build())
-                .toList();
+                .map(CompositeModificationEntity::toModificationMetadata)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        // custom query to read only the required fields (metadata)
+        modificationsMetadata.addAll(modificationRepository.findBaseByIdIn(uuids).stream()
+            .filter(m -> !m.isComposite()) // To be removed see TODO below
+            .map(m -> m.toModificationMetadata())
+            .toList());
+
+        return modificationsMetadata;
     }
 
-    private void deleteModifications(List<ModificationEntity> modificationEntities) {
+    /**
+     * WARNING : the given modifications must no longer be held by a loaded container that outlives the deletion: its PERSIST
+     * cascade would cancel the deletion at flush time.
+     * @return the modification references among the deleted modifications, the content of the composites included
+     */
+    private List<ModificationReferenceData> deleteModifications(@NonNull List<ModificationEntity> modificationEntities) {
+        if (modificationEntities.isEmpty()) {
+            return List.of();
+        }
         // This optimizes the treatment for tabular modifications but reduces efficiency for a list of 'unitary'
         // modifications. Nevertheless, for the volumes we are considering (max few hundreds) it is still very
         // efficient so no need to dig deeper about that for now.
 
+        List<ModificationEntity> modificationEntitiesToDelete = withCompositesContent(modificationEntities);
+
         // delete tabular modifications/creations
-        List<TabularModificationsEntity> tabularModificationsToDelete = modificationEntities.stream().filter(TabularModificationsEntity.class::isInstance).map(
+        List<TabularModificationsEntity> tabularModificationsToDelete = modificationEntitiesToDelete.stream().filter(TabularModificationsEntity.class::isInstance).map(
                 TabularModificationsEntity.class::cast).toList();
         tabularModificationsToDelete.forEach(m -> m.setContainer(null));
         tabularModificationsToDelete.forEach(this::deleteTabularModification);
 
-        List<CompositeModificationEntity> compositesToDelete = modificationEntities.stream()
-                .filter(CompositeModificationEntity.class::isInstance)
-                .map(CompositeModificationEntity.class::cast)
-                .toList();
-        deleteCompositeChildrenSubtree(compositesToDelete);
-
-        List<UUID> uuidsToDelete = modificationEntities.stream()
+        List<UUID> uuidsToDelete = modificationEntitiesToDelete.stream()
                 .filter(Predicate.not(TabularModificationsEntity.class::isInstance))
                 .map(ModificationEntity::getId).toList();
         if (!uuidsToDelete.isEmpty()) {
@@ -1198,23 +1483,40 @@ public class NetworkModificationRepository {
             modificationRepository.deleteAllByIdIn(uuidsToDelete);
             // bulk delete bypasses orphanRemoval; content shares the composite's id, so reap by the same ids.
             // (Or declare ON DELETE CASCADE composite_container.id -> modification_container.id and skip this.)
-            List<UUID> compositeIds = compositesToDelete.stream().map(ModificationEntity::getId).toList();
+            List<UUID> compositeIds = modificationEntitiesToDelete.stream()
+                    .filter(CompositeModificationEntity.class::isInstance)
+                    .map(ModificationEntity::getId)
+                    .toList();
             compositeContainerRepository.deleteAllById(compositeIds);
         }
+        return toReferencesDataWithoutContainer(modificationEntitiesToDelete);
     }
 
-    private void deleteCompositeChildrenSubtree(List<CompositeModificationEntity> composites) {
-        if (composites.isEmpty()) {
-            return;
-        }
-        // content id == composite id, so container ids ARE the composite ids
-        List<UUID> containerIds = composites.stream().map(ModificationEntity::getId).toList();
-        List<UUID> childrenIds = modificationRepository.findAllByContainers(containerIds).stream()
+    /**
+     * Keeps only the modification references among the given modifications
+     * @return their data with a null container
+     */
+    private static List<ModificationReferenceData> toReferencesDataWithoutContainer(List<ModificationEntity> modificationEntities) {
+        return modificationEntities.stream()
+                .filter(ModificationReferenceEntity.class::isInstance)
+                .map(ModificationReferenceEntity.class::cast)
+                .map(reference -> new ModificationReferenceData(reference.getId(), reference.getReferencedId(), null))
+                .toList();
+    }
+
+    /**
+     * @return the given modifications followed by the content of their composites at any depth
+     */
+    private List<ModificationEntity> withCompositesContent(List<ModificationEntity> modificationEntities) {
+        List<UUID> compositeIds = modificationEntities.stream()
+                .filter(CompositeModificationEntity.class::isInstance)
                 .map(ModificationEntity::getId)
                 .toList();
-        if (!childrenIds.isEmpty()) {
-            deleteModifications(modificationRepository.findAllById(childrenIds));
+        if (compositeIds.isEmpty()) {
+            return modificationEntities;
         }
+        return Stream.concat(modificationEntities.stream(),
+                modificationRepository.findAllById(modificationRepository.findAllDescendantModificationIdsByContainerIds(compositeIds)).stream()).distinct().toList();
     }
 
     private void deleteSomeLineTabularSubModifications(List<UUID> subModificationsIds) {
@@ -1285,35 +1587,54 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationInfos> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = originGroupUuid != null ? getUnstashedModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(
-                modificationsUuids);
-        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+    public List<ModificationInfos> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids,
+                                                              @NonNull Collection<String> rootNetworkTags) {
+        List<ModificationInfos> modificationInfos = originGroupUuid != null
+                ? getModificationsInfos(getModificationContainer(originGroupUuid), StashedFilter.UNSTASHED)
+                : getModificationsInfosInGivenOrder(modificationsUuids);
+        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos, rootNetworkTags);
         // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
-        return savedInfos(newEntities);
+        return toModificationsInfosAlreadySaved(newEntities);
+    }
+
+    /**
+     * Copies the unstashed modifications of the source group, applicabilities included, at the end of the target group.
+     * Nothing is done, not even creating the target group, when the source group does not exist.
+     */
+    @Transactional
+    public void duplicateUnstashedModifications(@NonNull UUID sourceGroupUuid, @NonNull UUID targetGroupUuid, @NonNull Collection<String> rootNetworkTags) {
+        modificationContainerRepository.findById(sourceGroupUuid).ifPresent(sourceGroup ->
+            saveModificationInfosNonTransactional(targetGroupUuid, getModificationsInfos(sourceGroup, StashedFilter.UNSTASHED), rootNetworkTags));
     }
 
     @Transactional
-    public List<ModificationInfos> extractModificationsFromCompositesAndSave(@NonNull UUID targetGroupUuid, @NonNull List<UUID> compositesUuids) {
-        List<ModificationInfos> modificationInfos = getModificationsInfosInsideCompositesNonTransactional(compositesUuids);
-        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+    public List<ModificationInfos> extractModificationsFromCompositesAndSave(@NonNull UUID targetGroupUuid, @NonNull List<UUID> compositesUuids,
+                                                                             @NonNull Collection<String> rootNetworkTags) {
+        List<ModificationInfos> modificationInfos = getCompositeModificationsInfos(compositesUuids);
+        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos, rootNetworkTags);
         // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
-        return savedInfos(newEntities);
+        return toModificationsInfosAlreadySaved(newEntities);
     }
 
     @Transactional
     public List<ModificationInfos> insertCompositeModifications(
             @NonNull UUID targetGroupUuid,
-            @NonNull List<CompositeInfos> compositeInfos) {
+            @NonNull List<CompositeInfos> compositeInfos,
+            @NonNull Collection<String> rootNetworkTags) {
+        // preload the composite modifications to optimize queries
+        List<ModificationInfos> sourceInfos = toModificationsInfosWithApplicabilities(compositeInfos.stream()
+                .map(compositeToBeInserted -> getModificationEntity(compositeToBeInserted.id()))
+                .toList());
         List<ModificationInfos> newCompositeModifications = new ArrayList<>();
-        for (CompositeInfos compositeToBeInserted : compositeInfos) {
-            CompositeModificationInfos compositeModification = (CompositeModificationInfos) getModificationEntity(compositeToBeInserted.id()).toModificationInfos();
+        for (int i = 0; i < compositeInfos.size(); i++) {
+            CompositeInfos compositeToBeInserted = compositeInfos.get(i);
+            CompositeModificationInfos compositeModification = (CompositeModificationInfos) sourceInfos.get(i);
             if (compositeModification != null) {
                 if (compositeToBeInserted.isShared()) {
                     // inserting a shared composite modification means that we create a new reference to it
                     ModificationReferenceInfos newModificationReference = ModificationReferenceInfos.builder()
                             .referencedId(compositeToBeInserted.id())
-                            .referenceType(ModificationReferenceInfos.Type.BASIC)
+                            .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
                             .referencedInfos(compositeModification)
                             .description(compositeToBeInserted.description())
                             .build();
@@ -1328,10 +1649,8 @@ public class NetworkModificationRepository {
                 LOGGER.error("Could not find composite modification with uuid {} to apply its name {}", compositeToBeInserted.id(), compositeToBeInserted.name());
             }
         }
-        // references do not hold applicabilities
-        addApplicabilities(newCompositeModifications.stream().filter(CompositeModificationInfos.class::isInstance).toList());
-        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
-        return savedInfos(newEntities);
+        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications, rootNetworkTags);
+        return toModificationsInfosAlreadySaved(newEntities);
     }
 
     /**
@@ -1348,7 +1667,7 @@ public class NetworkModificationRepository {
      * @return the reference left in place of the composite modification
      */
     @Transactional
-    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name) {
+    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name, String description) {
         getModificationGroup(groupUuid); // check if group exists
         ModificationEntity modificationEntity = getModificationEntity(modificationUuid);
         if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
@@ -1363,8 +1682,8 @@ public class NetworkModificationRepository {
 
         ModificationReferenceInfos referenceInfos = ModificationReferenceInfos.builder()
             .referencedId(modificationUuid)
-            .referenceType(ModificationReferenceInfos.Type.BASIC)
-            .referencedInfos(loadCompositeModificationMetadata(compositeEntity, null))
+            .referenceType(ModificationReferenceInfos.Type.COMPOSITE)
+            .referencedInfos(loadCompositeModificationMetadata(compositeEntity))
             .build();
         ModificationEntity referenceEntity = ModificationEntity.fromDTO(referenceInfos);
 
@@ -1373,9 +1692,7 @@ public class NetworkModificationRepository {
         containerEntity.removeModifications(List.of(modificationUuid));
         compositeEntity.setContainer(null);
         compositeEntity.setModificationsOrder(0);
-        if (name != null) {
-            compositeModificationRepository.renameCompositeModification(compositeEntity, name);
-        }
+        compositeEntity.updateNameAndDescription(ModificationMetadata.builder().name(name).description(description).build());
         return new ModificationReferenceData(referenceEntity.getId(), modificationUuid,
             containerEntity.isComposite() ? containerEntity.getId() : null);
     }
@@ -1411,13 +1728,13 @@ public class NetworkModificationRepository {
             if (ModificationContainerType.GROUP.equals(containerInfos.type())) {
                 return modificationGroupRepository.save(new ModificationGroupEntity(containerId));
             } else {
-                throw getModificationContainerNotFoundException(containerInfos.id().toString(), containerInfos.type());
+                throw getModificationContainerNotFoundException(containerInfos.id(), containerInfos.type());
             }
         });
         if (!containerInfos.type().name().equals(containerEntity.getType())) {
             throw new NetworkModificationServerException(MODIFICATION_CONTAINER_BAD_TYPE,
                 String.format(MODIFICATION_CONTAINER_BAD_TYPE.messageTemplate(), containerInfos.id(), containerEntity.getType(), containerInfos.type().name()),
-                Map.of("containerId", containerInfos.id(), "containerType", containerEntity.getType(), "expectedContainerType", containerInfos.type().name()));
+                Map.of(CONTAINER_ID, containerInfos.id(), "containerType", containerEntity.getType(), "expectedContainerType", containerInfos.type().name()));
         }
         return containerEntity;
     }
@@ -1441,7 +1758,7 @@ public class NetworkModificationRepository {
         if (containerType == null) {
             throw new NetworkModificationServerException(MODIFICATION_CONTAINER_TYPE_NOT_FOUND,
                 String.format(MODIFICATION_CONTAINER_TYPE_NOT_FOUND.messageTemplate(), m.getId()),
-                Map.of("containerId", m.getId()));
+                Map.of(CONTAINER_ID, m.getId()));
         }
         return containerType;
     }
@@ -1490,6 +1807,10 @@ public class NetworkModificationRepository {
                 .name("Composite modification")
                 .build();
         CompositeModificationEntity newLeaf = (CompositeModificationEntity) ModificationEntity.fromDTO(newCompositeInfos);
+        getApplicabilityHolders(assembledModifications).stream()
+                .flatMap(holder -> holder.getRootNetworkTags().stream())
+                .distinct()
+                .forEach(newLeaf::setDefaultApplicabilityIfMissing);
         newLeaf.setModifications(assembledModifications);
 
         if (targetGroup != null) {

@@ -9,14 +9,18 @@ package org.gridsuite.modification.server.service;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import org.gridsuite.modification.server.dto.ReferenceAttributes;
+import org.gridsuite.modification.server.dto.PermissionType;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
+
+import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 
 /**
  * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
@@ -25,7 +29,6 @@ import java.util.UUID;
 public class DirectoryService {
     private static final String DIRECTORY_API_VERSION = "v1";
     private static final String DELIMITER = "/";
-    public static final String HEADER_USER_ID = "userId";
 
     @Setter
     @Getter
@@ -33,44 +36,69 @@ public class DirectoryService {
     private final RestClient restClient;
 
     public DirectoryService(@Value("${gridsuite.services.directory-server.base-uri:http://directory-server/}") String directoryServerBaseUri,
-                         RestClient restClient) {
+                        RestClient restClient) {
         setDirectoryServerBaseUri(directoryServerBaseUri);
         this.restClient = restClient;
     }
 
     /**
-     * updates a reference from a shared modification in directory server so it points to a new container.
-     * the row to update is identified by elementUuid (the referenced shared element) and referenceUuid (the modification-reference itself)
-     * @param elementUuid uuid of the referenced shared element in the directory-server
-     * @param referenceAttributes new attributes of the modification-reference including its own referenceUuid which doesn't change
-     * @param userId id of the user who moves the reference
+     * Checks that the user holds the given permission on every given element, and throws otherwise.
+     * @param elementUuids uuids of the elements in the directory-server
+     * @param userId id of the user the permission is checked for
+     * @param permissionType the permission the user must hold
      */
-    public void updateElementReference(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, @NonNull String userId) {
-        var path = UriComponentsBuilder.fromPath(
-                        DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references/{referenceUuid}")
-                .buildAndExpand(elementUuid, referenceAttributes.getReferenceId())
+    public void checkPermission(@NonNull Collection<UUID> elementUuids, @NonNull String userId, @NonNull PermissionType permissionType) {
+        var path = UriComponentsBuilder.fromPath(DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/authorized")
+                .queryParam("ids", elementUuids)
+                .queryParam("accessType", permissionType)
+                .buildAndExpand()
                 .toUriString();
 
-        restClient.put()
-                .uri(getDirectoryServerBaseUri() + path).header(HEADER_USER_ID, userId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(referenceAttributes)
+        restClient.get()
+                .uri(getDirectoryServerBaseUri() + path)
+                .header(HEADER_USER_ID, userId)
                 .retrieve()
                 .toBodilessEntity();
     }
 
-    public void createElementReference(@NonNull UUID elementUuid, @NonNull ReferenceAttributes referenceAttributes, @NonNull String userId) {
-        var path = UriComponentsBuilder.fromPath(
-                        DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/{elementUuid}/references")
-                .buildAndExpand(elementUuid)
+    /**
+     * Get the permissions for a given list of directory elements and a given user.
+     * @param elementUuids uuids of the elements in the directory-server
+     * @param userId id of the user the permissions are read for
+     * @return the strongest permission held on each element, an element held no permission at all on and an element
+     * unknown to the directory-server being left out
+     */
+    public Map<UUID, PermissionType> getElementsPermissions(@NonNull Collection<UUID> elementUuids, @NonNull String userId) {
+        if (elementUuids.isEmpty()) {
+            return Map.of();
+        }
+        var path = UriComponentsBuilder.fromPath(DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/permissions")
+                .queryParam("ids", elementUuids)
+                .buildAndExpand()
                 .toUriString();
 
-        restClient.put()
+        Map<UUID, PermissionType> permissions = restClient.get()
                 .uri(getDirectoryServerBaseUri() + path)
                 .header(HEADER_USER_ID, userId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(referenceAttributes)
                 .retrieve()
-                .toBodilessEntity();
+                .body(new ParameterizedTypeReference<>() { });
+        return permissions == null ? Map.of() : permissions;
+    }
+
+    public Map<UUID, String> getElementNames(@NonNull Collection<UUID> elementUuids) {
+        if (elementUuids.isEmpty()) {
+            return Map.of();
+        }
+        var path = UriComponentsBuilder.fromPath(DELIMITER + DIRECTORY_API_VERSION + DELIMITER + "elements/names")
+                .queryParam("ids", elementUuids)
+                .queryParam("strictMode", false)
+                .buildAndExpand()
+                .toUriString();
+
+        Map<UUID, String> names = restClient.get()
+                .uri(getDirectoryServerBaseUri() + path)
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() { });
+        return names == null ? Map.of() : names;
     }
 }

@@ -7,8 +7,11 @@
 package org.gridsuite.modification.server.service;
 
 import lombok.NonNull;
+import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.SharingLinkAction;
 import org.gridsuite.modification.server.dto.WorkflowType;
+import org.gridsuite.modification.server.utils.PostCompletion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,10 @@ import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
@@ -32,6 +39,12 @@ public class NotificationService {
     public static final String WORKFLOW_TYPE_HEADER = "workflowType";
     public static final String WORKFLOW_INFOS_HEADER = "workflowInfos";
     public static final String NETWORK_UUID_HEADER = "networkUuid";
+    public static final String HEADER_ELEMENT_UUID = "elementUuid";
+    public static final String HEADER_MODIFIED_BY = "modifiedBy";
+    public static final String HEADER_MODIFICATION_DATE = "modificationDate";
+    public static final String HEADER_ACTION = "action";
+    public static final String HEADER_GROUP_UUID = "groupUuid";
+    public static final String HEADER_USER_ID = "userId";
 
     @Autowired
     private StreamBridge publisher;
@@ -65,5 +78,38 @@ public class NotificationService {
                 .setHeader(RECEIVER_HEADER, receiver)
                 .build();
         sendMessage(message, "publishCancelBuild-out-0");
+    }
+
+    /**
+     * Tells directory-server that {@code elementUuid} (typically a composite modification's uuid,
+     * which is also its directory element uuid) was modified. directory-server is the sole holder
+     * of the "who references what" graph: it decides on its own whether {@code elementUuid} is a
+     * shared element and who needs to be notified further.
+     */
+    public void emitElementUpdated(@NonNull UUID elementUuid, @NonNull String userId) {
+        Message<String> message = MessageBuilder.withPayload("")
+                .setHeader(HEADER_ELEMENT_UUID, elementUuid)
+                .setHeader(HEADER_MODIFIED_BY, userId)
+                .setHeader(HEADER_MODIFICATION_DATE, Instant.now())
+                .build();
+        sendMessage(message, "publishElementUpdate-out-0");
+    }
+
+    /**
+     * Tells the owner of the group (study-server) that some modification-references of the group were created, moved
+     * or deleted, so it can keep the references registered on the shared elements in directory-server up to date.
+     */
+    @PostCompletion
+    public void emitSharingLinksChanged(@NonNull SharingLinkAction action, UUID groupUuid,
+                                        @NonNull List<ModificationReferenceData> references, @NonNull String userId) {
+        if (groupUuid == null || references.isEmpty()) {
+            return;
+        }
+        Message<List<ModificationReferenceData>> message = MessageBuilder.withPayload(references)
+                .setHeader(HEADER_ACTION, action)
+                .setHeader(HEADER_GROUP_UUID, groupUuid)
+                .setHeader(HEADER_USER_ID, userId)
+                .build();
+        sendMessage(message, "publishCompositeLinks-out-0");
     }
 }

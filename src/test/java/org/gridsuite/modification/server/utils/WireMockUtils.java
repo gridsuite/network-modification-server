@@ -9,10 +9,12 @@ package org.gridsuite.modification.server.utils;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.admin.model.ServeEventQuery;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.matching.MultiValuePattern;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,6 +29,11 @@ public class WireMockUtils {
         this.wireMockServer = wireMockServer;
     }
 
+    public static MultiValuePattern havingExactlyIdsIgnoringOrder(Collection<UUID> filterIds) {
+        String[] expectedIds = filterIds.stream().map(UUID::toString).distinct().toArray(String[]::new);
+        return WireMock.havingExactly(expectedIds);
+    }
+
     public void verifyGetRequest(UUID stubId, String urlPath, Map<String, StringValuePattern> queryParams, boolean regexMatching) {
         verifyGetRequest(stubId, urlPath, queryParams, regexMatching, 1);
     }
@@ -34,6 +41,14 @@ public class WireMockUtils {
     public void verifyGetRequest(UUID stubId, String urlPath, Map<String, StringValuePattern> queryParams, boolean regexMatching, int nbRequests) {
         RequestPatternBuilder requestBuilder = regexMatching ? WireMock.getRequestedFor(WireMock.urlPathMatching(urlPath)) : WireMock.getRequestedFor(WireMock.urlPathEqualTo(urlPath));
         queryParams.forEach(requestBuilder::withQueryParam);
+        wireMockServer.verify(nbRequests, requestBuilder);
+        removeRequestForStub(stubId, nbRequests);
+    }
+
+    public void verifyGetRequest(UUID stubId, String urlPath, String queryParamName,
+                                 MultiValuePattern queryParamPattern, boolean regexMatching, int nbRequests) {
+        RequestPatternBuilder requestBuilder = regexMatching ? WireMock.getRequestedFor(WireMock.urlPathMatching(urlPath)) : WireMock.getRequestedFor(WireMock.urlPathEqualTo(urlPath));
+        requestBuilder.withQueryParam(queryParamName, queryParamPattern);
         wireMockServer.verify(nbRequests, requestBuilder);
         removeRequestForStub(stubId, nbRequests);
     }

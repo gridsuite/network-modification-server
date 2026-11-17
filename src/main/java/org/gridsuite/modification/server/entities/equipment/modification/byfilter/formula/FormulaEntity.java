@@ -9,10 +9,9 @@ package org.gridsuite.modification.server.entities.equipment.modification.byfilt
 
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.byfilter.formula.FormulaInfos;
-import org.gridsuite.modification.dto.byfilter.formula.Operator;
-import org.gridsuite.modification.dto.byfilter.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.modifications.data.assignment.Operator;
+import org.gridsuite.modification.modifications.data.assignment.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
 
@@ -61,7 +60,7 @@ public class FormulaEntity extends AbstractAssignmentEntity {
     public FormulaInfos toFormulaInfos() {
         FormulaInfos formulaInfos = FormulaInfos.builder()
                 .filters(filters.stream()
-                        .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName()))
+                        .map(VariationFilterEntity::toFilterInfos)
                         .toList())
                 .fieldOrValue1(ReferenceFieldOrValue.builder()
                         .equipmentField(equipmentField1)
