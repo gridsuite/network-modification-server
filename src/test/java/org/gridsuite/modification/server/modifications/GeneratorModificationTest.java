@@ -14,6 +14,7 @@ import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.iidm.network.extensions.Measurement;
 import com.powsybl.iidm.network.extensions.Measurements;
+import com.powsybl.iidm.network.regulation.RegulationMode;
 import org.assertj.core.api.Assertions;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationExceptionType;
@@ -49,7 +50,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
-        return NetworkCreation.create(networkUuid, true);
+        return NetworkCreation.createWithSingleVariant(networkUuid, true);
     }
 
     @Override
@@ -129,9 +130,9 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         assertEquals("newV1Generator", modifiedGenerator.getNameOrId());
         assertEquals(EnergySource.SOLAR, modifiedGenerator.getEnergySource());
         assertEquals(80.0, modifiedGenerator.getTargetP());
-        assertEquals(40.0, modifiedGenerator.getTargetQ());
-        assertEquals(48.0, modifiedGenerator.getTargetV());
-        assertFalse(modifiedGenerator.isVoltageRegulatorOn());
+        assertEquals(40.0, modifiedGenerator.getLocalTargetQ());
+        assertEquals(48.0, modifiedGenerator.getRegulatingTargetV());
+        assertFalse(modifiedGenerator.isRegulatingWithMode(RegulationMode.VOLTAGE));
         assertEquals(0., modifiedGenerator.getMinP());
         assertEquals(100., modifiedGenerator.getMaxP());
         assertEquals(220., modifiedGenerator.getRatedS());
@@ -154,9 +155,9 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         assertEquals("idGenerator", generator.getNameOrId());
         assertEquals(EnergySource.OTHER, generator.getEnergySource());
         assertEquals(42.1, generator.getTargetP());
-        assertEquals(1.0, generator.getTargetQ());
-        assertEquals(Double.NaN, generator.getTargetV());
-        assertFalse(generator.isVoltageRegulatorOn());
+        assertEquals(1.0, generator.getLocalTargetQ());
+        assertEquals(Double.NaN, generator.getRegulatingTargetV());
+        assertFalse(generator.isRegulatingWithMode(RegulationMode.VOLTAGE));
         assertEquals(-1.1, generator.getMinP());
         assertEquals(1000.0, generator.getMaxP());
         assertEquals(Double.NaN, generator.getRatedS());
@@ -483,7 +484,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
             .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
             .andExpect(status().isOk());
-        assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getTargetV());
+        assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getRegulatingTargetV());
 
         //Unset TargetQ (voltage regulation needs to be turned on and voltage setpoint to have a value)
         generatorModificationInfos.setVoltageRegulationOn(new AttributeModification<>(true, OperationType.SET));
@@ -494,7 +495,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
             .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
             .andExpect(status().isOk());
-        assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getTargetQ());
+        assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getLocalTargetQ());
 
     }
 

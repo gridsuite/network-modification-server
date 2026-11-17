@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import com.powsybl.iidm.network.StaticVarCompensator;
+import com.powsybl.iidm.network.regulation.RegulationMode;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,7 +39,7 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "regulationMode")
-    private StaticVarCompensator.RegulationMode regulationMode;
+    private RegulationMode regulationMode;
 
     @Column(name = "regulating")
     private boolean regulating;
