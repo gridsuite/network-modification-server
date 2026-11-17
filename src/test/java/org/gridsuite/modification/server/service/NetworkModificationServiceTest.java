@@ -116,7 +116,7 @@ class NetworkModificationServiceTest {
         UUID nestedChildUuid = savedComposite.getModificationsInfos().getFirst().getUuid();
         UUID directGroupChildUuid = saved.get(1).getUuid();
 
-        Map<UUID, UUID> parentComposites = networkModificationService.findModificationParentComposites(
+        Map<UUID, UUID> parentComposites = networkModificationService.getParentCompositeModifications(
                 List.of(nestedChildUuid, directGroupChildUuid));
 
         assertEquals(1, parentComposites.size());
@@ -387,7 +387,7 @@ class NetworkModificationServiceTest {
 
         NetworkModificationServerException ex = assertThrows(
                 NetworkModificationServerException.class,
-                () -> networkModificationService.replaceCompositeModification(sharedCompositeUuid, "newName", List.of(), "userId")
+                () -> networkModificationService.updateCompositeModification(sharedCompositeUuid, "newName", List.of(), "userId")
         );
         assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, ex.getBusinessErrorCode());
     }

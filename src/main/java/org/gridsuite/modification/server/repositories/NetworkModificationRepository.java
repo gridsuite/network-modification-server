@@ -88,7 +88,7 @@ public class NetworkModificationRepository {
     private final ModificationApplicationInfosService modificationApplicationInfosService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationRepository.class);
-    public static final String MODIFICATION_ID = "modificationId";
+    private static final String MODIFICATION_ID = "modificationId";
     private static final String CONTAINER_ID = "containerId";
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -185,7 +185,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public UUID createCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name, @NonNull Collection<String> rootNetworkTags) {
+    public UUID createCompositeModificationByCopying(@NonNull String name, @NonNull List<UUID> modificationUuids, @NonNull Collection<String> rootNetworkTags) {
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modificationsInfos(List.of()).name(name).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         List<ModificationEntity> copyEntities = copyModificationsWithReferenceResolution(modificationUuids);
@@ -204,7 +204,7 @@ public class NetworkModificationRepository {
      * @return the modification references among the previous content, deleted
      */
     @Transactional
-    public List<ModificationReferenceData> replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<UUID> modificationUuids) {
+    public List<ModificationReferenceData> updateCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<UUID> modificationUuids) {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> getModificationNotFoundException(compositeUuid));
 
@@ -1043,7 +1043,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<UUID> findAllChildrenUuids(@NonNull List<UUID> compositeUuids) {
+    public List<UUID> getAllChildrenUuids(@NonNull List<UUID> compositeUuids) {
         return compositeUuids.stream().flatMap(uuid -> modificationRepository.findAllChildrenUuids(uuid).stream()).toList();
     }
 

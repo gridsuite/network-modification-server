@@ -163,8 +163,8 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public List<UUID> findAllChildrenUuids(List<UUID> compositeModificationUuids) {
-        return networkModificationRepository.findAllChildrenUuids(compositeModificationUuids);
+    public List<UUID> getAllChildrenUuids(List<UUID> compositeModificationUuids) {
+        return networkModificationRepository.getAllChildrenUuids(compositeModificationUuids);
     }
 
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
@@ -247,7 +247,7 @@ public class NetworkModificationService {
     @Transactional
     public void updateNetworkModificationActivation(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata, @NonNull String userId) {
         // TODO replace metadata by boolean in the endpoint
-        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(modificationUuids).values().stream().toList();
+        List<UUID> parentComposites = getParentCompositeModificationsNonTransactional(modificationUuids).values().stream().toList();
         checkModificationsPermission(parentComposites, userId);
         networkModificationRepository.updateModificationActivation(modificationUuids, metadata);
         emitReferencedAncestorsUpdated(modificationUuids, userId);
@@ -375,11 +375,11 @@ public class NetworkModificationService {
      * sitting directly under a group is absent from the map
      */
     @Transactional(readOnly = true)
-    public Map<UUID, UUID> findModificationParentComposites(@NonNull List<UUID> modificationUuids) {
-        return findModificationParentCompositesNonTransactional(modificationUuids);
+    public Map<UUID, UUID> getParentCompositeModifications(@NonNull List<UUID> modificationUuids) {
+        return getParentCompositeModificationsNonTransactional(modificationUuids);
     }
 
-    public Map<UUID, UUID> findModificationParentCompositesNonTransactional(@NonNull List<UUID> modificationUuids) {
+    private Map<UUID, UUID> getParentCompositeModificationsNonTransactional(@NonNull List<UUID> modificationUuids) {
         if (modificationUuids.isEmpty()) {
             return Map.of();
         }
@@ -429,7 +429,7 @@ public class NetworkModificationService {
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids, @NonNull String userId) {
 
         //Check permission only on parent composites
-        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(modificationUuids).values().stream().toList();
+        List<UUID> parentComposites = getParentCompositeModificationsNonTransactional(modificationUuids).values().stream().toList();
         checkModificationsPermission(parentComposites, userId);
 
         // Collect referenced ancestor composites before stashing, since stashed modifications are moved out of their composite
@@ -603,7 +603,7 @@ public class NetworkModificationService {
             @NonNull String userId) {
 
         // check if we have permission to move the modifications on source and target groups
-        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(moveInfos.stream().map(ModificationMoveInfos::modificationUuid).toList())
+        List<UUID> parentComposites = getParentCompositeModificationsNonTransactional(moveInfos.stream().map(ModificationMoveInfos::modificationUuid).toList())
                 .values().stream().toList();
 
         List<UUID> uuids = Stream.concat(
@@ -716,7 +716,7 @@ public class NetworkModificationService {
     @Transactional
     public UUID createCompositeModificationByAssembling(@NonNull List<UUID> assembledModificationsUuids, @NonNull String userId) {
 
-        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(assembledModificationsUuids).values().stream().toList();
+        List<UUID> parentComposites = getParentCompositeModificationsNonTransactional(assembledModificationsUuids).values().stream().toList();
         checkModificationsPermission(parentComposites, userId);
         UUID newCompositeUuid = networkModificationRepository.createCompositeModificationByAssembling(assembledModificationsUuids);
 
@@ -732,8 +732,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public UUID createCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name, @NonNull Collection<String> rootNetworkTags) {
-        return networkModificationRepository.createCompositeModification(modificationUuids, name, rootNetworkTags);
+    public UUID createCompositeModificationByCopying(@NonNull String name, @NonNull List<UUID> modificationUuids, @NonNull Collection<String> rootNetworkTags) {
+        return networkModificationRepository.createCompositeModificationByCopying(name, modificationUuids, rootNetworkTags);
     }
 
     @Transactional
@@ -750,11 +750,11 @@ public class NetworkModificationService {
         networkModificationRepository.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
     }
 
-    public void replaceCompositeModification(@NonNull UUID compositeUuid, String name, List<UUID> modificationUuids, @NonNull String userId) {
+    public void updateCompositeModification(@NonNull UUID compositeUuid, String name, List<UUID> modificationUuids, @NonNull String userId) {
         checkModificationsPermission(List.of(compositeUuid), userId);
         // the deleted references were inside the composite, so in its group
         UUID groupUuid = modificationRepository.findGroupIdByModificationId(compositeUuid);
-        List<ModificationReferenceData> deletedReferences = networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.updateCompositeModification(compositeUuid, name, modificationUuids);
         deleteSharingLinks(groupUuid, deletedReferences, userId);
 
         // Notify directory-server if the replaced composite is itself referenced, then once per referenced ancestor composite (closest first)
