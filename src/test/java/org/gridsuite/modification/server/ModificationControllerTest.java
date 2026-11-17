@@ -709,7 +709,7 @@ class ModificationControllerTest {
     @Test
     void testUpdateModificationActivation() {
         // create a composite modification and set all its metadata fields
-        UUID compositeUuid = modificationRepository.createNetworkCompositeModification(List.of(), "", List.of());
+        UUID compositeUuid = modificationRepository.createCompositeModificationByCopying("", List.of(), List.of());
         assertEquals(true, modificationRepository.getModificationInfo(compositeUuid).getActivated());
 
         // update activation
