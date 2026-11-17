@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -134,7 +133,7 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    void testCreateWithoutLoadFlowDoesNotLoadParameters() throws Exception {
+    void testCreateWithoutLoadFlowDoesNotLoadParameters() {
         BalancesAdjustmentModificationInfos modification = (BalancesAdjustmentModificationInfos) buildModification();
         modification.setWithLoadFlow(false);
 

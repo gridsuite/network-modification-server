@@ -33,13 +33,9 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogNthMessage;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -331,7 +327,33 @@ class LoadScalingTest extends AbstractScalingTest {
             .build();
     }
 
-    private void testVariationWithSomeDisconnections(VariationMode variationMode, List<String> loadsToDisconnect) throws Exception {
+    @Test
+    void testRegularDistributionAllConnected() throws Exception {
+        testVariationWithSomeDisconnections(VariationMode.REGULAR_DISTRIBUTION, List.of());
+    }
+
+    @Test
+    void testRegularDistributionOnlyLD6Connected() throws Exception {
+        testVariationWithSomeDisconnections(VariationMode.REGULAR_DISTRIBUTION, List.of("LD1", "LD2", "LD3", "LD4", "LD5"));
+    }
+
+    @Test
+    void testProportionalAllConnected() throws Exception {
+        testVariationWithSomeDisconnections(VariationMode.PROPORTIONAL, List.of());
+    }
+
+    @Test
+    void testProportionalAndVentilationLD1Disconnected() throws Exception {
+        testVariationWithSomeDisconnections(VariationMode.PROPORTIONAL, List.of("LD1"));
+        testVariationWithSomeDisconnections(VariationMode.VENTILATION, List.of("LD1"));
+    }
+
+    @Test
+    void testProportionalOnlyLD6Connected() throws Exception {
+        testVariationWithSomeDisconnections(VariationMode.PROPORTIONAL, List.of("LD1", "LD2", "LD3", "LD4", "LD5"));
+    }
+
+    void testVariationWithSomeDisconnections(VariationMode variationMode, List<String> loadsToDisconnect) throws Exception {
         // use a dedicated network where we can easily disconnect loads
         setNetwork(Network.read(Paths.get(Objects.requireNonNull(this.getClass().getClassLoader().getResource("fourSubstations_testsOpenReac.xiidm")).toURI())));
 

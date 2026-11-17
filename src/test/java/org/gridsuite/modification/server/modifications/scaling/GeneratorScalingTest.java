@@ -36,9 +36,7 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogNthMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -238,7 +236,7 @@ class GeneratorScalingTest extends AbstractScalingTest {
                         .content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
-        var response = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -336,7 +334,6 @@ class GeneratorScalingTest extends AbstractScalingTest {
                 .variations(List.of(variation5))
                 .build();
     }
-
 
     @Test
     void testRegularDistributionAllConnected() throws Exception {

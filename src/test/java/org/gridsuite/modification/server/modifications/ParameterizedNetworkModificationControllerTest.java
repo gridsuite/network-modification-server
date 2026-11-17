@@ -19,8 +19,10 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
+import org.gridsuite.modification.server.NetworkModificationController;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.StashedFilter;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
@@ -72,6 +74,7 @@ class ParameterizedNetworkModificationControllerTest {
     private static final UUID TEST_NETWORK_ID = UUID.randomUUID();
     private static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
+    private static final String TEST_USER_ID = "userId";
 
     private static final String URI_NETWORK_MODIFICATION_BASE = "/v1/network-modifications";
     private static final String URI_CREATE_MODIFICATION = URI_NETWORK_MODIFICATION_BASE + "?groupUuid=" + TEST_GROUP_ID;
@@ -121,7 +124,7 @@ class ParameterizedNetworkModificationControllerTest {
 
         assertModificationCount(1);
 
-        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).getFirst();
+        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, StashedFilter.ALL).getFirst();
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
 
         MvcResult readResult = mockMvc.perform(get(URI_NETWORK_MODIFICATION_BASE + "/" + createdModificationUuid))
@@ -132,18 +135,20 @@ class ParameterizedNetworkModificationControllerTest {
 
         mockMvc.perform(put(URI_NETWORK_MODIFICATION_BASE + "/" + createdModificationUuid)
                 .content(mapper.writeValueAsString(modificationToUpdate))
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(NetworkModificationController.HEADER_USER_ID, TEST_USER_ID))
             .andExpect(status().isOk());
 
-        ModificationInfos updatedModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).getFirst();
+        ModificationInfos updatedModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, StashedFilter.ALL).getFirst();
         assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
 
         mockMvc.perform(delete(URI_NETWORK_MODIFICATION_BASE)
                 .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                .queryParam("uuids", createdModificationUuid.toString()))
+                .queryParam("uuids", createdModificationUuid.toString())
+                .header(NetworkModificationController.HEADER_USER_ID, TEST_USER_ID))
             .andExpect(status().isOk());
 
-        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).isEmpty());
+        assertTrue(networkModificationRepository.getModifications(TEST_GROUP_ID, false, StashedFilter.ALL).isEmpty());
     }
 
     @ParameterizedTest(name = "{0}")
@@ -159,11 +164,11 @@ class ParameterizedNetworkModificationControllerTest {
             assertNull(network.getIdentifiable(creation.getEquipmentId()));
         }
 
-        List<ModificationInfos> completeModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> completeModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, StashedFilter.ALL);
         assertEquals(1, completeModifications.size());
         assertThat(completeModifications.getFirst()).recursivelyEquals(modificationToCreate);
 
-        List<ModificationInfos> metadataModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> metadataModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, StashedFilter.ALL);
         assertEquals(1, metadataModifications.size());
         assertEquals(false, metadataModifications.getFirst().getActivated());
     }
@@ -177,7 +182,7 @@ class ParameterizedNetworkModificationControllerTest {
 
         String body = TestUtils.getJsonBody(List.of(modificationUuid), TEST_NETWORK_ID, null);
 
-        ResultActions copyAction = mockMvc.perform(put("/v1/containers/{groupUuid}?action=COPY", TEST_GROUP_ID)
+        ResultActions copyAction = mockMvc.perform(put("/v1/groups/{targetContainerUuid}/network-modifications/copy", TEST_GROUP_ID)
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(request().asyncStarted());
@@ -185,7 +190,7 @@ class ParameterizedNetworkModificationControllerTest {
         mockMvc.perform(asyncDispatch(copyAction.andReturn()))
             .andExpect(status().isOk());
 
-        List<ModificationInfos> copiedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> copiedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, StashedFilter.ALL);
         assertEquals(2, copiedModifications.size());
         assertThat(copiedModifications.get(0)).recursivelyEquals(modificationToCreate);
         assertThat(copiedModifications.get(1)).recursivelyEquals(modificationToCreate);
@@ -201,20 +206,22 @@ class ParameterizedNetworkModificationControllerTest {
         mockMvc.perform(put(URI_NETWORK_MODIFICATION_BASE)
                 .queryParam("groupUuid", TEST_GROUP_ID.toString())
                 .queryParam("uuids", modificationUuid.toString())
-                .queryParam("stashed", "true"))
+                .queryParam("stashed", "true")
+                .header(NetworkModificationController.HEADER_USER_ID, TEST_USER_ID))
             .andExpect(status().isOk());
 
-        List<ModificationInfos> stashedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true, true);
+        List<ModificationInfos> stashedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, StashedFilter.ALL);
         assertEquals(1, stashedModifications.size());
         assertEquals(Boolean.TRUE, stashedModifications.getFirst().getStashed());
 
         mockMvc.perform(put(URI_NETWORK_MODIFICATION_BASE)
                 .queryParam("groupUuid", TEST_GROUP_ID.toString())
                 .queryParam("uuids", modificationUuid.toString())
-                .queryParam("stashed", "false"))
+                .queryParam("stashed", "false")
+                .header(NetworkModificationController.HEADER_USER_ID, TEST_USER_ID))
             .andExpect(status().isOk());
 
-        List<ModificationInfos> restoredModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
+        List<ModificationInfos> restoredModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, true, StashedFilter.UNSTASHED);
         assertEquals(1, restoredModifications.size());
         assertNotEquals(Boolean.TRUE, restoredModifications.getFirst().getStashed());
     }
@@ -240,7 +247,7 @@ class ParameterizedNetworkModificationControllerTest {
             networkModificationsResult.modificationResults().getFirst().get().getApplicationStatus()
         );
 
-        List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, StashedFilter.ALL);
         assertEquals(1, storedModifications.size());
         return storedModifications.getFirst().getUuid();
     }
@@ -262,7 +269,7 @@ class ParameterizedNetworkModificationControllerTest {
     }
 
     private void assertModificationCount(int expectedSize) throws Exception {
-        MvcResult result = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)
+        MvcResult result = mockMvc.perform(get("/v1/containers/{containerUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();

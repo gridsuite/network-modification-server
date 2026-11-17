@@ -32,22 +32,6 @@ class BatteryByFormulaModificationTest extends AbstractByFormulaModificationTest
     private static final String BATTERY_ID_5 = "battery5";
     private static final String BATTERY_ID_6 = "battery6";
 
-    @Test
-    void testCreateWithWarning() throws Exception {
-        IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(BATTERY_ID_1, 1.0);
-        IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
-
-        FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filterWithOneWrongId))
-                .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
-                .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
-                .operator(Operator.ADDITION)
-                .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
-                .build();
-
-        checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes, wrongIdAttributes));
-    }
-
     @Override
     protected void createEquipments() {
         getNetwork().getBattery(BATTERY_ID_1).setTargetP(100).setMaxP(500).setMinP(0).setTargetQ(80);

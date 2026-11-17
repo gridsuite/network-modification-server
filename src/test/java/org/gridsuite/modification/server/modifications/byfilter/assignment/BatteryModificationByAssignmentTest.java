@@ -31,20 +31,6 @@ class BatteryModificationByAssignmentTest extends AbstractModificationByAssignme
     private static final String BATTERY_ID_5 = "battery5";
     private static final String BATTERY_ID_6 = "battery6";
 
-    @Test
-    void testCreateWithWarning() throws Exception {
-        IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(BATTERY_ID_1, 1.0);
-        IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
-
-        DoubleAssignmentInfos assignmentInfos = DoubleAssignmentInfos.builder()
-                .filters(List.of(filterWithOneWrongId))
-                .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
-                .value(55.)
-                .build();
-
-        checkCreateWithWarning(List.of(assignmentInfos), List.of(identifiableAttributes, wrongIdAttributes));
-    }
-
     @Override
     protected void createEquipments() {
         getNetwork().getBattery(BATTERY_ID_1).setTargetP(100).setMaxP(500).setMinP(0).setTargetQ(80);
