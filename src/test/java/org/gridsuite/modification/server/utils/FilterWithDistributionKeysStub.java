@@ -7,7 +7,7 @@
 
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.filter.wip.Filter;
+import org.gridsuite.filter.Filter;
 
 import java.util.Map;
 import java.util.UUID;

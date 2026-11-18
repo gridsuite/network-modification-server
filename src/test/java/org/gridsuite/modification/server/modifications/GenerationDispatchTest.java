@@ -8,11 +8,8 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
@@ -31,8 +28,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import static org.gridsuite.modification.server.utils.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -68,8 +63,6 @@ class GenerationDispatchTest extends AbstractByFilterTest {
     private static final UUID FILTER_ID_5 = UUID.randomUUID();
     private static final UUID FILTER_ID_6 = UUID.randomUUID();
     private static final UUID FILTER_ID_NOT_FOUND = UUID.randomUUID();
-    // filters metadata endpoint, only used by the server to flag the filters that do not exist anymore when reading a modification
-    private static final String FILTERS_METADATA_PATH = "/v1/filters/metadata";
 
     // generators of each filter, some of them not existing in the test networks
     private static final Map<UUID, Set<String>> GENERATORS_BY_FILTER = Map.of(
@@ -111,12 +104,6 @@ class GenerationDispatchTest extends AbstractByFilterTest {
         return stubStandaloneFilters(generatorsByFilter.entrySet().stream()
                 .map(entry -> createFilterStub(entry.getKey(), entry.getValue()))
                 .toList());
-    }
-
-    private static AbstractFilter getMetadataFilter(UUID filterID) {
-        return IdentifierListFilter.builder().id(filterID).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
-            .filterEquipmentsAttributes(List.of())
-            .build();
     }
 
     private void assertLogReportsForDefaultNetwork(double batteryBalanceOnSc2) {
@@ -670,13 +657,8 @@ class GenerationDispatchTest extends AbstractByFilterTest {
             .build();
 
         UUID modificationUuid = saveModification(modification);
-
-        UUID stubIdForGetFilters = wireMockServer.stubFor(WireMock.get(getPath() + FILTER_ID_1 + "," + FILTER_ID_2 + "," + FILTER_ID_3 + "," + FILTER_ID_NOT_FOUND + "," + FILTER_ID_4 + "," +
-                FILTER_ID_5 + "," + FILTER_ID_6)
-            .willReturn(WireMock.ok()
-                .withBody(mapper.writeValueAsString(Stream.of(FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_4, FILTER_ID_5, FILTER_ID_6)
-                        .map(GenerationDispatchTest::getMetadataFilter).toList()))
-                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        // filterNotFound has been deleted from the directory since the modification was saved
+        directoryFilterNames.remove(FILTER_ID_NOT_FOUND);
 
         MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/" + modificationUuid))
                 .andExpect(status().isOk()).andReturn();
@@ -692,9 +674,7 @@ class GenerationDispatchTest extends AbstractByFilterTest {
         assertNull(receivedGenerationDispatch.getGeneratorsWithoutOutage().get(3).getName());
         assertNull(receivedGenerationDispatch.getGeneratorsWithFixedSupply().get(2).getName());
         assertNull(receivedGenerationDispatch.getGeneratorsFrequencyReserve().getFirst().getGeneratorsFilters().get(2).getName());
-
-        wireMockUtils.verifyGetRequest(stubIdForGetFilters, FILTERS_METADATA_PATH,
-                handleQueryParams(List.of(FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_NOT_FOUND, FILTER_ID_4, FILTER_ID_5, FILTER_ID_6)), false);
+        assertEquals("filter1", receivedGenerationDispatch.getGeneratorsWithoutOutage().getFirst().getName());
     }
 
     @Override
@@ -765,13 +745,5 @@ class GenerationDispatchTest extends AbstractByFilterTest {
         assertEquals(85.357, getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
         assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);
-    }
-
-    private static Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
-        return Map.of("ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
-    }
-
-    private static String getPath() {
-        return FILTERS_METADATA_PATH + "?ids=";
     }
 }
