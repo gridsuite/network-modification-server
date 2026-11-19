@@ -65,7 +65,7 @@ public final class TestUtils {
     public static Set<String> getRequestsDone(int n, MockWebServer server) throws UncheckedInterruptedException {
         return IntStream.range(0, n).mapToObj(i -> {
             try {
-                return Objects.requireNonNull(server.takeRequest(TIMEOUT, TimeUnit.MILLISECONDS)).getPath();
+                return Objects.requireNonNull(server.takeRequest(TIMEOUT, TimeUnit.MILLISECONDS)).getTarget();
             } catch (InterruptedException e) {
                 throw new UncheckedInterruptedException(e);
             }
@@ -101,7 +101,7 @@ public final class TestUtils {
         } catch (NullPointerException e) {
             // ignoring
         } finally {
-            server.shutdown();
+            server.close();
         }
         assertNull(httpRequest, "Should not be any http requests :");
     }
