@@ -14,11 +14,9 @@ import lombok.NonNull;
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.StaticVarCompensatorModificationInfos;
-import org.gridsuite.modification.dto.VoltageRegulationType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.StringModificationEmbedded;
 import org.springframework.util.CollectionUtils;
 
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
@@ -31,7 +29,7 @@ import static org.gridsuite.modification.server.entities.equipment.modification.
 @Entity
 @Table(name = "staticVarCompensatorModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "staticVarCompensatorModification_id_fk_constraint"))
-public class StaticVarCompensatorModificationEntity extends InjectionModificationEntity {
+public class StaticVarCompensatorModificationEntity extends RegulatingInjectionModificationEntity {
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "maxSusceptance")),
@@ -88,34 +86,6 @@ public class StaticVarCompensatorModificationEntity extends InjectionModificatio
     })
     private DoubleModificationEmbedded reactivePowerSetpoint;
 
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "voltageRegulationType")),
-        @AttributeOverride(name = "opType", column = @Column(name = "voltageRegulationTypeOp"))
-    })
-    private EnumModificationEmbedded<VoltageRegulationType> voltageRegulationType;
-
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalId")),
-        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalIdOp"))
-    })
-    private StringModificationEmbedded regulatingTerminalId;
-
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalType")),
-        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalTypeOp"))
-    })
-    private StringModificationEmbedded regulatingTerminalType;
-
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalVlId")),
-        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalVlIdOp"))
-    })
-    private StringModificationEmbedded regulatingTerminalVlId;
-
     public StaticVarCompensatorModificationEntity(@NonNull StaticVarCompensatorModificationInfos modificationInfos) {
         super(modificationInfos);
         assignAttributes(modificationInfos);
@@ -136,10 +106,8 @@ public class StaticVarCompensatorModificationEntity extends InjectionModificatio
         this.regulating = modificationInfos.getRegulating() != null ? new BooleanModificationEmbedded(modificationInfos.getRegulating()) : null;
         this.voltageSetpoint = modificationInfos.getVoltageSetpoint() != null ? new DoubleModificationEmbedded(modificationInfos.getVoltageSetpoint()) : null;
         this.reactivePowerSetpoint = modificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(modificationInfos.getReactivePowerSetpoint()) : null;
-        this.voltageRegulationType = modificationInfos.getVoltageRegulationType() != null ? new EnumModificationEmbedded<>(modificationInfos.getVoltageRegulationType()) : null;
-        this.regulatingTerminalId = modificationInfos.getRegulatingTerminalId() != null ? new StringModificationEmbedded(modificationInfos.getRegulatingTerminalId()) : null;
-        this.regulatingTerminalType = modificationInfos.getRegulatingTerminalType() != null ? new StringModificationEmbedded(modificationInfos.getRegulatingTerminalType()) : null;
-        this.regulatingTerminalVlId = modificationInfos.getRegulatingTerminalVlId() != null ? new StringModificationEmbedded(modificationInfos.getRegulatingTerminalVlId()) : null;
+        assignRegulatingAttributes(modificationInfos.getVoltageRegulationType(), modificationInfos.getRegulatingTerminalId(),
+                modificationInfos.getRegulatingTerminalType(), modificationInfos.getRegulatingTerminalVlId());
     }
 
     @Override

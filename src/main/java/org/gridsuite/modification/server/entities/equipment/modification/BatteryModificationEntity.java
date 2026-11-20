@@ -13,7 +13,6 @@ import lombok.NonNull;
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.BatteryModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.VoltageRegulationType;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.springframework.util.CollectionUtils;
@@ -31,7 +30,7 @@ import static org.gridsuite.modification.server.entities.equipment.modification.
 @Entity
 @Table(name = "batteryModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "batteryModification_id_fk_constraint"))
-public class BatteryModificationEntity extends InjectionModificationEntity {
+public class BatteryModificationEntity extends RegulatingInjectionModificationEntity {
     @Embedded
     @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minP")), @AttributeOverride(name = "opType", column = @Column(name = "minpOp"))
     })
@@ -102,34 +101,6 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     })
     private BooleanModificationEmbedded voltageRegulationOn;
 
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "voltageRegulationType")),
-        @AttributeOverride(name = "opType", column = @Column(name = "voltageRegulationTypeOp"))
-    })
-    private EnumModificationEmbedded<VoltageRegulationType> voltageRegulationType;
-
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalId")),
-        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalIdOp"))
-    })
-    private StringModificationEmbedded regulatingTerminalId;
-
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalType")),
-        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalTypeOp"))
-    })
-    private StringModificationEmbedded regulatingTerminalType;
-
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalVlId")),
-        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalVlIdOp"))
-    })
-    private StringModificationEmbedded regulatingTerminalVlId;
-
     @ElementCollection
     @CollectionTable
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
@@ -160,10 +131,8 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(batteryModificationInfos.getReactiveCapabilityCurvePoints());
         this.targetV = batteryModificationInfos.getTargetV() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getTargetV()) : null;
         this.voltageRegulationOn = batteryModificationInfos.getVoltageRegulationOn() != null ? new BooleanModificationEmbedded(batteryModificationInfos.getVoltageRegulationOn()) : null;
-        this.voltageRegulationType = batteryModificationInfos.getVoltageRegulationType() != null ? new EnumModificationEmbedded<>(batteryModificationInfos.getVoltageRegulationType()) : null;
-        this.regulatingTerminalId = batteryModificationInfos.getRegulatingTerminalId() != null ? new StringModificationEmbedded(batteryModificationInfos.getRegulatingTerminalId()) : null;
-        this.regulatingTerminalType = batteryModificationInfos.getRegulatingTerminalType() != null ? new StringModificationEmbedded(batteryModificationInfos.getRegulatingTerminalType()) : null;
-        this.regulatingTerminalVlId = batteryModificationInfos.getRegulatingTerminalVlId() != null ? new StringModificationEmbedded(batteryModificationInfos.getRegulatingTerminalVlId()) : null;
+        assignRegulatingAttributes(batteryModificationInfos.getVoltageRegulationType(), batteryModificationInfos.getRegulatingTerminalId(),
+                batteryModificationInfos.getRegulatingTerminalType(), batteryModificationInfos.getRegulatingTerminalVlId());
     }
 
     @Override
