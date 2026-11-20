@@ -115,7 +115,7 @@ public class StaticVarCompensatorModificationEntity extends InjectionModificatio
 
     @Override
     public StaticVarCompensatorModificationInfos toModificationInfos() {
-        RegulatingTerminalModificationEmbeddable regulating = RegulatingTerminalModificationEmbeddable.orEmpty(regulatingTerminal);
+        RegulatingTerminalModificationEmbeddable terminalModificationEmbeddable = RegulatingTerminalModificationEmbeddable.orEmpty(regulatingTerminal);
         return StaticVarCompensatorModificationInfos.builder()
                 .uuid(getId())
                 .date(getDate())
@@ -142,10 +142,10 @@ public class StaticVarCompensatorModificationEntity extends InjectionModificatio
                 .regulating(toAttributeModification(getRegulating()))
                 .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
                 .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
-                .voltageRegulationType(toAttributeModification(regulating.getVoltageRegulationType()))
-                .regulatingTerminalId(toAttributeModification(regulating.getRegulatingTerminalId()))
-                .regulatingTerminalType(toAttributeModification(regulating.getRegulatingTerminalType()))
-                .regulatingTerminalVlId(toAttributeModification(regulating.getRegulatingTerminalVlId()))
+                .voltageRegulationType(toAttributeModification(terminalModificationEmbeddable.getVoltageRegulationType()))
+                .regulatingTerminalId(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalId()))
+                .regulatingTerminalType(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalType()))
+                .regulatingTerminalVlId(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalVlId()))
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)

@@ -224,7 +224,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
     }
 
     private GeneratorModificationInfos.GeneratorModificationInfosBuilder<?, ?> toGeneratorModificationInfosBuilder() {
-        RegulatingTerminalModificationEmbeddable regulating = RegulatingTerminalModificationEmbeddable.orEmpty(regulatingTerminal);
+        RegulatingTerminalModificationEmbeddable terminalModificationEmbeddable = RegulatingTerminalModificationEmbeddable.orEmpty(regulatingTerminal);
         return GeneratorModificationInfos
                 .builder()
                 .uuid(getId())
@@ -258,10 +258,10 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .droop(toAttributeModification(getDroop()))
                 .directTransX(toAttributeModification(getDirectTransX()))
                 .stepUpTransformerX(toAttributeModification(getStepUpTransformerX()))
-                .voltageRegulationType(toAttributeModification(regulating.getVoltageRegulationType()))
-                .regulatingTerminalId(toAttributeModification(regulating.getRegulatingTerminalId()))
-                .regulatingTerminalType(toAttributeModification(regulating.getRegulatingTerminalType()))
-                .regulatingTerminalVlId(toAttributeModification(regulating.getRegulatingTerminalVlId()))
+                .voltageRegulationType(toAttributeModification(terminalModificationEmbeddable.getVoltageRegulationType()))
+                .regulatingTerminalId(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalId()))
+                .regulatingTerminalType(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalType()))
+                .regulatingTerminalVlId(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalVlId()))
                 .qPercent(toAttributeModification(getQPercent()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
                 .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationInfos(getReactiveCapabilityCurvePoints()))

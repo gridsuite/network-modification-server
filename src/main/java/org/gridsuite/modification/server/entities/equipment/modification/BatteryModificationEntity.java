@@ -144,7 +144,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     }
 
     private BatteryModificationInfos.BatteryModificationInfosBuilder<?, ?> toBatteryModificationInfosBuilder() {
-        RegulatingTerminalModificationEmbeddable regulating = RegulatingTerminalModificationEmbeddable.orEmpty(regulatingTerminal);
+        RegulatingTerminalModificationEmbeddable terminalModificationEmbeddable = RegulatingTerminalModificationEmbeddable.orEmpty(regulatingTerminal);
         return BatteryModificationInfos
                 .builder()
                 .uuid(getId())
@@ -178,10 +178,10 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .qMeasurementValidity(toAttributeModification(getQMeasurementValidity()))
                 .targetV(toAttributeModification(getTargetV()))
                 .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
-                .voltageRegulationType(toAttributeModification(regulating.getVoltageRegulationType()))
-                .regulatingTerminalId(toAttributeModification(regulating.getRegulatingTerminalId()))
-                .regulatingTerminalType(toAttributeModification(regulating.getRegulatingTerminalType()))
-                .regulatingTerminalVlId(toAttributeModification(regulating.getRegulatingTerminalVlId()))
+                .voltageRegulationType(toAttributeModification(terminalModificationEmbeddable.getVoltageRegulationType()))
+                .regulatingTerminalId(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalId()))
+                .regulatingTerminalType(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalType()))
+                .regulatingTerminalVlId(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalVlId()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
