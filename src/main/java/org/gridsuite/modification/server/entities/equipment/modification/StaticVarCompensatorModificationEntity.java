@@ -29,7 +29,7 @@ import static org.gridsuite.modification.server.entities.equipment.modification.
 @Entity
 @Table(name = "staticVarCompensatorModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "staticVarCompensatorModification_id_fk_constraint"))
-public class StaticVarCompensatorModificationEntity extends RegulatingInjectionModificationEntity {
+public class StaticVarCompensatorModificationEntity extends InjectionModificationEntity {
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "maxSusceptance")),
@@ -86,6 +86,9 @@ public class StaticVarCompensatorModificationEntity extends RegulatingInjectionM
     })
     private DoubleModificationEmbedded reactivePowerSetpoint;
 
+    @Embedded
+    private RegulatingTerminalModificationEmbeddable regulatingTerminal;
+
     public StaticVarCompensatorModificationEntity(@NonNull StaticVarCompensatorModificationInfos modificationInfos) {
         super(modificationInfos);
         assignAttributes(modificationInfos);
@@ -106,12 +109,13 @@ public class StaticVarCompensatorModificationEntity extends RegulatingInjectionM
         this.regulating = modificationInfos.getRegulating() != null ? new BooleanModificationEmbedded(modificationInfos.getRegulating()) : null;
         this.voltageSetpoint = modificationInfos.getVoltageSetpoint() != null ? new DoubleModificationEmbedded(modificationInfos.getVoltageSetpoint()) : null;
         this.reactivePowerSetpoint = modificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(modificationInfos.getReactivePowerSetpoint()) : null;
-        assignRegulatingAttributes(modificationInfos.getVoltageRegulationType(), modificationInfos.getRegulatingTerminalId(),
+        this.regulatingTerminal = new RegulatingTerminalModificationEmbeddable(modificationInfos.getVoltageRegulationType(), modificationInfos.getRegulatingTerminalId(),
                 modificationInfos.getRegulatingTerminalType(), modificationInfos.getRegulatingTerminalVlId());
     }
 
     @Override
     public StaticVarCompensatorModificationInfos toModificationInfos() {
+        RegulatingTerminalModificationEmbeddable regulating = RegulatingTerminalModificationEmbeddable.orEmpty(regulatingTerminal);
         return StaticVarCompensatorModificationInfos.builder()
                 .uuid(getId())
                 .date(getDate())
@@ -138,10 +142,10 @@ public class StaticVarCompensatorModificationEntity extends RegulatingInjectionM
                 .regulating(toAttributeModification(getRegulating()))
                 .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
                 .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
-                .voltageRegulationType(toAttributeModification(getVoltageRegulationType()))
-                .regulatingTerminalId(toAttributeModification(getRegulatingTerminalId()))
-                .regulatingTerminalType(toAttributeModification(getRegulatingTerminalType()))
-                .regulatingTerminalVlId(toAttributeModification(getRegulatingTerminalVlId()))
+                .voltageRegulationType(toAttributeModification(regulating.getVoltageRegulationType()))
+                .regulatingTerminalId(toAttributeModification(regulating.getRegulatingTerminalId()))
+                .regulatingTerminalType(toAttributeModification(regulating.getRegulatingTerminalType()))
+                .regulatingTerminalVlId(toAttributeModification(regulating.getRegulatingTerminalVlId()))
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)

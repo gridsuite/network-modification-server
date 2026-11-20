@@ -10,7 +10,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.AttributeModification;
-import org.gridsuite.modification.dto.InjectionModificationInfos;
 import org.gridsuite.modification.dto.VoltageRegulationType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.StringModificationEmbedded;
@@ -20,8 +19,8 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
  */
 @NoArgsConstructor
 @Getter
-@MappedSuperclass
-public class RegulatingInjectionModificationEntity extends InjectionModificationEntity {
+@Embeddable
+public class RegulatingTerminalModificationEmbeddable {
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "voltageRegulationType")),
@@ -50,17 +49,17 @@ public class RegulatingInjectionModificationEntity extends InjectionModification
     })
     private StringModificationEmbedded regulatingTerminalVlId;
 
-    protected RegulatingInjectionModificationEntity(InjectionModificationInfos modificationInfos) {
-        super(modificationInfos);
+    public RegulatingTerminalModificationEmbeddable(AttributeModification<VoltageRegulationType> voltageRegulationType,
+                                                    AttributeModification<String> regulatingTerminalId,
+                                                    AttributeModification<String> regulatingTerminalType,
+                                                    AttributeModification<String> regulatingTerminalVlId) {
+        this.voltageRegulationType = voltageRegulationType != null ? new EnumModificationEmbedded<>(voltageRegulationType) : null;
+        this.regulatingTerminalId = regulatingTerminalId != null ? new StringModificationEmbedded(regulatingTerminalId) : null;
+        this.regulatingTerminalType = regulatingTerminalType != null ? new StringModificationEmbedded(regulatingTerminalType) : null;
+        this.regulatingTerminalVlId = regulatingTerminalVlId != null ? new StringModificationEmbedded(regulatingTerminalVlId) : null;
     }
 
-    protected void assignRegulatingAttributes(AttributeModification<VoltageRegulationType> voltageRegulationTypeInfos,
-                                              AttributeModification<String> regulatingTerminalIdInfos,
-                                              AttributeModification<String> regulatingTerminalTypeInfos,
-                                              AttributeModification<String> regulatingTerminalVlIdInfos) {
-        this.voltageRegulationType = voltageRegulationTypeInfos != null ? new EnumModificationEmbedded<>(voltageRegulationTypeInfos) : null;
-        this.regulatingTerminalId = regulatingTerminalIdInfos != null ? new StringModificationEmbedded(regulatingTerminalIdInfos) : null;
-        this.regulatingTerminalType = regulatingTerminalTypeInfos != null ? new StringModificationEmbedded(regulatingTerminalTypeInfos) : null;
-        this.regulatingTerminalVlId = regulatingTerminalVlIdInfos != null ? new StringModificationEmbedded(regulatingTerminalVlIdInfos) : null;
+    public static RegulatingTerminalModificationEmbeddable orEmpty(RegulatingTerminalModificationEmbeddable regulatingTerminal) {
+        return regulatingTerminal != null ? regulatingTerminal : new RegulatingTerminalModificationEmbeddable();
     }
 }

@@ -30,7 +30,7 @@ import static org.gridsuite.modification.server.entities.equipment.modification.
 @Entity
 @Table(name = "batteryModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "batteryModification_id_fk_constraint"))
-public class BatteryModificationEntity extends RegulatingInjectionModificationEntity {
+public class BatteryModificationEntity extends InjectionModificationEntity {
     @Embedded
     @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minP")), @AttributeOverride(name = "opType", column = @Column(name = "minpOp"))
     })
@@ -105,6 +105,9 @@ public class BatteryModificationEntity extends RegulatingInjectionModificationEn
     @CollectionTable
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
 
+    @Embedded
+    private RegulatingTerminalModificationEmbeddable regulatingTerminal;
+
     public BatteryModificationEntity(@NonNull BatteryModificationInfos batteryModificationInfos) {
         super(batteryModificationInfos);
         assignAttributes(batteryModificationInfos);
@@ -131,7 +134,7 @@ public class BatteryModificationEntity extends RegulatingInjectionModificationEn
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(batteryModificationInfos.getReactiveCapabilityCurvePoints());
         this.targetV = batteryModificationInfos.getTargetV() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getTargetV()) : null;
         this.voltageRegulationOn = batteryModificationInfos.getVoltageRegulationOn() != null ? new BooleanModificationEmbedded(batteryModificationInfos.getVoltageRegulationOn()) : null;
-        assignRegulatingAttributes(batteryModificationInfos.getVoltageRegulationType(), batteryModificationInfos.getRegulatingTerminalId(),
+        this.regulatingTerminal = new RegulatingTerminalModificationEmbeddable(batteryModificationInfos.getVoltageRegulationType(), batteryModificationInfos.getRegulatingTerminalId(),
                 batteryModificationInfos.getRegulatingTerminalType(), batteryModificationInfos.getRegulatingTerminalVlId());
     }
 
@@ -141,6 +144,7 @@ public class BatteryModificationEntity extends RegulatingInjectionModificationEn
     }
 
     private BatteryModificationInfos.BatteryModificationInfosBuilder<?, ?> toBatteryModificationInfosBuilder() {
+        RegulatingTerminalModificationEmbeddable regulating = RegulatingTerminalModificationEmbeddable.orEmpty(regulatingTerminal);
         return BatteryModificationInfos
                 .builder()
                 .uuid(getId())
@@ -174,10 +178,10 @@ public class BatteryModificationEntity extends RegulatingInjectionModificationEn
                 .qMeasurementValidity(toAttributeModification(getQMeasurementValidity()))
                 .targetV(toAttributeModification(getTargetV()))
                 .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
-                .voltageRegulationType(toAttributeModification(getVoltageRegulationType()))
-                .regulatingTerminalId(toAttributeModification(getRegulatingTerminalId()))
-                .regulatingTerminalType(toAttributeModification(getRegulatingTerminalType()))
-                .regulatingTerminalVlId(toAttributeModification(getRegulatingTerminalVlId()))
+                .voltageRegulationType(toAttributeModification(regulating.getVoltageRegulationType()))
+                .regulatingTerminalId(toAttributeModification(regulating.getRegulatingTerminalId()))
+                .regulatingTerminalType(toAttributeModification(regulating.getRegulatingTerminalType()))
+                .regulatingTerminalVlId(toAttributeModification(regulating.getRegulatingTerminalVlId()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
