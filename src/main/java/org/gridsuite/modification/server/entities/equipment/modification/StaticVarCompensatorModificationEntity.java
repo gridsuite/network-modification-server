@@ -14,11 +14,9 @@ import lombok.NonNull;
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.StaticVarCompensatorModificationInfos;
-import org.gridsuite.modification.dto.VoltageRegulationType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.StringModificationEmbedded;
 import org.springframework.util.CollectionUtils;
 
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
@@ -89,32 +87,7 @@ public class StaticVarCompensatorModificationEntity extends InjectionModificatio
     private DoubleModificationEmbedded reactivePowerSetpoint;
 
     @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "voltageRegulationType")),
-        @AttributeOverride(name = "opType", column = @Column(name = "voltageRegulationTypeOp"))
-    })
-    private EnumModificationEmbedded<VoltageRegulationType> voltageRegulationType;
-
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalId")),
-        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalIdOp"))
-    })
-    private StringModificationEmbedded regulatingTerminalId;
-
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalType")),
-        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalTypeOp"))
-    })
-    private StringModificationEmbedded regulatingTerminalType;
-
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalVlId")),
-        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalVlIdOp"))
-    })
-    private StringModificationEmbedded regulatingTerminalVlId;
+    private RegulatingTerminalModificationEmbeddable regulatingTerminal;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -192,10 +165,8 @@ public class StaticVarCompensatorModificationEntity extends InjectionModificatio
         this.regulating = modificationInfos.getRegulating() != null ? new BooleanModificationEmbedded(modificationInfos.getRegulating()) : null;
         this.voltageSetpoint = modificationInfos.getVoltageSetpoint() != null ? new DoubleModificationEmbedded(modificationInfos.getVoltageSetpoint()) : null;
         this.reactivePowerSetpoint = modificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(modificationInfos.getReactivePowerSetpoint()) : null;
-        this.voltageRegulationType = modificationInfos.getVoltageRegulationType() != null ? new EnumModificationEmbedded<>(modificationInfos.getVoltageRegulationType()) : null;
-        this.regulatingTerminalId = modificationInfos.getRegulatingTerminalId() != null ? new StringModificationEmbedded(modificationInfos.getRegulatingTerminalId()) : null;
-        this.regulatingTerminalType = modificationInfos.getRegulatingTerminalType() != null ? new StringModificationEmbedded(modificationInfos.getRegulatingTerminalType()) : null;
-        this.regulatingTerminalVlId = modificationInfos.getRegulatingTerminalVlId() != null ? new StringModificationEmbedded(modificationInfos.getRegulatingTerminalVlId()) : null;
+        this.regulatingTerminal = new RegulatingTerminalModificationEmbeddable(modificationInfos.getVoltageRegulationType(), modificationInfos.getRegulatingTerminalId(),
+                modificationInfos.getRegulatingTerminalType(), modificationInfos.getRegulatingTerminalVlId());
         this.standbyAutomatonOn = modificationInfos.getStandbyAutomatonOn() != null ? new BooleanModificationEmbedded(modificationInfos.getStandbyAutomatonOn()) : null;
         this.standby = modificationInfos.getStandby() != null ? new BooleanModificationEmbedded(modificationInfos.getStandby()) : null;
         this.b0 = modificationInfos.getB0() != null ? new DoubleModificationEmbedded(modificationInfos.getB0()) : null;
@@ -208,6 +179,7 @@ public class StaticVarCompensatorModificationEntity extends InjectionModificatio
 
     @Override
     public StaticVarCompensatorModificationInfos toModificationInfos() {
+        RegulatingTerminalModificationEmbeddable terminalModificationEmbeddable = RegulatingTerminalModificationEmbeddable.orEmpty(regulatingTerminal);
         return StaticVarCompensatorModificationInfos.builder()
                 .uuid(getId())
                 .date(getDate())
@@ -234,10 +206,10 @@ public class StaticVarCompensatorModificationEntity extends InjectionModificatio
                 .regulating(toAttributeModification(getRegulating()))
                 .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
                 .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
-                .voltageRegulationType(toAttributeModification(getVoltageRegulationType()))
-                .regulatingTerminalId(toAttributeModification(getRegulatingTerminalId()))
-                .regulatingTerminalType(toAttributeModification(getRegulatingTerminalType()))
-                .regulatingTerminalVlId(toAttributeModification(getRegulatingTerminalVlId()))
+                .voltageRegulationType(toAttributeModification(terminalModificationEmbeddable.getVoltageRegulationType()))
+                .regulatingTerminalId(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalId()))
+                .regulatingTerminalType(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalType()))
+                .regulatingTerminalVlId(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalVlId()))
                 .standbyAutomatonOn(toAttributeModification(getStandbyAutomatonOn()))
                 .standby(toAttributeModification(getStandby()))
                 .b0(toAttributeModification(getB0()))

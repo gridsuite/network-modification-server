@@ -1201,11 +1201,8 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void updateModificationActivation(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
-        if (metadata.getActivated() == null) {
-            return;
-        }
-        modificationRepository.findAllByIdIn(modificationUuids).forEach(m -> m.setActivated(metadata.getActivated()));
+    public void updateModificationActivation(@NonNull List<UUID> modificationUuids, boolean active) {
+        modificationRepository.findAllByIdIn(modificationUuids).forEach(m -> m.setActivated(active));
     }
 
     /**
