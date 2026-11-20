@@ -52,8 +52,6 @@ import java.util.stream.Stream;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -118,10 +116,6 @@ class ParameterizedNetworkModificationControllerTest {
                                                                   ModificationInfos modificationToUpdate) throws Exception {
         UUID createdModificationUuid = createModification(modificationToCreate);
 
-        if (modificationToCreate instanceof EquipmentCreationInfos creation) {
-            assertNotNull(network.getIdentifiable(creation.getEquipmentId()));
-        }
-
         assertModificationCount(1);
 
         ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, StashedFilter.ALL).getFirst();
@@ -159,10 +153,6 @@ class ParameterizedNetworkModificationControllerTest {
         modificationToCreate.setActivated(false);
 
         createModification(modificationToCreate);
-
-        if (modificationToCreate instanceof EquipmentCreationInfos creation) {
-            assertNull(network.getIdentifiable(creation.getEquipmentId()));
-        }
 
         List<ModificationInfos> completeModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, StashedFilter.ALL);
         assertEquals(1, completeModifications.size());

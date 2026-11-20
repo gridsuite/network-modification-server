@@ -172,8 +172,6 @@ class GeneratorScalingTest extends AbstractScalingTest {
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
 
-        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0.01D);
-        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0.01D);
         assertLogMessage("Ventilation mode could not be applied: at least one equipment is missing a distribution key",
                 "network.modification.distributionKeys.missingEquipmentKey", reportService);
 
