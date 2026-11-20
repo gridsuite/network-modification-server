@@ -89,6 +89,62 @@ public class StaticVarCompensatorModificationEntity extends InjectionModificatio
     @Embedded
     private RegulatingTerminalModificationEmbeddable regulatingTerminal;
 
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "standbyAutomatonOn")),
+        @AttributeOverride(name = "opType", column = @Column(name = "standbyAutomatonOnOp"))
+    })
+    private BooleanModificationEmbedded standbyAutomatonOn;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "standby")),
+        @AttributeOverride(name = "opType", column = @Column(name = "standbyOp"))
+    })
+    private BooleanModificationEmbedded standby;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "b0")),
+        @AttributeOverride(name = "opType", column = @Column(name = "b0Op"))
+    })
+    private DoubleModificationEmbedded b0;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "q0")),
+        @AttributeOverride(name = "opType", column = @Column(name = "q0Op"))
+    })
+    private DoubleModificationEmbedded q0;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "lowVoltageSetpoint")),
+        @AttributeOverride(name = "opType", column = @Column(name = "lowVoltageSetpointOp"))
+    })
+    private DoubleModificationEmbedded lowVoltageSetpoint;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "highVoltageSetpoint")),
+        @AttributeOverride(name = "opType", column = @Column(name = "highVoltageSetpointOp"))
+    })
+    private DoubleModificationEmbedded highVoltageSetpoint;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "lowVoltageThreshold")),
+        @AttributeOverride(name = "opType", column = @Column(name = "lowVoltageThresholdOp"))
+    })
+    private DoubleModificationEmbedded lowVoltageThreshold;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "highVoltageThreshold")),
+        @AttributeOverride(name = "opType", column = @Column(name = "highVoltageThresholdOp"))
+    })
+    private DoubleModificationEmbedded highVoltageThreshold;
+
     public StaticVarCompensatorModificationEntity(@NonNull StaticVarCompensatorModificationInfos modificationInfos) {
         super(modificationInfos);
         assignAttributes(modificationInfos);
@@ -111,6 +167,18 @@ public class StaticVarCompensatorModificationEntity extends InjectionModificatio
         this.reactivePowerSetpoint = modificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(modificationInfos.getReactivePowerSetpoint()) : null;
         this.regulatingTerminal = new RegulatingTerminalModificationEmbeddable(modificationInfos.getVoltageRegulationType(), modificationInfos.getRegulatingTerminalId(),
                 modificationInfos.getRegulatingTerminalType(), modificationInfos.getRegulatingTerminalVlId());
+        assignStandbyAutomatonAttributes(modificationInfos);
+    }
+
+    private void assignStandbyAutomatonAttributes(StaticVarCompensatorModificationInfos modificationInfos) {
+        this.standbyAutomatonOn = modificationInfos.getStandbyAutomatonOn() != null ? new BooleanModificationEmbedded(modificationInfos.getStandbyAutomatonOn()) : null;
+        this.standby = modificationInfos.getStandby() != null ? new BooleanModificationEmbedded(modificationInfos.getStandby()) : null;
+        this.b0 = modificationInfos.getB0() != null ? new DoubleModificationEmbedded(modificationInfos.getB0()) : null;
+        this.q0 = modificationInfos.getQ0() != null ? new DoubleModificationEmbedded(modificationInfos.getQ0()) : null;
+        this.lowVoltageSetpoint = modificationInfos.getLowVoltageSetpoint() != null ? new DoubleModificationEmbedded(modificationInfos.getLowVoltageSetpoint()) : null;
+        this.highVoltageSetpoint = modificationInfos.getHighVoltageSetpoint() != null ? new DoubleModificationEmbedded(modificationInfos.getHighVoltageSetpoint()) : null;
+        this.lowVoltageThreshold = modificationInfos.getLowVoltageThreshold() != null ? new DoubleModificationEmbedded(modificationInfos.getLowVoltageThreshold()) : null;
+        this.highVoltageThreshold = modificationInfos.getHighVoltageThreshold() != null ? new DoubleModificationEmbedded(modificationInfos.getHighVoltageThreshold()) : null;
     }
 
     @Override
@@ -146,6 +214,14 @@ public class StaticVarCompensatorModificationEntity extends InjectionModificatio
                 .regulatingTerminalId(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalId()))
                 .regulatingTerminalType(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalType()))
                 .regulatingTerminalVlId(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalVlId()))
+                .standbyAutomatonOn(toAttributeModification(getStandbyAutomatonOn()))
+                .standby(toAttributeModification(getStandby()))
+                .b0(toAttributeModification(getB0()))
+                .q0(toAttributeModification(getQ0()))
+                .lowVoltageSetpoint(toAttributeModification(getLowVoltageSetpoint()))
+                .highVoltageSetpoint(toAttributeModification(getHighVoltageSetpoint()))
+                .lowVoltageThreshold(toAttributeModification(getLowVoltageThreshold()))
+                .highVoltageThreshold(toAttributeModification(getHighVoltageThreshold()))
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
