@@ -10,15 +10,13 @@ import org.gridsuite.modification.server.dto.ModificationApplicability;
 import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationReferenceEntity;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -32,6 +30,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     /**
      * @return the modifications of the container that are applied on the given root network tag, that is the activated
      * ones the tag does not deactivate. A reference is resolved to the shared modification carrying the applicability.
+     * A modification without applicability for the tag is kept, for the applicator to reject it and throw an exception.
      */
     @Query("""
             SELECT m FROM ModificationEntity m
@@ -46,11 +45,11 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
                                                                     @Param("rootNetworkTag") String rootNetworkTag);
 
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) "
-            + "FROM ModificationEntity m WHERE m.container.id = ?1 order by m.modificationsOrder")
-    List<ModificationEntity> findAllBaseByContainerId(UUID containerId);
+            + "FROM ModificationEntity m WHERE m.id IN (?1) order by m.modificationsOrder")
+    List<ModificationEntity> findMetadataByIdIn(List<UUID> uuids);
 
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
-    List<ModificationEntity> findMetadataIn(List<UUID> uuids);
+    @Query(value = "SELECT new ModificationEntity(m.id, m.description, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
+    List<ModificationEntity> findBaseByIdIn(List<UUID> uuids);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder")
     List<ModificationEntity> findAllByIdIn(List<UUID> uuids);
@@ -75,12 +74,13 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<ModificationApplicability> findApplicabilitiesByIdIn(@Param("uuids") Collection<UUID> uuids);
 
     /**
-     * @return every modification held by the given containers, the content of their composites included.
+     * @return the IDs of every modification held by the given containers, the content of their composites included. The
+     * references are returned, but not the shared modifications they point to, nor their content.
      */
     @Query("""
         WITH descendants AS (
             SELECT m.id AS id FROM ModificationEntity m WHERE m.container.id IN (:containerIds)
-            UNION ALL
+            UNION
             SELECT m.id AS id FROM ModificationEntity m JOIN descendants d ON m.container.id = d.id
         )
         SELECT d.id FROM descendants d
@@ -93,6 +93,9 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
      */
     @Query("SELECT DISTINCT r.referencedId FROM ModificationReferenceEntity r WHERE r.id IN :ids")
     List<UUID> findReferencedModificationIds(@Param("ids") Collection<UUID> ids);
+
+    @Query(value = "SELECT r from ModificationReferenceEntity r WHERE r.id IN (?1)")
+    List<ModificationReferenceEntity> findReferenceModificationByIdIn(List<UUID> uuids);
 
     /**
      * @return true if at least one modification reference points to {@code referencedId}
@@ -135,14 +138,6 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     // children of one / many containers (no type param — id disambiguates)
     @Query("SELECT m FROM ModificationEntity m WHERE m.container.id = :containerId ORDER BY m.modificationsOrder ASC")
     List<ModificationEntity> findAllByContainer(@Param("containerId") UUID containerId);
-
-    @Query("""
-          SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description)
-            FROM ModificationEntity m
-           WHERE m.container.id IN :containerIds
-           ORDER BY m.container.id, m.modificationsOrder ASC
-        """)
-    List<ModificationEntity> findAllByContainers(@Param("containerIds") Collection<UUID> containerIds);
 
     @Query(value = """
             SELECT CAST(m.container_id AS VARCHAR)
@@ -247,6 +242,27 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findAllReferencedModificationAncestorsUuids(@Param("modificationUuids") Collection<UUID> modificationUuids);
 
     /**
+     * @return uuid of the group holding {@code modificationUuid}, directly or through any number of composites;
+     * null if the modification doesn't belong to a group (e.g. it is inside a shared composite)
+     */
+    @NativeQuery("""
+        WITH RECURSIVE ancestors(id) AS (
+            SELECT m.container_id
+              FROM modification m
+             WHERE m.id = :modificationUuid
+            UNION ALL
+            SELECT comp.container_id
+              FROM ancestors a
+              JOIN modification_container c ON c.id = a.id AND c.type = 'COMPOSITE'
+              JOIN modification comp ON comp.id = a.id
+        )
+        SELECT CAST(a.id AS VARCHAR)
+          FROM ancestors a
+          JOIN modification_container c ON c.id = a.id AND c.type = 'GROUP'
+        """)
+    UUID findGroupIdByModificationId(@Param("modificationUuid") UUID modificationUuid);
+
+    /**
      * Returns the composite UUID followed by every descendant UUID (composites <em>and</em> leaves),
      * ordered depth-first by {@code modifications_order} at each level.
      */
@@ -336,4 +352,27 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
             SELECT EXISTS (SELECT 1 FROM descendants WHERE type = 'MODIFICATION_REFERENCE')
             """)
     boolean existsReferenceInContainersSubtrees(@Param("containerIds") Collection<UUID> containerIds);
+
+    /**
+     * @return those of {@code containerIds} (groups or composites) holding an unstashed modification reference,
+     * directly or nested in any of their unstashed composite descendants
+     */
+    @NativeQuery("""
+            WITH RECURSIVE descendants(root_id, id, type) AS (
+                SELECT m.container_id, m.id, m.type
+                  FROM modification m
+                 WHERE m.container_id IN (:containerIds)
+                   AND m.stashed = false
+                   AND m.type IN ('COMPOSITE_MODIFICATION', 'MODIFICATION_REFERENCE')
+                UNION ALL
+                SELECT d.root_id, m.id, m.type
+                  FROM modification m
+                  JOIN descendants d ON m.container_id = d.id
+                 WHERE d.type = 'COMPOSITE_MODIFICATION'
+                   AND m.stashed = false
+                   AND m.type IN ('COMPOSITE_MODIFICATION', 'MODIFICATION_REFERENCE')
+            )
+            SELECT DISTINCT CAST(root_id AS VARCHAR) FROM descendants WHERE type = 'MODIFICATION_REFERENCE'
+            """)
+    List<UUID> findContainersWithReferenceInSubtrees(@Param("containerIds") Collection<UUID> containerIds);
 }

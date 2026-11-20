@@ -12,6 +12,7 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ModificationReferenceInfos;
+import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @Tag("IntegrationTest")
+@ContextConfigurationWithTestChannel
 class ModificationReferenceTest extends AbstractNetworkModificationTest {
 
     @Autowired
@@ -107,7 +109,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .activated(true)
                 .build();
-        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos));
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos), List.of());
         UUID referenceUuid = saved.get(0).getUuid();
 
         ModificationInfos fetched = networkModificationRepository.getModificationInfo(referenceUuid);
@@ -143,7 +145,7 @@ class ModificationReferenceTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .activated(true)
                 .build();
-        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos));
+        List<ModificationInfos> saved = networkModificationRepository.saveModificationInfos(UUID.randomUUID(), List.of(referenceInfos), List.of());
 
         ModificationInfos fetched = networkModificationRepository.getModificationInfo(saved.get(0).getUuid());
 

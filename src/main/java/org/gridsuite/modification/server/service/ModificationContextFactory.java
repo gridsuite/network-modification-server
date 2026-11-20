@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server.service;
 
+import org.gridsuite.modification.context.FilterLoader;
+import org.gridsuite.modification.context.FilterWithDistributionKeysLoader;
 import org.gridsuite.modification.context.ModificationContext;
 import org.springframework.stereotype.Service;
 
@@ -30,9 +32,17 @@ public class ModificationContextFactory {
     }
 
     public ModificationContext create() {
+        return create(filterLoaderService.getLoader(), filterWithDistributionKeysLoaderService.getLoader());
+    }
+
+    public ModificationContext createWithFilterNames() {
+        return create(filterLoaderService.getLoaderWithNames(), filterWithDistributionKeysLoaderService.getLoaderWithNames());
+    }
+
+    private ModificationContext create(FilterLoader filterLoader, FilterWithDistributionKeysLoader filterWithDistributionKeysLoader) {
         return ModificationContext.builder()
-                .filterLoader(filterLoaderService)
-                .filterWithDistributionKeysLoader(filterWithDistributionKeysLoaderService)
+                .filterLoader(filterLoader)
+                .filterWithDistributionKeysLoader(filterWithDistributionKeysLoader)
                 .loadFlowParametersLoader(loadFlowParametersLoaderService)
                 .build();
     }

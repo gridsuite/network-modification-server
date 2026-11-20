@@ -119,10 +119,6 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
             .toList();
     }
 
-    public void removeAllModifications() {
-        modifications.clear();
-    }
-
     public List<ModificationEntity> removeAllStashedModifications() {
         List<ModificationEntity> stashedModifications = getStashedModifications();
         modifications.removeAll(stashedModifications);

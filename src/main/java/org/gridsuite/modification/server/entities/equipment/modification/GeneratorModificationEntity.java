@@ -14,7 +14,6 @@ import lombok.NonNull;
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.GeneratorModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.VoltageRegulationType;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.springframework.util.CollectionUtils;
@@ -161,34 +160,6 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "voltageRegulationType")),
-        @AttributeOverride(name = "opType", column = @Column(name = "voltageRegulationTypeOp"))
-    })
-    private EnumModificationEmbedded<VoltageRegulationType> voltageRegulationType;
-
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalId")),
-        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalIdOp"))
-    })
-    private StringModificationEmbedded regulatingTerminalId;
-
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalType")),
-        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalTypeOp"))
-    })
-    private StringModificationEmbedded regulatingTerminalType;
-
-    @Embedded
-    @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalVlId")),
-        @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalVlIdOp"))
-    })
-    private StringModificationEmbedded regulatingTerminalVlId;
-
-    @Embedded
-    @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "qPercent")),
         @AttributeOverride(name = "opType", column = @Column(name = "qPercentOp"))
     })
@@ -204,6 +175,9 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
     @ElementCollection
     @CollectionTable
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
+
+    @Embedded
+    private RegulatingTerminalModificationEmbeddable regulatingTerminal;
 
     public GeneratorModificationEntity(@NonNull GeneratorModificationInfos generatorModificationInfos) {
         super(generatorModificationInfos);
@@ -236,10 +210,8 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         this.droop = generatorModificationInfos.getDroop() != null ? new FloatModificationEmbedded(generatorModificationInfos.getDroop()) : null;
         this.directTransX = generatorModificationInfos.getDirectTransX() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getDirectTransX()) : null;
         this.stepUpTransformerX = generatorModificationInfos.getStepUpTransformerX() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getStepUpTransformerX()) : null;
-        this.voltageRegulationType = generatorModificationInfos.getVoltageRegulationType() != null ? new EnumModificationEmbedded<>(generatorModificationInfos.getVoltageRegulationType()) : null;
-        this.regulatingTerminalId = generatorModificationInfos.getRegulatingTerminalId() != null ? new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalId()) : null;
-        this.regulatingTerminalType = generatorModificationInfos.getRegulatingTerminalType() != null ? new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalType()) : null;
-        this.regulatingTerminalVlId = generatorModificationInfos.getRegulatingTerminalVlId() != null ? new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalVlId()) : null;
+        this.regulatingTerminal = new RegulatingTerminalModificationEmbeddable(generatorModificationInfos.getVoltageRegulationType(), generatorModificationInfos.getRegulatingTerminalId(),
+                generatorModificationInfos.getRegulatingTerminalType(), generatorModificationInfos.getRegulatingTerminalVlId());
         this.qPercent = generatorModificationInfos.getQPercent() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getQPercent()) : null;
         this.reactiveCapabilityCurve = generatorModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(generatorModificationInfos.getReactiveCapabilityCurve())
                 : null;
@@ -252,6 +224,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
     }
 
     private GeneratorModificationInfos.GeneratorModificationInfosBuilder<?, ?> toGeneratorModificationInfosBuilder() {
+        RegulatingTerminalModificationEmbeddable terminalModificationEmbeddable = RegulatingTerminalModificationEmbeddable.orEmpty(regulatingTerminal);
         return GeneratorModificationInfos
                 .builder()
                 .uuid(getId())
@@ -285,10 +258,10 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .droop(toAttributeModification(getDroop()))
                 .directTransX(toAttributeModification(getDirectTransX()))
                 .stepUpTransformerX(toAttributeModification(getStepUpTransformerX()))
-                .voltageRegulationType(toAttributeModification(getVoltageRegulationType()))
-                .regulatingTerminalId(toAttributeModification(getRegulatingTerminalId()))
-                .regulatingTerminalType(toAttributeModification(getRegulatingTerminalType()))
-                .regulatingTerminalVlId(toAttributeModification(getRegulatingTerminalVlId()))
+                .voltageRegulationType(toAttributeModification(terminalModificationEmbeddable.getVoltageRegulationType()))
+                .regulatingTerminalId(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalId()))
+                .regulatingTerminalType(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalType()))
+                .regulatingTerminalVlId(toAttributeModification(terminalModificationEmbeddable.getRegulatingTerminalVlId()))
                 .qPercent(toAttributeModification(getQPercent()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
                 .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationInfos(getReactiveCapabilityCurvePoints()))

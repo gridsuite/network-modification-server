@@ -6,9 +6,7 @@
  */
 package org.gridsuite.modification.server.service;
 
-import org.gridsuite.modification.server.dto.ModificationReferenceData;
 import org.gridsuite.modification.server.dto.PermissionType;
-import org.gridsuite.modification.server.dto.ReferenceAttributes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,8 +25,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.NetworkModificationController.HEADER_USER_ID;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.springframework.http.HttpMethod.*;
-import static org.springframework.test.web.client.ExpectedCount.once;
+import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
@@ -47,121 +44,6 @@ class DirectoryServiceTest {
 
     @AfterEach
     void tearDown() {
-        directoryServer.verify();
-    }
-
-    @Test
-    void testUpdateElementReferences() {
-        UUID elementUuid = UUID.randomUUID();
-        UUID referenceUuid = UUID.randomUUID();
-        UUID rootContainerId = UUID.randomUUID();
-        UUID containerId = UUID.randomUUID();
-        String userId = "userId";
-        ReferenceAttributes referenceAttributes = ReferenceAttributes.createReferenceAttributes(
-                referenceUuid,
-                rootContainerId,
-                containerId,
-                ReferenceAttributes.ReferenceType.STUDY_NODE
-        );
-
-        String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/" + elementUuid + "/references";
-        directoryServer.expect(requestTo(expectedUrl))
-                .andExpect(method(PUT))
-                .andExpect(header(HEADER_USER_ID, userId))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].referenceId").value(referenceUuid.toString()))
-                .andRespond(withSuccess());
-
-        directoryService.updateElementReferences(elementUuid, List.of(referenceAttributes), userId);
-    }
-
-    @Test
-    void testCreateElementReferences() {
-        UUID elementUuid = UUID.randomUUID();
-        UUID referenceUuid = UUID.randomUUID();
-        UUID rootContainerId = UUID.randomUUID();
-        UUID containerId = UUID.randomUUID();
-        String userId = "userId";
-        ReferenceAttributes referenceAttributes = ReferenceAttributes.createReferenceAttributes(
-                referenceUuid,
-                rootContainerId,
-                containerId,
-                ReferenceAttributes.ReferenceType.STUDY_NODE
-        );
-
-        String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/" + elementUuid + "/references";
-        directoryServer.expect(requestTo(expectedUrl))
-                .andExpect(method(POST))
-                .andExpect(header(HEADER_USER_ID, userId))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].referenceId").value(referenceUuid.toString()))
-                .andRespond(withSuccess());
-
-        directoryService.createElementReferences(elementUuid, List.of(referenceAttributes), userId);
-    }
-
-    @Test
-    void testRemoveElementReferences() {
-        UUID sharedElementUuid = UUID.randomUUID();
-        UUID referenceUuid1 = UUID.randomUUID();
-        UUID referenceUuid2 = UUID.randomUUID();
-        String userId = "userId";
-
-        // both references of the same shared element are removed in a single call
-        String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/" + sharedElementUuid + "/references";
-        directoryServer.expect(once(), requestTo(expectedUrl))
-                .andExpect(method(DELETE))
-                .andExpect(header(HEADER_USER_ID, userId))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json("[\"" + referenceUuid1 + "\",\"" + referenceUuid2 + "\"]"))
-                .andRespond(withSuccess());
-
-        directoryService.removeElementReferences(List.of(
-                new ModificationReferenceData(referenceUuid1, sharedElementUuid, null),
-                new ModificationReferenceData(referenceUuid2, sharedElementUuid, UUID.randomUUID())), userId);
-
-        directoryServer.verify();
-    }
-
-    @Test
-    void testRecreateReferences() {
-        UUID nodeContainerUuid = UUID.randomUUID();
-        UUID studyRootContainerUuid = UUID.randomUUID();
-        String userId = "userId";
-
-        UUID modification1Uuid = UUID.randomUUID();
-        UUID referencedId1 = UUID.randomUUID();
-
-        UUID modification2Uuid = UUID.randomUUID();
-        UUID referencedId2 = UUID.randomUUID();
-
-        List<ModificationReferenceData> referencesData = List.of(
-                new ModificationReferenceData(modification1Uuid, referencedId1, UUID.randomUUID()),
-                new ModificationReferenceData(modification2Uuid, referencedId2, null)
-        );
-
-        // First reference: inside composite (containerId != null)
-        String expectedUrl1 = DIRECTORY_SERVER_BASE_URI + "/v1/elements/" + referencedId1 + "/references";
-        directoryServer.expect(requestTo(expectedUrl1))
-                .andExpect(method(POST))
-                .andExpect(header(HEADER_USER_ID, userId))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].referenceId").value(modification1Uuid.toString()))
-                .andExpect(jsonPath("$[0].referenceType").value(ReferenceAttributes.ReferenceType.STUDY_NODE_NETWORK_MODIFICATION.toString()))
-                .andRespond(withSuccess());
-
-        // Second reference: at root level (containerId == null)
-        String expectedUrl2 = DIRECTORY_SERVER_BASE_URI + "/v1/elements/" + referencedId2 + "/references";
-        directoryServer.expect(requestTo(expectedUrl2))
-                .andExpect(method(POST))
-                .andExpect(header(HEADER_USER_ID, userId))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].referenceId").value(modification2Uuid.toString()))
-                .andExpect(jsonPath("$[0].referenceType").value(ReferenceAttributes.ReferenceType.STUDY_NODE.toString()))
-                .andRespond(withSuccess());
-
-        directoryService.createElementReferences(nodeContainerUuid, studyRootContainerUuid, userId, referencesData);
-
         directoryServer.verify();
     }
 
@@ -229,5 +111,37 @@ class DirectoryServiceTest {
         return directoryServer.expect(requestTo(expectedUrl))
                 .andExpect(method(GET))
                 .andExpect(header(HEADER_USER_ID, userId));
+    }
+
+    @Test
+    void testGetElementNames() {
+        UUID existingElementUuid = UUID.randomUUID();
+        UUID deletedElementUuid = UUID.randomUUID();
+
+        String expectedUrl = DIRECTORY_SERVER_BASE_URI + "/v1/elements/names"
+                + "?ids=" + existingElementUuid + "&ids=" + deletedElementUuid + "&strictMode=false";
+        directoryServer.expect(requestTo(expectedUrl))
+                .andExpect(method(GET))
+                .andRespond(withSuccess("{\"" + existingElementUuid + "\":\"filter name\"}", MediaType.APPLICATION_JSON));
+
+        // the directory-server leaves out the elements it does not know anymore
+        assertThat(directoryService.getElementNames(List.of(existingElementUuid, deletedElementUuid)))
+                .containsExactlyInAnyOrderEntriesOf(Map.of(existingElementUuid, "filter name"));
+    }
+
+    @Test
+    void testGetElementNamesAsksNothingWithoutElement() {
+        assertThat(directoryService.getElementNames(Set.of())).isEmpty();
+    }
+
+    @Test
+    void testGetElementNamesThrowsWhenTheDirectoryFails() {
+        UUID elementUuid = UUID.randomUUID();
+
+        directoryServer.expect(requestTo(DIRECTORY_SERVER_BASE_URI + "/v1/elements/names?ids=" + elementUuid + "&strictMode=false"))
+                .andExpect(method(GET))
+                .andRespond(withServerError());
+
+        assertThrows(RestClientException.class, () -> directoryService.getElementNames(List.of(elementUuid)));
     }
 }

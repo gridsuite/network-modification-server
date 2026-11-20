@@ -300,7 +300,8 @@ class ModificationIndexationTest {
         // Create the composite modification to pass later to ?action=insert
         UUID compositeUuid = networkModificationService.createNetworkCompositeModification(
                 modifications.stream().map(ModificationInfos::getUuid).toList(),
-                "composite name"
+                "composite name",
+                List.of()
         );
 
         // Need to remove the listener created in the last modifications application
@@ -350,10 +351,7 @@ class ModificationIndexationTest {
         /*
         Delete this modification
          */
-        networkModificationService.deleteNetworkModifications(
-            groupUuid1,
-            modifications.stream().map(ModificationInfos::getUuid).toList()
-        );
+        networkModificationService.deleteNetworkModifications(modifications.stream().map(ModificationInfos::getUuid).toList(), "userId");
 
         /*
         check results in database and in elasticsearch
@@ -378,7 +376,7 @@ class ModificationIndexationTest {
         /*
         Delete modification group
          */
-        networkModificationService.deleteModificationGroups(List.of(groupUuid1));
+        networkModificationService.deleteModificationGroups(List.of(groupUuid1), "userId");
 
         /*
         check results in database and in elasticsearch

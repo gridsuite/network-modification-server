@@ -9,8 +9,8 @@ package org.gridsuite.modification.server.modifications.scaling;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import lombok.SneakyThrows;
+import org.gridsuite.filter.IdentifierListFilter;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.filter.wip.IdentifierListFilter;
 import org.gridsuite.modification.context.dto.FilterWithDistributionKeys;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.FilterWithDistributionKeysStub;
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -49,7 +50,7 @@ public abstract class AbstractScalingTest extends AbstractNetworkModificationTes
         return new FilterWithDistributionKeysStub(filterId,
                 IdentifierListFilter.builder()
                         .equipmentType(equipmentType)
-                        .equipmentIds(distributionKeys.keySet())
+                        .equipmentIds(new TreeSet<>(distributionKeys.keySet()))
                         .build(),
                 distributionKeys);
     }

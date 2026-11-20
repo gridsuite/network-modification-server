@@ -38,6 +38,7 @@ public enum ModificationTypeWithPreloadingStrategy {
     SHUNT_COMPENSATOR_CREATION(ModificationType.SHUNT_COMPENSATOR_CREATION, PreloadingStrategy.NONE),
     SHUNT_COMPENSATOR_MODIFICATION(ModificationType.SHUNT_COMPENSATOR_MODIFICATION, PreloadingStrategy.NONE),
     STATIC_VAR_COMPENSATOR_CREATION(ModificationType.STATIC_VAR_COMPENSATOR_CREATION, PreloadingStrategy.NONE),
+    STATIC_VAR_COMPENSATOR_MODIFICATION(ModificationType.STATIC_VAR_COMPENSATOR_MODIFICATION, PreloadingStrategy.NONE),
     VOLTAGE_LEVEL_CREATION(ModificationType.VOLTAGE_LEVEL_CREATION, PreloadingStrategy.NONE),
     VOLTAGE_LEVEL_MODIFICATION(ModificationType.VOLTAGE_LEVEL_MODIFICATION, PreloadingStrategy.NONE),
     LINE_SPLIT_WITH_VOLTAGE_LEVEL(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL, PreloadingStrategy.NONE),
@@ -69,7 +70,8 @@ public enum ModificationTypeWithPreloadingStrategy {
     LIMIT_SETS_TABULAR_MODIFICATION(ModificationType.LIMIT_SETS_TABULAR_MODIFICATION, PreloadingStrategy.COLLECTION),
     CREATE_VOLTAGE_LEVEL_SECTION(ModificationType.CREATE_VOLTAGE_LEVEL_SECTION, PreloadingStrategy.NONE),
     MOVE_VOLTAGE_LEVEL_FEEDER_BAYS(ModificationType.MOVE_VOLTAGE_LEVEL_FEEDER_BAYS, PreloadingStrategy.NONE),
-    MODIFICATION_REFERENCE(ModificationType.MODIFICATION_REFERENCE, PreloadingStrategy.COLLECTION);
+    MODIFICATION_REFERENCE(ModificationType.MODIFICATION_REFERENCE, PreloadingStrategy.COLLECTION),
+    NETWORK_REDUCTION(ModificationType.NETWORK_REDUCTION, PreloadingStrategy.COLLECTION);
 
     private final ModificationType type;
     private final PreloadingStrategy strategy;
