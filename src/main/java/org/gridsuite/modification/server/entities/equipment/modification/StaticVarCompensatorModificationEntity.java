@@ -167,6 +167,10 @@ public class StaticVarCompensatorModificationEntity extends InjectionModificatio
         this.reactivePowerSetpoint = modificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(modificationInfos.getReactivePowerSetpoint()) : null;
         this.regulatingTerminal = new RegulatingTerminalModificationEmbeddable(modificationInfos.getVoltageRegulationType(), modificationInfos.getRegulatingTerminalId(),
                 modificationInfos.getRegulatingTerminalType(), modificationInfos.getRegulatingTerminalVlId());
+        assignStandbyAutomatonAttributes(modificationInfos);
+    }
+
+    private void assignStandbyAutomatonAttributes(StaticVarCompensatorModificationInfos modificationInfos) {
         this.standbyAutomatonOn = modificationInfos.getStandbyAutomatonOn() != null ? new BooleanModificationEmbedded(modificationInfos.getStandbyAutomatonOn()) : null;
         this.standby = modificationInfos.getStandby() != null ? new BooleanModificationEmbedded(modificationInfos.getStandby()) : null;
         this.b0 = modificationInfos.getB0() != null ? new DoubleModificationEmbedded(modificationInfos.getB0()) : null;
