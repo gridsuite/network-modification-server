@@ -562,16 +562,10 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         assertEquals(true, modifications.getFirst().getActivated());
 
-        ModificationInfos metadata = new ModificationInfos();
-        metadata.setType(LINE_MODIFICATION);
-        metadata.setActivated(false);
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
-                .queryParam("groupUuid", TEST_GROUP_ID.toString())
                 .queryParam("uuids", uuidString)
-                .queryParam(HEADER_USER_ID, "userId")
-                .content(mapper.writeValueAsString(metadata))
-                .contentType(MediaType.APPLICATION_JSON)
+                .queryParam("active", "false")
                 .header(HEADER_USER_ID, TEST_USER_ID)
         ).andExpect(status().isOk());
         assertEquals(false, modificationRepository.getModifications(TEST_GROUP_ID, true).getFirst().getActivated());
@@ -713,12 +707,10 @@ class ModificationControllerTest {
         assertEquals(true, modificationRepository.getModificationInfo(compositeUuid).getActivated());
 
         // update activation
-        modificationRepository.updateModificationActivation(List.of(compositeUuid), CompositeModificationInfos.builder().activated(false).build());
+        modificationRepository.updateModificationActivation(List.of(compositeUuid), false);
         assertEquals(false, modificationRepository.getModificationInfo(compositeUuid).getActivated());
-
-        // update activation without providing value
-        modificationRepository.updateModificationActivation(List.of(compositeUuid), CompositeModificationInfos.builder().build());
-        assertEquals(false, modificationRepository.getModificationInfo(compositeUuid).getActivated());
+        modificationRepository.updateModificationActivation(List.of(compositeUuid), true);
+        assertEquals(true, modificationRepository.getModificationInfo(compositeUuid).getActivated());
     }
 
     @Test
