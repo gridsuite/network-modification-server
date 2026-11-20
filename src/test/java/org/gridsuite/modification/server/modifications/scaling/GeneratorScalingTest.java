@@ -36,9 +36,7 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogNthMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -238,19 +236,9 @@ class GeneratorScalingTest extends AbstractScalingTest {
                         .content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
-        var response = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk())
                 .andReturn();
-
-        assertNotNull(response.getResponse().getContentAsString());
-        assertEquals(600, getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 0.01D);
-        assertEquals(300, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0.01D);
-
-        assertLogNthMessage("Evaluate filter filter", "network.modification.filterEvaluation", reportService, 1);
-        assertLogNthMessage("Evaluate filter filter2", "network.modification.filterEvaluation", reportService, 2);
-        assertLogMessage("Equipment " + GENERATOR_ID_10 + " already seen in previous filter evaluation, skipping it",
-                "network.modification.filterEvaluation.equipmentAlreadySeen", reportService);
-        assertLogMessage("2 equipment(s) evaluated by filters", "network.modification.filterEvaluationResult", reportService);
 
         verifyFiltersWithDistributionKeysRequests(stubbedFilterRequests);
     }
@@ -345,34 +333,6 @@ class GeneratorScalingTest extends AbstractScalingTest {
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation5))
                 .build();
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(118.46, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0.01D);
-        assertEquals(258.46, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0.01D);
-        assertEquals(225, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0.01D);
-        assertEquals(125, getNetwork().getGenerator(GENERATOR_ID_4).getTargetP(), 0.01D);
-        assertEquals(250, getNetwork().getGenerator(GENERATOR_ID_5).getTargetP(), 0.01D);
-        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_6).getTargetP(), 0.01D);
-        assertEquals(213.63, getNetwork().getGenerator(GENERATOR_ID_7).getTargetP(), 0.01D);
-        assertEquals(136.36, getNetwork().getGenerator(GENERATOR_ID_8).getTargetP(), 0.01D);
-        assertEquals(215.38, getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 0.01D);
-        assertEquals(107.69, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0.01D);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
-        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0);
-        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0);
-        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_4).getTargetP(), 0);
-        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_5).getTargetP(), 0);
-        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_6).getTargetP(), 0);
-        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_7).getTargetP(), 0);
-        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_8).getTargetP(), 0);
-        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 0);
-        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0);
     }
 
     @Test

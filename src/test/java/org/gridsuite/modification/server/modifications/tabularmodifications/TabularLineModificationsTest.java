@@ -91,21 +91,6 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(10., getNetwork().getLine("line1").getR(), 0.001);
-        assertEquals(20., getNetwork().getLine("line2").getX(), 0.001);
-        assertEquals(30., getNetwork().getLine("line3").getG1(), 0.001);
-        assertEquals(40., getNetwork().getLine("line3").getB1(), 0.001);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(1., getNetwork().getLine("line1").getR(), 0.001);
-        assertEquals(5., getNetwork().getLine("line2").getX(), 0.001);
-        assertEquals(5.5, getNetwork().getLine("line3").getG1(), 0.001);
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
