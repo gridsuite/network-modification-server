@@ -741,8 +741,12 @@ public class NetworkModificationService {
         return networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name, description);
     }
 
-    public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {
-        return networkModificationRepository.duplicateCompositeModifications(sourceModificationUuids);
+    /**
+     * @param namesBySourceModificationUuid source composite uuids mapped with the name of their duplicate, null to keep the source name
+     * @return the duplicated composite uuids mapped with their source uuid
+     */
+    public Map<UUID, UUID> duplicateCompositeModifications(Map<UUID, String> namesBySourceModificationUuid) {
+        return networkModificationRepository.duplicateCompositeModifications(namesBySourceModificationUuid);
     }
 
     public void updateModificationNameAndDescription(@NonNull UUID modificationUuid, ModificationMetadata modificationMetadata, String userId) {

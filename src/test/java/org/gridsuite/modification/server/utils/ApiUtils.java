@@ -100,11 +100,20 @@ public final class ApiUtils {
         MvcResult mvcResult = mockMvc.perform(
                 post("/v1/network-composite-modifications/duplication")
                     .contentType("application/json")
-                    .content(getObjectMapper().writeValueAsString(modificationUuids))
+                    .content(getObjectMapper().writeValueAsString(withoutNewNames(modificationUuids)))
             )
             .andExpectAll(status().isOk())
             .andReturn();
         return getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+    }
+
+    /**
+     * @return the duplication body keeping the source names (no new name for each modification)
+     */
+    public static Map<UUID, String> withoutNewNames(List<UUID> modificationUuids) {
+        Map<UUID, String> namesByUuid = new HashMap<>();
+        modificationUuids.forEach(uuid -> namesByUuid.put(uuid, null));
+        return namesByUuid;
     }
 
     public static void deleteGroup(MockMvc mockMvc, UUID groupUuid) throws Exception {
