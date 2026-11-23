@@ -33,7 +33,7 @@ class StaticVarCompensatorModificationTest extends AbstractInjectionModification
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
-        return NetworkCreation.createWithSingleVariant(networkUuid, true);
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override

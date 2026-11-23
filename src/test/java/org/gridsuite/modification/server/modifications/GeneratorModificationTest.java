@@ -50,7 +50,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
-        return NetworkCreation.createWithSingleVariant(networkUuid, true);
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override
