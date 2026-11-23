@@ -204,7 +204,7 @@ public class NetworkModificationRepository {
      * @return the modification references among the previous content, deleted
      */
     @Transactional
-    public List<ModificationReferenceData> replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, @NonNull List<UUID> modificationUuids) {
+    public List<ModificationReferenceData> replaceCompositeModification(@NonNull UUID compositeUuid, @NonNull String name, String description, @NonNull List<UUID> modificationUuids) {
         CompositeModificationEntity compositeEntity = compositeModificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> getModificationNotFoundException(compositeUuid));
 
@@ -215,7 +215,11 @@ public class NetworkModificationRepository {
         copyEntities.forEach(copy -> setTreeDefaultApplicabilitiesIfMissing(copy, rootNetworkTags));
         List<ModificationEntity> previousModifications = compositeEntity.getModifications();
         compositeEntity.setModifications(copyEntities);
-        compositeEntity.updateNameAndDescription(ModificationMetadata.builder().name(name).build());
+        ModificationMetadata.ModificationMetadataBuilder builder = ModificationMetadata.builder().name(name);
+        if (description != null) {
+            builder.description(description);
+        }
+        compositeEntity.updateNameAndDescription(builder.build());
         //Delete previously held modifications
         return deleteModifications(previousModifications);
     }
