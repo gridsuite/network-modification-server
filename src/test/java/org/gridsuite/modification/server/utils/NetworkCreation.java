@@ -29,6 +29,10 @@ public final class NetworkCreation {
         return create(uuid, createHvdcLine, new NetworkFactoryImpl());
     }
 
+    /**
+     * Same network as {@link #create(UUID, boolean)} but with a single variant: IIDM refuses to set a voltage regulation
+     * terminal when the network has several variants.
+     */
     public static Network createWithSingleVariant(UUID uuid, boolean createHvdcLine) {
         Network network = create(uuid, createHvdcLine);
         network.getVariantManager().removeVariant(VARIANT_ID);

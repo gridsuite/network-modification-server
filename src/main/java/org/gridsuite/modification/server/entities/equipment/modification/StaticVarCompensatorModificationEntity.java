@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import com.powsybl.iidm.network.StaticVarCompensator;
+import com.powsybl.iidm.network.regulation.RegulationMode;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -63,7 +63,7 @@ public class StaticVarCompensatorModificationEntity extends InjectionModificatio
         @AttributeOverride(name = "value", column = @Column(name = "regulationMode")),
         @AttributeOverride(name = "opType", column = @Column(name = "regulationModeOp"))
     })
-    private EnumModificationEmbedded<StaticVarCompensator.RegulationMode> regulationMode;
+    private EnumModificationEmbedded<RegulationMode> regulationMode;
 
     @Embedded
     @AttributeOverrides(value = {

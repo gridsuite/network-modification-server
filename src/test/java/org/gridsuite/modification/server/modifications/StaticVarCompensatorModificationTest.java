@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.StaticVarCompensator;
 import com.powsybl.iidm.network.extensions.StandbyAutomaton;
+import com.powsybl.iidm.network.regulation.RegulationMode;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -32,7 +33,7 @@ class StaticVarCompensatorModificationTest extends AbstractInjectionModification
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
-        return NetworkCreation.create(networkUuid, true);
+        return NetworkCreation.createWithSingleVariant(networkUuid, true);
     }
 
     @Override
@@ -43,7 +44,7 @@ class StaticVarCompensatorModificationTest extends AbstractInjectionModification
                 .equipmentName(new AttributeModification<>("newName", OperationType.SET))
                 .minSusceptance(new AttributeModification<>(1., OperationType.SET))
                 .maxSusceptance(new AttributeModification<>(40., OperationType.SET))
-                .regulationMode(new AttributeModification<>(StaticVarCompensator.RegulationMode.REACTIVE_POWER, OperationType.SET))
+                .regulationMode(new AttributeModification<>(RegulationMode.REACTIVE_POWER, OperationType.SET))
                 .regulating(new AttributeModification<>(true, OperationType.SET))
                 .voltageSetpoint(new AttributeModification<>(390., OperationType.SET))
                 .reactivePowerSetpoint(new AttributeModification<>(50., OperationType.SET))
@@ -82,10 +83,10 @@ class StaticVarCompensatorModificationTest extends AbstractInjectionModification
         assertEquals("newName", svc.getNameOrId());
         assertEquals(1., svc.getBmin());
         assertEquals(40., svc.getBmax());
-        assertEquals(StaticVarCompensator.RegulationMode.REACTIVE_POWER, svc.getRegulationMode());
+        assertEquals(RegulationMode.REACTIVE_POWER, svc.getVoltageRegulation().getMode());
         assertTrue(svc.isRegulating());
-        assertEquals(390., svc.getVoltageSetpoint());
-        assertEquals(50., svc.getReactivePowerSetpoint());
+        assertEquals(390., svc.getRegulatingTargetV());
+        assertEquals(50., svc.getRegulatingTargetQ());
         assertEquals("v3load", svc.getRegulatingTerminal().getConnectable().getId());
         assertEquals(PROPERTY_VALUE, svc.getProperty(PROPERTY_NAME));
         StandbyAutomaton standbyAutomaton = svc.getExtension(StandbyAutomaton.class);
@@ -104,10 +105,10 @@ class StaticVarCompensatorModificationTest extends AbstractInjectionModification
         assertEquals(SVC_ID, svc.getNameOrId());
         assertEquals(2., svc.getBmin());
         assertEquals(30., svc.getBmax());
-        assertEquals(StaticVarCompensator.RegulationMode.VOLTAGE, svc.getRegulationMode());
+        assertEquals(RegulationMode.VOLTAGE, svc.getVoltageRegulation().getMode());
         assertFalse(svc.isRegulating());
-        assertEquals(380., svc.getVoltageSetpoint());
-        assertEquals(100., svc.getReactivePowerSetpoint());
+        assertEquals(380., svc.getRegulatingTargetV());
+        assertEquals(100., svc.getRegulatingTargetQ());
         assertEquals(SVC_ID, svc.getRegulatingTerminal().getConnectable().getId());
         assertNull(svc.getProperty(PROPERTY_NAME));
         assertNull(svc.getExtension(StandbyAutomaton.class));
