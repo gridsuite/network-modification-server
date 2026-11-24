@@ -9,11 +9,8 @@ package org.gridsuite.modification.server.entities;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
-import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationMetadata;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.util.List;
 
@@ -27,10 +24,6 @@ import java.util.List;
 @Table(name = "composite_modification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "composite_modification_id_fk_constraint"))
 public class CompositeModificationEntity extends ModificationEntity {
-
-    @Column(name = "name")
-    @ColumnDefault("'My Composite'")
-    private String name;
 
     @OneToOne(cascade = CascadeType.ALL, optional = false, fetch = FetchType.LAZY)
     @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "composite_modification_content_fk"))
@@ -58,16 +51,6 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .build();
     }
 
-    @Override
-    public ModificationMetadata toModificationMetadata() {
-        return ModificationMetadata.builder()
-            .id(getId())
-            .name(getName())
-            .description(getDescription())
-            .type(ModificationType.valueOf(getType()))
-            .build();
-    }
-
     @SneakyThrows
     public static ModificationInfos fillDisplayMessage(ModificationInfos child) {
         child.setMessageType(child.getType().name());
@@ -76,21 +59,10 @@ public class CompositeModificationEntity extends ModificationEntity {
     }
 
     protected void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
-        this.name = compositeModificationInfos.getName();
         this.content = new CompositeContainerEntity(getId());
         setModifications(compositeModificationInfos.getModificationsInfos().stream()
                 .map(ModificationEntity::fromDTO)
                 .toList());
-    }
-
-    @SneakyThrows
-    @Override
-    public void updateNameAndDescription(ModificationMetadata modificationMetadata) {
-        super.updateNameAndDescription(modificationMetadata);
-        if (modificationMetadata.getName() != null) {
-            setName(modificationMetadata.getName());
-            setMessageValues(new ObjectMapper().writeValueAsString(toModificationInfos().getMapMessageValues()));
-        }
     }
 
     public List<ModificationEntity> getModifications() {

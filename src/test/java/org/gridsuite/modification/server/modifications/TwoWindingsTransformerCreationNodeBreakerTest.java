@@ -373,7 +373,7 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos2, 2);
 
         assertEquals(
-            "TwoWindingsTransformerCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, " +
+            "TwoWindingsTransformerCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, name=null, " +
                     "type=TWO_WINDINGS_TRANSFORMER_CREATION, date=null, stashed=false, messageType=null, messageValues=null, activated=null, " +
                     "applicabilityByRootNetworkTag=null, description=a dummy description), " +
                     "equipmentId=id2wt1WithRatioTapChanger2, properties=null), equipmentName=2wtName), r=400.0, x=300.0, voltageLevelId1=v1, voltageLevelId2=v4, " +

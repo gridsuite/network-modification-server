@@ -115,7 +115,7 @@ class GeneratorScalingTest extends AbstractScalingTest {
         verifyFiltersWithDistributionKeysRequests(stubbedFilterRequests);
 
         assertEquals(
-            String.format("ScalingInfos(super=ModificationInfos(uuid=null, type=GENERATOR_SCALING, date=null, stashed=false, messageType=null, messageValues=null, activated=null, " +
+            String.format("ScalingInfos(super=ModificationInfos(uuid=null, name=null, type=GENERATOR_SCALING, date=null, stashed=false, messageType=null, messageValues=null, activated=null, " +
                             "applicabilityByRootNetworkTag=null, " +
                             "description=null), variations=[ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter1)], " +
                             "variationMode=PROPORTIONAL_TO_PMAX, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, " +

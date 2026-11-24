@@ -44,11 +44,11 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<ModificationEntity> findAllActiveModificationsByContainerId(@Param("containerId") UUID containerId,
                                                                     @Param("rootNetworkTag") String rootNetworkTag);
 
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) "
+    @Query(value = "SELECT new ModificationEntity(m.id, m.name, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) "
             + "FROM ModificationEntity m WHERE m.id IN (?1) order by m.modificationsOrder")
     List<ModificationEntity> findMetadataByIdIn(List<UUID> uuids);
 
-    @Query(value = "SELECT new ModificationEntity(m.id, m.description, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
+    @Query(value = "SELECT new ModificationEntity(m.id, m.name, m.description, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
     List<ModificationEntity> findBaseByIdIn(List<UUID> uuids);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder")
@@ -286,6 +286,8 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
         UUID getId();
 
+        String getName();
+
         String getType();
 
         Instant getDate();
@@ -301,7 +303,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
         String getDescription();
 
         default ModificationEntity toModificationEntity() {
-            return new ModificationEntity(getId(), getType(), getDate(), getStashed(), getActivated(), getMessageType(), getMessageValues(), getDescription());
+            return new ModificationEntity(getId(), getName(), getType(), getDate(), getStashed(), getActivated(), getMessageType(), getMessageValues(), getDescription());
         }
     }
 
