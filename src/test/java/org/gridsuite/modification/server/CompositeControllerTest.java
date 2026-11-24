@@ -1667,6 +1667,20 @@ class CompositeControllerTest {
                     .andExpect(jsonPath("$.businessErrorValues.allowedTagsCount").value(2));
         }
 
+        // the tags already used are still allowed, but left out of the allowed tags reported on refusal
+        mockMvc.perform(post("/v1/containers/root-network-tags/authorized")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("containerUuids", List.of(TEST_GROUP2_ID), "tags", List.of("A"), "usedTags", List.of("A"))))
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/v1/containers/root-network-tags/authorized")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("containerUuids", List.of(TEST_GROUP2_ID), "tags", List.of("C"), "usedTags", List.of("A"))))
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.businessErrorValues.allowedTags").value("B"))
+                .andExpect(jsonPath("$.businessErrorValues.allowedTagsCount").value(1));
+
         // a user who can write on the shared modification may associate it with any tag
         when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.WRITE));
         mockMvc.perform(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP2_ID, "C")).andExpect(status().isOk());
@@ -1675,6 +1689,43 @@ class CompositeControllerTest {
         clearInvocations(directoryService);
         mockMvc.perform(areRootNetworkTagsAllowed("containerUuids", TEST_GROUP_ID, "C")).andExpect(status().isOk());
         verifyNoInteractions(directoryService);
+    }
+
+    @Test
+    void testGetAllowedRootNetworkTags() throws Exception {
+        UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
+        UUID childUuid = ((CompositeModificationInfos) networkModificationRepository.getModificationInfo(sharedCompositeUuid))
+                .getModificationsInfos().getFirst().getUuid();
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid, childUuid), "B", true);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid, childUuid), "A", false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(sharedCompositeUuid), "C", true);
+
+        // the user cannot write on the shared modification: only the tags it and all its content are associated with
+        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ));
+        assertEquals(new AllowedRootNetworkTags(true, List.of("A", "B")), getAllowedRootNetworkTags(TEST_GROUP2_ID));
+        // the tags already used are left out, as in the error values when a tag is refused
+        assertEquals(new AllowedRootNetworkTags(true, List.of("B")), getAllowedRootNetworkTags(TEST_GROUP2_ID, "A"));
+
+        // a user who can write on it may use any tag
+        when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.WRITE));
+        assertEquals(AllowedRootNetworkTags.UNRESTRICTED, getAllowedRootNetworkTags(TEST_GROUP2_ID));
+
+        // a container pointing at no shared modification does not even need the permission to be checked
+        clearInvocations(directoryService);
+        assertEquals(AllowedRootNetworkTags.UNRESTRICTED, getAllowedRootNetworkTags(TEST_GROUP_ID));
+        verifyNoInteractions(directoryService);
+    }
+
+    private AllowedRootNetworkTags getAllowedRootNetworkTags(UUID containerUuid, String... usedTags) throws Exception {
+        MockHttpServletRequestBuilder request = post("/v1/containers/root-network-tags/allowed");
+        if (usedTags.length > 0) {
+            request.queryParam("usedTags", usedTags);
+        }
+        return mapper.readValue(mockMvc.perform(request
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(List.of(containerUuid)))
+                        .header(HEADER_USER_ID, TEST_USER_ID))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), AllowedRootNetworkTags.class);
     }
 
     private MockHttpServletRequestBuilder areRootNetworkTagsAllowed(String uuidsField, UUID uuid, String... tags) throws Exception {

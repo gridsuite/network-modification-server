@@ -19,7 +19,7 @@ import java.util.UUID;
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
 public record RootNetworkTagsCheckInfos(List<UUID> containerUuids, List<UUID> modificationUuids, List<UUID> sharedUuids,
-                                        List<String> tags) {
+                                        List<String> tags, List<String> usedTags) {
     public RootNetworkTagsCheckInfos {
         containerUuids = Objects.requireNonNullElse(containerUuids, List.of());
         modificationUuids = Objects.requireNonNullElse(modificationUuids, List.of());

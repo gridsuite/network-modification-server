@@ -142,10 +142,6 @@ public class NetworkModificationService {
         return new NetworkModificationExportInfos(exportable, unexported);
     }
 
-    public List<ModificationEntity> getModificationsByUuids(List<UUID> modificationUuids) {
-        return modificationRepository.findAllByIdIn(modificationUuids);
-    }
-
     /**
      * checks that all the modificationUuids are part of the container, otherwise throws an error
      */
@@ -303,15 +299,10 @@ public class NetworkModificationService {
             .collect(Collectors.toSet());
     }
 
-    /**
-     * Asserts that the shared modifications the user cannot write on, among the given ones and the ones the given
-     * containers or modifications refer to, are associated with the given root network tags: the user cannot add the
-     * missing ones. The containers themselves are not checked, only their content: a composite passed as a container,
-     * unlike a shared one, is left out.
-     */
     @Transactional(readOnly = true)
     public void assertRootNetworkTagsAllowed(@NonNull List<UUID> containerUuids, @NonNull List<UUID> modificationUuids,
-                                             @NonNull List<UUID> sharedUuids, @NonNull List<String> rootNetworkTags, @NonNull String userId) {
+                                             @NonNull List<UUID> sharedUuids, @NonNull List<String> rootNetworkTags,
+                                             @NonNull List<String> usedTags, @NonNull String userId) {
         if (rootNetworkTags.isEmpty()) {
             return;
         }
@@ -323,10 +314,32 @@ public class NetworkModificationService {
         List<String> allowedTags = networkModificationRepository.getCommonRootNetworkTags(notWritableUuids);
         List<String> forbiddenTags = rootNetworkTags.stream().filter(tag -> !allowedTags.contains(tag)).distinct().toList();
         if (!forbiddenTags.isEmpty()) {
+            List<String> givableTags = withoutUsedTags(allowedTags, usedTags);
             throw new NetworkModificationServerException(ROOT_NETWORK_TAGS_FORBIDDEN_BY_SHARED,
                     String.format(ROOT_NETWORK_TAGS_FORBIDDEN_BY_SHARED.messageTemplate(), forbiddenTags, notWritableUuids, allowedTags),
-                    Map.of("allowedTags", String.join(", ", allowedTags), "allowedTagsCount", allowedTags.size()));
+                    Map.of("allowedTags", String.join(", ", givableTags), "allowedTagsCount", givableTags.size()));
         }
+    }
+
+    /**
+     * @return the root network tags the user may associate with the content of the given containers: when some of the
+     * shared modifications it refers to cannot be written on by the user, only the tags all of these are already
+     * associated with, but the {@code usedTags}: the same tags as the ones reported when
+     * {@link #assertRootNetworkTagsAllowed(List, List, List, List, List, String)} refuses a tag for these containers
+     */
+    @Transactional(readOnly = true)
+    public AllowedRootNetworkTags getAllowedRootNetworkTags(@NonNull List<UUID> containerUuids, @NonNull List<String> usedTags,
+                                                            @NonNull String userId) {
+        Set<UUID> notWritableUuids = getNotWritableUuids(
+                networkModificationRepository.getSharedModificationUuids(containerUuids, List.of(), List.of()), userId);
+        if (notWritableUuids.isEmpty()) {
+            return AllowedRootNetworkTags.UNRESTRICTED;
+        }
+        return new AllowedRootNetworkTags(true, withoutUsedTags(networkModificationRepository.getCommonRootNetworkTags(notWritableUuids), usedTags));
+    }
+
+    private static List<String> withoutUsedTags(List<String> allowedTags, List<String> usedTags) {
+        return allowedTags.stream().filter(tag -> !usedTags.contains(tag)).toList();
     }
 
     @Transactional
