@@ -387,7 +387,7 @@ class NetworkModificationServiceTest {
 
         NetworkModificationServerException ex = assertThrows(
                 NetworkModificationServerException.class,
-                () -> networkModificationService.replaceCompositeModification(sharedCompositeUuid, "newName", List.of(), "userId")
+                () -> networkModificationService.replaceCompositeModification(sharedCompositeUuid, "newName", null, List.of(), "userId")
         );
         assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, ex.getBusinessErrorCode());
     }
