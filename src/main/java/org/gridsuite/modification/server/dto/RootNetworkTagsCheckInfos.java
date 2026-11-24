@@ -25,5 +25,6 @@ public record RootNetworkTagsCheckInfos(List<UUID> containerUuids, List<UUID> mo
         modificationUuids = Objects.requireNonNullElse(modificationUuids, List.of());
         sharedUuids = Objects.requireNonNullElse(sharedUuids, List.of());
         tags = Objects.requireNonNullElse(tags, List.of());
+        usedTags = Objects.requireNonNullElse(usedTags, List.of());
     }
 }
