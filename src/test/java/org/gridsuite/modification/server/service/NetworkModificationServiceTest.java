@@ -631,12 +631,10 @@ class NetworkModificationServiceTest {
         doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", HttpHeaders.EMPTY, new byte[0], null))
                 .when(directoryService).checkPermission(any(), eq("userId"), eq(PermissionType.WRITE));
 
-        ModificationInfos metadata = new ModificationInfos();
-        metadata.setActivated(false);
         List<UUID> childModUuids = savedComposite.getModificationsInfos().stream().map(ModificationInfos::getUuid).toList();
         NetworkModificationServerException ex = assertThrows(
                 NetworkModificationServerException.class,
-                () -> networkModificationService.updateNetworkModificationActivation(childModUuids, metadata, "userId")
+                () -> networkModificationService.updateNetworkModificationActivation(childModUuids, false, "userId")
         );
         assertEquals(ModificationBusinessErrorCode.MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED, ex.getBusinessErrorCode());
     }

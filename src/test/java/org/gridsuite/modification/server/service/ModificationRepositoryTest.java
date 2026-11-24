@@ -1592,9 +1592,7 @@ class ModificationRepositoryTest {
     }
 
     private void updateActivation(UUID modificationUuid, boolean activated) {
-        ModificationInfos metadata = new ModificationInfos();
-        metadata.setActivated(activated);
-        networkModificationRepository.updateModificationActivation(List.of(modificationUuid), metadata);
+        networkModificationRepository.updateModificationActivation(List.of(modificationUuid), activated);
     }
 
     @Test
