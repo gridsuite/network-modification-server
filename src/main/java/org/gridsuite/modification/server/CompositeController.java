@@ -131,7 +131,7 @@ public class CompositeController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
     public ResponseEntity<Void> replaceNetworkCompositeModification(@PathVariable("uuid") UUID compositeModificationUuid,
                                                                     @Parameter(description = "New composite name") @RequestParam(value = "name") String name,
-                                                                    @Parameter(description = "New composite description") @RequestParam(value = "description") String description,
+                                                                    @Parameter(description = "New composite description") @RequestParam(value = "description", required = false) String description,
                                                                     @RequestBody List<UUID> modificationUuids,
                                                                     @RequestHeader(HEADER_USER_ID) String userId) {
         networkModificationService.replaceCompositeModification(compositeModificationUuid, name, description, modificationUuids, userId);
