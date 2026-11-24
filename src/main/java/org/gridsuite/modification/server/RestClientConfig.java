@@ -29,15 +29,17 @@ public class RestClientConfig {
 
     @Bean
     public RestClient restClient(RestClient.Builder builder) {
-        return builder.messageConverters(messageConverters -> {
-            //find and replace Jackson message converter with our own
-            for (int i = 0; i < messageConverters.size(); i++) {
-                final HttpMessageConverter<?> httpMessageConverter = messageConverters.get(i);
-                if (httpMessageConverter instanceof MappingJackson2HttpMessageConverter) {
-                    messageConverters.set(i, mappingJackson2HttpMessageConverter());
+        return builder.configureMessageConverters(convertersBuilder ->
+            convertersBuilder.configureMessageConvertersList(messageConverters -> {
+                //find and replace Jackson message converter with our own
+                for (int i = 0; i < messageConverters.size(); i++) {
+                    final HttpMessageConverter<?> httpMessageConverter = messageConverters.get(i);
+                    if (httpMessageConverter instanceof MappingJackson2HttpMessageConverter) {
+                        messageConverters.set(i, mappingJackson2HttpMessageConverter());
+                    }
                 }
-            }
-        }).build();
+            })
+        ).build();
     }
 
     public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
