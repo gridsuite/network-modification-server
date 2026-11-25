@@ -159,8 +159,8 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public List<UUID> findAllChildrenUuids(List<UUID> compositeModificationUuids) {
-        return networkModificationRepository.findAllChildrenUuids(compositeModificationUuids);
+    public List<UUID> getAllChildrenUuids(List<UUID> compositeModificationUuids) {
+        return networkModificationRepository.getAllChildrenUuids(compositeModificationUuids);
     }
 
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
@@ -242,7 +242,7 @@ public class NetworkModificationService {
 
     @Transactional
     public void updateNetworkModificationActivation(@NonNull List<UUID> modificationUuids, boolean active, @NonNull String userId) {
-        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(modificationUuids).values().stream().toList();
+        List<UUID> parentComposites = getParentCompositeModificationsNonTransactional(modificationUuids).values().stream().toList();
         checkModificationsPermission(parentComposites, userId);
         networkModificationRepository.updateModificationActivation(modificationUuids, active);
         emitReferencedAncestorsUpdated(modificationUuids, userId);
@@ -387,11 +387,11 @@ public class NetworkModificationService {
      * sitting directly under a group is absent from the map
      */
     @Transactional(readOnly = true)
-    public Map<UUID, UUID> findModificationParentComposites(@NonNull List<UUID> modificationUuids) {
-        return findModificationParentCompositesNonTransactional(modificationUuids);
+    public Map<UUID, UUID> getParentCompositeModifications(@NonNull List<UUID> modificationUuids) {
+        return getParentCompositeModificationsNonTransactional(modificationUuids);
     }
 
-    public Map<UUID, UUID> findModificationParentCompositesNonTransactional(@NonNull List<UUID> modificationUuids) {
+    private Map<UUID, UUID> getParentCompositeModificationsNonTransactional(@NonNull List<UUID> modificationUuids) {
         if (modificationUuids.isEmpty()) {
             return Map.of();
         }
@@ -441,7 +441,7 @@ public class NetworkModificationService {
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids, @NonNull String userId) {
 
         //Check permission only on parent composites
-        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(modificationUuids).values().stream().toList();
+        List<UUID> parentComposites = getParentCompositeModificationsNonTransactional(modificationUuids).values().stream().toList();
         checkModificationsPermission(parentComposites, userId);
 
         // Collect referenced ancestor composites before stashing, since stashed modifications are moved out of their composite
@@ -615,7 +615,7 @@ public class NetworkModificationService {
             @NonNull String userId) {
 
         // check if we have permission to move the modifications on source and target groups
-        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(moveInfos.stream().map(ModificationMoveInfos::modificationUuid).toList())
+        List<UUID> parentComposites = getParentCompositeModificationsNonTransactional(moveInfos.stream().map(ModificationMoveInfos::modificationUuid).toList())
                 .values().stream().toList();
 
         List<UUID> uuids = Stream.concat(
@@ -726,32 +726,31 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public UUID assembleNetworkModificationsIntoNewComposite(@NonNull List<UUID> assembledModificationsUuids, @NonNull String userId) {
+    public UUID createCompositeModificationByAssembling(@NonNull List<UUID> assembledModificationsUuids, @NonNull String userId) {
 
-        List<UUID> parentComposites = findModificationParentCompositesNonTransactional(assembledModificationsUuids).values().stream().toList();
+        List<UUID> parentComposites = getParentCompositeModificationsNonTransactional(assembledModificationsUuids).values().stream().toList();
         checkModificationsPermission(parentComposites, userId);
-        CompositeModificationInfos newComposite =
-                networkModificationRepository.assembleNetworkModificationsIntoNewComposite(assembledModificationsUuids).toModificationInfos();
+        UUID newCompositeUuid = networkModificationRepository.createCompositeModificationByAssembling(assembledModificationsUuids);
 
         // the references among the assembled modifications are now located in the new composite
-        UUID groupUuid = modificationRepository.findGroupIdByModificationId(newComposite.getUuid());
+        UUID groupUuid = modificationRepository.findGroupIdByModificationId(newCompositeUuid);
         notificationService.emitSharingLinksChanged(SharingLinkAction.UPDATE, groupUuid,
                 getModificationsReferencesNonTransactional(assembledModificationsUuids, false), userId);
 
         // Collect referenced ancestor composites before assembling, since assembled modifications are moved out of their composite
         emitReferencedAncestorsUpdated(assembledModificationsUuids, userId);
 
-        return newComposite.getUuid();
+        return newCompositeUuid;
     }
 
     @Transactional
-    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, @NonNull String name, @NonNull Collection<String> rootNetworkTags) {
-        return networkModificationRepository.createNetworkCompositeModification(modificationUuids, name, rootNetworkTags);
+    public UUID createCompositeModificationByCopying(@NonNull String name, @NonNull List<UUID> modificationUuids, @NonNull Collection<String> rootNetworkTags) {
+        return networkModificationRepository.createCompositeModificationByCopying(name, modificationUuids, rootNetworkTags);
     }
 
     @Transactional
-    public ModificationReferenceData extractCompositeModificationToShare(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name, String description) {
-        return networkModificationRepository.extractCompositeModificationToShare(groupUuid, modificationUuid, name, description);
+    public ModificationReferenceData shareCompositeModification(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, String name, String description) {
+        return networkModificationRepository.shareCompositeModification(groupUuid, modificationUuid, name, description);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {

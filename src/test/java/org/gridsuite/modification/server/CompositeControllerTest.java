@@ -697,7 +697,7 @@ class CompositeControllerTest {
     }
 
     @Test
-    void testUpdateNetworkCompositeModificationName() throws Exception {
+    void testUpdateCompositeModificationName() throws Exception {
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
 
@@ -732,7 +732,7 @@ class CompositeControllerTest {
     }
 
     @Test
-    void testUpdateNetworkCompositeModificationForbiddenOnSharedComposite() throws Exception {
+    void testUpdateCompositeModificationForbiddenOnSharedComposite() throws Exception {
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
         List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
         MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE).queryParam("rootNetworkTags", "PH1").queryParam("name", "composite name 1")
@@ -759,7 +759,7 @@ class CompositeControllerTest {
     }
 
     @Test
-    void testUpdateNetworkCompositeModification() throws Exception {
+    void testUpdateCompositeModification() throws Exception {
         // Insert some switch modifications in the group
         int modificationsNumber = 3;
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, modificationsNumber);
@@ -796,7 +796,7 @@ class CompositeControllerTest {
     }
 
     @Test
-    void testUpdateNetworkCompositeModificationWithNonexistentUuid() throws Exception {
+    void testUpdateCompositeModificationWithNonexistentUuid() throws Exception {
         // Try to update a composite modification that doesn't exist
         UUID nonExistentUuid = UUID.randomUUID();
         List<UUID> modificationUuids = List.of(UUID.randomUUID());
@@ -809,7 +809,7 @@ class CompositeControllerTest {
     }
 
     @Test
-    void testUpdateNetworkCompositeModificationWithEmptyList() throws Exception {
+    void testUpdateCompositeModificationWithEmptyList() throws Exception {
         // Create a composite modification with some modifications
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
         List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();

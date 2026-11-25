@@ -162,4 +162,11 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
         }
         resetPositionsOrder();
     }
+
+    public void detachModifications(List<ModificationEntity> modificationsToDetach) {
+        modificationsToDetach.forEach(m -> {
+            m.setContainer(null);
+            m.setModificationsOrder(0);
+        });
+    }
 }
