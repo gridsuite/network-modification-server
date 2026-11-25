@@ -94,14 +94,12 @@ public final class TestUtils {
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
-    public static void assertServerRequestsEmptyThenShutdown(MockWebServer server) throws UncheckedInterruptedException, IOException {
+    public static void assertServerRequestsEmptyThenShutdown(MockWebServer server) throws UncheckedInterruptedException {
         Set<String> httpRequest = null;
-        try {
+        try (server) {
             httpRequest = getRequestsDone(1, server);
         } catch (NullPointerException e) {
             // ignoring
-        } finally {
-            server.close();
         }
         assertNull(httpRequest, "Should not be any http requests :");
     }

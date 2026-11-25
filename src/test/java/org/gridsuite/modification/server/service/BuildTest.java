@@ -60,7 +60,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -213,8 +212,9 @@ class BuildTest {
                     }
                     return new MockResponse.Builder().code(HttpStatus.OK.value()).build();
                 } else {
-                    LOGGER.error("Unhandled method+path: " + request.getMethod() + " " + request.getTarget());
-                    return new MockResponse.Builder().code(HttpStatus.I_AM_A_TEAPOT.value()).body("Unhandled method+path: " + request.getMethod() + " " + request.getTarget()).build();
+                    String msg = "Unhandled method+path: " + request.getMethod() + " " + request.getTarget();
+                    LOGGER.error(msg);
+                    return new MockResponse.Builder().code(HttpStatus.I_AM_A_TEAPOT.value()).body(msg).build();
                 }
             }
         };
@@ -1197,8 +1197,6 @@ class BuildTest {
             TestUtils.assertServerRequestsEmptyThenShutdown(server);
         } catch (UncheckedInterruptedException e) {
             LOGGER.error("Error while attempting to get the request done : ", e);
-        } catch (IOException e) {
-            // Ignoring
         }
     }
 }
