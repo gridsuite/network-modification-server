@@ -129,11 +129,11 @@ public class CompositeController {
     @PutMapping(value = "/{uuid}/replace", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Replaces all the network modifications inside a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
-    public ResponseEntity<Void> updateCompositeModification(@PathVariable("uuid") UUID compositeModificationUuid,
+    public ResponseEntity<Void> replaceCompositeModification(@PathVariable("uuid") UUID compositeModificationUuid,
                                                             @Parameter(description = "New composite name") @RequestParam(value = "name") String name,
                                                             @RequestBody List<UUID> modificationUuids,
                                                             @RequestHeader(HEADER_USER_ID) String userId) {
-        networkModificationService.updateCompositeModification(compositeModificationUuid, name, modificationUuids, userId);
+        networkModificationService.replaceCompositeModification(compositeModificationUuid, name, modificationUuids, userId);
         return ResponseEntity.ok().build();
     }
 }

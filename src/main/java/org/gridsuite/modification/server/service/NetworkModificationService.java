@@ -749,11 +749,11 @@ public class NetworkModificationService {
         networkModificationRepository.updateModificationNameAndDescription(modificationUuid, modificationMetadata);
     }
 
-    public void updateCompositeModification(@NonNull UUID compositeUuid, String name, List<UUID> modificationUuids, @NonNull String userId) {
+    public void replaceCompositeModification(@NonNull UUID compositeUuid, String name, List<UUID> modificationUuids, @NonNull String userId) {
         checkModificationsPermission(List.of(compositeUuid), userId);
         // the deleted references were inside the composite, so in its group
         UUID groupUuid = modificationRepository.findGroupIdByModificationId(compositeUuid);
-        List<ModificationReferenceData> deletedReferences = networkModificationRepository.updateCompositeModification(compositeUuid, name, modificationUuids);
+        List<ModificationReferenceData> deletedReferences = networkModificationRepository.replaceCompositeModification(compositeUuid, name, modificationUuids);
         deleteSharingLinks(groupUuid, deletedReferences, userId);
 
         // Notify directory-server if the replaced composite is itself referenced, then once per referenced ancestor composite (closest first)
