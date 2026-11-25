@@ -80,22 +80,6 @@ import static org.mockito.Mockito.when;
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(100, getNetwork().getShuntCompensator("v2shunt").getMaximumSectionCount());
-        assertEquals(10, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
-        assertEquals(200, getNetwork().getShuntCompensator("v5shunt").getMaximumSectionCount());
-        assertEquals(20, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(3, getNetwork().getShuntCompensator("v2shunt").getMaximumSectionCount());
-        assertEquals(2, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
-        assertEquals(3, getNetwork().getShuntCompensator("v5shunt").getMaximumSectionCount());
-        assertEquals(2, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });

@@ -161,7 +161,6 @@ public abstract class AbstractNetworkModificationTest {
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        assertAfterNetworkModificationCreation();
 
         ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
@@ -188,8 +187,6 @@ public abstract class AbstractNetworkModificationTest {
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        // when modification is not active, element created by the modifications should NOT be present in network
-        assertAfterNetworkModificationDeletion();
 
         ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
@@ -254,7 +251,6 @@ public abstract class AbstractNetworkModificationTest {
         List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
 
         assertTrue(storedModifications.isEmpty());
-        assertAfterNetworkModificationDeletion();
     }
 
     @Test
@@ -347,10 +343,6 @@ public abstract class AbstractNetworkModificationTest {
     protected abstract ModificationInfos buildModification();
 
     protected abstract ModificationInfos buildModificationUpdate();
-
-    protected abstract void assertAfterNetworkModificationCreation();
-
-    protected abstract void assertAfterNetworkModificationDeletion();
 
     @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {

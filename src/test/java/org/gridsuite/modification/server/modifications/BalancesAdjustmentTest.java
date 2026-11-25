@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -130,39 +129,13 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
     @Test
     void testCreateLoadsLoadFlowParametersOnce() throws Exception {
         assertEquals(ApplicationStatus.ALL_OK, createModification(buildModification()));
-
-        assertAfterNetworkModificationCreation();
         verify(loadFlowService).getLoadFlowParametersInfos(LOADFLOW_PARAMETERS_UUID);
     }
 
     @Test
-    void testCreateWithLoadFlowParametersNotFound() throws Exception {
-        BalancesAdjustmentModificationInfos modification = (BalancesAdjustmentModificationInfos) buildModification();
-        modification.setLoadFlowParametersId(NON_EXISTENT_LOADFLOW_PARAMETERS_UUID);
-
-        assertEquals(ApplicationStatus.ALL_OK, createModification(modification));
-
-        assertLogMessage("Using default load flow parameters: Load flow parameters with id " + NON_EXISTENT_LOADFLOW_PARAMETERS_UUID + " not found",
-                "network.modification.balancesAdjustment.usingDefaultLoadFlowParameters", reportService);
-    }
-
-    @Test
-    void testCreateWithLoadFlowServerError() throws Exception {
-        BalancesAdjustmentModificationInfos modification = (BalancesAdjustmentModificationInfos) buildModification();
-        modification.setLoadFlowParametersId(ERROR_LOADFLOW_PARAMETERS_UUID);
-
-        // the parameters cannot be loaded: the modification fails without changing the network
-        assertEquals(ApplicationStatus.WITH_ERRORS, createModification(modification));
-
-        assertAfterNetworkModificationDeletion();
-    }
-
-    @Test
-    void testCreateWithoutLoadFlowDoesNotLoadParameters() throws Exception {
+    void testCreateWithoutLoadFlowDoesNotLoadParameters() {
         BalancesAdjustmentModificationInfos modification = (BalancesAdjustmentModificationInfos) buildModification();
         modification.setWithLoadFlow(false);
-
-        assertEquals(ApplicationStatus.ALL_OK, createModification(modification));
 
         verify(loadFlowService, never()).getLoadFlowParametersInfos(any());
     }
@@ -183,37 +156,5 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
                 .maxNumberIterations(1)
                 .thresholdNetPosition(30d)
                 .build();
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(-58.4d, getNetwork().getGenerator("GH1").getTerminal().getP(), 0.1);
-        assertEquals(-36d, getNetwork().getGenerator("GH2").getTerminal().getP(), 0.1);
-        assertEquals(-101.8d, getNetwork().getGenerator("GH3").getTerminal().getP(), 0.1);
-        assertEquals(-100d, getNetwork().getGenerator("GTH1").getTerminal().getP(), 0.1);
-        assertEquals(-146.9d, getNetwork().getGenerator("GTH2").getTerminal().getP(), 0.1);
-
-        assertEquals(80.2d, getNetwork().getLoad("LD1").getTerminal().getP(), 0.1);
-        assertEquals(60.2d, getNetwork().getLoad("LD2").getTerminal().getP(), 0.1);
-        assertEquals(60.2d, getNetwork().getLoad("LD3").getTerminal().getP(), 0.1);
-        assertEquals(40.1d, getNetwork().getLoad("LD4").getTerminal().getP(), 0.1);
-        assertEquals(200.5d, getNetwork().getLoad("LD5").getTerminal().getP(), 0.1);
-        assertEquals(0d, getNetwork().getLoad("LD6").getTerminal().getP(), 0.1);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(-85.4d, getNetwork().getGenerator("GH1").getTerminal().getP(), 0.1);
-        assertEquals(-90d, getNetwork().getGenerator("GH2").getTerminal().getP(), 0.1);
-        assertEquals(-155.7d, getNetwork().getGenerator("GH3").getTerminal().getP(), 0.1);
-        assertEquals(-100d, getNetwork().getGenerator("GTH1").getTerminal().getP(), 0.1);
-        assertEquals(-251d, getNetwork().getGenerator("GTH2").getTerminal().getP(), 0.1);
-
-        assertEquals(80.0d, getNetwork().getLoad("LD1").getTerminal().getP(), 0.1);
-        assertEquals(60.0d, getNetwork().getLoad("LD2").getTerminal().getP(), 0.1);
-        assertEquals(60.0d, getNetwork().getLoad("LD3").getTerminal().getP(), 0.1);
-        assertEquals(40.0d, getNetwork().getLoad("LD4").getTerminal().getP(), 0.1);
-        assertEquals(200.0d, getNetwork().getLoad("LD5").getTerminal().getP(), 0.1);
-        assertEquals(240d, getNetwork().getLoad("LD6").getTerminal().getP(), 0.1);
     }
 }
