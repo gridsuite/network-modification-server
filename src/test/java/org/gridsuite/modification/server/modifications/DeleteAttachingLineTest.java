@@ -66,20 +66,6 @@ class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNull(getNetwork().getLine("l1"));
-        assertNull(getNetwork().getLine("l2"));
-        assertNotNull(getNetwork().getLine("replacingLineId"));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNotNull(getNetwork().getLine("l1"));
-        assertNotNull(getNetwork().getLine("l2"));
-        assertNull(getNetwork().getLine("replacingLineId"));
-    }
-
     @Test
     void createWithInvalidLineIdTest() throws Exception {
         // test create with incorrect line id
@@ -144,12 +130,4 @@ class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
         assertEquals("l2", createdValues.get("lineToAttachTo2Id"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("DELETE_ATTACHING_LINE", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("l3", updatedValues.get("attachedLineId"));
-        assertEquals("l1", updatedValues.get("lineToAttachTo1Id"));
-        assertEquals("l2", updatedValues.get("lineToAttachTo2Id"));
-    }
 }

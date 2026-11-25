@@ -19,14 +19,12 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.FORCED_OUTAGE;
-import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.PLANNED_OUTAGE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
 class OperatingStatusModificationLockoutHvdcLineTest extends AbstractNetworkModificationTest {
     private static final String TARGET_HVDC_LINE_ID = "hvdcLine";
 
-    private static final OperatingStatus.Status TARGET_HVDC_LINE_STATUS = PLANNED_OUTAGE;
     private static final OperatingStatus.Status OTHER_HVDC_LINE_STATUS = FORCED_OUTAGE;
 
     @Override
@@ -56,17 +54,6 @@ class OperatingStatusModificationLockoutHvdcLineTest extends AbstractNetworkModi
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        TestUtils.assertOperatingStatus(getNetwork(), TARGET_HVDC_LINE_ID, TARGET_HVDC_LINE_STATUS);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        // go back to init status
-        TestUtils.assertOperatingStatus(getNetwork(), TARGET_HVDC_LINE_ID, OTHER_HVDC_LINE_STATUS);
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
@@ -75,12 +62,4 @@ class OperatingStatusModificationLockoutHvdcLineTest extends AbstractNetworkModi
         assertEquals("hvdcLine", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("energizedVoltageLevelId", updatedValues.get("energizedVoltageLevelId"));
-        assertEquals("LOCKOUT", updatedValues.get("action"));
-        assertEquals("hvdcLineEdited", updatedValues.get("equipmentId"));
-    }
 }

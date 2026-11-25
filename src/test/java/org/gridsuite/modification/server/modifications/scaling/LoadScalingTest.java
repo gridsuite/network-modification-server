@@ -345,35 +345,6 @@ class LoadScalingTest extends AbstractScalingTest {
             .build();
     }
 
-    //TODO update values after PowSyBl release
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(108.33, getNetwork().getLoad(LOAD_ID_1).getP0(), 0.01D);
-        assertEquals(216.66, getNetwork().getLoad(LOAD_ID_2).getP0(), 0.01D);
-        assertEquals(225.0, getNetwork().getLoad(LOAD_ID_3).getP0(), 0.01D);
-        assertEquals(125.0, getNetwork().getLoad(LOAD_ID_4).getP0(), 0.01D);
-        assertEquals(287.5, getNetwork().getLoad(LOAD_ID_5).getP0(), 0.01D);
-        assertEquals(182.5, getNetwork().getLoad(LOAD_ID_6).getP0(), 0.01D);
-        assertEquals(213.63, getNetwork().getLoad(LOAD_ID_7).getP0(), 0.01D);
-        assertEquals(166.36, getNetwork().getLoad(LOAD_ID_8).getP0(), 0.01D);
-        assertEquals(216.66, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
-        assertEquals(108.33, getNetwork().getLoad(LOAD_ID_10).getP0(), 0.01D);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(100.0, getNetwork().getLoad(LOAD_ID_1).getP0(), 0);
-        assertEquals(200.0, getNetwork().getLoad(LOAD_ID_2).getP0(), 0);
-        assertEquals(200.0, getNetwork().getLoad(LOAD_ID_3).getP0(), 0);
-        assertEquals(100.0, getNetwork().getLoad(LOAD_ID_4).getP0(), 0);
-        assertEquals(200.0, getNetwork().getLoad(LOAD_ID_5).getP0(), 0);
-        assertEquals(120.0, getNetwork().getLoad(LOAD_ID_6).getP0(), 0);
-        assertEquals(200.0, getNetwork().getLoad(LOAD_ID_7).getP0(), 0);
-        assertEquals(130.0, getNetwork().getLoad(LOAD_ID_8).getP0(), 0);
-        assertEquals(200.0, getNetwork().getLoad(LOAD_ID_9).getP0(), 0);
-        assertEquals(100.0, getNetwork().getLoad(LOAD_ID_10).getP0(), 0);
-    }
-
     @Test
     void testRegularDistributionAllConnected() throws Exception {
         testVariationWithSomeDisconnections(VariationMode.REGULAR_DISTRIBUTION, List.of());

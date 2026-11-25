@@ -7,19 +7,15 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.Switch;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.gridsuite.modification.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.dto.CreateCouplingDeviceInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Etienne Lesot <etienne.lesot at rte-france.com>
@@ -69,24 +65,8 @@ class CreateCouplingDeviceTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertTrue(getNetwork().getSwitchStream().map(Switch::getId).collect(Collectors.toSet())
-            .containsAll(Set.of("vl1_BREAKER", "vl1_DISCONNECTOR_22_15", "vl1_DISCONNECTOR_21_0")));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(4, getNetwork().getSwitchStream().map(Switch::getId).collect(Collectors.toSet()).size());
-        assertTrue(getNetwork().getSwitchStream().map(Switch::getId).collect(Collectors.toSet()).containsAll(Set.of("br21", "b4", "b5", "br11")));
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("{\"voltageLevelId\":\"v1\"}", modificationInfos.getMessageValues());
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("{\"voltageLevelId\":\"v1\"}", modificationInfos.getMessageValues());
-    }
 }

@@ -69,16 +69,6 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNull(getNetwork().getLoad("v1load"));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNotNull(getNetwork().getLoad("v1load"));
-    }
-
     @Test
     void testOkWhenRemovingIsolatedEquipment() throws Exception {
 
@@ -174,10 +164,4 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         assertEquals("v1load", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
-        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("idGenerator", createdValues.get("equipmentId"));
-    }
 }

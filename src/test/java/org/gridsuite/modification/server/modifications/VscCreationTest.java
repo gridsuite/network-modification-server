@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
-import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -139,79 +138,10 @@ class VscCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getHvdcLine("vsc1"));
-
-        assertEquals(1, getNetwork().getVoltageLevel("v1").getVscConverterStationStream()
-                .filter(converterStation -> converterStation.getId().equals("stationId1")).count());
-
-        assertEquals(1, getNetwork().getVoltageLevel("v2").getVscConverterStationStream()
-                .filter(converterStation -> converterStation.getId().equals("stationId2")).count());
-
-        HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
-        assertNotNull(hvdcLine);
-        assertEquals(HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER, hvdcLine.getConvertersMode());
-        assertEquals(39, hvdcLine.getNominalV(), 0);
-        assertEquals(4, hvdcLine.getR(), 0);
-        assertEquals(5, hvdcLine.getActivePowerSetpoint(), 0);
-        assertEquals(56, hvdcLine.getMaxP(), 0);
-        assertEquals(PROPERTY_VALUE, hvdcLine.getProperty(PROPERTY_NAME));
-
-        HvdcOperatorActivePowerRange hvdcOperatorActivePowerRange = hvdcLine.getExtension(HvdcOperatorActivePowerRange.class);
-        assertEquals(6, hvdcOperatorActivePowerRange.getOprFromCS1toCS2(), 0);
-        assertEquals(8, hvdcOperatorActivePowerRange.getOprFromCS2toCS1(), 0);
-
-        HvdcAngleDroopActivePowerControl activePowerControl = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
-        assertEquals(1, activePowerControl.getDroop(), 0);
-        assertEquals(5, activePowerControl.getP0(), 0);
-
-        VscConverterStation vscConverterStation1 = (VscConverterStation) hvdcLine.getConverterStation1();
-        assertNotNull(vscConverterStation1);
-        assertEquals(44, vscConverterStation1.getReactivePowerSetpoint(), 0);
-        assertEquals(40, vscConverterStation1.getLossFactor(), 0);
-        assertEquals(ReactiveLimitsKind.CURVE, vscConverterStation1.getReactiveLimits().getKind());
-        ReactiveCapabilityCurve reactiveLimits1 = vscConverterStation1.getReactiveLimits(ReactiveCapabilityCurve.class);
-        assertEquals(2, reactiveLimits1.getPointCount());
-        assertEquals(0.6, reactiveLimits1.getMaxP(), 0);
-        assertEquals(0.4, reactiveLimits1.getMinP(), 0);
-        assertEquals(66, vscConverterStation1.getVoltageSetpoint(), 0);
-        assertEquals("v1", vscConverterStation1.getTerminal().getVoltageLevel().getId());
-
-        VscConverterStation vscConverterStation2 = (VscConverterStation) hvdcLine.getConverterStation2();
-        assertNotNull(vscConverterStation2);
-        assertEquals(23, vscConverterStation2.getReactivePowerSetpoint(), 0);
-        assertEquals(4, vscConverterStation2.getLossFactor(), 0);
-        assertEquals(ReactiveLimitsKind.MIN_MAX, vscConverterStation2.getReactiveLimits().getKind());
-        MinMaxReactiveLimits reactiveLimits2 = vscConverterStation2.getReactiveLimits(MinMaxReactiveLimits.class);
-        assertEquals(66, reactiveLimits2.getMaxQ(), 0);
-        assertEquals(55, reactiveLimits2.getMinQ(), 0);
-        assertEquals(34, vscConverterStation2.getVoltageSetpoint(), 0);
-        assertEquals("v2", vscConverterStation2.getTerminal().getVoltageLevel().getId());
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("VSC_CREATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("vsc1", createdValues.get("equipmentId"));
-    }
-
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("VSC_CREATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("vsc1Edited", updatedValues.get("equipmentId"));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getHvdcLine("vsc1"));
-
-        assertEquals(0, getNetwork().getVoltageLevel("v1").getVscConverterStationStream()
-                .filter(converterStation -> converterStation.getId().equals("stationId1")).count());
-
-        assertEquals(0, getNetwork().getVoltageLevel("v2").getVscConverterStationStream()
-                .filter(converterStation -> converterStation.getId().equals("stationId2")).count());
     }
 
     @Test

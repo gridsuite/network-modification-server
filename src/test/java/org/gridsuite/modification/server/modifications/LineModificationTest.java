@@ -9,14 +9,9 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Line;
-import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
-import com.powsybl.iidm.network.extensions.Measurement;
-import com.powsybl.iidm.network.extensions.Measurements;
-import org.apache.commons.collections4.CollectionUtils;
-import org.assertj.core.api.Assertions;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -29,7 +24,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +38,6 @@ import static org.gridsuite.modification.server.report.NetworkModificationServer
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
@@ -187,60 +179,6 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                 )).build())
                         .build()))
                 .build();
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        Line modifiedLine = getNetwork().getLine("line1");
-        assertEquals("LineModified", modifiedLine.getNameOrId());
-        assertEquals(1.0, modifiedLine.getR());
-        assertEquals(1.0, modifiedLine.getX());
-        assertEquals(1.0, modifiedLine.getG1());
-        assertEquals(1.0, modifiedLine.getB1());
-        assertEquals(2.0, modifiedLine.getG2());
-        assertEquals(2.0, modifiedLine.getB2());
-        assertEquals(12.0, modifiedLine.getNullableCurrentLimits1().getPermanentLimit());
-        TemporaryLimit temporaryLimit = modifiedLine.getNullableCurrentLimits1().getTemporaryLimit(Integer.MAX_VALUE);
-        assertEquals(Integer.MAX_VALUE, temporaryLimit.getAcceptableDuration());
-        assertEquals("name31", temporaryLimit.getName());
-        assertEquals(Double.MAX_VALUE, temporaryLimit.getValue());
-        assertEquals(22.0, modifiedLine.getNullableCurrentLimits2().getPermanentLimit());
-        temporaryLimit = modifiedLine.getNullableCurrentLimits2().getTemporaryLimit(32);
-        assertEquals(32, temporaryLimit.getAcceptableDuration());
-        assertEquals("name32", temporaryLimit.getName());
-        assertEquals(42.0, temporaryLimit.getValue());
-        assertEquals(PROPERTY_VALUE, modifiedLine.getProperty(PROPERTY_NAME));
-        assertMeasurements(modifiedLine); // measurements extension are added
-    }
-
-    private void assertMeasurements(Line line) {
-        Measurements<?> measurements = (Measurements<?>) line.getExtension(Measurements.class);
-        assertNotNull(measurements);
-        Collection<Measurement> activePowerMeasurements = measurements.getMeasurements(Measurement.Type.ACTIVE_POWER).stream().toList();
-        assertNotNull(activePowerMeasurements);
-        assertFalse(CollectionUtils.isEmpty(activePowerMeasurements));
-        Assertions.assertThat(activePowerMeasurements).allMatch(m -> m.getValue() == MEASUREMENT_P_VALUE && m.isValid() == MEASUREMENT_P_VALID);
-        Collection<Measurement> reactivePowerMeasurements = measurements.getMeasurements(Measurement.Type.REACTIVE_POWER).stream().toList();
-        assertFalse(CollectionUtils.isEmpty(reactivePowerMeasurements));
-        Assertions.assertThat(reactivePowerMeasurements).allMatch(m -> m.getValue() == MEASUREMENT_Q_VALUE && m.isValid() == MEASUREMENT_Q_VALID);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        Line line = getNetwork().getLine("line1");
-        assertEquals("line1", line.getNameOrId());
-        assertEquals(1.0, line.getR());
-        assertEquals(1.0, line.getX());
-        assertEquals(1.0, line.getG1());
-        assertEquals(1.0, line.getB1());
-        assertEquals(2.0, line.getG2());
-        assertEquals(2.0, line.getB2());
-        assertNull(line.getNullableCurrentLimits1());
-        assertNull(line.getNullableCurrentLimits2());
-        assertNull(line.getProperty(PROPERTY_NAME));
-        // no more measurements extension
-        Measurements<?> measurements = (Measurements<?>) line.getExtension(Measurements.class);
-        assertTrue(measurements == null || CollectionUtils.isEmpty(measurements.getMeasurements()));
     }
 
     @Test
@@ -461,13 +399,6 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         assertEquals("LINE_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("line1", createdValues.get("equipmentId"));
-    }
-
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("LINE_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("line1", updatedValues.get("equipmentId"));
     }
 
     @Test

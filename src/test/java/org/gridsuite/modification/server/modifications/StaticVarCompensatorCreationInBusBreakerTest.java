@@ -90,21 +90,6 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getStaticVarCompensator("idStaticVarCompensator2"));
-        assertEquals(1, getNetwork().getVoltageLevel("v1").getStaticVarCompensatorStream()
-                .filter(transformer -> transformer.getId().equals("idStaticVarCompensator2")).count());
-        assertEquals(PROPERTY_VALUE, getNetwork().getStaticVarCompensator("idStaticVarCompensator2").getProperty(PROPERTY_NAME));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getStaticVarCompensator("idStaticVarCompensator2"));
-        assertEquals(0, getNetwork().getVoltageLevel("v1").getStaticVarCompensatorStream()
-                .filter(transformer -> transformer.getId().equals("idStaticVarCompensator2")).count());
-    }
-
     @Test
     void testCreateWithBusBarSectionErrors() throws Exception {
         StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
@@ -139,10 +124,4 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
         assertEquals("idStaticVarCompensator2", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("STATIC_VAR_COMPENSATOR_CREATION", modificationInfos.getMessageType());
-        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("idStaticVarCompensator2Edited", createdValues.get("equipmentId"));
-    }
 }

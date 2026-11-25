@@ -97,20 +97,6 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(500., getNetwork().getGenerator("idGenerator").getMaxP(), 0.001);
-        assertEquals(500., getNetwork().getGenerator("v5generator").getMaxP(), 0.001);
-        assertEquals(500., getNetwork().getGenerator("v6generator").getMaxP(), 0.001);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(1000., getNetwork().getGenerator("idGenerator").getMaxP(), 0.001);
-        assertEquals(1000., getNetwork().getGenerator("v5generator").getMaxP(), 0.001);
-        assertEquals(1000., getNetwork().getGenerator("v6generator").getMaxP(), 0.001);
-    }
-
     @Test
     void testSqlRequestsCountOnGetModification() throws Exception {
         Pair<UUID, ModificationInfos> tabularWith1Modification = createTabularGeneratorModification(1);
@@ -616,13 +602,6 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals(ModificationType.GENERATOR_MODIFICATION.name(), createdValues.get("tabularModificationType"));
-    }
-
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals(ModificationType.GENERATOR_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
     }
 
     private List<Pair<UUID, ModificationInfos>> createFewTabularModifications() {

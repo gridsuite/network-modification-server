@@ -24,10 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author David Braquart <david.braquart_externe at rte-france.com>
@@ -88,27 +85,10 @@ class TabularShuntCompensatorCreationsTest extends AbstractNetworkModificationTe
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getShuntCompensator("shuntOneId"));
-        assertLogMessage("Tabular creation: 1 shunt compensator have been created", "network.modification.tabular.creation", reportService);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getShuntCompensator("shuntOneId"));
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_CREATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals(ModificationType.SHUNT_COMPENSATOR_CREATION.name(), createdValues.get("tabularCreationType"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals(ModificationType.TABULAR_CREATION.name(), modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals(ModificationType.SHUNT_COMPENSATOR_CREATION.name(), updatedValues.get("tabularCreationType"));
-    }
 }

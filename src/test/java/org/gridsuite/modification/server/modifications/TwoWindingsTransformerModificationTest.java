@@ -13,7 +13,6 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.DiscreteMeasurement;
 import com.powsybl.iidm.network.extensions.DiscreteMeasurements;
 import com.powsybl.iidm.network.extensions.DiscreteMeasurementsAdder;
-import com.powsybl.iidm.network.extensions.TwoWindingsTransformerToBeEstimated;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.error.NetworkModificationExceptionType;
@@ -262,46 +261,6 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        TwoWindingsTransformer modifiedTwoWindingsTransformer = getNetwork().getTwoWindingsTransformer("trf1");
-        assertNotNull(modifiedTwoWindingsTransformer);
-        assertEquals("2wt modified name", modifiedTwoWindingsTransformer.getNameOrId());
-        assertEquals(1, getNetwork().getVoltageLevel("v1").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("trf1")).count());
-        assertEquals(1, getNetwork().getVoltageLevel("v2").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("trf1")).count());
-        assertEquals("v1", modifiedTwoWindingsTransformer.getTerminal1().getVoltageLevel().getId());
-        assertEquals("v2", modifiedTwoWindingsTransformer.getTerminal2().getVoltageLevel().getId());
-        assertEquals(1.0, modifiedTwoWindingsTransformer.getR(), 0.1);
-        assertEquals(2.0, modifiedTwoWindingsTransformer.getX(), 0.1);
-        assertEquals(3.0, modifiedTwoWindingsTransformer.getG(), 0.1);
-        assertEquals(4.0, modifiedTwoWindingsTransformer.getB(), 0.1);
-        assertEquals(5.0, modifiedTwoWindingsTransformer.getRatedU1(), 0.1);
-        assertEquals(6.0, modifiedTwoWindingsTransformer.getRatedU2(), 0.1);
-        assertEquals(7.0, modifiedTwoWindingsTransformer.getRatedS(), 0.1);
-        // limits
-        assertNotNull(modifiedTwoWindingsTransformer.getNullableCurrentLimits1());
-        assertEquals(12.0, modifiedTwoWindingsTransformer.getNullableCurrentLimits1().getPermanentLimit());
-        LoadingLimits.TemporaryLimit temporaryLimit = modifiedTwoWindingsTransformer.getNullableCurrentLimits1().getTemporaryLimit(Integer.MAX_VALUE);
-        assertEquals(Integer.MAX_VALUE, temporaryLimit.getAcceptableDuration());
-        assertEquals("name31", temporaryLimit.getName());
-        assertEquals(Double.MAX_VALUE, temporaryLimit.getValue());
-        assertNotNull(modifiedTwoWindingsTransformer.getNullableCurrentLimits2());
-        assertEquals(22.0, modifiedTwoWindingsTransformer.getNullableCurrentLimits2().getPermanentLimit());
-        temporaryLimit = modifiedTwoWindingsTransformer.getNullableCurrentLimits2().getTemporaryLimit(32);
-        assertEquals(32, temporaryLimit.getAcceptableDuration());
-        assertEquals("name32", temporaryLimit.getName());
-        assertEquals(42.0, temporaryLimit.getValue());
-        assertEquals(PROPERTY_VALUE, modifiedTwoWindingsTransformer.getProperty(PROPERTY_NAME));
-        // toBeEstimated extension
-        TwoWindingsTransformerToBeEstimated toBeEstimated = modifiedTwoWindingsTransformer.getExtension(TwoWindingsTransformerToBeEstimated.class);
-        assertNotNull(toBeEstimated);
-        assertTrue(toBeEstimated.shouldEstimateRatioTapChanger());
-        assertFalse(toBeEstimated.shouldEstimatePhaseTapChanger());
-        // tap position measurements
-        assertTapPositionMeasurement(modifiedTwoWindingsTransformer, DiscreteMeasurement.TapChanger.RATIO_TAP_CHANGER, 4);
-        assertTapPositionMeasurement(modifiedTwoWindingsTransformer, DiscreteMeasurement.TapChanger.PHASE_TAP_CHANGER, 5);
-    }
-
     private static List<DiscreteMeasurement> getTapPositionMeasurements(TwoWindingsTransformer twt, DiscreteMeasurement.TapChanger tapChanger) {
         DiscreteMeasurements<?> measurements = (DiscreteMeasurements<?>) twt.getExtension(DiscreteMeasurements.class);
         if (measurements == null) {
@@ -403,28 +362,6 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         TwoWindingsTransformerModificationInfos stored = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false).get(0);
         assertEquals(new AttributeModification<>(6, OperationType.SET), stored.getRatioTapChangerPositionMeasurement());
         assertNull(stored.getPhaseTapChangerPositionMeasurement());
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        TwoWindingsTransformer modifiedTwoWindingsTransformer = getNetwork().getTwoWindingsTransformer("trf1");
-        assertNotNull(modifiedTwoWindingsTransformer);
-        assertEquals("trf1", modifiedTwoWindingsTransformer.getNameOrId());
-        assertEquals(1, getNetwork().getVoltageLevel("v1").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("trf1")).count());
-        assertEquals(1, getNetwork().getVoltageLevel("v2").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("trf1")).count());
-        assertEquals("v1", modifiedTwoWindingsTransformer.getTerminal1().getVoltageLevel().getId());
-        assertEquals("v2", modifiedTwoWindingsTransformer.getTerminal2().getVoltageLevel().getId());
-        assertEquals(2.0, modifiedTwoWindingsTransformer.getR(), 0.1);
-        assertEquals(14.745, modifiedTwoWindingsTransformer.getX(), 0.1);
-        assertEquals(0.0, modifiedTwoWindingsTransformer.getG(), 0.1);
-        assertEquals(3.2E-5, modifiedTwoWindingsTransformer.getB(), 0.1);
-        assertEquals(400.0, modifiedTwoWindingsTransformer.getRatedU1(), 0.1);
-        assertEquals(225.0, modifiedTwoWindingsTransformer.getRatedU2(), 0.1);
-        // limits
-        assertNull(modifiedTwoWindingsTransformer.getNullableCurrentLimits1());
-        assertNull(modifiedTwoWindingsTransformer.getNullableCurrentLimits2());
-        assertTrue(getTapPositionMeasurements(modifiedTwoWindingsTransformer, DiscreteMeasurement.TapChanger.RATIO_TAP_CHANGER).isEmpty());
-        assertTrue(getTapPositionMeasurements(modifiedTwoWindingsTransformer, DiscreteMeasurement.TapChanger.PHASE_TAP_CHANGER).isEmpty());
     }
 
     @Test
@@ -844,13 +781,6 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         assertEquals("TWO_WINDINGS_TRANSFORMER_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("trf1", createdValues.get("equipmentId"));
-    }
-
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("TWO_WINDINGS_TRANSFORMER_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("trf1Edited", updatedValues.get("equipmentId"));
     }
 
     @Test

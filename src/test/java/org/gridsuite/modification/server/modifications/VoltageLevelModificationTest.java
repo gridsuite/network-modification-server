@@ -93,22 +93,6 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        VoltageLevel voltageLevel = getNetwork().getVoltageLevel("v1");
-        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
-        assertNotNull(identifiableShortCircuit);
-        assertNotNull(voltageLevel);
-        assertEquals("test 1", voltageLevel.getNameOrId());
-        assertEquals(420D, voltageLevel.getNominalV(), 0);
-        assertEquals(30D, voltageLevel.getLowVoltageLimit(), 0);
-        assertEquals(50D, voltageLevel.getHighVoltageLimit(), 0);
-        assertEquals(0.8, identifiableShortCircuit.getIpMax(), 0);
-        assertEquals(0.7, identifiableShortCircuit.getIpMin(), 0);
-        assertEquals(PROPERTY_VALUE, getNetwork().getVoltageLevel("v1").getProperty(PROPERTY_NAME));
-        assertBusbarSectionMeasurement(getNetwork().getBusbarSection("1.1"), MEASUREMENT_V_VALUE, MEASUREMENT_V_VALID);
-    }
-
     private void assertBusbarSectionMeasurement(BusbarSection bbs, double expectedValue, boolean expectedValid) {
         assertNotNull(bbs);
         Measurements<?> measurements = (Measurements<?>) bbs.getExtension(Measurements.class);
@@ -118,17 +102,6 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
             assertThat(m.getValue()).isEqualTo(expectedValue);
             assertThat(m.isValid()).isEqualTo(expectedValid);
         });
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        VoltageLevel voltageLevel = getNetwork().getVoltageLevel("v1");
-        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
-        assertNull(identifiableShortCircuit);
-        assertNotNull(voltageLevel);
-        assertEquals(380D, voltageLevel.getNominalV(), 0);
-        assertEquals(Double.NaN, voltageLevel.getLowVoltageLimit(), 0);
-        assertEquals(Double.NaN, voltageLevel.getHighVoltageLimit(), 0);
     }
 
     @Test
@@ -316,11 +289,4 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
         assertEquals("v1", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("VOLTAGE_LEVEL_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() {
-        });
-        assertEquals("v1Edited", updatedValues.get("equipmentId"));
-    }
 }

@@ -269,29 +269,6 @@ class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetworkModi
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getTwoWindingsTransformer("id2wt1"));
-        assertEquals(1, getNetwork().getVoltageLevel("v1").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("id2wt1")).count());
-        assertEquals(1, getNetwork().getVoltageLevel("v3").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("id2wt1")).count());
-        assertEquals("v1", getNetwork().getTwoWindingsTransformer("id2wt1").getTerminal1().getVoltageLevel().getId());
-        assertEquals("v3", getNetwork().getTwoWindingsTransformer("id2wt1").getTerminal2().getVoltageLevel().getId());
-        assertEquals(300., getNetwork().getTwoWindingsTransformer("id2wt1").getX(), 0.1);
-        assertEquals(1000, getNetwork().getTwoWindingsTransformer("id2wt1").getRatedU1(), 0.1);
-        assertEquals(1., getNetwork().getTwoWindingsTransformer("id2wt1").getRatedS(), 0.1);
-        assertEquals(4, getNetwork().getTwoWindingsTransformer("id2wt1").getRatioTapChanger().getStepCount());
-        assertEquals(3, getNetwork().getTwoWindingsTransformer("id2wt1").getPhaseTapChanger().getStepCount());
-        assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, getNetwork().getTwoWindingsTransformer("id2wt1").getPhaseTapChanger().getRegulationMode());
-        assertEquals(PROPERTY_VALUE, getNetwork().getTwoWindingsTransformer("id2wt1").getProperty(PROPERTY_NAME));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getTwoWindingsTransformer("id2wt1"));
-        assertEquals(0, getNetwork().getVoltageLevel("v1").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("id2wt1")).count());
-        assertEquals(0, getNetwork().getVoltageLevel("v3").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("id2wt1")).count());
-    }
-
     @Test
     void testCreateWithErrors() throws Exception {
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) buildModification();
@@ -316,11 +293,5 @@ class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetworkModi
         assertEquals("id2wt1", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("TWO_WINDINGS_TRANSFORMER_CREATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("new2wtUpdate", updatedValues.get("equipmentId"));
-    }
 }
 

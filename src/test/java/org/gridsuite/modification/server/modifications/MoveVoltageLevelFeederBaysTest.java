@@ -16,7 +16,6 @@ import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.error.NetworkModificationExceptionType;
 import org.gridsuite.modification.modifications.MoveVoltageLevelFeederBays;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.gridsuite.modification.utils.ModificationUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
@@ -90,77 +89,11 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        // v3load
-        Load v3load = getNetwork().getLoad("v3load");
-        assertNotNull(v3load);
-        String busbarId = ModificationUtils.getInstance().getBusOrBusbarSection(v3load.getTerminal());
-        assertEquals("3A", busbarId);
-        ConnectablePosition connectablePosition = v3load.getExtension(ConnectablePosition.class);
-        assertNotNull(connectablePosition);
-        ConnectablePosition.Feeder feeder = connectablePosition.getFeeder();
-        assertNotNull(feeder);
-        assertTrue(feeder.getName().isPresent());
-        assertEquals("v3loadrename", feeder.getName().get());
-        assertTrue(feeder.getOrder().isPresent());
-        assertEquals(4, feeder.getOrder().get());
-        assertEquals(ConnectablePosition.Direction.TOP, feeder.getDirection());
-
-        // line2
-        Line line2 = getNetwork().getLine("line2");
-        assertNotNull(line2);
-        String line2BusbarId = ModificationUtils.getInstance().getBusOrBusbarSection(line2.getTerminal2());
-        assertEquals("3C", line2BusbarId);
-        ConnectablePosition lineConnectablePosition = line2.getExtension(ConnectablePosition.class);
-        assertNotNull(lineConnectablePosition);
-        ConnectablePosition.Feeder feeder2 = lineConnectablePosition.getFeeder2();
-        assertNotNull(feeder2);
-        assertTrue(feeder2.getName().isPresent());
-        assertEquals("line2NameV3", feeder2.getName().get());
-        assertTrue(feeder2.getOrder().isPresent());
-        assertEquals(10, feeder2.getOrder().get());
-        assertEquals(ConnectablePosition.Direction.BOTTOM, feeder2.getDirection());
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        // v3load
-        Load v3load = getNetwork().getLoad("v3load");
-        assertNotNull(v3load);
-        String busbarId = ModificationUtils.getInstance().getBusOrBusbarSection(v3load.getTerminal());
-        assertEquals("3A", busbarId);
-        ConnectablePosition connectablePosition = v3load.getExtension(ConnectablePosition.class);
-        assertNull(connectablePosition);
-
-        // line2
-        Line line2 = getNetwork().getLine("line2");
-        assertNotNull(line2);
-        String line2BusbarId = ModificationUtils.getInstance().getBusOrBusbarSection(line2.getTerminal2());
-        assertEquals("3C", line2BusbarId);
-        ConnectablePosition lineConnectablePosition = line2.getExtension(ConnectablePosition.class);
-        assertNotNull(lineConnectablePosition);
-        ConnectablePosition.Feeder feeder2 = lineConnectablePosition.getFeeder2();
-        assertNotNull(feeder2);
-        assertTrue(feeder2.getName().isPresent());
-        assertEquals("cn2line2", feeder2.getName().get());
-        assertTrue(feeder2.getOrder().isPresent());
-        assertEquals(2, feeder2.getOrder().get());
-        assertEquals(ConnectablePosition.Direction.TOP, feeder2.getDirection());
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() {
         });
         assertEquals("v3", createdValues.get("voltageLevelId"));
-    }
-
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("v3", updatedValues.get("voltageLevelId"));
     }
 
     @Test

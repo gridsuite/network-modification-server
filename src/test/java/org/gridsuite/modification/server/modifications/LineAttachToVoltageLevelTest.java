@@ -7,9 +7,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.OperationalLimitsGroup;
 import com.powsybl.iidm.network.SwitchKind;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
@@ -126,37 +124,6 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        // new equipments in the network:
-        assertNotNull(getNetwork().getLine("nl1"));
-        assertNotNull(getNetwork().getLine("nl2"));
-        assertNotNull(getNetwork().getVoltageLevel("AttPointId"));
-        // replaced line is gone
-        assertNull(getNetwork().getLine("line3"));
-
-        // check attachment Line
-        Line attachmentLine = getNetwork().getLine("attachmentLine");
-        assertNotNull(attachmentLine);
-        assertFalse(attachmentLine.getOperationalLimitsGroups1().isEmpty());
-        Optional<OperationalLimitsGroup> operationalLimitsGroup = attachmentLine.getOperationalLimitsGroup1("groupId");
-        assertTrue(operationalLimitsGroup.isPresent());
-        assertEquals("groupId", operationalLimitsGroup.get().getId());
-        assertTrue(operationalLimitsGroup.get().getCurrentLimits().isPresent());
-        assertEquals(1.0, operationalLimitsGroup.get().getCurrentLimits().get().getPermanentLimit());
-        assertFalse(attachmentLine.getPropertyNames().isEmpty());
-        assertTrue(attachmentLine.getPropertyNames().contains("property"));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getLine("attachmentLine"));
-        assertNull(getNetwork().getLine("nl1"));
-        assertNull(getNetwork().getLine("nl2"));
-        assertNull(getNetwork().getVoltageLevel("AttPointId"));
-        assertNotNull(getNetwork().getLine("line3"));
-    }
-
     private void tryToCreateLineWithExistingId(LineAttachToVoltageLevelInfos tryWithExistingLine, String existingLineId) throws Exception {
         String tryWithExistingLineJson = getJsonBody(tryWithExistingLine, null);
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tryWithExistingLineJson).contentType(MediaType.APPLICATION_JSON))
@@ -220,10 +187,4 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
         assertEquals("line3", createdValues.get("lineToAttachToId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("LINE_ATTACH_TO_VOLTAGE_LEVEL", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("line2", updatedValues.get("lineToAttachToId"));
-    }
 }

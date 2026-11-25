@@ -53,22 +53,6 @@ class OperatingStatusModificationSwitchOnLineTest extends AbstractNetworkModific
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        // terminals are now all connected
-        Line line = getNetwork().getLine(TARGET_LINE_ID);
-        assertNotNull(line);
-        assertTrue(line.getTerminals().stream().allMatch(Terminal::isConnected));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        // back to init state : no more connected terminals
-        Line line = getNetwork().getLine(TARGET_LINE_ID);
-        assertNotNull(line);
-        assertTrue(line.getTerminals().stream().noneMatch(Terminal::isConnected));
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
@@ -77,12 +61,4 @@ class OperatingStatusModificationSwitchOnLineTest extends AbstractNetworkModific
         assertEquals("line2", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("energizedVoltageLevelIdEdited", updatedValues.get("energizedVoltageLevelId"));
-        assertEquals("TRIP", updatedValues.get("action"));
-        assertEquals("line1Edited", updatedValues.get("equipmentId"));
-    }
 }

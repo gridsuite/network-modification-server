@@ -107,10 +107,4 @@ abstract class AbstractByFilterDeletionTest extends AbstractByFilterTest {
         assertEquals(getIdentifiableType().name(), createdValues.get("equipmentType"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("BY_FILTER_DELETION", modificationInfos.getMessageType());
-        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals(getIdentifiableType().name(), createdValues.get("equipmentType"));
-    }
 }

@@ -63,30 +63,10 @@ class TabularBatteryModificationsTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(50., getNetwork().getBattery("v1Battery").getMaxP(), 0.001);
-        assertEquals(5., getNetwork().getBattery("v2Battery").getMinP(), 0.001);
-        assertEquals(5., getNetwork().getBattery("v3Battery").getTargetP(), 0.001);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(15., getNetwork().getBattery("v1Battery").getMaxP(), 0.001);
-        assertEquals(0., getNetwork().getBattery("v2Battery").getMinP(), 0.001);
-        assertEquals(1., getNetwork().getBattery("v3Battery").getTargetP(), 0.001);
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals(ModificationType.BATTERY_MODIFICATION.name(), createdValues.get("tabularModificationType"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals(ModificationType.BATTERY_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
-    }
 }

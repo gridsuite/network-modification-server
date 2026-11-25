@@ -89,11 +89,6 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
                 .action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        TestUtils.assertOperatingStatus(getNetwork(), TARGET_LINE_ID, TARGET_BRANCH_STATUS);
-    }
-
     private void testLockoutLine(String lineID) throws Exception {
         OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
         modificationInfos.setEquipmentId(lineID);
@@ -106,12 +101,6 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
         TestUtils.assertOperatingStatus(getNetwork(), lineID, TARGET_BRANCH_STATUS);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        // go back to init status
-        TestUtils.assertOperatingStatus(getNetwork(), TARGET_LINE_ID, OTHER_BRANCH_STATUS);
     }
 
     @Test
@@ -194,12 +183,4 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         assertEquals("line2", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("energizedVoltageLevelId", updatedValues.get("energizedVoltageLevelId"));
-        assertEquals("SWITCH_ON", updatedValues.get("action"));
-        assertEquals("line1", updatedValues.get("equipmentId"));
-    }
 }

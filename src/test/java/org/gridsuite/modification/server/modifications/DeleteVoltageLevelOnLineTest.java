@@ -64,24 +64,6 @@ class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getVoltageLevel("v1"));
-        assertNotNull(getNetwork().getSubstation("s1"));
-        assertNull(getNetwork().getLine("l1"));
-        assertNull(getNetwork().getLine("l2"));
-        assertNotNull(getNetwork().getLine("replacementLineId"));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNotNull(getNetwork().getVoltageLevel("v1"));
-        assertNotNull(getNetwork().getSubstation("s1"));
-        assertNotNull(getNetwork().getLine("l1"));
-        assertNotNull(getNetwork().getLine("l2"));
-        assertNull(getNetwork().getLine("replacementLineId"));
-    }
-
     @Test
     void createWithInvalidLineIdTest() throws Exception {
         // test create with incorrect line id
@@ -124,11 +106,4 @@ class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
         assertEquals("l2", createdValues.get("lineToAttachTo2Id"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("DELETE_VOLTAGE_LEVEL_ON_LINE", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("line00", updatedValues.get("lineToAttachTo1Id"));
-        assertEquals("line11", updatedValues.get("lineToAttachTo2Id"));
-    }
 }

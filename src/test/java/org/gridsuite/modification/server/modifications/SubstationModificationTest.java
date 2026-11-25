@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.Substation;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationExceptionType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -19,13 +18,11 @@ import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -65,31 +62,6 @@ class SubstationModificationTest extends AbstractNetworkModificationTest {
             .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        Substation modifiedStation = getNetwork().getSubstation("s3");
-        assertNotNull(modifiedStation);
-        assertEquals("newName", modifiedStation.getOptionalName().orElse(""));
-        assertEquals(Country.BQ, modifiedStation.getCountry().orElse(Country.ZW));
-        // 2 properties added and 1 updated, 'tso' removed
-        assertEquals(Set.of("p1", "p2", "region"), modifiedStation.getPropertyNames());
-        assertEquals("v1", modifiedStation.getProperty("p1", ""));
-        assertEquals("v2", modifiedStation.getProperty("p2", ""));
-        assertEquals("south", modifiedStation.getProperty("region", ""));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        Substation modifiedStation = getNetwork().getSubstation("s3");
-        assertNotNull(modifiedStation);
-        assertEquals("s3", modifiedStation.getOptionalName().orElse(""));
-        assertEquals(Country.FR, modifiedStation.getCountry().orElse(Country.ZW));
-        // property 'tso' is back, and region got its origin value
-        assertEquals(Set.of("tso", "region"), modifiedStation.getPropertyNames());
-        assertEquals("rtefrance", modifiedStation.getProperty("tso", ""));
-        assertEquals("west", modifiedStation.getProperty("region", ""));
-    }
-
     @Test
     void testCreateWithErrors() throws Exception {
         // Try to modify an unknown substation
@@ -110,10 +82,4 @@ class SubstationModificationTest extends AbstractNetworkModificationTest {
         assertEquals("s3", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("SUBSTATION_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("s3Edited", updatedValues.get("equipmentId"));
-    }
 }

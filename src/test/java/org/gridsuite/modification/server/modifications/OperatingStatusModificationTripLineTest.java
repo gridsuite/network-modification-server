@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Tag;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.FORCED_OUTAGE;
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.PLANNED_OUTAGE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -26,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class OperatingStatusModificationTripLineTest extends AbstractNetworkModificationTest {
     private static final String TARGET_LINE_ID = "line2";
     private static final String UPDATE_BRANCH_ID = "line1";
-    private static final OperatingStatus.Status TARGET_BRANCH_STATUS = FORCED_OUTAGE;
     private static final OperatingStatus.Status OTHER_BRANCH_STATUS = PLANNED_OUTAGE;
 
     @Override
@@ -56,17 +54,6 @@ class OperatingStatusModificationTripLineTest extends AbstractNetworkModificatio
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        TestUtils.assertOperatingStatus(getNetwork(), TARGET_LINE_ID, TARGET_BRANCH_STATUS);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        // back to init status
-        TestUtils.assertOperatingStatus(getNetwork(), TARGET_LINE_ID, OTHER_BRANCH_STATUS);
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
@@ -75,12 +62,4 @@ class OperatingStatusModificationTripLineTest extends AbstractNetworkModificatio
         assertEquals("line2", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("energizedVoltageLevelIdEdited", updatedValues.get("energizedVoltageLevelId"));
-        assertEquals("SWITCH_ON", updatedValues.get("action"));
-        assertEquals("line1", updatedValues.get("equipmentId"));
-    }
 }

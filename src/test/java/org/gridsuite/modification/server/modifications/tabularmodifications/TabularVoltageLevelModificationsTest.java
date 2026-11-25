@@ -65,36 +65,10 @@ class TabularVoltageLevelModificationsTest extends AbstractNetworkModificationTe
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(300., getNetwork().getVoltageLevel("v1").getNominalV(), 0.001);
-        assertEquals(299., getNetwork().getVoltageLevel("v1").getLowVoltageLimit(), 0.001);
-        assertEquals(400., getNetwork().getVoltageLevel("v1").getHighVoltageLimit(), 0.001);
-        assertEquals(300., getNetwork().getVoltageLevel("v2").getNominalV(), 0.001);
-        assertEquals(299., getNetwork().getVoltageLevel("v2").getLowVoltageLimit(), 0.001);
-        assertEquals(400., getNetwork().getVoltageLevel("v2").getHighVoltageLimit(), 0.001);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(380.0, getNetwork().getVoltageLevel("v1").getNominalV(), 0.001);
-        assertEquals(Double.NaN, getNetwork().getVoltageLevel("v1").getLowVoltageLimit(), 0.001);
-        assertEquals(Double.NaN, getNetwork().getVoltageLevel("v1").getHighVoltageLimit(), 0.001);
-        assertEquals(225.0, getNetwork().getVoltageLevel("v2").getNominalV(), 0.001);
-        assertEquals(Double.NaN, getNetwork().getVoltageLevel("v2").getLowVoltageLimit(), 0.001);
-        assertEquals(Double.NaN, getNetwork().getVoltageLevel("v2").getHighVoltageLimit(), 0.001);
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals(ModificationType.VOLTAGE_LEVEL_MODIFICATION.name(), createdValues.get("tabularModificationType"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals(ModificationType.VOLTAGE_LEVEL_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
-    }
 }

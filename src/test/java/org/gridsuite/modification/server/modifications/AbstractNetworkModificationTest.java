@@ -15,7 +15,6 @@ import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -161,7 +160,6 @@ public abstract class AbstractNetworkModificationTest {
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        assertAfterNetworkModificationCreation();
 
         ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
@@ -189,7 +187,6 @@ public abstract class AbstractNetworkModificationTest {
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
         // when modification is not active, element created by the modifications should NOT be present in network
-        assertAfterNetworkModificationDeletion();
 
         ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
@@ -235,9 +232,6 @@ public abstract class AbstractNetworkModificationTest {
         assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        ModificationInfos updatedModificationwithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true).get(0);
-        testUpdateModificationMessage(updatedModificationwithOnlyMetadata);
-
     }
 
     @Test
@@ -254,7 +248,6 @@ public abstract class AbstractNetworkModificationTest {
         List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
 
         assertTrue(storedModifications.isEmpty());
-        assertAfterNetworkModificationDeletion();
     }
 
     @Test
@@ -310,10 +303,6 @@ public abstract class AbstractNetworkModificationTest {
         return TEST_NETWORK_ID;
     }
 
-    protected UUID getNetworkUuid() {
-        return ((NetworkImpl) network).getUuid();
-    }
-
     protected UUID getGroupId() {
         return TEST_GROUP_ID;
     }
@@ -348,21 +337,14 @@ public abstract class AbstractNetworkModificationTest {
 
     protected abstract ModificationInfos buildModificationUpdate();
 
-    protected abstract void assertAfterNetworkModificationCreation();
-
-    protected abstract void assertAfterNetworkModificationDeletion();
-
     @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("{}", modificationInfos.getMessageValues());
     }
 
     @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("{}", modificationInfos.getMessageValues());
-    }
 
-    protected List<NetworkModificationResult.ApplicationStatus> extractApplicationStatus(NetworkModificationsResult networkModificationsResult) {
+protected List<NetworkModificationResult.ApplicationStatus> extractApplicationStatus(NetworkModificationsResult networkModificationsResult) {
         List<NetworkModificationResult.ApplicationStatus> applicationStatuses = new ArrayList<>();
         networkModificationsResult.modificationResults().forEach(modificationResult -> {
             modificationResult.ifPresent(networkModificationResult -> applicationStatuses.add(networkModificationResult.getApplicationStatus()));

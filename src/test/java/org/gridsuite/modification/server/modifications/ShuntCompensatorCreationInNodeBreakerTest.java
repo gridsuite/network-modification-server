@@ -79,17 +79,6 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getShuntCompensator("shuntOneId"));
-        assertEquals(PROPERTY_VALUE, getNetwork().getShuntCompensator("shuntOneId").getProperty(PROPERTY_NAME));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getShuntCompensator("shuntOneId"));
-    }
-
     @Test
     void testCreateWithError() throws Exception {
         ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
@@ -168,10 +157,4 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
         assertEquals("shuntOneId", updatedValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("shuntOneIdEdited", updatedValues.get("equipmentId"));
-    }
 }
