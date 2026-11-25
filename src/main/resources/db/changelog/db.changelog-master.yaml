@@ -552,7 +552,3 @@ databaseChangeLog:
   - include :
       file: changesets/changelog_20261123T151525Z.xml
       relativeToChangelogFile: true
-# delete column name in composite modification after migrating it to modification table
-#  - include :
-#      file: changesets/changelog_20261123T151713Z.xml
-#      relativeToChangelogFile: true
