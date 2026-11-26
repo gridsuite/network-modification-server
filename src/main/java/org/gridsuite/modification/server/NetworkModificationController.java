@@ -364,8 +364,20 @@ public class NetworkModificationController {
             @Parameter(description = "Modifications to check and root network tags") @RequestBody RootNetworkTagsCheckInfos checkInfos,
             @RequestHeader(HEADER_USER_ID) String userId) {
         networkModificationService.assertRootNetworkTagsAllowed(checkInfos.containerUuids(), checkInfos.modificationUuids(),
-                checkInfos.sharedUuids(), checkInfos.tags(), userId);
+                checkInfos.sharedUuids(), checkInfos.tags(), checkInfos.usedTags(), userId);
         return ResponseEntity.ok().build();
+    }
+
+    // POST as the uuids of a whole study tree would exceed the url length limit
+    @PostMapping(value = "/containers/root-network-tags/naming-restrictions", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get the root network tags the user may associate with the content of the containers, restricted" +
+        " when it refers to shared modifications the user cannot write on")
+    @ApiResponse(responseCode = "200", description = "The root network tags naming restrictions were returned")
+    public ResponseEntity<RestrictionsOnTags> getRootNetworkTagsNamingRestrictions(
+            @Parameter(description = "Container UUIDs and tags already used, left out of the allowed tags") @RequestBody RootNetworkTagsNamingInfos rootNetworkTagsInfos,
+            @RequestHeader(HEADER_USER_ID) String userId) {
+        return ResponseEntity.ok().body(networkModificationService.getRootNetworkTagsNamingRestrictions(rootNetworkTagsInfos.containerUuids(),
+                rootNetworkTagsInfos.usedTags(), userId));
     }
 
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE, params = "active")
