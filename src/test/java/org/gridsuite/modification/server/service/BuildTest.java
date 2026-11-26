@@ -18,7 +18,7 @@ import mockwebserver3.Dispatcher;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
 import mockwebserver3.RecordedRequest;
-import mockwebserver3.junit5.internal.MockWebServerExtension;
+import mockwebserver3.junit5.StartStop;
 import okhttp3.HttpUrl;
 import org.gridsuite.modification.TapChangerType;
 import org.gridsuite.modification.dto.*;
@@ -43,7 +43,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
@@ -61,12 +60,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.junit.jupiter.api.Assertions.*;
@@ -80,7 +79,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-@ExtendWith(MockWebServerExtension.class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextConfigurationWithTestChannel
@@ -163,8 +161,11 @@ class BuildTest {
 
     private Network network;
 
+    @StartStop
+    final MockWebServer server = new MockWebServer();
+
     @BeforeEach
-    public void setUp(final MockWebServer mockWebServer) {
+    public void setUp() {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
         // create a new network for each invocation (answer)
         when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> {
@@ -184,7 +185,7 @@ class BuildTest {
             return network;
         });
 
-        initMockWebServer(mockWebServer);
+        initMockWebServer(server);
     }
 
     @AfterEach
@@ -203,16 +204,17 @@ class BuildTest {
             @Override
             @NotNull
             public MockResponse dispatch(RecordedRequest request) {
-                String path = Objects.requireNonNull(request.getPath());
+                String path = Objects.requireNonNull(request.getTarget());
                 if (path.matches("/v1/reports/.*") && Objects.equals(request.getMethod(), HttpMethod.PUT.name())) {
-                    String reportUuid = Objects.requireNonNull(request.getRequestUrl()).pathSegments().get(2);
+                    String reportUuid = Objects.requireNonNull(request.getUrl()).pathSegments().get(2);
                     if (TEST_ERROR_REPORT_ID.toString().equals(reportUuid)) {
-                        return new MockResponse(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                        return new MockResponse.Builder().code(HttpStatus.INTERNAL_SERVER_ERROR.value()).build();
                     }
-                    return new MockResponse(HttpStatus.OK.value());
+                    return new MockResponse.Builder().code(HttpStatus.OK.value()).build();
                 } else {
-                    LOGGER.error("Unhandled method+path: " + request.getMethod() + " " + request.getPath());
-                    return new MockResponse.Builder().code(HttpStatus.I_AM_A_TEAPOT.value()).body("Unhandled method+path: " + request.getMethod() + " " + request.getPath()).build();
+                    String msg = "Unhandled method+path: " + request.getMethod() + " " + request.getTarget();
+                    LOGGER.error(msg);
+                    return new MockResponse.Builder().code(HttpStatus.I_AM_A_TEAPOT.value()).body(msg).build();
                 }
             }
         };
@@ -220,7 +222,7 @@ class BuildTest {
     }
 
     @Test
-    void runBuildForLineSplits(final MockWebServer server) throws Exception {
+    void runBuildForLineSplits() throws Exception {
         List<ModificationEntity> entities1 = List.of(
                 ModificationEntity.fromDTO(LineCreationInfos.builder()
                         .equipmentId("newLine")
@@ -316,7 +318,7 @@ class BuildTest {
     }
 
     @Test
-    void runBuildWithEmptyGroupTest(final MockWebServer server) throws Exception {
+    void runBuildWithEmptyGroupTest() throws Exception {
         BuildInfos buildInfos = BuildInfos.builder()
             .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
             .destinationVariantId(NetworkCreation.VARIANT_ID)
@@ -335,7 +337,7 @@ class BuildTest {
             .andExpect(status().isOk());
         RecordedRequest request = server.takeRequest(TIMEOUT, TimeUnit.MILLISECONDS);
         assertNotNull(request);
-        assertEquals(expectedBody, request.getBody().readUtf8());
+        assertEquals(expectedBody, request.getBody().utf8());
 
         assertNotNull(output.receive(TIMEOUT, buildResultDestination));
         assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
@@ -345,11 +347,11 @@ class BuildTest {
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
         request = server.takeRequest(TIMEOUT, TimeUnit.MILLISECONDS);
         assertNotNull(request);
-        assertEquals(expectedBody, request.getBody().readUtf8());
+        assertEquals(expectedBody, request.getBody().utf8());
     }
 
     @Test
-    void testIndexationAfterBuild(final MockWebServer server) {
+    void testIndexationAfterBuild() {
         List<ModificationEntity> equipmentsToAdd = new ArrayList<>();
         // add new voltage level
         equipmentsToAdd.add(ModificationEntity.fromDTO(VoltageLevelCreationInfos.builder()
@@ -507,7 +509,7 @@ class BuildTest {
 
     @SuppressWarnings("checkstyle:MethodLength")
     @Test
-    void runBuildTest(final MockWebServer server) throws Exception {
+    void runBuildTest() throws Exception {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(ModificationEntity.fromDTO(
@@ -871,7 +873,7 @@ class BuildTest {
     }
 
     @Test
-    void runBuildWithStashedModificationsTest(final MockWebServer server) {
+    void runBuildWithStashedModificationsTest() {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(ModificationEntity.fromDTO(
@@ -900,7 +902,7 @@ class BuildTest {
     }
 
     @Test
-    void runBuildWithNotApplicableModificationsTest(final MockWebServer server) {
+    void runBuildWithNotApplicableModificationsTest() {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(ModificationEntity.fromDTO(
@@ -984,7 +986,7 @@ class BuildTest {
     }
 
     @Test
-    void runBuildWithReportErrorTest(final MockWebServer server) throws Exception {
+    void runBuildWithReportErrorTest() throws Exception {
         List<ModificationEntity> entities = new ArrayList<>();
         entities.add(ModificationEntity.fromDTO(
                 EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
@@ -1021,8 +1023,8 @@ class BuildTest {
                 ModificationEntity.fromDTO(switchOpening("v1d1")),
                 ModificationEntity.fromDTO(switchOpening("v2d1")),
                 ModificationEntity.fromDTO(switchOpening("v2d2"))));
-        UUID sourceUuid = modificationRepository.createNetworkCompositeModification(
-                sources.stream().map(ModificationInfos::getUuid).toList(), "source", List.of());
+        UUID sourceUuid = modificationRepository.createCompositeModificationByCopying("source",
+            sources.stream().map(ModificationInfos::getUuid).toList(), List.of());
         // set on the source: the copy carries the applicabilities over, and is applied as it is returned
         List<UUID> contentUuids = modificationRepository.getModifications(sourceUuid, true)
                 .stream().map(ModificationInfos::getUuid).toList();
@@ -1040,7 +1042,7 @@ class BuildTest {
     }
 
     @Test
-    void runBuildLeavesOutTheCompositeContentTheRootNetworkDeactivates(final MockWebServer server) {
+    void runBuildLeavesOutTheCompositeContentTheRootNetworkDeactivates() {
         insertCompositeCoveringEveryApplicabilityCase();
 
         BuildInfos buildInfos = BuildInfos.builder()
@@ -1062,7 +1064,7 @@ class BuildTest {
      * has to stay available to the next.
      */
     @Test
-    void applyingOnARootNetworkLeavesTheModificationsAvailableToTheNext(final MockWebServer server) {
+    void applyingOnARootNetworkLeavesTheModificationsAvailableToTheNext() {
         Network deactivatingNetwork = NetworkCreation.create(TEST_NETWORK_ID, true);
         Network otherNetwork = NetworkCreation.create(TEST_NETWORK_ID, true);
         List<ModificationInfos> composites = insertCompositeCoveringEveryApplicabilityCase();
@@ -1087,7 +1089,7 @@ class BuildTest {
      * saved, on the tree as it stands. The composite itself is applicable here: only its content is deactivated.
      */
     @Test
-    void applyingACompositeLeavesOutTheContentTheRootNetworkDeactivates(final MockWebServer server) {
+    void applyingACompositeLeavesOutTheContentTheRootNetworkDeactivates() {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
         List<ModificationInfos> composites = insertCompositeCoveringEveryApplicabilityCase();
 
@@ -1098,7 +1100,7 @@ class BuildTest {
     }
 
     @Test
-    void testApplyModificationWithErrors(final MockWebServer server) {
+    void testApplyModificationWithErrors() {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
         UUID groupUuid = UUID.randomUUID();
@@ -1134,7 +1136,7 @@ class BuildTest {
     }
 
     @Test
-    void testLastGroupModificationStatus(final MockWebServer server) {
+    void testLastGroupModificationStatus() {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
         UUID groupUuid = UUID.randomUUID();
@@ -1188,15 +1190,13 @@ class BuildTest {
     }
 
     @AfterEach
-    void tearDown(final MockWebServer server) {
+    void tearDown() {
         List<String> destinations = List.of(consumeBuildDestination, cancelBuildDestination, buildResultDestination, buildStoppedDestination);
         TestUtils.assertQueuesEmptyThenClear(destinations, output);
         try {
             TestUtils.assertServerRequestsEmptyThenShutdown(server);
         } catch (UncheckedInterruptedException e) {
             LOGGER.error("Error while attempting to get the request done : ", e);
-        } catch (IOException e) {
-            // Ignoring
         }
     }
 }
