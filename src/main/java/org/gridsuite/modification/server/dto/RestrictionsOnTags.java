@@ -15,12 +15,15 @@ import java.util.List;
  *
  * @param restricted  whether some shared modifications the user cannot write on restrict the tags
  * @param allowedTags only when restricted, the only tags allowed; null otherwise
+ *
+ * @author Souissi Maissa <souissi.maissa at rte-france.com>
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public record RootNetworkTagsNamingRestrictions(boolean restricted, List<String> allowedTags) {
-    public static final RootNetworkTagsNamingRestrictions UNRESTRICTED = new RootNetworkTagsNamingRestrictions(false, null);
 
-    public RootNetworkTagsNamingRestrictions {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public record RestrictionsOnTags(boolean restricted, List<String> allowedTags) {
+    public static final RestrictionsOnTags UNRESTRICTED = new RestrictionsOnTags(false, null);
+
+    public RestrictionsOnTags {
         if (restricted) {
             allowedTags = allowedTags == null ? List.of() : List.copyOf(allowedTags);
         } else {

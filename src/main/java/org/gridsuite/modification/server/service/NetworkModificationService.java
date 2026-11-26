@@ -299,6 +299,14 @@ public class NetworkModificationService {
             .collect(Collectors.toSet());
     }
 
+    /**
+     * Asserts that the shared modifications the user cannot write on, among the given ones and the ones the given
+     * containers or modifications refer to, are associated with the given root network tags: the user cannot add the
+     * missing ones. The containers themselves are not checked, only their content: a composite passed as a container,
+     * unlike a shared one, is left out.
+     * The {@code usedTags}, already used by other root networks of the study, play no part in the check: they are
+     * only left out of the allowed tags reported in the error, as they cannot be given again.
+     */
     @Transactional(readOnly = true)
     public void assertRootNetworkTagsAllowed(@NonNull List<UUID> containerUuids, @NonNull List<UUID> modificationUuids,
                                              @NonNull List<UUID> sharedUuids, @NonNull List<String> rootNetworkTags,
@@ -328,14 +336,14 @@ public class NetworkModificationService {
      * {@link #assertRootNetworkTagsAllowed(List, List, List, List, List, String)} refuses a tag for these containers
      */
     @Transactional(readOnly = true)
-    public RootNetworkTagsNamingRestrictions getRootNetworkTagsNamingRestrictions(@NonNull List<UUID> containerUuids, @NonNull List<String> usedTags,
+    public RestrictionsOnTags getRootNetworkTagsNamingRestrictions(@NonNull List<UUID> containerUuids, @NonNull List<String> usedTags,
                                                             @NonNull String userId) {
         Set<UUID> notWritableUuids = getNotWritableUuids(
                 networkModificationRepository.getSharedModificationUuids(containerUuids, List.of(), List.of()), userId);
         if (notWritableUuids.isEmpty()) {
-            return RootNetworkTagsNamingRestrictions.UNRESTRICTED;
+            return RestrictionsOnTags.UNRESTRICTED;
         }
-        return new RootNetworkTagsNamingRestrictions(true, withoutUsedTags(networkModificationRepository.getCommonRootNetworkTags(notWritableUuids), usedTags));
+        return new RestrictionsOnTags(true, withoutUsedTags(networkModificationRepository.getCommonRootNetworkTags(notWritableUuids), usedTags));
     }
 
     private static List<String> withoutUsedTags(List<String> allowedTags, List<String> usedTags) {
