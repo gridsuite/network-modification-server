@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.modifications.byfilter.assignment;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.iidm.network.regulation.RegulationMode;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.BooleanAssignmentInfos;
@@ -48,8 +49,8 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
                 .setTargetP(100)
                 .setMaxP(500)
                 .setMinP(0)
-                .setTargetV(10)
-                .setTargetQ(20)
+                .setLocalTargetV(10)
+                .setLocalTargetQ(20)
                 .newExtension(GeneratorStartupAdder.class)
                 .withMarginalCost(30.)
                 .withPlannedOutageRate(0.25)
@@ -61,8 +62,8 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
                 .setTargetP(200)
                 .setMaxP(2000)
                 .setMinP(10)
-                .setTargetV(10)
-                .setTargetQ(20)
+                .setLocalTargetV(10)
+                .setLocalTargetQ(20)
                 .newExtension(GeneratorStartupAdder.class)
                 .withMarginalCost(30.)
                 .withPlannedOutageRate(0.25)
@@ -262,7 +263,7 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
         assertEquals(10, generatorStartup1.getPlannedActivePowerSetpoint(), 0);
         assertEquals(300., generator1.getMaxP(), 0);
         assertEquals(2, generator1.getMinP(), 0);
-        assertEquals(true, generator1.isVoltageRegulatorOn());
+        assertEquals(true, generator1.isRegulatingWithMode(RegulationMode.VOLTAGE));
 
         Generator generator2 = getNetwork().getGenerator(GENERATOR_ID_2);
         GeneratorStartup generatorStartup2 = generator2.getExtension(GeneratorStartup.class);
