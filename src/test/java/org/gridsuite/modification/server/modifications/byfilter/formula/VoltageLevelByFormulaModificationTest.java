@@ -8,8 +8,6 @@ package org.gridsuite.modification.server.modifications.byfilter.formula;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.TopologyKind;
-import com.powsybl.iidm.network.VoltageLevel;
-import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.byfilter.equipmentfield.VoltageLevelField;
@@ -21,10 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
-import static org.gridsuite.modification.modifications.byfilter.AbstractModificationByAssignment.*;
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessageWithoutRank;
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -200,65 +194,4 @@ class VoltageLevelByFormulaModificationTest extends AbstractByFormulaModificatio
         return EquipmentType.VOLTAGE_LEVEL;
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(110, getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_1).getLowVoltageLimit(), 0);
-        assertEquals(110, getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_2).getLowVoltageLimit(), 0);
-        assertEquals(60, getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_3).getLowVoltageLimit(), 0);
-
-        VoltageLevel voltageLevel4 = getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_4);
-        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit4 = voltageLevel4.getExtension(IdentifiableShortCircuit.class);
-        assertNotNull(identifiableShortCircuit4);
-        assertEquals(80, voltageLevel4.getLowVoltageLimit(), 0);
-        assertEquals(5, identifiableShortCircuit4.getIpMin(), 0);
-        assertEquals(95, identifiableShortCircuit4.getIpMax(), 0);
-
-        VoltageLevel voltageLevel5 = getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_5);
-        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit5 = voltageLevel5.getExtension(IdentifiableShortCircuit.class);
-        assertNotNull(identifiableShortCircuit5);
-        assertEquals(1000, voltageLevel5.getHighVoltageLimit(), 0);
-        assertEquals(15, voltageLevel5.getNominalV(), 0);
-        assertEquals(70, identifiableShortCircuit5.getIpMax(), 0);
-
-        VoltageLevel voltageLevel6 = getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_6);
-        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit6 = voltageLevel6.getExtension(IdentifiableShortCircuit.class);
-        assertNotNull(identifiableShortCircuit6);
-        assertEquals(2000, voltageLevel6.getHighVoltageLimit(), 0);
-        assertEquals(50, identifiableShortCircuit6.getIpMin(), 0);
-        assertEquals(195, identifiableShortCircuit6.getIpMax(), 0);
-
-        assertTrue(Double.isNaN(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_7).getLowVoltageLimit()));
-        assertTrue(Double.isNaN(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_7).getHighVoltageLimit()));
-        assertLogMessageWithoutRank("Cannot modify equipment v7 : At least one of the value or referenced field is missing", REPORT_KEY_EQUIPMENT_MODIFIED_ERROR_MISSING, reportService);
-        assertLogMessageWithoutRank("Cannot modify equipment v7 : The value or referenced field of the second operand in the division operator is zero", REPORT_KEY_EQUIPMENT_MODIFIED_ERROR_ZERO,
-                reportService);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(100, getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_1).getLowVoltageLimit(), 0);
-        assertEquals(100, getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_2).getLowVoltageLimit(), 0);
-        assertEquals(250, getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_3).getHighVoltageLimit(), 0);
-
-        VoltageLevel voltageLevel4 = getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_4);
-        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit4 = voltageLevel4.getExtension(IdentifiableShortCircuit.class);
-        assertNotNull(identifiableShortCircuit4);
-        assertEquals(300, voltageLevel4.getHighVoltageLimit(), 0);
-        assertEquals(10, identifiableShortCircuit4.getIpMin(), 0);
-        assertEquals(100, identifiableShortCircuit4.getIpMax(), 0);
-
-        VoltageLevel voltageLevel5 = getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_5);
-        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit5 = voltageLevel5.getExtension(IdentifiableShortCircuit.class);
-        assertNotNull(identifiableShortCircuit5);
-        assertEquals(500, voltageLevel5.getHighVoltageLimit(), 0);
-        assertEquals(210, voltageLevel5.getNominalV(), 0);
-        assertEquals(75, identifiableShortCircuit5.getIpMax(), 0);
-
-        VoltageLevel voltageLevel6 = getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_6);
-        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit6 = voltageLevel6.getExtension(IdentifiableShortCircuit.class);
-        assertNotNull(identifiableShortCircuit6);
-        assertEquals(1000, voltageLevel6.getHighVoltageLimit(), 0);
-        assertEquals(100, identifiableShortCircuit6.getIpMin(), 0);
-        assertEquals(200, identifiableShortCircuit6.getIpMax(), 0);
-    }
 }

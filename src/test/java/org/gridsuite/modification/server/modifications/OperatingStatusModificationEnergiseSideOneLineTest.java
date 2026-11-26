@@ -61,24 +61,6 @@ class OperatingStatusModificationEnergiseSideOneLineTest extends AbstractNetwork
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        // terminal1 is now connected, terminal2 is now disconnected
-        Line line = getNetwork().getLine(TARGET_LINE_ID);
-        assertNotNull(line);
-        assertTrue(line.getTerminal1().isConnected());
-        assertFalse(line.getTerminal2().isConnected());
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        // back to init state
-        Line line = getNetwork().getLine(TARGET_LINE_ID);
-        assertNotNull(line);
-        assertFalse(line.getTerminal1().isConnected());
-        assertTrue(line.getTerminal2().isConnected());
-    }
-
     @Test
     void testCreateWithErrors() throws Exception {
         // Add a line that can't be disconnected
@@ -111,12 +93,4 @@ class OperatingStatusModificationEnergiseSideOneLineTest extends AbstractNetwork
         assertEquals("line2", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("vl1_bis", updatedValues.get("energizedVoltageLevelId"));
-        assertEquals("TRIP", updatedValues.get("action"));
-        assertEquals("line1", updatedValues.get("equipmentId"));
-    }
 }

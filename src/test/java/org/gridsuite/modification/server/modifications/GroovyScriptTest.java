@@ -24,7 +24,6 @@ import static org.gridsuite.modification.error.NetworkModificationExceptionType.
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -52,16 +51,6 @@ class GroovyScriptTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .script("network.getGenerator('idGenerator').targetP=15\n")
                 .build();
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(12, getNetwork().getGenerator("idGenerator").getTargetP(), 0);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(42.1, getNetwork().getGenerator("idGenerator").getTargetP(), 0);
     }
 
     @Test

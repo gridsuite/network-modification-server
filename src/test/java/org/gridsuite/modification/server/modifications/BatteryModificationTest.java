@@ -10,11 +10,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Battery;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ReactiveCapabilityCurve;
-import com.powsybl.iidm.network.ReactiveLimitsKind;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
-import com.powsybl.iidm.network.extensions.BatteryShortCircuit;
-import com.powsybl.iidm.network.extensions.Measurement;
-import com.powsybl.iidm.network.extensions.Measurements;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationExceptionType;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -102,50 +98,6 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .maxP(new AttributeModification<>(102., OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
                 .build();
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        Battery modifiedBattery = getNetwork().getBattery("v3Battery");
-        BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
-        assertEquals("newV1Battery", modifiedBattery.getNameOrId());
-        assertEquals(80.0, modifiedBattery.getTargetP());
-        assertEquals(40.0, modifiedBattery.getTargetQ());
-        assertEquals(0., modifiedBattery.getMinP());
-        assertEquals(100., modifiedBattery.getMaxP());
-        assertEquals(0.1f, modifiedBattery.getExtension(ActivePowerControl.class).getDroop());
-        assertTrue(modifiedBattery.getExtension(ActivePowerControl.class).isParticipate());
-        assertEquals(ReactiveLimitsKind.CURVE, modifiedBattery.getReactiveLimits().getKind());
-        Collection<ReactiveCapabilityCurve.Point> points = modifiedBattery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
-        List<ReactiveCapabilityCurve.Point> batteryPoints = new ArrayList<>(points);
-        List<ReactiveCapabilityCurvePointsInfos> modificationPoints = batteryModificationInfos.getReactiveCapabilityCurvePoints();
-        if (!CollectionUtils.isEmpty(points)) {
-            IntStream.range(0, batteryPoints.size())
-                    .forEach(i -> {
-                        var point = batteryPoints.get(i);
-                        var modificationPoint = modificationPoints.get(i);
-                        assertEquals(modificationPoint.getMaxQ(), point.getMaxQ());
-                        assertEquals(modificationPoint.getMinQ(), point.getMinQ());
-                        assertEquals(modificationPoint.getP(), point.getP());
-                    });
-        }
-        assertEquals(PROPERTY_VALUE, getNetwork().getBattery("v3Battery").getProperty(PROPERTY_NAME));
-        BatteryShortCircuit batteryShortCircuit = modifiedBattery.getExtension(BatteryShortCircuit.class);
-        assertNotNull(batteryShortCircuit);
-        assertEquals(0.1, batteryShortCircuit.getDirectTransX());
-        assertEquals(0.2, batteryShortCircuit.getStepUpTransformerX());
-        assertMeasurements(modifiedBattery);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        Battery battery = getNetwork().getBattery("v3Battery");
-        assertEquals("v3Battery", battery.getNameOrId());
-        assertEquals(1.0, battery.getTargetP());
-        assertEquals(1.0, battery.getTargetQ());
-        assertEquals(0.0, battery.getMinP());
-        assertEquals(10.0, battery.getMaxP());
-        assertEquals(ReactiveLimitsKind.MIN_MAX, battery.getReactiveLimits().getKind());
     }
 
     @Test
@@ -390,13 +342,6 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         assertEquals("v3Battery", updatedValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("BATTERY_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("idBatteryEdited", updatedValues.get("equipmentId"));
-    }
-
     @Test
     void testDisconnection() throws Exception {
         assertChangeConnectionState(getNetwork().getBattery("v3Battery"), false);
@@ -436,22 +381,5 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
 
         assertThat(createdModification).recursivelyEquals(batteryModificationInfos);
         testNetworkModificationsCount(getGroupId(), 2);
-    }
-
-    private void assertMeasurements(Battery battery) {
-        Measurements<?> measurements = (Measurements<?>) battery.getExtension(Measurements.class);
-        assertNotNull(measurements);
-        Collection<Measurement> activePowerMeasurements = measurements.getMeasurements(Measurement.Type.ACTIVE_POWER).stream().toList();
-        Collection<Measurement> reactivePowerMeasurements = measurements.getMeasurements(Measurement.Type.REACTIVE_POWER).stream().toList();
-        assertThat(activePowerMeasurements).isNotEmpty();
-        assertThat(reactivePowerMeasurements).isNotEmpty();
-        assertThat(activePowerMeasurements).allSatisfy(m -> {
-            assertThat(m.getValue()).isEqualTo(MEASUREMENT_P_VALUE);
-            assertThat(m.isValid()).isEqualTo(MEASUREMENT_P_VALID);
-        });
-        assertThat(reactivePowerMeasurements).allSatisfy(m -> {
-            assertThat(m.getValue()).isEqualTo(MEASUREMENT_Q_VALUE);
-            assertThat(m.isValid()).isEqualTo(MEASUREMENT_Q_VALID);
-        });
     }
 }

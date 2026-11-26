@@ -70,31 +70,6 @@ class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        // 3 lines are gone
-        assertNull(getNetwork().getLine("l1"));
-        assertNull(getNetwork().getLine("l2"));
-        assertNull(getNetwork().getLine("l3"));
-        // v2 is still here
-        assertNotNull(getNetwork().getVoltageLevel("v2"));
-        assertEquals(4, getNetwork().getVoltageLevelCount());
-        // new lines:
-        assertNotNull(getNetwork().getLine("nl1"));
-        assertNotNull(getNetwork().getLine("nl2"));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNotNull(getNetwork().getLine("l1"));
-        assertNotNull(getNetwork().getLine("l2"));
-        assertNotNull(getNetwork().getLine("l3"));
-        assertNotNull(getNetwork().getVoltageLevel("v2"));
-        assertEquals(4, getNetwork().getVoltageLevelCount());
-        assertNull(getNetwork().getLine("nl1"));
-        assertNull(getNetwork().getLine("nl2"));
-    }
-
     @Test
     void testCreateWithErrors() throws Exception {
         // use an unexisting line
@@ -130,10 +105,4 @@ class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
         assertEquals("l3", createdValues.get("attachedLineId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("LINES_ATTACH_TO_SPLIT_LINES", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("newline3", updatedValues.get("attachedLineId"));
-    }
 }

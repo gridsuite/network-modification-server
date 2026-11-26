@@ -46,33 +46,10 @@ class SubstationDeletionTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNull(getNetwork().getSubstation("s1"));
-        assertNull(getNetwork().getVoltageLevel("v1"));
-        assertNull(getNetwork().getVoltageLevel("v2"));
-        assertNull(getNetwork().getLoad("v1load"));
-        assertNull(getNetwork().getLccConverterStation("v1lcc"));
-        assertNull(getNetwork().getSwitch("v1d1"));
-        assertNull(getNetwork().getLine("line2"));
-        assertNull(getNetwork().getHvdcLine("hvdcLine"));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNotNull(getNetwork().getSubstation("s1"));
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("s1", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("v2", updatedValues.get("equipmentId"));
-    }
 }

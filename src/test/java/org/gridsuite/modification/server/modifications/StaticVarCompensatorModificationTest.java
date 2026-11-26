@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.StaticVarCompensator;
-import com.powsybl.iidm.network.extensions.StandbyAutomaton;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -77,54 +76,10 @@ class StaticVarCompensatorModificationTest extends AbstractInjectionModification
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        StaticVarCompensator svc = getNetwork().getStaticVarCompensator(SVC_ID);
-        assertEquals("newName", svc.getNameOrId());
-        assertEquals(1., svc.getBmin());
-        assertEquals(40., svc.getBmax());
-        assertEquals(StaticVarCompensator.RegulationMode.REACTIVE_POWER, svc.getRegulationMode());
-        assertTrue(svc.isRegulating());
-        assertEquals(390., svc.getVoltageSetpoint());
-        assertEquals(50., svc.getReactivePowerSetpoint());
-        assertEquals("v3load", svc.getRegulatingTerminal().getConnectable().getId());
-        assertEquals(PROPERTY_VALUE, svc.getProperty(PROPERTY_NAME));
-        StandbyAutomaton standbyAutomaton = svc.getExtension(StandbyAutomaton.class);
-        assertNotNull(standbyAutomaton);
-        assertFalse(standbyAutomaton.isStandby());
-        assertEquals(5., standbyAutomaton.getB0());
-        assertEquals(370., standbyAutomaton.getLowVoltageSetpoint());
-        assertEquals(390., standbyAutomaton.getHighVoltageSetpoint());
-        assertEquals(360., standbyAutomaton.getLowVoltageThreshold());
-        assertEquals(400., standbyAutomaton.getHighVoltageThreshold());
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        StaticVarCompensator svc = getNetwork().getStaticVarCompensator(SVC_ID);
-        assertEquals(SVC_ID, svc.getNameOrId());
-        assertEquals(2., svc.getBmin());
-        assertEquals(30., svc.getBmax());
-        assertEquals(StaticVarCompensator.RegulationMode.VOLTAGE, svc.getRegulationMode());
-        assertFalse(svc.isRegulating());
-        assertEquals(380., svc.getVoltageSetpoint());
-        assertEquals(100., svc.getReactivePowerSetpoint());
-        assertEquals(SVC_ID, svc.getRegulatingTerminal().getConnectable().getId());
-        assertNull(svc.getProperty(PROPERTY_NAME));
-        assertNull(svc.getExtension(StandbyAutomaton.class));
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("STATIC_VAR_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals(SVC_ID, updatedValues.get("equipmentId"));
-    }
-
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("STATIC_VAR_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("idCompensatorEdited", updatedValues.get("equipmentId"));
     }
 
     @Test

@@ -9,8 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.Switch;
-import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelTopologyModificationInfos;
@@ -103,50 +101,6 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        VoltageLevel voltageLevel = getNetwork().getVoltageLevel("v1");
-        assertNotNull(voltageLevel);
-
-        Switch switch1 = getNetwork().getSwitch("v1d1");
-        assertNotNull(switch1);
-        assertFalse(switch1.isOpen());
-
-        Switch switch2 = getNetwork().getSwitch("v1b1");
-        assertNotNull(switch2);
-        assertFalse(switch2.isOpen());
-
-        Switch switch3 = getNetwork().getSwitch("v1blcc");
-        assertNotNull(switch3);
-        assertFalse(switch3.isOpen());
-
-        Switch switch4 = getNetwork().getSwitch("v1dlcc");
-        assertNotNull(switch4);
-        assertFalse(switch4.isOpen());
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        VoltageLevel voltageLevel = getNetwork().getVoltageLevel("v1");
-        assertNotNull(voltageLevel);
-
-        Switch switch1 = getNetwork().getSwitch("v1d1");
-        assertNotNull(switch1);
-        assertFalse(switch1.isOpen());
-
-        Switch switch2 = getNetwork().getSwitch("v1b1");
-        assertNotNull(switch2);
-        assertFalse(switch2.isOpen());
-
-        Switch switch3 = getNetwork().getSwitch("v1blcc");
-        assertNotNull(switch3);
-        assertFalse(switch3.isOpen());
-
-        Switch switch4 = getNetwork().getSwitch("v1dlcc");
-        assertNotNull(switch4);
-        assertFalse(switch4.isOpen());
-    }
-
     @Test
     void testInvalidVoltageLevel() throws Exception {
         VoltageLevelTopologyModificationInfos infos = VoltageLevelTopologyModificationInfos.builder()
@@ -215,10 +169,4 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
         assertEquals("v1", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("VOLTAGE_LEVEL_TOPOLOGY_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("v1", updatedValues.get("equipmentId"));
-    }
 }

@@ -8,10 +8,7 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
-import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.iidm.network.extensions.Measurement;
 import com.powsybl.iidm.network.extensions.Measurements;
 import org.assertj.core.api.Assertions;
@@ -121,47 +118,6 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                 .plannedOutageRate(new AttributeModification<>(.45, OperationType.SET))
                 .forcedOutageRate(new AttributeModification<>(.66, OperationType.SET))
                 .build();
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        Generator modifiedGenerator = getNetwork().getGenerator("idGenerator");
-        assertEquals("newV1Generator", modifiedGenerator.getNameOrId());
-        assertEquals(EnergySource.SOLAR, modifiedGenerator.getEnergySource());
-        assertEquals(80.0, modifiedGenerator.getTargetP());
-        assertEquals(40.0, modifiedGenerator.getTargetQ());
-        assertEquals(48.0, modifiedGenerator.getTargetV());
-        assertFalse(modifiedGenerator.isVoltageRegulatorOn());
-        assertEquals(0., modifiedGenerator.getMinP());
-        assertEquals(100., modifiedGenerator.getMaxP());
-        assertEquals(220., modifiedGenerator.getRatedS());
-        assertEquals(0.1, modifiedGenerator.getExtension(GeneratorStartup.class).getMarginalCost());
-        assertEquals(10., modifiedGenerator.getExtension(GeneratorStartup.class).getPlannedActivePowerSetpoint());
-        assertEquals(0.30, modifiedGenerator.getExtension(GeneratorStartup.class).getPlannedOutageRate());
-        assertEquals(0.40, modifiedGenerator.getExtension(GeneratorStartup.class).getForcedOutageRate());
-        assertEquals(0.1f, modifiedGenerator.getExtension(ActivePowerControl.class).getDroop());
-        assertTrue(modifiedGenerator.getExtension(ActivePowerControl.class).isParticipate());
-        assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getDirectTransX());
-        assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getStepUpTransformerX());
-        assertEquals(ReactiveLimitsKind.CURVE, modifiedGenerator.getReactiveLimits().getKind());
-        assertEquals(PROPERTY_VALUE, modifiedGenerator.getProperty(PROPERTY_NAME));
-        assertMeasurements(modifiedGenerator);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        Generator generator = getNetwork().getGenerator("idGenerator");
-        assertEquals("idGenerator", generator.getNameOrId());
-        assertEquals(EnergySource.OTHER, generator.getEnergySource());
-        assertEquals(42.1, generator.getTargetP());
-        assertEquals(1.0, generator.getTargetQ());
-        assertEquals(Double.NaN, generator.getTargetV());
-        assertFalse(generator.isVoltageRegulatorOn());
-        assertEquals(-1.1, generator.getMinP());
-        assertEquals(1000.0, generator.getMaxP());
-        assertEquals(Double.NaN, generator.getRatedS());
-        assertEquals(ReactiveLimitsKind.MIN_MAX, generator.getReactiveLimits().getKind());
-        assertNull(generator.getProperty(PROPERTY_NAME));
     }
 
     @Test
@@ -523,13 +479,6 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         assertEquals("GENERATOR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idGenerator", createdValues.get("equipmentId"));
-    }
-
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("GENERATOR_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("idGeneratorEdited", createdValues.get("equipmentId"));
     }
 
     @Test

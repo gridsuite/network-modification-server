@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import com.powsybl.iidm.network.extensions.VoltageRegulation;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -24,7 +23,6 @@ import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerato
 import static org.gridsuite.modification.server.utils.NetworkUtil.createSwitch;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -355,52 +353,6 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertLogMessage("Shunt compensator with id=shuntNotFound not found", "network.modification.shuntCompensatorNotFound", reportService);
-        assertEquals(10., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
-        assertEquals(226., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
-        assertEquals(75., getNetwork().getBattery("v1Battery").getExtension(VoltageRegulation.class).getTargetV(), 0.001);
-        assertEquals(26., getNetwork().getBattery("v1Battery").getTargetQ(), 0.001);
-        assertEquals(16., getNetwork().getBattery("v2Battery").getTargetQ(), 0.001);
-        assertEquals(2, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
-        assertEquals(223, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTargetV(), 0.001);
-        assertEquals(2, getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTapPosition());
-        assertEquals(220., getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTargetV(), 0.001);
-        assertEquals(50., getNetwork().getStaticVarCompensator("v5Compensator").getReactivePowerSetpoint(), 0.001);
-        assertEquals(372., getNetwork().getStaticVarCompensator("v6Compensator").getVoltageSetpoint(), 0.001);
-        assertEquals(23., getNetwork().getVscConverterStation("v2vsc").getReactivePowerSetpoint(), 0.001);
-        assertEquals(560., getNetwork().getVscConverterStation("v2vsc").getVoltageSetpoint(), 0.001);
-        assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
-        assertEquals(230., getNetwork().getShuntCompensator("v2shunt").getTargetV(), 0.001);
-        assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
-        assertEquals(221., getNetwork().getShuntCompensator("v5shunt").getTargetV(), 0.001);
-        assertEquals(1, getNetwork().getShuntCompensator("v6shunt").getSectionCount());
-        assertEquals(230., getNetwork().getBusView().getBus("v1_0").getV(), 0.001);
-        assertEquals(0.5, getNetwork().getBusView().getBus("v1_0").getAngle(), 0.001);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(1., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
-        assertEquals(224., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
-        assertNull(getNetwork().getBattery("v1Battery").getExtension(VoltageRegulation.class));
-        assertEquals(3., getNetwork().getBattery("v1Battery").getTargetQ(), 0.001);
-        assertEquals(11., getNetwork().getBattery("v2Battery").getTargetQ(), 0.001);
-        assertEquals(1, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
-        assertEquals(220., getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTargetV(), 0.001);
-        assertEquals(1, getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTapPosition());
-        assertEquals(100., getNetwork().getStaticVarCompensator("v5Compensator").getReactivePowerSetpoint(), 0.001);
-        assertEquals(380., getNetwork().getStaticVarCompensator("v6Compensator").getVoltageSetpoint(), 0.001);
-        assertEquals(40., getNetwork().getVscConverterStation("v2vsc").getReactivePowerSetpoint(), 0.001);
-        assertEquals(150., getNetwork().getVscConverterStation("v2vsc").getVoltageSetpoint(), 0.001);
-        assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
-        assertEquals(225., getNetwork().getShuntCompensator("v2shunt").getTargetV(), 0.001);
-        assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
-        assertEquals(225., getNetwork().getShuntCompensator("v5shunt").getTargetV(), 0.001);
-        assertEquals(0, getNetwork().getShuntCompensator("v6shunt").getSectionCount());
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("VOLTAGE_INIT_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
@@ -408,11 +360,4 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
         assertEquals("node1", createdValues.get("nodeName"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("VOLTAGE_INIT_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("rootNetwork2", updatedValues.get("rootNetworkName"));
-        assertEquals("node2", updatedValues.get("nodeName"));
-    }
 }

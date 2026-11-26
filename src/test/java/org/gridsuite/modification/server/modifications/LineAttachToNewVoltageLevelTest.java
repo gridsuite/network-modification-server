@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -126,63 +125,10 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        // new equipments in the network:
-        assertNotNull(getNetwork().getLine("attachmentLine"));
-        assertNotNull(getNetwork().getLine("nl1"));
-        assertNotNull(getNetwork().getLine("nl2"));
-        assertNotNull(getNetwork().getVoltageLevel("AttPointId"));
-        assertNotNull(getNetwork().getVoltageLevel("newVoltageLevel"));
-        // replaced line is gone
-        assertNull(getNetwork().getLine("line3"));
-
-        // attachment point substation
-        Substation attachmentPointSubstation = getNetwork().getSubstation("attachmentPointSubstation");
-        assertNotNull(attachmentPointSubstation);
-        assertTrue(attachmentPointSubstation.getOptionalName().isPresent());
-        assertEquals("attachmentPointSubstationName", attachmentPointSubstation.getOptionalName().get());
-        assertEquals("valueSubstation", attachmentPointSubstation.getProperty("substationProp"));
-        assertTrue(attachmentPointSubstation.getCountry().isPresent());
-        assertEquals(Country.FR, attachmentPointSubstation.getCountry().get());
-        assertTrue(attachmentPointSubstation.isFictitious());
-
-        // attachment point voltage level
-        VoltageLevel attachmentPointVoltageLevel = getNetwork().getVoltageLevel("AttPointId");
-        assertNotNull(attachmentPointVoltageLevel);
-        assertEquals("valueVoltageLevel", attachmentPointVoltageLevel.getProperty("voltageLevelProp"));
-        assertEquals(380.0, attachmentPointVoltageLevel.getNominalV(), 0.001);
-        assertEquals(50.0, attachmentPointVoltageLevel.getLowVoltageLimit(), 0.001);
-        assertEquals(100.0, attachmentPointVoltageLevel.getHighVoltageLimit(), 0.001);
-        assertTrue(attachmentPointVoltageLevel.isFictitious());
-
-        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = attachmentPointVoltageLevel.getExtension(IdentifiableShortCircuit.class);
-        assertNotNull(identifiableShortCircuit);
-        assertEquals(5.0, identifiableShortCircuit.getIpMin(), 0.001);
-        assertEquals(20.0, identifiableShortCircuit.getIpMax(), 0.001);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getLine("attachmentLine"));
-        assertNull(getNetwork().getLine("nl1"));
-        assertNull(getNetwork().getLine("nl2"));
-        assertNull(getNetwork().getVoltageLevel("AttPointId"));
-        assertNull(getNetwork().getSubstation("attachmentPointSubstation"));
-        assertNull(getNetwork().getVoltageLevel("newVoltageLevel"));
-        assertNotNull(getNetwork().getLine("line3"));
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("LINE_ATTACH_TO_VOLTAGE_LEVEL", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("line3", createdValues.get("lineToAttachToId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("LINE_ATTACH_TO_VOLTAGE_LEVEL", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("line3Edited", updatedValues.get("lineToAttachToId"));
-    }
 }

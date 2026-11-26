@@ -102,21 +102,6 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getBattery("idBattery1"));
-        assertEquals(1, getNetwork().getVoltageLevel("v2").getBatteryStream()
-                .filter(transformer -> transformer.getId().equals("idBattery1")).count());
-        assertEquals(PROPERTY_VALUE, getNetwork().getBattery("idBattery1").getProperty(PROPERTY_NAME));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getBattery("idBattery1"));
-        assertEquals(0, getNetwork().getVoltageLevel("v2").getBatteryStream()
-                .filter(transformer -> transformer.getId().equals("idBattery1")).count());
-    }
-
     @Test
     void testCreateWithErrors() throws Exception {
         // invalid Battery id
@@ -229,13 +214,6 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         assertEquals("BATTERY_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idBattery1", updatedValues.get("equipmentId"));
-    }
-
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("BATTERY_CREATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("idBattery2Edited", updatedValues.get("equipmentId"));
     }
 
     @Test

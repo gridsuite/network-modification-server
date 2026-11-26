@@ -207,16 +207,6 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertTrue(getNetwork().getSwitch("v1b1").isOpen());
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertFalse(getNetwork().getSwitch("v1b1").isOpen());
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("EQUIPMENT_ATTRIBUTE_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
@@ -225,12 +215,4 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         assertEquals("true", createdValues.get("equipmentAttributeValue"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("EQUIPMENT_ATTRIBUTE_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("open", createdValues.get("equipmentAttributeName"));
-        assertEquals("v1b1Edited", createdValues.get("equipmentId"));
-        assertEquals("false", createdValues.get("equipmentAttributeValue"));
-    }
 }

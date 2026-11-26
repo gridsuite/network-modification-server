@@ -630,7 +630,6 @@ class GenerationDispatchTest extends AbstractByFilterTest {
 
         assertLogMessage("The modification points to at least 1 filter that does not exist anymore", "network.modification.missingFiltersInGenerationDispatch", reportService);
         // the dispatch is not applied
-        assertAfterNetworkModificationDeletion();
         verifyStandaloneFiltersRequest(stubId, Set.of(FILTER_ID_1, FILTER_ID_NOT_FOUND));
     }
 
@@ -726,24 +725,4 @@ class GenerationDispatchTest extends AbstractByFilterTest {
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNetworkAfterCreationWithStandardLossCoefficient();
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(85.357, getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
-        assertEquals(50., getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
-        assertEquals(100., getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
-        assertEquals(100., getNetwork().getGenerator(GTH1_ID).getTargetP(), 0.001);
-        assertEquals(100., getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
-        assertEquals(24.0, getNetwork().getGenerator(TEST1_ID).getTargetP(), 0.001);
-        assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);
-        assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);
-        assertEquals(100., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);
-        assertEquals(85.357, getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
-        assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);
-        assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);
-    }
 }

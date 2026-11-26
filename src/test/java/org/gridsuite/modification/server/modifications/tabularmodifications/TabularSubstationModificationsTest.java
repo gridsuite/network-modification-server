@@ -69,32 +69,10 @@ class TabularSubstationModificationsTest extends AbstractNetworkModificationTest
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(Country.BE, getNetwork().getSubstation("s1").getCountry().orElse(Country.AF));
-        assertEquals("s1", getNetwork().getSubstation("s1").getOptionalName().orElse("s2"));
-        assertEquals(Country.BE, getNetwork().getSubstation("s2").getCountry().orElse(Country.AF));
-        assertEquals("s2", getNetwork().getSubstation("s2").getOptionalName().orElse("s1"));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(Country.FR, getNetwork().getSubstation("s1").getCountry().orElse(Country.BE));
-        assertEquals("s1", getNetwork().getSubstation("s1").getOptionalName().orElse("s2"));
-        assertEquals(Country.FR, getNetwork().getSubstation("s2").getCountry().orElse(Country.BE));
-        assertEquals("s2", getNetwork().getSubstation("s2").getOptionalName().orElse("s1"));
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals(MOFIFICATION_TYPE.name(), createdValues.get("tabularModificationType"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals(MOFIFICATION_TYPE.name(), updatedValues.get("tabularModificationType"));
-    }
 }

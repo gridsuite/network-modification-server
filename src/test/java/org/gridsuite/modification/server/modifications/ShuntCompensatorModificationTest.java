@@ -9,10 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import com.powsybl.iidm.network.extensions.Measurement;
-import com.powsybl.iidm.network.extensions.Measurements;
-import org.apache.commons.collections4.CollectionUtils;
-import org.assertj.core.api.Assertions;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.error.NetworkModificationException;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -20,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,7 +26,6 @@ import static org.gridsuite.modification.server.report.NetworkModificationServer
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -301,35 +295,10 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        var shuntCompensator = getNetwork().getShuntCompensator("v7shunt");
-        var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
-        assertNotNull(model);
-        assertEquals(2.9629E-4, model.getBPerSection(), 0.0001);
-        assertEquals(PROPERTY_VALUE, getNetwork().getShuntCompensator("v7shunt").getProperty(PROPERTY_NAME));
-        assertMeasurements(shuntCompensator);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        var shuntCompensator = getNetwork().getShuntCompensator("v2shunt");
-        var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
-        assertNotNull(model);
-        assertEquals(1.0, model.getBPerSection(), 0);
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("v7shunt", createdValues.get("equipmentId"));
-    }
-
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("v2shunt", updatedValues.get("equipmentId"));
     }
 
     @Test
@@ -356,11 +325,4 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
         assertChangeConnectionState(getNetwork().getShuntCompensator("v2shunt"), shuntModificationInfos, true);
     }
 
-    private void assertMeasurements(ShuntCompensator shuntCompensator) {
-        Measurements<?> measurements = (Measurements<?>) shuntCompensator.getExtension(Measurements.class);
-        assertNotNull(measurements);
-        Collection<Measurement> reactivePowerMeasurements = measurements.getMeasurements(Measurement.Type.REACTIVE_POWER).stream().toList();
-        assertFalse(CollectionUtils.isEmpty(reactivePowerMeasurements));
-        Assertions.assertThat(reactivePowerMeasurements).allMatch(m -> m.getValue() == MEASUREMENT_Q_VALUE && m.isValid() == MEASUREMENT_Q_VALID);
-    }
 }

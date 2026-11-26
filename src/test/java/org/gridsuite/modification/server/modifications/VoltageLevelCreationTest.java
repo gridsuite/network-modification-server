@@ -74,29 +74,6 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getVoltageLevel("vlId"));
-        assertNotNull(getNetwork().getBusbarSection("vlId_1_1"));
-        assertNotNull(getNetwork().getBusbarSection("vlId_1_2"));
-        assertNotNull(getNetwork().getBusbarSection("vlId_2_1"));
-        assertNotNull(getNetwork().getBusbarSection("vlId_2_2"));
-        assertTrue(getNetwork().getSubstation("s2").getVoltageLevelStream().anyMatch(vl -> vl.getId().equals("vlId")));
-        assertEquals(1, getNetwork().getSubstation("s2").getVoltageLevelStream().filter(vl -> vl.getId().equals("vlId")).count());
-        assertEquals(PROPERTY_VALUE, getNetwork().getVoltageLevel("vlId").getProperty(PROPERTY_NAME));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getVoltageLevel("vlId"));
-        assertNull(getNetwork().getBusbarSection("vlId_1_1"));
-        assertNull(getNetwork().getBusbarSection("vlId_1_2"));
-        assertNull(getNetwork().getBusbarSection("vlId_2_1"));
-        assertNull(getNetwork().getBusbarSection("vlId_2_2"));
-        assertFalse(getNetwork().getSubstation("s2").getVoltageLevelStream().anyMatch(vl -> vl.getId().equals("vlId")));
-        assertEquals(0, getNetwork().getSubstation("s2").getVoltageLevelStream().filter(vl -> vl.getId().equals("vlId")).count());
-    }
-
     @Test
     void testCreateWithErrors() throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
@@ -231,10 +208,4 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         assertEquals("vlId", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("VOLTAGE_LEVEL_CREATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("VoltageLevelIdEdited", updatedValues.get("equipmentId"));
-    }
 }

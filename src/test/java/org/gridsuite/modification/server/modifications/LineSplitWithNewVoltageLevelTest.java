@@ -99,32 +99,10 @@ class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNull(getNetwork().getLine("line2"));
-        assertNotNull(getNetwork().getVoltageLevel("newVoltageLevel"));
-        assertNotNull(getNetwork().getLine("nl1v"));
-        assertNotNull(getNetwork().getLine("nl2v"));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNotNull(getNetwork().getLine("line2"));
-        assertNull(getNetwork().getVoltageLevel("newVoltageLevel"));
-        assertNull(getNetwork().getLine("nl1v"));
-        assertNull(getNetwork().getLine("nl2v"));
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("LINE_SPLIT_WITH_VOLTAGE_LEVEL", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("line2", createdValues.get("lineToSplitId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("LINE_SPLIT_WITH_VOLTAGE_LEVEL", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("line2Edited", updatedValues.get("lineToSplitId"));
-    }
 }

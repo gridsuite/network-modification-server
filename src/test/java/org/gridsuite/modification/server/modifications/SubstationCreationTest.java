@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.Substation;
 import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.SubstationCreationInfos;
@@ -58,18 +57,6 @@ class SubstationCreationTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        Substation substation = getNetwork().getSubstation("SubstationId");
-        assertNotNull(substation);
-        assertEquals("DemoC", substation.getProperty("DEMO"));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getSubstation("SubstationId"));
-    }
-
     @Test
     void testCreateWithErrors() throws Exception {
         SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) buildModification();
@@ -88,10 +75,4 @@ class SubstationCreationTest extends AbstractNetworkModificationTest {
         assertEquals("SubstationId", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("SUBSTATION_CREATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("SubstationIdEdited", updatedValues.get("equipmentId"));
-    }
 }

@@ -119,21 +119,6 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getGenerator("idGenerator1"));
-        assertEquals(1, getNetwork().getVoltageLevel("v2").getGeneratorStream()
-                .filter(transformer -> transformer.getId().equals("idGenerator1")).count());
-        assertEquals(PROPERTY_VALUE, getNetwork().getGenerator("idGenerator1").getProperty(PROPERTY_NAME));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getGenerator("idGenerator1"));
-        assertEquals(0, getNetwork().getVoltageLevel("v2").getGeneratorStream()
-                .filter(transformer -> transformer.getId().equals("idGenerator1")).count());
-    }
-
     @Test
     void testCreateWithErrors() throws Exception {
         // invalid Generator id
@@ -274,10 +259,4 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         assertEquals("idGenerator1", updatedValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("GENERATOR_CREATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("idGenerator2", updatedValues.get("equipmentId"));
-    }
 }

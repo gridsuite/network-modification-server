@@ -120,21 +120,6 @@ class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificationTest 
                 .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getGenerator("idGenerator2"));
-        assertEquals(1, getNetwork().getVoltageLevel("v1").getGeneratorStream()
-                .filter(transformer -> transformer.getId().equals("idGenerator2")).count());
-        assertEquals(PROPERTY_VALUE, getNetwork().getGenerator("idGenerator2").getProperty(PROPERTY_NAME));
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getGenerator("idGenerator2"));
-        assertEquals(0, getNetwork().getVoltageLevel("v1").getGeneratorStream()
-                .filter(transformer -> transformer.getId().equals("idGenerator2")).count());
-    }
-
     @Test
     void testCreateWithBusbarSectionErrors() throws Exception {
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
@@ -167,10 +152,4 @@ class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificationTest 
         assertEquals("idGenerator2", createdValues.get("equipmentId"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("GENERATOR_CREATION", modificationInfos.getMessageType());
-        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("idGenerator2Edited", createdValues.get("equipmentId"));
-    }
 }

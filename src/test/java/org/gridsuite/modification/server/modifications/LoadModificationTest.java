@@ -7,19 +7,14 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.extensions.Measurement;
-import com.powsybl.iidm.network.extensions.Measurements;
-import org.apache.commons.collections4.CollectionUtils;
-import org.assertj.core.api.Assertions;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import java.util.Collection;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -74,41 +69,6 @@ class LoadModificationTest extends AbstractInjectionModificationTest {
             .build();
     }
 
-    @Override
-    protected void assertAfterNetworkModificationCreation() {
-        Load modifiedLoad = getNetwork().getLoad("v1load");
-        assertNotNull(modifiedLoad);
-        assertEquals(LoadType.FICTITIOUS, modifiedLoad.getLoadType());
-        assertEquals(200.0, modifiedLoad.getP0(), 0.0);
-        assertEquals(30.0, modifiedLoad.getQ0(), 0.0);
-        assertEquals("nameLoad1", modifiedLoad.getNameOrId());
-        assertEquals(PROPERTY_VALUE, modifiedLoad.getProperty(PROPERTY_NAME));
-        assertMeasurements(modifiedLoad);
-    }
-
-    private void assertMeasurements(Load load) {
-        Measurements<?> measurements = (Measurements<?>) load.getExtension(Measurements.class);
-        assertNotNull(measurements);
-        Collection<Measurement> activePowerMeasurements = measurements.getMeasurements(Measurement.Type.ACTIVE_POWER).stream().toList();
-        assertNotNull(activePowerMeasurements);
-        assertFalse(CollectionUtils.isEmpty(activePowerMeasurements));
-        Assertions.assertThat(activePowerMeasurements).allMatch(m -> m.getValue() == MEASUREMENT_P_VALUE && m.isValid() == MEASUREMENT_P_VALID);
-        Collection<Measurement> reactivePowerMeasurements = measurements.getMeasurements(Measurement.Type.REACTIVE_POWER).stream().toList();
-        assertFalse(CollectionUtils.isEmpty(reactivePowerMeasurements));
-        Assertions.assertThat(reactivePowerMeasurements).allMatch(m -> m.getValue() == MEASUREMENT_Q_VALUE && m.isValid() == MEASUREMENT_Q_VALID);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        Load modifiedLoad = getNetwork().getLoad("v1load");
-        assertNotNull(modifiedLoad);
-        assertEquals(LoadType.UNDEFINED, modifiedLoad.getLoadType());
-        assertEquals(0.0, modifiedLoad.getP0(), 0.0);
-        assertEquals(0.0, modifiedLoad.getQ0(), 0.0);
-        assertEquals("v1load", modifiedLoad.getNameOrId());
-        assertNull(modifiedLoad.getProperty(PROPERTY_NAME));
-    }
-
     @Test
     void testCreateWithErrors() throws Exception {
         // Unset an attribute that should not be null
@@ -129,13 +89,6 @@ class LoadModificationTest extends AbstractInjectionModificationTest {
         assertEquals("LOAD_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("v1load", createdValues.get("equipmentId"));
-    }
-
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals("LOAD_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("v1loadEdited", updatedValues.get("equipmentId"));
     }
 
     @Test

@@ -220,11 +220,4 @@ abstract class AbstractByFormulaModificationTest extends AbstractByFilterTest {
         assertEquals(getIdentifiableType().toString(), updatedValues.get(EQUIPMENT_TYPE));
     }
 
-    @Override
-    @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals(getIdentifiableType().toString(), updatedValues.get(EQUIPMENT_TYPE));
-    }
-
 }

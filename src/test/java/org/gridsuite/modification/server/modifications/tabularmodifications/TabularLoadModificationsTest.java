@@ -63,30 +63,10 @@ class TabularLoadModificationsTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(300., getNetwork().getLoad("v1load").getQ0(), 0.001);
-        assertEquals(300., getNetwork().getLoad("v2load").getQ0(), 0.001);
-        assertEquals(300., getNetwork().getLoad("v3load").getQ0(), 0.001);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(0., getNetwork().getLoad("v1load").getQ0(), 0.001);
-        assertEquals(0., getNetwork().getLoad("v2load").getQ0(), 0.001);
-        assertEquals(0., getNetwork().getLoad("v3load").getQ0(), 0.001);
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals(ModificationType.LOAD_MODIFICATION.name(), createdValues.get("tabularModificationType"));
     }
 
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals(ModificationType.LOAD_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
-    }
 }

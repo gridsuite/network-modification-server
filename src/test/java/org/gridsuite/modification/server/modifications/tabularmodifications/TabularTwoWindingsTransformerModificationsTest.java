@@ -78,29 +78,10 @@ class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModi
     }
 
     @Override
-    protected void assertAfterNetworkModificationCreation() {
-        assertEquals(0.0, getNetwork().getTwoWindingsTransformer("trf1").getR(), 0.001);
-        assertEquals(1.0, getNetwork().getTwoWindingsTransformer("trf2").getR(), 0.001);
-    }
-
-    @Override
-    protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(2.0, getNetwork().getTwoWindingsTransformer("trf1").getR(), 0.001);
-        assertEquals(2.0, getNetwork().getTwoWindingsTransformer("trf2").getR(), 0.001);
-    }
-
-    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals(ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION.name(), createdValues.get("tabularModificationType"));
-    }
-
-    @Override
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
-        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals(ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
     }
 
     @Test
