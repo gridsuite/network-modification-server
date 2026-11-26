@@ -1692,7 +1692,7 @@ class CompositeControllerTest {
     }
 
     @Test
-    void testGetAllowedRootNetworkTags() throws Exception {
+    void testGetRootNetworkTagsNamingRestrictions() throws Exception {
         UUID sharedCompositeUuid = insertSharedCompositeInSecondGroup();
         UUID childUuid = ((CompositeModificationInfos) networkModificationRepository.getModificationInfo(sharedCompositeUuid))
                 .getModificationsInfos().getFirst().getUuid();
@@ -1702,22 +1702,22 @@ class CompositeControllerTest {
 
         // the user cannot write on the shared modification: only the tags it and all its content are associated with
         when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.READ));
-        assertEquals(new AllowedRootNetworkTags(true, List.of("A", "B")), getAllowedRootNetworkTags(TEST_GROUP2_ID));
+        assertEquals(new RootNetworkTagsNamingRestrictions(true, List.of("A", "B")), getRootNetworkTagsNamingRestrictions(TEST_GROUP2_ID));
         // the tags already used are left out, as in the error values when a tag is refused
-        assertEquals(new AllowedRootNetworkTags(true, List.of("B")), getAllowedRootNetworkTags(TEST_GROUP2_ID, "A"));
+        assertEquals(new RootNetworkTagsNamingRestrictions(true, List.of("B")), getRootNetworkTagsNamingRestrictions(TEST_GROUP2_ID, "A"));
 
         // a user who can write on it may use any tag
         when(directoryService.getElementsPermissions(any(), eq(TEST_USER_ID))).thenReturn(Map.of(sharedCompositeUuid, PermissionType.WRITE));
-        assertEquals(AllowedRootNetworkTags.UNRESTRICTED, getAllowedRootNetworkTags(TEST_GROUP2_ID));
+        assertEquals(RootNetworkTagsNamingRestrictions.UNRESTRICTED, getRootNetworkTagsNamingRestrictions(TEST_GROUP2_ID));
 
         // a container pointing at no shared modification does not even need the permission to be checked
         clearInvocations(directoryService);
-        assertEquals(AllowedRootNetworkTags.UNRESTRICTED, getAllowedRootNetworkTags(TEST_GROUP_ID));
+        assertEquals(RootNetworkTagsNamingRestrictions.UNRESTRICTED, getRootNetworkTagsNamingRestrictions(TEST_GROUP_ID));
         verifyNoInteractions(directoryService);
     }
 
-    private AllowedRootNetworkTags getAllowedRootNetworkTags(UUID containerUuid, String... usedTags) throws Exception {
-        MockHttpServletRequestBuilder request = post("/v1/containers/root-network-tags/allowed");
+    private RootNetworkTagsNamingRestrictions getRootNetworkTagsNamingRestrictions(UUID containerUuid, String... usedTags) throws Exception {
+        MockHttpServletRequestBuilder request = post("/v1/containers/root-network-tags/naming-restrictions");
         if (usedTags.length > 0) {
             request.queryParam("usedTags", usedTags);
         }
@@ -1725,7 +1725,7 @@ class CompositeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(List.of(containerUuid)))
                         .header(HEADER_USER_ID, TEST_USER_ID))
-                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), AllowedRootNetworkTags.class);
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), RootNetworkTagsNamingRestrictions.class);
     }
 
     private MockHttpServletRequestBuilder areRootNetworkTagsAllowed(String uuidsField, UUID uuid, String... tags) throws Exception {

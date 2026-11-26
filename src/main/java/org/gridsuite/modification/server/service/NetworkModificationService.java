@@ -328,14 +328,14 @@ public class NetworkModificationService {
      * {@link #assertRootNetworkTagsAllowed(List, List, List, List, List, String)} refuses a tag for these containers
      */
     @Transactional(readOnly = true)
-    public AllowedRootNetworkTags getAllowedRootNetworkTags(@NonNull List<UUID> containerUuids, @NonNull List<String> usedTags,
+    public RootNetworkTagsNamingRestrictions getRootNetworkTagsNamingRestrictions(@NonNull List<UUID> containerUuids, @NonNull List<String> usedTags,
                                                             @NonNull String userId) {
         Set<UUID> notWritableUuids = getNotWritableUuids(
                 networkModificationRepository.getSharedModificationUuids(containerUuids, List.of(), List.of()), userId);
         if (notWritableUuids.isEmpty()) {
-            return AllowedRootNetworkTags.UNRESTRICTED;
+            return RootNetworkTagsNamingRestrictions.UNRESTRICTED;
         }
-        return new AllowedRootNetworkTags(true, withoutUsedTags(networkModificationRepository.getCommonRootNetworkTags(notWritableUuids), usedTags));
+        return new RootNetworkTagsNamingRestrictions(true, withoutUsedTags(networkModificationRepository.getCommonRootNetworkTags(notWritableUuids), usedTags));
     }
 
     private static List<String> withoutUsedTags(List<String> allowedTags, List<String> usedTags) {
