@@ -49,6 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public final class TestUtils {
 
     private static final long TIMEOUT = 100;
+    public static final String EQUIPMENT_TYPE = "equipmentType";
 
     private TestUtils() {
         throw new IllegalCallerException("Utility class");
@@ -64,7 +65,7 @@ public final class TestUtils {
     public static Set<String> getRequestsDone(int n, MockWebServer server) throws UncheckedInterruptedException {
         return IntStream.range(0, n).mapToObj(i -> {
             try {
-                return Objects.requireNonNull(server.takeRequest(TIMEOUT, TimeUnit.MILLISECONDS)).getPath();
+                return Objects.requireNonNull(server.takeRequest(TIMEOUT, TimeUnit.MILLISECONDS)).getTarget();
             } catch (InterruptedException e) {
                 throw new UncheckedInterruptedException(e);
             }
@@ -93,14 +94,12 @@ public final class TestUtils {
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
-    public static void assertServerRequestsEmptyThenShutdown(MockWebServer server) throws UncheckedInterruptedException, IOException {
+    public static void assertServerRequestsEmptyThenShutdown(MockWebServer server) throws UncheckedInterruptedException {
         Set<String> httpRequest = null;
-        try {
+        try (server) {
             httpRequest = getRequestsDone(1, server);
         } catch (NullPointerException e) {
             // ignoring
-        } finally {
-            server.shutdown();
         }
         assertNull(httpRequest, "Should not be any http requests :");
     }

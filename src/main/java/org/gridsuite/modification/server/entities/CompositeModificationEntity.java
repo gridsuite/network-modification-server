@@ -9,8 +9,10 @@ package org.gridsuite.modification.server.entities;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
+import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.util.List;
@@ -56,6 +58,16 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .build();
     }
 
+    @Override
+    public ModificationMetadata toModificationMetadata() {
+        return ModificationMetadata.builder()
+            .id(getId())
+            .name(getName())
+            .description(getDescription())
+            .type(ModificationType.valueOf(getType()))
+            .build();
+    }
+
     @SneakyThrows
     public static ModificationInfos fillDisplayMessage(ModificationInfos child) {
         child.setMessageType(child.getType().name());
@@ -69,6 +81,16 @@ public class CompositeModificationEntity extends ModificationEntity {
         setModifications(compositeModificationInfos.getModificationsInfos().stream()
                 .map(ModificationEntity::fromDTO)
                 .toList());
+    }
+
+    @SneakyThrows
+    @Override
+    public void updateNameAndDescription(ModificationMetadata modificationMetadata) {
+        super.updateNameAndDescription(modificationMetadata);
+        if (modificationMetadata.getName() != null) {
+            setName(modificationMetadata.getName());
+            setMessageValues(new ObjectMapper().writeValueAsString(toModificationInfos().getMapMessageValues()));
+        }
     }
 
     public List<ModificationEntity> getModifications() {

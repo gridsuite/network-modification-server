@@ -119,10 +119,6 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
             .toList();
     }
 
-    public void removeAllModifications() {
-        modifications.clear();
-    }
-
     public List<ModificationEntity> removeAllStashedModifications() {
         List<ModificationEntity> stashedModifications = getStashedModifications();
         modifications.removeAll(stashedModifications);
@@ -165,5 +161,12 @@ public abstract class AbstractModificationContainerEntity extends AbstractManual
             this.modifications.add(child);
         }
         resetPositionsOrder();
+    }
+
+    public void detachModifications(List<ModificationEntity> modificationsToDetach) {
+        modificationsToDetach.forEach(m -> {
+            m.setContainer(null);
+            m.setModificationsOrder(0);
+        });
     }
 }

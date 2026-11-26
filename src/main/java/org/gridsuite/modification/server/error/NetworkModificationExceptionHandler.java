@@ -41,13 +41,13 @@ public class NetworkModificationExceptionHandler extends AbstractBusinessExcepti
                  NETWORK_NOT_FOUND,
                  VARIANT_NOT_FOUND
                  -> HttpStatus.NOT_FOUND;
-            case MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED -> HttpStatus.FORBIDDEN;
+            case MODIFICATIONS_CONTAINS_WRITE_FORBIDDEN_SHARED,
+                 ROOT_NETWORK_TAGS_FORBIDDEN_BY_SHARED
+                 -> HttpStatus.FORBIDDEN;
             case MODIFICATION_BAD_TYPE,
                  MODIFICATION_CONTAINS_SHARED,
                  MODIFICATION_CONTAINER_BAD_TYPE,
                  MODIFICATION_INFOS_ERROR,
-                 MODIFICATION_WITH_GROUP_DELETION_FORBIDDEN,
-                 MODIFICATION_DELETION_ARGUMENT_ERROR,
                  MODIFICATION_DUPLICATION_ARGUMENT_ERROR,
                  MODIFICATION_DESCRIPTION_MISSING,
                  MOVE_COMPOSITE_MODIFICATION_CYCLE_ERROR,

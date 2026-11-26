@@ -11,12 +11,13 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.MultiValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import lombok.SneakyThrows;
+import org.gridsuite.filter.Filter;
+import org.gridsuite.filter.IdentifierListFilter;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.filter.wip.Filter;
-import org.gridsuite.filter.wip.IdentifierListFilter;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.FilterStub;
 import org.gridsuite.modification.server.utils.StubbedFilterRequest;
+import org.gridsuite.modification.server.utils.WireMockUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
@@ -91,10 +92,6 @@ public abstract class AbstractByFilterTest extends AbstractNetworkModificationTe
     }
 
     protected MultiValuePattern havingExactlyIdsIgnoringOrder(Collection<UUID> filterIds) {
-        String[] expectedIds = filterIds.stream()
-                .map(UUID::toString)
-                .distinct()
-                .toArray(String[]::new);
-        return WireMock.havingExactly(expectedIds);
+        return WireMockUtils.havingExactlyIdsIgnoringOrder(filterIds);
     }
 }

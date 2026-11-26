@@ -374,7 +374,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         List<UUID> ids = List.of(modifId);
         exception = assertThrows(
             UnsupportedOperationException.class,
-            () -> networkModificationRepository.deleteModifications(TEST_GROUP_ID, ids)
+            () -> networkModificationRepository.deleteModifications(ids)
         );
         assertEquals("No sub-modifications deletion method for type: SUBSTATION_CREATION", exception.getMessage());
     }

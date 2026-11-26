@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server.service;
 
+import org.gridsuite.modification.context.FilterLoader;
+import org.gridsuite.modification.context.FilterWithDistributionKeysLoader;
 import org.gridsuite.modification.context.ModificationContext;
 import org.springframework.stereotype.Service;
 
@@ -18,17 +20,29 @@ import org.springframework.stereotype.Service;
 public class ModificationContextFactory {
 
     private final FilterLoaderService filterLoaderService;
+    private final FilterWithDistributionKeysLoaderService filterWithDistributionKeysLoaderService;
     private final LoadFlowParametersLoaderService loadFlowParametersLoaderService;
 
     public ModificationContextFactory(FilterLoaderService filterLoaderService,
+                                      FilterWithDistributionKeysLoaderService filterWithDistributionKeysLoaderService,
                                       LoadFlowParametersLoaderService loadFlowParametersLoaderService) {
         this.filterLoaderService = filterLoaderService;
+        this.filterWithDistributionKeysLoaderService = filterWithDistributionKeysLoaderService;
         this.loadFlowParametersLoaderService = loadFlowParametersLoaderService;
     }
 
     public ModificationContext create() {
+        return create(filterLoaderService.getLoader(), filterWithDistributionKeysLoaderService.getLoader());
+    }
+
+    public ModificationContext createWithFilterNames() {
+        return create(filterLoaderService.getLoaderWithNames(), filterWithDistributionKeysLoaderService.getLoaderWithNames());
+    }
+
+    private ModificationContext create(FilterLoader filterLoader, FilterWithDistributionKeysLoader filterWithDistributionKeysLoader) {
         return ModificationContext.builder()
-                .filterLoader(filterLoaderService)
+                .filterLoader(filterLoader)
+                .filterWithDistributionKeysLoader(filterWithDistributionKeysLoader)
                 .loadFlowParametersLoader(loadFlowParametersLoaderService)
                 .build();
     }
