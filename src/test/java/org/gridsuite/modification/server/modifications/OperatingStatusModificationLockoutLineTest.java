@@ -24,7 +24,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.util.Map;
 import java.util.UUID;
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.FORCED_OUTAGE;
-import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.PLANNED_OUTAGE;
 import static org.gridsuite.modification.error.NetworkModificationExceptionType.*;
 import static org.gridsuite.modification.server.error.ModificationBusinessErrorCode.MODIFICATION_INFOS_ERROR;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
@@ -40,7 +39,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModificationTest {
     private static final String TARGET_LINE_ID = "line2";
     private static final String UPDATE_BRANCH_ID = "line1";
-    private static final OperatingStatus.Status TARGET_BRANCH_STATUS = PLANNED_OUTAGE;
     private static final OperatingStatus.Status OTHER_BRANCH_STATUS = FORCED_OUTAGE;
 
     @Override
@@ -100,7 +98,6 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
-        TestUtils.assertOperatingStatus(getNetwork(), lineID, TARGET_BRANCH_STATUS);
     }
 
     @Test

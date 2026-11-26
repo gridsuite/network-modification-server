@@ -344,7 +344,7 @@ public abstract class AbstractNetworkModificationTest {
 
     @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
 
-protected List<NetworkModificationResult.ApplicationStatus> extractApplicationStatus(NetworkModificationsResult networkModificationsResult) {
+    protected List<NetworkModificationResult.ApplicationStatus> extractApplicationStatus(NetworkModificationsResult networkModificationsResult) {
         List<NetworkModificationResult.ApplicationStatus> applicationStatuses = new ArrayList<>();
         networkModificationsResult.modificationResults().forEach(modificationResult -> {
             modificationResult.ifPresent(networkModificationResult -> applicationStatuses.add(networkModificationResult.getApplicationStatus()));

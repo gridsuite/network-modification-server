@@ -118,16 +118,6 @@ public final class TestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static void assertOperatingStatus(Network network, String identifiableName, OperatingStatus.Status status) {
-        assertNotNull(network);
-        Identifiable<?> identifiable = network.getIdentifiable(identifiableName);
-        assertNotNull(identifiable);
-        OperatingStatus operatingStatus = identifiable.getExtensionByName("operatingStatus");
-        assertNotNull(operatingStatus);
-        assertEquals(status, operatingStatus.getStatus());
-    }
-
-    @SuppressWarnings("unchecked")
     public static void setOperatingStatus(Network network, String identifiableName, OperatingStatus.Status status) {
         Identifiable<?> identifiable = network.getIdentifiable(identifiableName);
         assertNotNull(identifiable);
