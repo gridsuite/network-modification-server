@@ -2,5 +2,5 @@
 UPDATE modification m
 SET name = cm.name
 FROM composite_modification cm
-WHERE m.id = cm.modification_id
+WHERE m.id = cm.id
   AND cm.name IS NOT NULL;
