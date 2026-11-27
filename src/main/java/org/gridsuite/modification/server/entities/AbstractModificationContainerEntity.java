@@ -10,7 +10,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
-import org.hibernate.annotations.ConcreteProxy;
 
 import java.util.*;
 import java.util.function.Function;
@@ -23,7 +22,6 @@ import static org.gridsuite.modification.server.error.ModificationBusinessErrorC
  */
 @Getter
 @NoArgsConstructor
-@ConcreteProxy
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING)
