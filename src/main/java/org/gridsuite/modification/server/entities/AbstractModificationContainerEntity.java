@@ -10,7 +10,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.error.NetworkModificationServerException;
-import org.hibernate.annotations.ConcreteProxy;
 
 import java.util.*;
 import java.util.function.Function;
