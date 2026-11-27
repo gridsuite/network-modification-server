@@ -564,7 +564,7 @@ class ModificationControllerTest {
 
         String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/activation")
-                .content(mapper.writeValueAsString(List.of(uuidString)))
+                .content("[\"" + uuidString + "\"]")
                 .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("active", "false")
                 .header(HEADER_USER_ID, TEST_USER_ID)
@@ -580,7 +580,7 @@ class ModificationControllerTest {
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
                 .header(HEADER_USER_ID, TEST_USER_ID)
-                .content(mapper.writeValueAsString(List.of(deactivatedUuid.toString())))
+                .content("[\"" + deactivatedUuid + "\"]")
                 .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
                 .queryParam("applicable", "false")
@@ -608,7 +608,7 @@ class ModificationControllerTest {
         UUID modificationUuid = modifications.getFirst().getUuid();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
                 .header(HEADER_USER_ID, TEST_USER_ID)
-                .content(mapper.writeValueAsString(List.of(modificationUuid.toString())))
+                .content("[\"" + modificationUuid + "\"]")
                 .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
                 .queryParam("applicable", "false")
@@ -667,7 +667,8 @@ class ModificationControllerTest {
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
                 .header(HEADER_USER_ID, TEST_USER_ID)
-                .queryParam("uuids", modifications.getFirst().getUuid().toString())
+                .content("[\"" + modifications.getFirst().getUuid() + "\"]")
+                .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("rootNetworkTag", "TOO_LONG")
                 .queryParam("applicable", "false")
         ).andExpect(status().isBadRequest());
