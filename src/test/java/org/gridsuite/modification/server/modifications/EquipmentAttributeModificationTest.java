@@ -53,7 +53,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
             .equipmentAttributeValue("equipmentAttributeValue")
             .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
             .build();
-        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, " +
+        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, name=null, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, " +
                 "date=2021-02-19T00:00:00Z, stashed=false, messageType=null, messageValues=null, activated=null, " +
                 "applicabilityByRootNetworkTag=null, description=null), equipmentId=equipmentId, properties=null), " +
                 "equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());

@@ -1435,20 +1435,9 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationMetadata> getModificationsBaseInfos(List<UUID> uuids) {
-        // TODO remove when name attribute moved into ModificationEntity
-        List<ModificationMetadata> modificationsMetadata =
-            compositeModificationRepository.findAllById(uuids)
-                .stream()
-                .map(CompositeModificationEntity::toModificationMetadata)
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        // custom query to read only the required fields (metadata)
-        modificationsMetadata.addAll(modificationRepository.findBaseByIdIn(uuids).stream()
-            .filter(m -> !m.isComposite()) // To be removed see TODO below
-            .map(m -> m.toModificationMetadata())
-            .toList());
-
-        return modificationsMetadata;
+        return modificationRepository.findBaseByIdIn(uuids).stream()
+            .map(ModificationEntity::toModificationMetadata)
+            .toList();
     }
 
     /**

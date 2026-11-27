@@ -54,6 +54,9 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     @Column(name = "id")
     private UUID id;
 
+    @Column(name = "name")
+    private String name;
+
     @Column(name = "type")
     private String type;
 
@@ -91,8 +94,9 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     @JoinColumn(name = "container_id", foreignKey = @ForeignKey(name = "modification_container_fk"))
     private AbstractModificationContainerEntity container;
 
-    public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues, String description) {
+    public ModificationEntity(UUID id, String name, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues, String description) {
         this.id = id;
+        this.name = name;
         this.type = type;
         this.date = date;
         this.stashed = stashed;
@@ -102,8 +106,9 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
         this.description = description;
     }
 
-    public ModificationEntity(UUID id, String description, String type) {
+    public ModificationEntity(UUID id, String name, String description, String type) {
         this.id = id;
+        this.name = name;
         this.description = description;
         this.type = type;
     }
@@ -134,6 +139,7 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     public ModificationInfos toModificationInfos() {
         ModificationInfos modificationInfos = ModificationInfos.builder()
             .uuid(this.id)
+            .name(this.name)
             .date(this.date)
             .stashed(this.stashed)
             .activated(this.activated)
@@ -148,7 +154,7 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     public ModificationMetadata toModificationMetadata() {
         return ModificationMetadata.builder()
             .id(this.id)
-            .name("")
+            .name(this.name)
             .description(this.description)
             .type(ModificationType.valueOf(this.type))
             .build();
@@ -171,7 +177,9 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
     }
 
     public void updateNameAndDescription(ModificationMetadata modificationMetadata) {
-        // TODO name when attribute is moved into ModificationEntity
+        if (modificationMetadata.getName() != null) {
+            this.setName(modificationMetadata.getName());
+        }
         if (modificationMetadata.getDescription() != null) {
             this.setDescription(modificationMetadata.getDescription());
         }
@@ -179,6 +187,9 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
 
     @SneakyThrows
     private void assignAttributes(ModificationInfos modificationInfos) {
+        if (modificationInfos.getName() != null) {
+            this.setName(modificationInfos.getName());
+        }
         this.setType(modificationInfos.getType().name());
         this.setMessageType(modificationInfos.getType().name());
         if (modificationInfos.getDescription() != null) {
