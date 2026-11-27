@@ -563,8 +563,9 @@ class ModificationControllerTest {
         assertEquals(true, modifications.getFirst().getActivated());
 
         String uuidString = modifications.getFirst().getUuid().toString();
-        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
-                .queryParam("uuids", uuidString)
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/activation")
+                .content("[\"" + uuidString + "\"]")
+                .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("active", "false")
                 .header(HEADER_USER_ID, TEST_USER_ID)
         ).andExpect(status().isOk());
@@ -579,7 +580,8 @@ class ModificationControllerTest {
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
                 .header(HEADER_USER_ID, TEST_USER_ID)
-                .queryParam("uuids", deactivatedUuid.toString())
+                .content("[\"" + deactivatedUuid + "\"]")
+                .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
                 .queryParam("applicable", "false")
         ).andExpect(status().isOk());
@@ -606,7 +608,8 @@ class ModificationControllerTest {
         UUID modificationUuid = modifications.getFirst().getUuid();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
                 .header(HEADER_USER_ID, TEST_USER_ID)
-                .queryParam("uuids", modificationUuid.toString())
+                .content("[\"" + modificationUuid + "\"]")
+                .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
                 .queryParam("applicable", "false")
         ).andExpect(status().isOk());
@@ -664,7 +667,8 @@ class ModificationControllerTest {
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
                 .header(HEADER_USER_ID, TEST_USER_ID)
-                .queryParam("uuids", modifications.getFirst().getUuid().toString())
+                .content("[\"" + modifications.getFirst().getUuid() + "\"]")
+                .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("rootNetworkTag", "TOO_LONG")
                 .queryParam("applicable", "false")
         ).andExpect(status().isBadRequest());
