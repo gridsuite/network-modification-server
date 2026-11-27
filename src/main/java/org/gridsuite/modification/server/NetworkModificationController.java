@@ -368,11 +368,11 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE, params = "active")
+    @PutMapping(value = "/network-modifications/activation", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Updates the activation of network modifications")
     @ApiResponse(responseCode = "200", description = "The activation of the network modifications has been successfully updated")
     public ResponseEntity<Void> updateNetworkModificationActivation(
-            @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
+            @Parameter(description = "Network modifications UUIDs") @RequestBody List<UUID> networkModificationUuids,
             @RequestParam("active") boolean active,
             @RequestHeader(HEADER_USER_ID) String userId) {
         networkModificationService.updateNetworkModificationActivation(networkModificationUuids, active, userId);
@@ -408,11 +408,11 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(value = "/network-modifications/root-network-applicability")
+    @PutMapping(value = "/network-modifications/root-network-applicability", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Updates the applicability of network modifications for a root network tag")
     @ApiResponse(responseCode = "200", description = "The applicability of the network modifications has been successfully updated")
     public ResponseEntity<Void> updateRootNetworkApplicability(
-            @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
+            @Parameter(description = "Network modifications UUIDs") @RequestBody List<UUID> networkModificationUuids,
             @Parameter(description = "Root network tag") @RequestParam("rootNetworkTag") String rootNetworkTag,
             @Parameter(description = "Applicability on this root network tag") @RequestParam("applicable") boolean applicable,
             @RequestHeader(HEADER_USER_ID) String userId) {

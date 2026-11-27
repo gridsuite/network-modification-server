@@ -563,8 +563,9 @@ class ModificationControllerTest {
         assertEquals(true, modifications.getFirst().getActivated());
 
         String uuidString = modifications.getFirst().getUuid().toString();
-        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
-                .queryParam("uuids", uuidString)
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/activation")
+                .content(mapper.writeValueAsString(List.of(uuidString)))
+                .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("active", "false")
                 .header(HEADER_USER_ID, TEST_USER_ID)
         ).andExpect(status().isOk());
@@ -579,7 +580,8 @@ class ModificationControllerTest {
 
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
                 .header(HEADER_USER_ID, TEST_USER_ID)
-                .queryParam("uuids", deactivatedUuid.toString())
+                .content(mapper.writeValueAsString(List.of(deactivatedUuid.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
                 .queryParam("applicable", "false")
         ).andExpect(status().isOk());
@@ -606,7 +608,8 @@ class ModificationControllerTest {
         UUID modificationUuid = modifications.getFirst().getUuid();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/root-network-applicability")
                 .header(HEADER_USER_ID, TEST_USER_ID)
-                .queryParam("uuids", modificationUuid.toString())
+                .content(mapper.writeValueAsString(List.of(modificationUuid.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("rootNetworkTag", ROOT_NETWORK_TAG)
                 .queryParam("applicable", "false")
         ).andExpect(status().isOk());
