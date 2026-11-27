@@ -187,7 +187,9 @@ public class ModificationEntity extends AbstractManuallyAssignedIdentifierEntity
 
     @SneakyThrows
     private void assignAttributes(ModificationInfos modificationInfos) {
-        this.setName(modificationInfos.getName());
+        if (modificationInfos.getName() != null) {
+            this.setName(modificationInfos.getName());
+        }
         this.setType(modificationInfos.getType().name());
         this.setMessageType(modificationInfos.getType().name());
         if (modificationInfos.getDescription() != null) {
