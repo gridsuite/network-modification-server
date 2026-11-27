@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.service;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
+import org.apache.commons.collections4.ListUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
@@ -2328,12 +2329,39 @@ class ModificationRepositoryTest {
         networkModificationRepository.updateRootNetworkApplicability(List.of(ownedUuid), RENAMED_ROOT_NETWORK_TAG, false);
 
         // deleting several root networks at once drops all their tags in one go
-        networkModificationRepository.deleteRootNetworkTags(List.of(TEST_GROUP_ID_2, TEST_GROUP_ID_3), List.of(ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG));
+        networkModificationRepository.deleteRootNetworkTags(List.of(TEST_GROUP_ID_2, TEST_GROUP_ID_3), List.of(), List.of(ROOT_NETWORK_TAG, OTHER_ROOT_NETWORK_TAG));
 
         assertEquals(Map.of(RENAMED_ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_3).get(ownedUuid),
                 "The deleted root networks take their own applicabilities away, and only those");
         assertEquals(Map.of(ROOT_NETWORK_TAG, false), getApplicabilities(TEST_GROUP_ID_2).get(referenceUuid),
                 "Another group may name a root network with that very tag, so a shared modification is never cleaned");
+    }
+
+    @Test
+    void testDeleteRootNetworkTagsOfACompositeDropsThemFromItsContentToo() {
+        UUID compositeUuid = sharedModificationOf(insertComposite(TEST_GROUP_ID_2, true, "v1d1", "v1d2"));
+        List<UUID> contentUuids = modificationUuidsInside(compositeUuid);
+        UUID nestedReferenceUuid = insertComposite(TEST_GROUP_ID_3, true, "v1d4");
+        UUID nestedSharedUuid = sharedModificationOf(nestedReferenceUuid);
+        List<UUID> applicabilityHoldersUuids = ListUtils.union(List.of(compositeUuid, nestedSharedUuid), contentUuids);
+        networkModificationRepository.updateRootNetworkApplicability(applicabilityHoldersUuids, ROOT_NETWORK_TAG, false);
+        networkModificationRepository.updateRootNetworkApplicability(applicabilityHoldersUuids, OTHER_ROOT_NETWORK_TAG, false);
+        networkModificationRepository.moveModifications(
+                new ModificationContainerInfos(TEST_GROUP_ID_3, ModificationContainerType.GROUP),
+                new ModificationContainerInfos(compositeUuid, ModificationContainerType.COMPOSITE),
+                List.of(nestedReferenceUuid), null);
+
+        networkModificationRepository.deleteRootNetworkTags(List.of(), List.of(compositeUuid), List.of(ROOT_NETWORK_TAG));
+
+        assertEquals(Map.of(OTHER_ROOT_NETWORK_TAG, false),
+                networkModificationRepository.getModificationInfo(compositeUuid).getApplicabilityByRootNetworkTag(),
+                "The composite loses the applicability of the deleted tag, and only that one");
+        Map<UUID, Map<String, Boolean>> contentApplicabilities = getApplicabilitiesByModificationsInside(compositeUuid);
+        contentUuids.forEach(contentUuid -> assertEquals(Map.of(OTHER_ROOT_NETWORK_TAG, false), contentApplicabilities.get(contentUuid),
+                "Its content loses it too"));
+        assertEquals(Map.of(ROOT_NETWORK_TAG, false, OTHER_ROOT_NETWORK_TAG, false),
+                networkModificationRepository.getModificationInfo(nestedSharedUuid).getApplicabilityByRootNetworkTag(),
+                "A shared modification the composite refers to may be used elsewhere with that tag, so it is never cleaned");
     }
 
     @Test

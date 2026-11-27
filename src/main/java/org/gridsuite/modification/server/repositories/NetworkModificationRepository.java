@@ -1320,17 +1320,23 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * Drops the applicability entries of {@code tags} for the modifications the given groups own. A shared
-     * modification is left alone: another group may still name a root network with one of those tags.
+     * Drops the applicability entries of {@code tags}:
+     * <ul>
+     *     <li>for every modification the given groups own, the content of their composites included;</li>
+     *     <li>for the given modifications, and the content of those that are composites.</li>
+     * </ul>
+     * A shared modification they refer to is left alone: another group may still name a root network with one of those
+     * tags.
      */
     @Transactional
-    public void deleteRootNetworkTags(@NonNull List<UUID> groupUuids, @NonNull List<String> tags) {
+    public void deleteRootNetworkTags(@NonNull List<UUID> groupUuids, @NonNull List<UUID> modificationUuids, @NonNull List<String> tags) {
         if (tags.isEmpty()) {
             return;
         }
-        List<UUID> ownedUuids = getContainedModificationUuidsNonTransactional(groupUuids);
-        if (!ownedUuids.isEmpty()) {
-            modificationRepository.deleteRootNetworkApplicabilities(ownedUuids, tags);
+        List<UUID> modificationTreesUuids = ListUtils.union(modificationUuids,
+                getContainedModificationUuidsNonTransactional(ListUtils.union(groupUuids, modificationUuids)));
+        if (!modificationTreesUuids.isEmpty()) {
+            modificationRepository.deleteRootNetworkApplicabilities(modificationTreesUuids, tags);
         }
     }
 

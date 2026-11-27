@@ -330,8 +330,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void deleteRootNetworkTags(@NonNull List<UUID> groupUuids, @NonNull List<String> rootNetworkTags) {
-        networkModificationRepository.deleteRootNetworkTags(groupUuids, rootNetworkTags);
+    public void deleteRootNetworkTags(@NonNull List<UUID> groupUuids, @NonNull List<UUID> modificationUuids, @NonNull List<String> rootNetworkTags) {
+        networkModificationRepository.deleteRootNetworkTags(groupUuids, modificationUuids, rootNetworkTags);
     }
 
     private static void assertRootNetworkTagFits(String rootNetworkTag) {

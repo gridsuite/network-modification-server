@@ -443,12 +443,13 @@ public class NetworkModificationController {
     }
 
     @DeleteMapping(value = "/network-modifications/root-network-tag")
-    @Operation(summary = "Deletes root network tags from the applicabilities of the modifications of the given groups")
+    @Operation(summary = "Deletes root network tags from the applicabilities of the modifications of the given groups, and of the given modifications with their content")
     @ApiResponse(responseCode = "200", description = "The root network tags have been successfully deleted")
     public ResponseEntity<Void> deleteRootNetworkTags(
-            @Parameter(description = "Modification groups UUIDs") @RequestParam("groupUuids") List<UUID> groupUuids,
+            @Parameter(description = "Modification groups UUIDs") @RequestParam(name = "groupUuids", required = false) Optional<List<UUID>> groupUuids,
+            @Parameter(description = "Network modifications UUIDs, the content of the composites included") @RequestParam(name = "uuids", required = false) Optional<List<UUID>> modificationUuids,
             @Parameter(description = "Root network tags") @RequestParam("rootNetworkTags") List<String> rootNetworkTags) {
-        networkModificationService.deleteRootNetworkTags(groupUuids, rootNetworkTags);
+        networkModificationService.deleteRootNetworkTags(groupUuids.orElse(List.of()), modificationUuids.orElse(List.of()), rootNetworkTags);
         return ResponseEntity.ok().build();
     }
 
