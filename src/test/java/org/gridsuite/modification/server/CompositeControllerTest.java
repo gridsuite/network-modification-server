@@ -1310,6 +1310,26 @@ class CompositeControllerTest {
     }
 
     @Test
+    void testDeleteRootNetworkTagsOfAComposite() throws Exception {
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID compositeUuid = mapper.readValue(mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
+                        .content(mapper.writeValueAsString(List.of(modificationList.getFirst().getUuid())))
+                        .header(HEADER_USER_ID, "user1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), new TypeReference<>() { });
+        networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), "PH1", false);
+        networkModificationRepository.updateRootNetworkApplicability(List.of(compositeUuid), "PH2", false);
+
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE + "/root-network-tag")
+                        .queryParam("uuids", compositeUuid.toString())
+                        .queryParam("rootNetworkTags", "PH1"))
+                .andExpect(status().isOk());
+
+        assertEquals(Map.of("PH2", false), networkModificationRepository.getModificationInfo(compositeUuid).getApplicabilityByRootNetworkTag(),
+                "A modification given by its uuid loses the deleted root network tag, and only that one");
+    }
+
+    @Test
     void testNoNotificationWhenNotSharedCompositeReplaced() throws Exception {
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
         UUID compositeUuid = mapper.readValue(mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/")
